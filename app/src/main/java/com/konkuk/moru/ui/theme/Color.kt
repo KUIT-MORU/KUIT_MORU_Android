@@ -1,11 +1,45 @@
 package com.konkuk.moru.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.staticCompositionLocalOf
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+val LimeGreen = Color(color = 0xFFB8EE44)
+val PaleLime = Color(color = 0xFFEBFFC0)
+val OliveGreen = Color(color = 0xFF7AB300)
+val Black = Color(color = 0xFF000000)
+val DarkGray = Color(color = 0xFF595959)
+val MediumGray = Color(color = 0xFF999999)
+val LightGray = Color(color = 0xFFD9D9D9)
+val VeryLightGray = Color(color = 0xFFF1F3F5)
+val CharcoalBlack = Color(color = 0xFF1A1A1A)
+val Black50Opacity = Color(color = 0x80000000)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+@Immutable
+data class MoruColors(
+    val limeGreen: Color,
+    val paleLime: Color,
+    val oliveGreen: Color,
+    val black: Color,
+    val darkGray: Color,
+    val mediumGray: Color,
+    val lightGray: Color,
+    val veryLightGray: Color,
+    val charcoalBlack: Color,
+    val black50Opacity: Color
+)
+
+val defaultMoruColors = MoruColors(
+    limeGreen = LimeGreen,
+    paleLime = PaleLime,
+    oliveGreen = OliveGreen,
+    black = Black,
+    darkGray = DarkGray,
+    mediumGray = MediumGray,
+    lightGray = LightGray,
+    veryLightGray = VeryLightGray,
+    charcoalBlack = CharcoalBlack,
+    black50Opacity = Black50Opacity
+)
+
+val LocalMoruColorsProvider = staticCompositionLocalOf { defaultMoruColors }
