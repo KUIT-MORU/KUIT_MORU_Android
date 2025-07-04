@@ -1,4 +1,4 @@
-package com.konkuk.moru.core.component
+package com.konkuk.moru.core.component.routine
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -64,9 +64,9 @@ fun RoutineCardWithImage(
         modifier = modifier.clickable { onClick() }
     ) {
         val imageResource = if (isRunning) {
-            R.drawable.ic_routine_running
+            R.drawable.ic_routine_rectangle_running
         } else {
-            R.drawable.ic_routine_stop
+            R.drawable.ic_routine_rectangle_stop
         }
 
         Image(
@@ -99,7 +99,7 @@ fun RoutineCardWithImage(
             Icon(
                 imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                 contentDescription = "좋아요",
-                tint = if (isLiked) Color.Black else Color.Gray,
+                tint = if (isLiked) Color.Red else Color.Gray,
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
