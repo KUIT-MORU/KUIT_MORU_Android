@@ -5,57 +5,80 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.konkuk.moru.R
-import com.konkuk.moru.ui.theme.MORUTheme
+
 
 @Composable
 fun ProfileCard(
     modifier: Modifier = Modifier,
+    painter: Painter,
     username: String,
-    tag: String
+    tag: String,
+    backgroundColor: Color? = null // 변경점: 배경색 파라미터 추가 (기본값 null)
 ) {
     Column(
         modifier = modifier
-            .fillMaxHeight()
-            .background(Color(0xFFFFFFFF))
+            //.fillMaxHeight()
+            // 변경점: backgroundColor가 null이 아닐 때만 배경색을 적용
+            .then(
+                if (backgroundColor != null) Modifier.background(backgroundColor)
+                else Modifier
+            )
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // 회색 원형 배경
-        Box(
+
+        Image(
+            painter = painter,
+            contentDescription = "User Profile",
             modifier = Modifier
                 .size(64.dp)
-                .background(MORUTheme.colors.veryLightGray, CircleShape) // 연한 회색 원
                 .clip(CircleShape),
-            contentAlignment = Alignment.Center // 아이콘을 중앙에 배치
-        ) {
-            // 프로필 아이콘
-            Image(
-                painter = painterResource(R.drawable.ic_profile), // 실제 아이콘 리소스로 변경
-                contentDescription = "User Profile",
-                modifier = Modifier.size(32.dp), // 아이콘 크기 조절
-                contentScale = ContentScale.Fit
-            )
-        }
-        Text(text = username, fontSize = 16.sp)
-        Text(text = tag, color = Color.Gray, fontSize = 14.sp)
+            contentScale = ContentScale.Crop
+        )
+
+        Spacer(modifier=Modifier.padding(2.dp))
+        Text(text = username, fontSize = 12.sp, lineHeight = 16.sp)
+        Text(text = tag, color = Color.Gray, fontSize = 12.sp, lineHeight = 16.sp)
     }
 }
 
+// 변경점: 두 가지 경우를 모두 테스트하는 Preview 추가
+@Preview(name = "With Background", showBackground = true)
 @Composable
-@Preview(showBackground = true)
-fun ProfileCardScreen() {
-    ProfileCard(username = "Jeong", tag = "#운동하자")
+fun ProfileCardWithBgPreview() {
+    MaterialTheme {
+        ProfileCard(
+            painter = painterResource(id = R.drawable.ic_avatar),
+            username = "사용자명",
+            tag = "#운동하자",
+            backgroundColor = Color(0xFFF5F5F5) // 배경색 지정
+        )
+    }
+}
+
+@Preview(name = "Without Background", showBackground = true)
+@Composable
+fun ProfileCardWithoutBgPreview() {
+    MaterialTheme {
+        ProfileCard(
+            painter = painterResource(id = R.drawable.ic_avatar),
+            username = "사용자명",
+            tag = "#운동하자"
+            // backgroundColor를 생략하면 기본값인 null이 사용됨
+        )
+    }
 }
