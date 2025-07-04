@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.konkuk.moru.ui.theme.LocalMoruColorsProvider
-import com.konkuk.moru.ui.theme.LocalMoruTypographyProvider
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
@@ -20,6 +19,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import com.konkuk.moru.ui.theme.MORUTheme.colors
+import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
 fun RoutineStepItem(modifier: Modifier = Modifier) {
@@ -32,20 +33,20 @@ fun RoutineStepItem(modifier: Modifier = Modifier) {
         ) {
             Text(
                 text = "1",
-                style = LocalMoruTypographyProvider.current.desc_M_14,
-                color = LocalMoruColorsProvider.current.black
+                style = typography.desc_M_14,
+                color = colors.black
             )
             Spacer(modifier = modifier.size(29.dp))
             Text(
                 text = "샤워하기",
-                style = LocalMoruTypographyProvider.current.desc_M_16,
-                color = LocalMoruColorsProvider.current.black
+                style = typography.desc_M_16,
+                color = colors.black
             )
             Spacer(modifier = modifier.size(148.dp))
             Text(
                 text = "15m",
-                style = LocalMoruTypographyProvider.current.desc_M_14,
-                color = LocalMoruColorsProvider.current.black
+                style = typography.desc_M_14,
+                color = colors.black
             )
             Spacer(modifier = modifier.size(20.dp))
             Switch(

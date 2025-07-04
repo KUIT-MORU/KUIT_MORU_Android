@@ -7,15 +7,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
-import androidx.compose.material3.Text
-import com.konkuk.moru.ui.theme.LocalMoruColorsProvider
-import com.konkuk.moru.ui.theme.LocalMoruTypographyProvider
+import com.konkuk.moru.ui.theme.MORUTheme.colors
+import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
 fun RoutineCardItem(modifier: Modifier = Modifier) {
@@ -35,14 +35,14 @@ fun RoutineCardItem(modifier: Modifier = Modifier) {
             Spacer(modifier = modifier.size(8.dp))
             Text(
                 text = "루틴명",
-                style = LocalMoruTypographyProvider.current.time_R_12,
-                color = LocalMoruColorsProvider.current.black
+                style = typography.time_R_12,
+                color = colors.black
             )
             Spacer(modifier = modifier.size(2.dp))
             Text(
                 text = "#태그",
-                style = LocalMoruTypographyProvider.current.time_R_10,
-                color = LocalMoruColorsProvider.current.darkGray
+                style = typography.time_R_10,
+                color = colors.darkGray
             )
         }
     }

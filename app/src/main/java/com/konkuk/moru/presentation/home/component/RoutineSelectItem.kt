@@ -31,6 +31,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.painterResource
 import com.konkuk.moru.ui.theme.LocalMoruColorsProvider
 import com.konkuk.moru.ui.theme.LocalMoruTypographyProvider
+import com.konkuk.moru.ui.theme.MORUTheme.colors
+import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
 fun RoutineSelectItem(
@@ -39,7 +41,6 @@ fun RoutineSelectItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val colors = LocalMoruColorsProvider.current
     //선택 상태에 따라 바뀌는 색상
     //테두리 색
     val borderColor = if (isSelected) colors.limeGreen else colors.lightGray
@@ -72,7 +73,7 @@ fun RoutineSelectItem(
             ) {
                 Text(
                     text = text,
-                    style = LocalMoruTypographyProvider.current.body_SB_16,
+                    style = typography.body_SB_16,
                     color = colors.charcoalBlack
                 )
             }
