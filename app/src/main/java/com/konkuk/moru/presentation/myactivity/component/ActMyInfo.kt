@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -108,7 +109,7 @@ fun ActMyInfo(
             contentAlignment = Alignment.CenterStart,
             modifier = Modifier
                 .fillMaxWidth()
-                .background(color = colors.veryLightGray)
+                .background(color = colors.veryLightGray, shape = RoundedCornerShape(4.dp))
                 .height(34.dp)
         ) {
             val trimmedSelfInfo = if (selfInfo.length > 40) selfInfo.take(40) + "…" else selfInfo
