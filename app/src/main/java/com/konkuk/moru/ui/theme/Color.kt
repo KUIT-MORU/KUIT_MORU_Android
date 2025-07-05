@@ -13,7 +13,7 @@ val MediumGray = Color(color = 0xFF999999)
 val LightGray = Color(color = 0xFFD9D9D9)
 val VeryLightGray = Color(color = 0xFFF1F3F5)
 val CharcoalBlack = Color(color = 0xFF1A1A1A)
-val Black50Opacity = Color(color = 0x80000000)
+val Black50Oopacity = Color(color = 0x80000000)
 
 @Immutable
 data class MoruColors(
@@ -26,7 +26,7 @@ data class MoruColors(
     val lightGray: Color,
     val veryLightGray: Color,
     val charcoalBlack: Color,
-    val black50Opacity: Color
+    val black50Oopacity: Color
 )
 
 val defaultMoruColors = MoruColors(
@@ -39,7 +39,7 @@ val defaultMoruColors = MoruColors(
     lightGray = LightGray,
     veryLightGray = VeryLightGray,
     charcoalBlack = CharcoalBlack,
-    black50Opacity = Black50Opacity
+    black50Oopacity = Black50Oopacity
 )
 
 val LocalMoruColorsProvider = staticCompositionLocalOf { defaultMoruColors }
