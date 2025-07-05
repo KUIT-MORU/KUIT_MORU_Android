@@ -60,6 +60,7 @@ fun RoutinePaceCard(
                     .size(20.dp)
             )
         }
+        Spacer(modifier = Modifier.height(9.dp))
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom,
