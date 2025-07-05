@@ -8,7 +8,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.konkuk.moru.presentation.home.screen.HomeScreen
-import com.konkuk.moru.presentation.myactivity.screen.MyActivityScreen
+import com.konkuk.moru.presentation.myactivity.screen.ActMainScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesScreen
 import com.konkuk.moru.presentation.routinefeed.screen.RoutineFeedScreen
 
@@ -41,7 +41,7 @@ fun MainNavGraph(
         }
 
         composable(route = Route.MyActivity.route) {
-            MyActivityScreen(
+            ActMainScreen(
                 modifier = modifier.padding(innerPadding)
             )
         }

@@ -5,6 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
-fun MyActivityScreen(modifier: Modifier = Modifier) {
+fun ActMainScreen(modifier: Modifier = Modifier) {
     Text("My Activity Screen", modifier = modifier)
 }
