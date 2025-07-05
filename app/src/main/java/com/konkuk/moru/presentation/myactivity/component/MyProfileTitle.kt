@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.myactivity.component
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,12 +16,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.konkuk.moru.R
+import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
-fun MyProfileTitle(modifier: Modifier = Modifier) {
+fun MyProfileTitle(
+    navController: NavHostController,
+    modifier: Modifier = Modifier
+    ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -42,12 +48,7 @@ fun MyProfileTitle(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .padding(end = 12.dp)
                 .size(20.dp)
+                .clickable { navController.navigate(Route.ActSetting.route) }
         )
     }
-}
-
-@Preview
-@Composable
-private fun MyProfileTitlePreview() {
-    MyProfileTitle()
 }

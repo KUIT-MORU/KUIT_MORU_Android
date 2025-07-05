@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.myactivity.component
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -13,12 +14,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.konkuk.moru.R
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
 fun BackTitle(
     title: String,
+    navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -31,14 +34,9 @@ fun BackTitle(
             contentDescription = "Back Icon",
             modifier = Modifier
                 .size(24.dp)
+                .clickable { navController.popBackStack() }
         )
         Spacer(modifier = Modifier.width(16.dp))
         Text(text = title, style = typography.body_SB_16)
     }
-}
-
-@Preview
-@Composable
-private fun BackTitlePreview() {
-    BackTitle("스크랩한 루틴")
 }
