@@ -27,8 +27,8 @@ fun MovingIconProgressBar(
     modifier: Modifier = Modifier
 ) {
     BoxWithConstraints(
-        modifier = modifier
-            .width(228.dp)
+        modifier = Modifier
+            .fillMaxWidth()
             .height(37.dp)
     ) {
         Box(

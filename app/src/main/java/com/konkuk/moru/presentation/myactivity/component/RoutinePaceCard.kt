@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -33,7 +34,7 @@ fun RoutinePaceCard(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(97.dp)
             .background(color = colors.charcoalBlack, shape = RoundedCornerShape(8.dp))
@@ -63,19 +64,30 @@ fun RoutinePaceCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom,
             modifier = Modifier
-                .fillMaxSize()
-                .padding(start = 16.dp, end = 16.dp)
-        ){
-            Box(modifier = Modifier.padding(bottom = 16.dp)){
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .weight(1f)
+            ) {
                 MovingIconProgressBar(progress)
             }
-            Text(
-                text = (progress * 100).toString() + "%",
-                color = colors.limeGreen,
-                style = typography.body_SB_16,
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Box(
                 modifier = Modifier
-                    .padding(bottom = 11.dp)
-            )
+                    .padding(bottom = 11.dp),
+                contentAlignment = Alignment.BottomEnd
+            ) {
+                Text(
+                    text = (progress * 100).toString() + "%",
+                    color = colors.limeGreen,
+                    style = typography.body_SB_16
+                )
+            }
         }
     }
 }
