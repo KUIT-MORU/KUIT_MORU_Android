@@ -94,6 +94,9 @@ dependencies {
     ksp(libs.hilt.android.compiler)
     ksp(libs.hilt.compiler)
     ksp(libs.hilt.manager)
+
+    // Material Icons 확장 라이브러리 (Outlined, Rounded, Sharp 아이콘 포함)
+    implementation("androidx.compose.material:material-icons-extended")
 }
 
 configurations.all {
