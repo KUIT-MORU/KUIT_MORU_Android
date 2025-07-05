@@ -43,7 +43,6 @@ fun MyProfileTitle(modifier: Modifier = Modifier) {
                 .padding(end = 12.dp)
                 .size(20.dp)
         )
-
     }
 }
 
