@@ -33,6 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.konkuk.moru.presentation.myactivity.component.ActMyInfo
+import com.konkuk.moru.presentation.myactivity.component.MyActivityTab
 import com.konkuk.moru.presentation.myactivity.component.MyProfileTitle
 import com.konkuk.moru.presentation.myactivity.component.RoutinePaceCard
 import com.konkuk.moru.ui.theme.MORUTheme.colors
@@ -66,6 +67,16 @@ fun ActMainScreen(
             ActMyInfo(4, 628, 221, "정해찬", "루틴을 꼭 지키고 말겠어! 저는 정해찬입니다. 아주 긴 문장을 쓰기 위해 아무 말이나 작성 중입니다.")
             Spacer(modifier = Modifier.height(24.dp))
             RoutinePaceCard("간헐적 루틴러", 0.7f)
+            Spacer(modifier = Modifier.height(24.dp))
+
+            var selectedTab by remember { mutableStateOf(0) }
+            MyActivityTab(
+                selectedTab = selectedTab,
+                onTabSelected = { selectedTab = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            )
         }
     }
 }
