@@ -36,6 +36,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
+import com.konkuk.moru.core.util.modifier.noRippleClickable
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
@@ -63,7 +64,7 @@ fun RoutinePaceCard(
             Row(
                 modifier = Modifier
                     .padding(start = 16.dp, top = 16.dp)
-            ){
+            ) {
                 Text(text = "나의 루틴 페이스는 ", style = typography.body_SB_16, color = Color(0xFFFFFFFF))
                 Text(text = routinePace, style = typography.body_SB_16, color = colors.limeGreen)
             }
@@ -74,7 +75,7 @@ fun RoutinePaceCard(
                 modifier = Modifier
                     .padding(top = 15.dp, end = 16.dp)
                     .size(20.dp)
-                    .clickable {
+                    .noRippleClickable {
                         isSheetOpen = true
                     }
             )

@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.konkuk.moru.R
+import com.konkuk.moru.core.util.modifier.noRippleClickable
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
@@ -34,7 +35,7 @@ fun BackTitle(
             contentDescription = "Back Icon",
             modifier = Modifier
                 .size(24.dp)
-                .clickable { navController.popBackStack() }
+                .noRippleClickable { navController.popBackStack() }
         )
         Spacer(modifier = Modifier.width(16.dp))
         Text(text = title, style = typography.body_SB_16)

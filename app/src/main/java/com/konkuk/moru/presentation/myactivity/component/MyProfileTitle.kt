@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.konkuk.moru.R
+import com.konkuk.moru.core.util.modifier.noRippleClickable
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
@@ -26,7 +27,7 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 fun MyProfileTitle(
     navController: NavHostController,
     modifier: Modifier = Modifier
-    ) {
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -48,7 +49,7 @@ fun MyProfileTitle(
             modifier = Modifier
                 .padding(end = 12.dp)
                 .size(20.dp)
-                .clickable { navController.navigate(Route.ActSetting.route) }
+                .noRippleClickable { navController.navigate(Route.ActSetting.route) }
         )
     }
 }

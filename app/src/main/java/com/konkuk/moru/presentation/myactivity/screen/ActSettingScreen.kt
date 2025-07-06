@@ -29,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.konkuk.moru.R
+import com.konkuk.moru.core.util.modifier.noRippleClickable
 import com.konkuk.moru.presentation.myactivity.component.BackTitle
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
@@ -72,7 +73,7 @@ fun ActSettingScreen(
                         .fillMaxWidth()
                         .height(51.dp)
                         .padding(start = 16.dp, end = 16.dp)
-                        .clickable { action() }
+                        .noRippleClickable { action() }
                 ) {
                     Text(
                         text = title,
@@ -89,7 +90,7 @@ fun ActSettingScreen(
                             .height(14.dp)
                     )
                 }
-                if(title != "탈퇴"){
+                if (title != "탈퇴") {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
