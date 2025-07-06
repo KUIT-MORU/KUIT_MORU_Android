@@ -1,6 +1,8 @@
 package com.konkuk.moru.presentation.home.component
 
+import android.graphics.SumPathEffect
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,77 +22,89 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
-import com.konkuk.moru.ui.theme.LocalMoruColorsProvider
-import com.konkuk.moru.ui.theme.LocalMoruTypographyProvider
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
 fun TodayRoutineListBoxItem(
     modifier: Modifier = Modifier,
-    title: String = "주말 아침 루틴",
-    hashtag: String = "#화이팅",
-    dayAndTime: String = "토일 am 09:00 ~ am 09:58",
-    progress: Float = 0.25f
+    title: String = "아침 운동",
+    hashtag: String = "#모닝 루틴 #스트레칭",
+    heartCount: Int = 16,
+    day: String = "토일",
+    time: String = "am 09:00"
 ) {
     Box(
         modifier = modifier
-            .width(328.dp)
-            .height(150.dp)
+            .width(330.dp)
+            .height(120.dp)
+            .border(width = 1.dp, color = colors.darkGray, shape = RoundedCornerShape(12.dp))
             .padding(8.dp)
     ) {
-        Column() {
-            Row(
-                modifier = modifier.padding(10.dp)
+        Column(
+            modifier= Modifier
+                .padding(horizontal = 8.dp)
+        ) {
+            // 1.카드 박스
+            Box(
+                modifier = Modifier
+                    .width(298.dp)
+                    .height(72.dp)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.transparentbox),
-                    contentDescription = "ImageBox",
-                    modifier = Modifier
-                        .width(53.dp)
-                        .height(52.dp)
-                )
-                Spacer(modifier = modifier.size(15.dp))
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = title,
-                        style = typography.title_B_14,
-                        color = colors.black,
-                        textDecoration = TextDecoration.Underline
+                Row() {
+                    Image(
+                        painter = painterResource(id = R.drawable.routine_image),
+                        contentDescription = "ImageBox",
+                        modifier = Modifier.size(72.dp)
                     )
-                    Spacer(modifier = modifier.size(1.dp))
-                    Text(
-                        text = hashtag,
-                        style = typography.time_R_10,
-                        color = colors.black
-                    )
-                    Spacer(modifier = modifier.size(3.dp))
-                    Text(
-                        text = dayAndTime,
-                        style = typography.time_R_12,
-                        color = colors.black
-                    )
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 7.dp)
+                    ) {
+                        //제목(ex)아침 운동)
+                        Text(
+                            text = title,
+                            style = typography.title_B_14,
+                            color = colors.black,
+                        )
+                        Spacer(modifier = modifier.size(1.dp))
+                        // 해시태그(ex)#모닝 루틴,#스트레칭)
+                        Text(
+                            text = hashtag,
+                            style = typography.time_R_10,
+                            color = colors.black
+                        )
+                        Spacer(modifier = modifier.size(3.dp))
+                        //하트와 하트 클릭 수
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Image(
+                                painter = painterResource(id = R.drawable.empty_heart),
+                                contentDescription = "empty heart Icon",
+                                modifier = Modifier.size(width = 13.33.dp, height = 11.47.dp)
+                            )
+                            Text(
+                                text = "$heartCount",
+                                style = typography.time_R_12,
+                                color = colors.black
+                            )
+                        }
+                    }
                 }
             }
-            Spacer(modifier = modifier.size(39.dp))
-            //프로그래스 바와 진행률
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 18.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                LinearProgressIndicator(
-                    progress = progress,
-                    modifier = modifier
-                        .weight(1f),
-                    color = colors.oliveGreen,
-                    trackColor = colors.lightGray
-                )
-                Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.size(14.dp))
+            // 2. 요일과 시간
+            Row() {
                 Text(
-                    text = "${(progress * 100).toInt()}%",
-                    style = typography.desc_M_12,
+                    text = day,
+                    style = typography.title_B_12,
+                    color = colors.black
+                )
+                Spacer(modifier = Modifier.size(10.dp))
+                Text(
+                    text = time,
+                    style = typography.title_B_12,
                     color = colors.black
                 )
             }
@@ -98,7 +112,11 @@ fun TodayRoutineListBoxItem(
     }
 }
 
-@Preview
+@Preview(
+    showBackground = true,
+    widthDp = 330,
+    heightDp = 120
+)
 @Composable
 private fun TodayRoutineListBoxItemPreview() {
     TodayRoutineListBoxItem()

@@ -11,10 +11,11 @@ import com.konkuk.moru.ui.theme.MORUTheme.colors
 
 // 1. 데이터 클래스
 data class RoutineData(
-    val title: String,
-    val hashtag: String,
-    val dayAndTime: String,
-    val progress: Float
+    val title: String,        // 제목
+    val hashtag: String,      // 해시태그
+    val heartCount: Int,      // 하트 수
+    val day: String,          // 요일
+    val time: String          // 시간
 )
 
 // 2. Pager 컴포저블
@@ -22,32 +23,33 @@ data class RoutineData(
 @Composable
 fun TodayRoutinePager(
     modifier: Modifier = Modifier,
-    routines:List<RoutineData>
+    routines: List<RoutineData>
 ) {
     //현재 페이지가 몇 페이지인지 기억하기
     val pagerState = rememberPagerState(initialPage = 0)
-    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
-    ){
+    ) {
         HorizontalPager(
             count = routines.size,
             state = pagerState,
             modifier = modifier
                 .fillMaxWidth()
-                .height(160.dp)
-        ) { page->
+                .height(120.dp)
+        ) { page ->
             val routine = routines[page]
             TodayRoutineListBoxItem(
                 title = routine.title,
                 hashtag = routine.hashtag,
-                dayAndTime = routine.dayAndTime,
-                progress = routine.progress
+                heartCount = routine.heartCount,
+                day = routine.day,
+                time = routine.time
             )
         }
-        Spacer(modifier=modifier.size(8.dp))
+
+        Spacer(modifier = modifier.size(8.dp))
 
         HorizontalPagerIndicator(
             pagerState = pagerState,
@@ -64,9 +66,9 @@ fun TodayRoutinePager(
 @Composable
 private fun TodayRoutinePagerPreview() {
     val sampleRoutines = listOf(
-        RoutineData("주말 아침 루틴", "#화이팅", "토일 am 09:00 ~ am 09:58", 0.25f),
-        RoutineData("출근 준비 루틴", "#힘내자", "월 am 08:00 ~ am 08:45", 0.6f),
-        RoutineData("운동 루틴", "#건강", "수 pm 06:00 ~ pm 07:00", 0.9f)
+        RoutineData("주말 아침 루틴", "#화이팅", 25, "토일", "am 09:00 ~ am 09:58"),
+        RoutineData("출근 준비 루틴", "#힘내자", 41, "월", "am 08:00 ~ am 08:45"),
+        RoutineData("운동 루틴", "#건강", 12, "수", "pm 06:00 ~ pm 07:00")
     )
 
     TodayRoutinePager(routines = sampleRoutines)
