@@ -1,6 +1,7 @@
 package com.konkuk.moru.presentation.routinefeed.screen
 
 import android.R.attr.color
+import android.R.attr.onClick
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,9 +28,10 @@ import java.time.Duration
 import java.time.LocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun NotificationScreen() {
+fun NotificationScreen(
+    onNavigateBack: () -> Unit
+) {
     val dummyNotifications = listOf(
         Notification(1, null, "xx님", "이 [루틴명]을 생성했습니다.", null, LocalDateTime.now().minusMinutes(2)),
         Notification(2, null, "xx님", "이 [루틴명]을 생성했습니다.", null, LocalDateTime.now().minusMinutes(5)),
@@ -61,7 +63,7 @@ fun NotificationScreen() {
                 title = "알림",
                 spacingBetweenIconAndTitle = 27.dp,
                 navigationIcon = {
-                    IconButton(onClick = { /* 뒤로가기 */ }) {
+                    IconButton(onClick = onNavigateBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                             contentDescription = "뒤로가기"
@@ -141,6 +143,6 @@ fun NotificationScreen() {
 @Composable
 private fun NotificationScreenPreview() {
     MaterialTheme {
-        NotificationScreen()
+        NotificationScreen(onNavigateBack = {})
     }
 }

@@ -3,19 +3,26 @@ package com.konkuk.moru.presentation.routinefeed.screen.main
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.routinefeed.component.MoruLiveSection
 import com.konkuk.moru.presentation.routinefeed.component.TitledRoutineSection
+import com.konkuk.moru.presentation.routinefeed.component.topAppBar.HomeTopAppBar
+import com.konkuk.moru.presentation.routinefeed.component.topAppBar.HomeTopAppBarPreviewWithNoNotification
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
 import com.konkuk.moru.presentation.routinefeed.data.RoutineInfo
 import com.konkuk.moru.presentation.routinefeed.data.RoutineSectionModel
@@ -27,8 +34,13 @@ import com.konkuk.moru.presentation.routinefeed.data.RoutineSectionModel
  * 현재는 샘플 데이터를 생성합니다.
  */
 @Composable
-fun RoutineFeedScreen(modifier: Modifier = Modifier) {
+fun RoutineFeedScreen(modifier: Modifier = Modifier,
+                      onNavigateToNotification: () -> Unit={}) {
     // --- Sample Data ---
+
+    var searchQuery by remember { mutableStateOf("") }
+    var hasNotification by remember { mutableStateOf(true) }
+
     val liveUsers = remember {
         listOf(
             LiveUserInfo(1, "사용자명", "#운동하자", R.drawable.ic_avatar),
@@ -78,25 +90,53 @@ fun RoutineFeedScreen(modifier: Modifier = Modifier) {
         }
     }
 
-    RoutineFeedContent(
-        modifier = modifier,
-        liveUsers = liveUsers,
-        routineSections = routineSections.map { section ->
-            section.copy(routines = section.routines.map { routine ->
-                routine.copy(isLiked = likedStates[routine.id] ?: routine.isLiked)
-            })
-        },
-        likeCounts = likeCounts,
-        onUserClick = { userId -> println("User $userId clicked") },
-        onLiveTitleClick = { println("Live title clicked") },
-        onRoutineClick = { routineId -> println("Routine $routineId clicked") },
-        onMoreClick = { title -> println("More button for '$title' clicked") },
-        onLikeClick = { routineId, newLikeStatus ->
-            likedStates[routineId] = newLikeStatus
-            val currentCount = likeCounts[routineId] ?: 0
-            likeCounts[routineId] = if (newLikeStatus) currentCount + 1 else currentCount - 1
+
+    Scaffold(
+        topBar = {
+            HomeTopAppBar(
+                searchQuery = searchQuery,
+                onQueryChange = { newQuery ->
+                    searchQuery = newQuery
+                },
+                onSearch = { query ->
+                    println("Search triggered for: '$query'")
+                },
+                hasNotification = hasNotification,
+                /*onNotificationClick = {
+                    hasNotification = !hasNotification
+                },*/
+                onNotificationClick = {
+                    // ◀ 2. 클릭 시에는 화면 이동만 요청합니다.
+                    //    빨간 점 유무와 관계없이 항상 알림 화면으로 이동합니다.
+                    onNavigateToNotification()
+                    if(hasNotification){hasNotification = !hasNotification}
+                },
+
+                onLogoClick = {}
+            )
         }
-    )
+    ) { paddingValues ->
+        // --- 3. RoutineFeedContent에 paddingValues를 전달 ---
+        RoutineFeedContent(
+            modifier = modifier.padding(paddingValues), // Scaffold가 제공하는 패딩 적용
+            liveUsers = liveUsers,
+            routineSections = routineSections.map { section ->
+                section.copy(routines = section.routines.map { routine ->
+                    routine.copy(isLiked = likedStates[routine.id] ?: routine.isLiked)
+                })
+            },
+            likeCounts = likeCounts,
+            onUserClick = { userId -> println("User $userId clicked") },
+            onLiveTitleClick = { println("Live title clicked") },
+            onRoutineClick = { routineId -> println("Routine $routineId clicked") },
+            onMoreClick = { title -> println("More button for '$title' clicked") },
+            onLikeClick = { routineId, newLikeStatus ->
+                likedStates[routineId] = newLikeStatus
+                val currentCount = likeCounts[routineId] ?: 0
+                likeCounts[routineId] = if (newLikeStatus) currentCount + 1 else currentCount - 1
+            }
+        )
+    }
 }
 
 /**
@@ -145,7 +185,7 @@ private fun RoutineFeedContent(
 @Composable
 private fun RoutineFeedScreenWithDataPreview() {
     MaterialTheme {
-        RoutineFeedScreen()
+        RoutineFeedScreen(onNavigateToNotification = {})
     }
 }
 
