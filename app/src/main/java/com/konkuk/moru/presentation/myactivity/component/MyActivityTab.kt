@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.konkuk.moru.core.util.modifier.noRippleClickable
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
@@ -60,7 +61,7 @@ fun MyActivityTab(
                             .weight(1f)
                             .clip(RoundedCornerShape(200.dp))
                             .background(color = if (index == selectedTab) Color(0xFFFFFFFF) else colors.veryLightGray)
-                            .clickable { onTabSelected(index) },
+                            .noRippleClickable {onTabSelected(index)},
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
