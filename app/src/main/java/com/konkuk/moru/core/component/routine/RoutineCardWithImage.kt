@@ -180,7 +180,8 @@ fun RoutineListWithImageScreen() {
                             // 로컬 UI 상태를 즉시 업데이트 (Optimistic UI)
                             val newLikeStatus = !isLiked
                             likedStates[routine.id] = newLikeStatus
-                            likeCounts[routine.id] = if (newLikeStatus) currentLikeCount + 1 else currentLikeCount - 1
+                            likeCounts[routine.id] =
+                                if (newLikeStatus) currentLikeCount + 1 else currentLikeCount - 1
 
                             // TODO: ViewModel을 통해 서버에 API 요청을 보내는 로직 구현
                             println("서버로 '${routine.name}' 좋아요 상태($newLikeStatus) 전송 요청")

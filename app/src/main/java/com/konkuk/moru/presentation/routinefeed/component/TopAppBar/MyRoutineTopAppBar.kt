@@ -9,7 +9,9 @@ import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -76,6 +78,7 @@ fun MyRoutineTopAppBar(
         TabRow(
             selectedTabIndex = selectedTabIndex,
             containerColor = Color.Transparent,
+            modifier = Modifier.graphicsLayer(scaleY = -1f),
             contentColor = Color.White,
             indicator = { tabPositions ->
                 if (selectedTabIndex < tabPositions.size) {
@@ -95,7 +98,7 @@ fun MyRoutineTopAppBar(
                     },
                     text = {
                         Text(
-                            modifier=Modifier.height(15.dp).width(25.dp),
+                            modifier = Modifier.graphicsLayer(scaleY = -1f).height(15.dp).width(25.dp),  //글자마다 길이가 달라서 일단 25로 width 결정
                             text = day,
                             fontSize = 12.sp,
                             fontFamily = moruFontRegular,

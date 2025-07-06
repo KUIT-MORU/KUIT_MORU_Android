@@ -90,31 +90,31 @@ fun HomeTopAppBar(
 }
 
 
-@Preview(name = "HomeTopAppBar Interactive", showBackground = true)
+@Preview(name = "TopAppBar 한글 입력 테스트", showBackground = true)
 @Composable
 fun HomeTopAppBarPreview() {
-    // 1. 프리뷰 내에서 사용할 상태 변수를 remember로 생성합니다.
+    // 1. 프리뷰 안에서 텍스트 상태를 저장할 변수를 만듭니다.
     var searchQuery by remember { mutableStateOf("") }
     var hasNotification by remember { mutableStateOf(true) }
 
     MaterialTheme {
         HomeTopAppBar(
             searchQuery = searchQuery,
-            // 2. onQueryChange가 호출될 때마다 상태 변수(searchQuery)를 업데이트합니다.
-            // 이 부분이 글자 입력을 가능하게 하는 핵심입니다.
+            // 2. 검색창의 글자가 바뀔 때마다 1번에서 만든 상태 변수를 업데이트합니다.
+            //    이 부분이 실시간으로 글자 입력을 가능하게 하는 핵심입니다.
             onQueryChange = { newQuery ->
                 searchQuery = newQuery
             },
             onSearch = { query ->
-                // 실제 검색 로직 대신, 프리뷰에서는 동작 확인을 위해 로그를 출력합니다.
-                println("Search triggered for: '$query'")
+                println("검색 실행: '$query'")
             },
             hasNotification = hasNotification,
             onNotificationClick = {
-                // 알림 아이콘 클릭 시 상태를 반전시켜 아이콘 모양이 바뀌는지 확인합니다.
                 hasNotification = !hasNotification
             },
-            onLogoClick = {}
+            onLogoClick = {
+                println("로고 클릭됨")
+            }
         )
     }
 }
