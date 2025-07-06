@@ -10,7 +10,8 @@ import androidx.navigation.compose.composable
 import com.konkuk.moru.presentation.home.screen.HomeScreen
 import com.konkuk.moru.presentation.myactivity.screen.MyActivityScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesScreen
-import com.konkuk.moru.presentation.routinefeed.screen.RoutineFeedScreen
+import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedScreen
+
 
 @Composable
 fun MainNavGraph(
