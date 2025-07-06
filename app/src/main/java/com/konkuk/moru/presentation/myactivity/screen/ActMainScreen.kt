@@ -34,13 +34,13 @@ fun ActMainScreen(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFFFFFFFF))
-            .padding(start = 16.dp, end = 16.dp)
     ){
         MyProfileTitle(navController)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(1.dp)
+                .padding(start = 16.dp, end = 16.dp)
                 .background(colors.lightGray)
         ){}
 

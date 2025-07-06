@@ -39,6 +39,7 @@ fun ActMyInfo(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp)
             .background(Color(0xFFFFFFFF))
             .height(144.dp)
     ) {

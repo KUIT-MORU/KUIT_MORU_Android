@@ -68,10 +68,9 @@ fun MyActivityTab(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
         when (selectedTab) {
             0 -> {
+                Spacer(modifier = Modifier.height(24.dp))
                 MyInfoDetail(myInfoDetailIcon = R.drawable.ic_heart_a , title = "내 관심 태그")
                 Spacer(modifier = Modifier.height(6.dp))
                 MyInfoDetail(myInfoDetailIcon = R.drawable.ic_graph_a , title = "내 기록")
@@ -80,9 +79,7 @@ fun MyActivityTab(
             }
 
             1 -> {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    Text("인사이트 구현 예정")
-                }
+                InsightContentSection(70)
             }
         }
     }

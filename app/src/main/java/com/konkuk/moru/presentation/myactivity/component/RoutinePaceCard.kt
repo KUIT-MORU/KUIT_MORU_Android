@@ -54,6 +54,7 @@ fun RoutinePaceCard(
         modifier = modifier
             .fillMaxWidth()
             .height(97.dp)
+            .padding(start = 16.dp, end = 16.dp)
             .background(color = colors.charcoalBlack, shape = RoundedCornerShape(8.dp))
     ) {
         Row(

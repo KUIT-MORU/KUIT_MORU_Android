@@ -34,6 +34,7 @@ fun MyProfileTitle(
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp)
+            .padding(start = 16.dp, end = 16.dp)
     ) {
         Text(
             text = "MY PROFILE",
