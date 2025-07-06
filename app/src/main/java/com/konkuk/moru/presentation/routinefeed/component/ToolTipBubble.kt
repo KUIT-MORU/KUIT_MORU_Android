@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.konkuk.moru.ui.theme.moruFontLight
+import com.konkuk.moru.ui.theme.moruFontMedium
 
 
 @Composable
@@ -64,6 +66,7 @@ fun SpecificTooltipPreview() {
             Text(
                 text = "시간대가 설정되지 않은 루틴은 인사이트 분석 시에 제외됩니다.\n정확한 인사이트를 원한다면 시간대를 설정해보세요!",
                 color = Color.White,
+                fontFamily = moruFontLight,
                 fontSize = 12.sp,
                 lineHeight = 18.sp,
                 textAlign = TextAlign.Start,
