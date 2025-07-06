@@ -61,7 +61,7 @@ fun ActMainScreen(
                 selectedTab = selectedTab,
                 onTabSelected = { selectedTab = it },
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .padding(horizontal = 16.dp)
             )
         }

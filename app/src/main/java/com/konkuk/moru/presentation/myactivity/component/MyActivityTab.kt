@@ -31,7 +31,9 @@ fun MyActivityTab(
 ) {
     val tabTitles = listOf("내 정보", "인사이트")
 
-    Column {
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
         Box(
             modifier = modifier
                 .fillMaxWidth()
