@@ -10,4 +10,6 @@ sealed class Route(
     data object MyRoutine : Route(route = "my_routine")
 
     data object MyActivity : Route(route = "my_activity")
+
+    object Notification : Route("notification")
 }
