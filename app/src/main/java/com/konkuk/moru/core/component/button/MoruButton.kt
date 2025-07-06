@@ -92,7 +92,7 @@ fun MoruButton(
 @Composable
 private fun ButtonShapeExamples() {
     Column(
-        modifier = Modifier.padding(16.dp),
+        modifier = Modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
