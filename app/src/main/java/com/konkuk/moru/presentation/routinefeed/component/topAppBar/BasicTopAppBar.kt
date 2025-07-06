@@ -1,4 +1,4 @@
-package com.konkuk.moru.presentation.routinefeed.component.TopAppBar
+package com.konkuk.moru.presentation.routinefeed.component.topAppBar
 
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.icons.Icons
