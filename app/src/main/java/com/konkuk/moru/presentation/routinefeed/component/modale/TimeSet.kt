@@ -1,4 +1,4 @@
-package com.konkuk.moru.presentation.routinefeed.component
+package com.konkuk.moru.presentation.routinefeed.component.modale
 
 import android.os.Build
 import androidx.annotation.RequiresApi

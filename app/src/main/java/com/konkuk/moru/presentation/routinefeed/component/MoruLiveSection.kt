@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.konkuk.moru.R
@@ -43,7 +44,7 @@ fun MoruLiveSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(text = "MORU LIVE", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(2.dp))
             Image(
                 painter = painterResource(id = if (liveUsers.isNotEmpty()) R.drawable.ic_antenna_color else R.drawable.ic_antenna),
                 contentDescription = "Live Status",
@@ -76,4 +77,10 @@ fun MoruLiveSection(
             }
         }
     }
+}
+
+@Composable
+@Preview
+fun MoruLiveSection(){
+    MoruLiveSection()
 }

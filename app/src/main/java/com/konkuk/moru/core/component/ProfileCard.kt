@@ -36,8 +36,7 @@ fun ProfileCard(
             .then(
                 if (backgroundColor != null) Modifier.background(backgroundColor)
                 else Modifier
-            )
-            .padding(16.dp),
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
