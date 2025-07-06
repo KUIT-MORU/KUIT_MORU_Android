@@ -1,36 +1,27 @@
 package com.konkuk.moru.presentation.myactivity.component
 
-import androidx.compose.animation.core.animateDp
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.konkuk.moru.core.util.modifier.noRippleClickable
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
+import com.konkuk.moru.R
 
 @Composable
 fun MyActivityTab(
@@ -77,13 +68,15 @@ fun MyActivityTab(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         when (selectedTab) {
             0 -> {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    Text("내 정보 구현 예정")
-                }
+                MyInfoDetail(myInfoDetailIcon = R.drawable.ic_heart_a , title = "내 관심 태그")
+                Spacer(modifier = Modifier.height(6.dp))
+                MyInfoDetail(myInfoDetailIcon = R.drawable.ic_graph_a , title = "내 기록")
+                Spacer(modifier = Modifier.height(6.dp))
+                MyInfoDetail(myInfoDetailIcon = R.drawable.ic_scrap_a , title = "스크랩한 루틴")
             }
 
             1 -> {
