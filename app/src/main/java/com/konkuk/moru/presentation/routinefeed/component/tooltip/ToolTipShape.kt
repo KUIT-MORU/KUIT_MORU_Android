@@ -1,4 +1,4 @@
-package com.konkuk.moru.presentation.routinefeed.component
+package com.konkuk.moru.presentation.routinefeed.component.tooltip
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.geometry.CornerRadius
