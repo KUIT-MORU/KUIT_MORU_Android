@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import com.konkuk.moru.core.component.MoruBottomBar
 import com.konkuk.moru.presentation.home.component.HomeFloatingActionButton
 import com.konkuk.moru.presentation.home.component.HomeTopAppBar
-import com.konkuk.moru.presentation.home.component.HomeTutorialOverlayContainer
 import com.konkuk.moru.presentation.home.component.RoutineCardList
 import com.konkuk.moru.presentation.home.component.RoutineData
 import com.konkuk.moru.presentation.home.component.TodayRoutinePager
@@ -34,6 +33,8 @@ import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
+
+// 홈 메인 페이지
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier
@@ -56,16 +57,9 @@ fun HomeScreen(
         13 to listOf("주말아침루틴"),
         14 to listOf("주말아침루틴")
     )
+
     Scaffold(
         containerColor = Color.White,
-        bottomBar = {
-            MoruBottomBar(
-                selectedRoute = Route.Home.route,
-                onItemSelected = { route ->
-                    //현재는 HomeScreen에서만 보여줄 것이라 실제 route 변경은 구현 X
-                }
-            )
-        }
     ) { innerPadding ->
 
         Box(modifier=modifier.fillMaxSize()) {
@@ -145,6 +139,7 @@ fun HomeScreen(
                             today = 13
                         )
                     }
+                    Spacer(modifier = modifier.size(15.dp))
                     Divider(
                         modifier = Modifier
                             .fillMaxWidth(),
@@ -176,35 +171,47 @@ fun HomeScreen(
         var showOverlay by remember { mutableStateOf(false) }
 
         Box(modifier = Modifier.fillMaxSize()) {
-            when {
-                showOnboarding -> {
-                    // 온보딩 화면 1
-                    OnboardingScreen(
-                        onNextClick = {
-                            showOnboarding = false
-                            showOverlay = true
-                        },
-                        onCloseClick = {
-                            // 온보딩 건너뛰기 시 모든 튜토리얼 종료
-                            showOnboarding = false
-                            showOverlay = false
-                        }
-                    )
-                }
 
-                showOverlay -> {
-                    // 온보딩 화면 2 (튜토리얼 오버레이)
-                    HomeTutorialOverlayContainer(
-                        onDismiss = {
-                            showOverlay = false
-                        },
-                        onFabClick = {
-                            // FAB 클릭 시 튜토리얼 종료 (또는 다음 단계)
-                            showOverlay = false
-                        }
-                    )
-                }
-            }
+            //BottomBar
+            MoruBottomBar(
+                selectedRoute = Route.Home.route,
+                onItemSelected = { route ->
+                    //현재는 HomeScreen에서만 보여줄 것이라 실제 route 변경은 구현 X
+                },
+                modifier = Modifier
+                    .height(80.dp)
+                    .align(Alignment.BottomCenter)
+            )
+
+//            when {
+//                showOnboarding -> {
+//                    // 온보딩 화면 1
+//                    OnboardingScreen(
+//                        onNextClick = {
+//                            showOnboarding = false
+//                            showOverlay = true
+//                        },
+//                        onCloseClick = {
+//                            // 온보딩 건너뛰기 시 모든 튜토리얼 종료
+//                            showOnboarding = false
+//                            showOverlay = false
+//                        }
+//                    )
+//                }
+//
+//                showOverlay -> {
+//                    // 온보딩 화면 2 (튜토리얼 오버레이)
+//                    HomeTutorialOverlayContainer(
+//                        onDismiss = {
+//                            showOverlay = false
+//                        },
+//                        onFabClick = {
+//                            // FAB 클릭 시 튜토리얼 종료 (또는 다음 단계)
+//                            showOverlay = false
+//                        }
+//                    )
+//                }
+//            }
         }
 
 
