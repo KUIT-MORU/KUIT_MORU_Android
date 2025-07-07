@@ -1,6 +1,7 @@
 package com.konkuk.moru.presentation.home.component
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
+import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
@@ -37,7 +40,7 @@ fun HomeTutorialDecoration(
     onFabClick: () -> Unit
 ) {
     Box(modifier = modifier.fillMaxSize()) {
-        DotWithArrowUp(startX = 53.dp, startY = 304.dp, length = 76.dp)
+        DotWithArrowUp(startX = 53.dp, startY = 296.dp, length = 80.dp)
         Text(
             text = "정기 루틴 확인하기",
             style = typography.time_R_14,
@@ -91,9 +94,9 @@ fun HomeTutorialDecoration(
                 .clickable { onFabClick() }
         )
 
-        BottomBarIconWithLabelOverlay(R.drawable.ic_routine_feed, "루틴 피드", 110.dp, 744.dp)
-        BottomBarIconWithLabelOverlay(R.drawable.ic_my_routine, "내 루틴", 202.dp, 744.dp)
-        BottomBarIconWithLabelOverlay(R.drawable.ic_my_activity, "내 활동", 282.dp, 744.dp)
+        BottomBarIconWithLabelOverlay(R.drawable.ic_routine_feed_white, "루틴 피드", 110.dp, 744.dp)
+        BottomBarIconWithLabelOverlay(R.drawable.ic_my_routine_white, "내 루틴", 202.dp, 744.dp)
+        BottomBarIconWithLabelOverlay(R.drawable.ic_my_activity_white, "내 활동", 282.dp, 744.dp)
 
         Text(
             text = "✕",
@@ -110,7 +113,10 @@ fun HomeTutorialDecoration(
 @Composable
 fun DotWithArrowUp(startX: Dp, startY: Dp, length: Dp) {
     Canvas(
-        modifier = Modifier.offset(x = startX, y = startY).width(1.dp).height(length)
+        modifier = Modifier
+            .offset(x = startX, y = startY)
+            .width(1.dp)
+            .height(length)
     ) {
         drawCircle(Color.White, 4.dp.toPx(), Offset(0.5f, size.height))
         drawLine(
@@ -127,7 +133,10 @@ fun DotWithArrowUp(startX: Dp, startY: Dp, length: Dp) {
 @Composable
 fun DotWithArrow(startX: Dp, startY: Dp, length: Dp) {
     Canvas(
-        modifier = Modifier.offset(x = startX, y = startY).width(1.dp).height(length)
+        modifier = Modifier
+            .offset(x = startX, y = startY)
+            .width(1.dp)
+            .height(length)
     ) {
         drawCircle(Color.White, 4.dp.toPx(), Offset(0.5f, 0f))
         drawLine(
@@ -144,22 +153,47 @@ fun DotWithArrow(startX: Dp, startY: Dp, length: Dp) {
 @Composable
 fun DotWithBentArrow(startX: Dp, startY: Dp, verticalLength: Dp, horizontalLength: Dp) {
     Canvas(
-        modifier = Modifier.offset(x = startX, y = startY).width(horizontalLength + 4.dp).height(verticalLength + 4.dp)
+        modifier = Modifier
+            .offset(x = startX, y = startY)
+            .width(horizontalLength + 4.dp)
+            .height(verticalLength + 4.dp)
     ) {
         val dotRadius = 4.dp.toPx()
         val strokeWidth = 2.dp.toPx()
         drawCircle(Color.White, dotRadius, Offset(0.5f, 0f))
-        drawLine(Color.White, Offset(0.5f, dotRadius), Offset(0.5f, verticalLength.toPx()), strokeWidth, StrokeCap.Round, PathEffect.dashPathEffect(floatArrayOf(12f, 12f)))
-        drawLine(Color.White, Offset(0.5f, verticalLength.toPx()), Offset(horizontalLength.toPx(), verticalLength.toPx()), strokeWidth, StrokeCap.Round, PathEffect.dashPathEffect(floatArrayOf(12f, 12f)))
+        drawLine(
+            Color.White,
+            Offset(0.5f, dotRadius),
+            Offset(0.5f, verticalLength.toPx()),
+            strokeWidth,
+            StrokeCap.Round,
+            PathEffect.dashPathEffect(floatArrayOf(12f, 12f))
+        )
+        drawLine(
+            Color.White,
+            Offset(0.5f, verticalLength.toPx()),
+            Offset(horizontalLength.toPx(), verticalLength.toPx()),
+            strokeWidth,
+            StrokeCap.Round,
+            PathEffect.dashPathEffect(floatArrayOf(12f, 12f))
+        )
     }
 }
 
 @Composable
-fun SimpleBottomTailBalloon(text: String, offsetX: Dp, offsetY: Dp, balloonWidth: Dp = 138.dp, balloonHeight: Dp = 50.dp) {
+fun SimpleBottomTailBalloon(
+    text: String,
+    offsetX: Dp,
+    offsetY: Dp,
+    balloonWidth: Dp = 138.dp,
+    balloonHeight: Dp = 42.dp
+) {
     val tailHeight = 8.dp
     val tailWidth = 12.dp
     Box(
-        modifier = Modifier.offset(x = offsetX, y = offsetY).wrapContentSize()
+        modifier = Modifier
+            .offset(x = offsetX, y = offsetY)
+            .wrapContentSize()
     ) {
         Canvas(
             modifier = Modifier.size(width = balloonWidth, height = balloonHeight + tailHeight)
@@ -175,7 +209,15 @@ fun SimpleBottomTailBalloon(text: String, offsetX: Dp, offsetY: Dp, balloonWidth
             val tailEndX = tailTipX + tailWidthPx / 2
             val tailTipY = size.height
             val path = Path().apply {
-                addRoundRect(RoundRect(0f, 0f, balloonRight, balloonBottom, CornerRadius(cornerRadius)))
+                addRoundRect(
+                    RoundRect(
+                        0f,
+                        0f,
+                        balloonRight,
+                        balloonBottom,
+                        CornerRadius(cornerRadius)
+                    )
+                )
                 moveTo(tailStartX, balloonBottom)
                 lineTo(tailTipX, tailTipY)
                 lineTo(tailEndX, balloonBottom)
@@ -185,10 +227,14 @@ fun SimpleBottomTailBalloon(text: String, offsetX: Dp, offsetY: Dp, balloonWidth
             drawPath(path, Color(0xffF3FFD9), style = Stroke(width = strokeWidth))
         }
         Box(
-            modifier = Modifier.size(balloonWidth, balloonHeight).padding(horizontal = 8.dp),
+            modifier = Modifier
+                .size(balloonWidth, balloonHeight)
+                .border(width=1.dp,color=colors.oliveGreen,shape= RoundedCornerShape(8.dp))
+                .padding(horizontal = 8.dp)
+            ,
             contentAlignment = Alignment.Center
         ) {
-            Text(text, style = typography.body_SB_16, color = Color(0xFF7AB300))
+            Text(text, style = typography.body_SB_16, color = colors.oliveGreen)
         }
     }
 }
@@ -196,13 +242,17 @@ fun SimpleBottomTailBalloon(text: String, offsetX: Dp, offsetY: Dp, balloonWidth
 @Composable
 fun BottomBarIconWithLabelOverlay(iconResId: Int, label: String, offsetX: Dp, offsetY: Dp) {
     Box(
-        modifier = Modifier.offset(x = offsetX, y = offsetY).wrapContentSize(),
+        modifier = Modifier
+            .offset(x = offsetX, y = offsetY)
+            .wrapContentSize(),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             painter = painterResource(id = iconResId),
             contentDescription = label,
-            modifier = Modifier.width(16.dp).height(17.5.dp),
+            modifier = Modifier
+                .width(16.dp)
+                .height(17.5.dp),
             tint = Color.White
         )
         Text(

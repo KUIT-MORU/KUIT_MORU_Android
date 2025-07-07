@@ -37,7 +37,7 @@ fun TodayWeekTab(
                         Text(
                             text = title,
                             style = typography.desc_M_14,
-                            color = if (selectedTabIndex == index) colors.black else colors.lightGray
+                            color = if (selectedTabIndex == index) colors.black else colors.mediumGray
                         )
                     }
                 )

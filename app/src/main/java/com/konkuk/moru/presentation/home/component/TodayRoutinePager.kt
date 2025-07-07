@@ -49,7 +49,7 @@ fun TodayRoutinePager(
             )
         }
 
-        Spacer(modifier = modifier.size(8.dp))
+        Spacer(modifier = Modifier.height(19.dp))
 
         HorizontalPagerIndicator(
             pagerState = pagerState,
@@ -62,7 +62,11 @@ fun TodayRoutinePager(
 
 }
 
-@Preview(showBackground = true)
+@Preview(
+    showBackground = true,
+    widthDp = 360,
+    heightDp = 800
+)
 @Composable
 private fun TodayRoutinePagerPreview() {
     val sampleRoutines = listOf(
