@@ -2,6 +2,7 @@ package com.konkuk.moru.presentation.routinefeed.screen.follow
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -106,6 +107,8 @@ fun FollowScreen(
                     )
                 }
             }
+
+            Spacer(modifier=Modifier.padding(top=11.dp))
 
             // 4. when 문 대신 HorizontalPager를 사용합니다.
             HorizontalPager(

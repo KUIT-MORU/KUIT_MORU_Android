@@ -3,8 +3,10 @@ package com.konkuk.moru.presentation.routinefeed.component.topAppBar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -18,7 +20,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -26,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,22 +41,23 @@ import com.konkuk.moru.ui.theme.moruFontSemiBold
  * '내 루틴' 화면에서 사용하는 TopAppBar와 요일 선택 탭
  * @param onInfoClick 정보 아이콘 클릭 시 동작
  * @param onTrashClick 휴지통 아이콘 클릭 시 동작
- * @param onDaySelected 요일 탭 선택 시 동작 (선택된 요일의 인덱스를 전달)
+ * @param onDaySelected 요일 탭 선택 시 동작 (선택된 요일의 인덱스를 전달, 아무것도 선택되지 않으면 null 전달)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyRoutineTopAppBar(
     onInfoClick: () -> Unit,
     onTrashClick: () -> Unit,
-    onDaySelected: (Int) -> Unit,
+    onDaySelected: (Int?) -> Unit, // 변경점 1: 콜백 파라미터 타입을 Int?로 변경
     modifier: Modifier = Modifier
 ) {
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    // 변경점 2: 상태 변수를 Int? 타입으로 변경하고 초기값을 null로 설정
+    var selectedDayIndex by remember { mutableStateOf<Int?>(null) }
     val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
 
     Column(modifier = modifier.background(Color(0xFF212120))) {
-        // 1. 상단 바
+        // 1. 상단 바 (변경 없음)
         TopAppBar(
             title = {
                 Text(
@@ -80,40 +84,49 @@ fun MyRoutineTopAppBar(
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent, // Column 배경색을 사용하기 위해 투명으로
+                containerColor = Color.Transparent,
                 actionIconContentColor = Color.Gray
             )
         )
 
         // 2. 요일 선택 탭
         TabRow(
-            selectedTabIndex = selectedTabIndex,
+            selectedTabIndex = selectedDayIndex ?: -1, // 선택된 탭이 없을 경우 기본값으로 -1 전달
             containerColor = Color.Transparent,
             modifier = Modifier.graphicsLayer(scaleY = -1f),
             contentColor = Color.White,
             indicator = { tabPositions ->
-                if (selectedTabIndex < tabPositions.size) {
-                    TabRowDefaults.SecondaryIndicator(
-                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                        color = Color.White // 선택된 탭 하단 선 색상
-                    )
+                // 변경점 3: 선택된 인덱스가 null이 아닐 때만 인디케이터(밑줄)를 표시
+                selectedDayIndex?.let {
+                    if (it < tabPositions.size) {
+                        TabRowDefaults.SecondaryIndicator(
+                            modifier = Modifier.tabIndicatorOffset(tabPositions[it]),
+                            color = Color.White
+                        )
+                    }
                 }
             }
         ) {
             days.forEachIndexed { index, day ->
                 Tab(
-                    selected = selectedTabIndex == index,
+                    selected = selectedDayIndex == index,
                     onClick = {
-                        selectedTabIndex = index
-                        onDaySelected(index)
+                        // 변경점 4: 토글 로직 구현 및 콜백 호출
+                        selectedDayIndex = if (selectedDayIndex == index) null else index
+                        onDaySelected(selectedDayIndex)
                     },
                     text = {
                         Text(
-                            modifier = Modifier.graphicsLayer(scaleY = -1f).height(15.dp).width(25.dp),  //글자마다 길이가 달라서 일단 25로 width 결정
+                            modifier = Modifier
+                                .graphicsLayer(scaleY = -1f)
+                                .heightIn(min = 25.dp)
+                                .widthIn(min = 80.dp),
                             text = day,
                             fontSize = 12.sp,
                             fontFamily = moruFontRegular,
-                            color = if (selectedTabIndex == index) Color.White else Color.Gray,
+                            maxLines = 1,          // ① 한 줄만
+                            softWrap = false,
+                            color = if (selectedDayIndex == index) Color.White else Color.Gray,
                         )
                     }
                 )

@@ -353,13 +353,13 @@ private fun DayOfWeekSelector(selectedDays: Set<DayOfWeek>, onDayClick: (DayOfWe
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(if (isSelected) MORUTheme.colors.mediumGray else Color.Transparent)
+                    .background(if (isSelected) MORUTheme.colors.limeGreen else Color.Transparent)
                     .clickable { onDayClick(day) },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = dayShortName,
-                    color = if (isSelected) Color.Black else Color.Gray,
+                    color = if (isSelected) Color.White else Color.Black,
                     textAlign = TextAlign.Center
                 )
             }
