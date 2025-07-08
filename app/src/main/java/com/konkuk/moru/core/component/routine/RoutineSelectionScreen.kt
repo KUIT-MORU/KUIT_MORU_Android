@@ -1,4 +1,3 @@
-
 package com.konkuk.moru.core.component.routine
 
 import androidx.compose.foundation.Image
@@ -10,7 +9,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,10 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.konkuk.moru.R // 실제 프로젝트의 R 클래스를 임포트하세요.
 
-
-/**
- * 체크박스가 포함된 루틴 리스트 아이템
- */
 @Composable
 fun RoutineListItem(
     modifier: Modifier = Modifier,
@@ -32,32 +29,31 @@ fun RoutineListItem(
     routineName: String,
     tags: List<String>,
     likeCount: Int,
-    isLiked: Boolean, // 변경점: 좋아요 상태 파라미터 추가
-    isChecked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    onLikeClick: () -> Unit // 변경점: 좋아요 클릭 이벤트 파라미터 추가
+    isLiked: Boolean,
+    showCheckbox: Boolean = false,
+    isChecked: Boolean = false,
+    onCheckedChange: (Boolean) -> Unit = {},
+    onLikeClick: () -> Unit
 ) {
+    // ▼▼▼ [수정됨] Row 전체를 감싸던 clickable Modifier 제거 ▼▼▼
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onCheckedChange(!isChecked) }
             .padding(vertical = 12.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 좌측 이미지
         val imageResource = if (isRunning) R.drawable.ic_routine_square_running else R.drawable.ic_routine_square_stop
-        Image(painter = painterResource(id = imageResource), contentDescription = routineName, modifier = Modifier.size(64.dp))
+        Image(painter = painterResource(id = imageResource), contentDescription = routineName, modifier = Modifier.size(72.dp))
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        // 중앙 텍스트 영역
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = routineName, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = tags.joinToString(", "), color = Color.Gray, fontSize = 14.sp)
-            Spacer(modifier = Modifier.height(6.dp))
+        Column(modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(text = routineName, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(text = tags.joinToString(" "), color = Color.Gray, fontSize = 12.sp)
 
-            // 변경점: 좋아요 Row에 clickable 추가 및 아이콘/색상 상태 반영
+            // 이제 이 Row의 clickable이 정상적으로 동작합니다.
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.clickable { onLikeClick() }
@@ -72,24 +68,27 @@ fun RoutineListItem(
                 Text(
                     text = likeCount.toString(),
                     color = if (isLiked) Color.Black else Color.Gray,
-                    fontSize = 14.sp
+                    fontSize = 12.sp
                 )
             }
         }
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        // 우측 체크박스 아이콘
-        val checkboxIcon = if (isChecked) R.drawable.check_box else R.drawable.empty_box
-        IconButton(onClick = { onCheckedChange(!isChecked) }) {
-            Icon(painter = painterResource(id = checkboxIcon), contentDescription = "Checkbox", modifier = Modifier.size(24.dp), tint = Color.Unspecified)
+        if (showCheckbox) {
+            IconButton(onClick = { onCheckedChange(!isChecked) }) {
+                val icon = if (isChecked) R.drawable.check_box else R.drawable.empty_box
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = "Checkbox",
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 }
 
-/**
- * 여러 루틴을 보여주고 선택할 수 있는 화면
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoutineSelectionScreen() {

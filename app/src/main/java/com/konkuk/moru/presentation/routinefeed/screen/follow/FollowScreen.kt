@@ -36,6 +36,10 @@ fun FollowScreen(
     val pagerState = rememberPagerState { tabs.size }
     val scope = rememberCoroutineScope()
 
+    /*val followers = remember { mutableStateListOf<FollowUser>() }   // ★ 일부러 비워 둔 프리뷰용
+    val followings = remember { mutableStateListOf<FollowUser>() }*/
+
+
     // 임시 데이터 (이 부분은 동일합니다)
     val followers = remember {
         mutableStateListOf(

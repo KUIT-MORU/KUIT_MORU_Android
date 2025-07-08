@@ -57,7 +57,7 @@ fun TitledRoutineSection(
                 RoutineCardWithImage(
                     isRunning = routine.isRunning,
                     routineName = routine.name,
-                    tag = routine.tag,
+                    tags = routine.tags,
                     likeCount = likeCounts[routine.id] ?: routine.likes, // 좋아요 수는 나중에 상태관리 필요
                     isLiked = routine.isLiked,
                     onLikeClick = { onLikeClick(routine.id, !routine.isLiked) },
@@ -73,10 +73,10 @@ fun TitledRoutineSection(
 fun TitledRoutineSectionPreview() {
     // 1. 프리뷰에 사용할 가상 데이터(샘플) 생성
     val sampleRoutines = listOf(
-        RoutineInfo(id = 1, isRunning = true, name = "아침 조깅", tag = "#운동", likes = 25, isLiked = true),
-        RoutineInfo(id = 2, isRunning = false, name = "미라클 모닝", tag = "#자기계발", likes = 42, isLiked = false),
-        RoutineInfo(id = 3, isRunning = false, name = "책 20페이지 읽기", tag = "#독서", likes = 18, isLiked = true),
-        RoutineInfo(id = 4, isRunning = false, name = "물 2L 마시기", tag = "#건강", likes = 33, isLiked = false)
+        RoutineInfo(id = 1, isRunning = true, name = "아침 조깅", tags = listOf("#운동"), likes = 25, isLiked = true),
+        RoutineInfo(id = 2, isRunning = false, name = "미라클 모닝", tags = listOf("#자기계발"), likes = 42, isLiked = false),
+        RoutineInfo(id = 3, isRunning = false, name = "책 20페이지 읽기", tags = listOf("#독서"), likes = 18, isLiked = true),
+        RoutineInfo(id = 4, isRunning = false, name = "물 2L 마시기", tags = listOf("#건강"), likes = 33, isLiked = false)
     )
 
     // 2. 좋아요 수는 상태에 따라 변할 수 있으므로 Map 형태로 관리

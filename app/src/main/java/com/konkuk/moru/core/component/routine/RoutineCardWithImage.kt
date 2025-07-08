@@ -55,7 +55,7 @@ fun RoutineCardWithImage(
     modifier: Modifier = Modifier,
     isRunning: Boolean,
     routineName: String,
-    tag: String,
+    tags: List<String>,
     likeCount: Int,
     isLiked: Boolean,
     onLikeClick: () -> Unit,
@@ -92,7 +92,7 @@ fun RoutineCardWithImage(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "#$tag",
+            text = tags.joinToString(" ") { "#$it" },
             fontSize = 14.sp,
             color = Color.Gray
         )
@@ -124,7 +124,7 @@ fun RoutineListWithImageScreen() {
     data class RoutineInfo(
         val id: Int,
         val name: String,
-        val tag: String,
+        val tags: List<String>,
         val likes: Int,
         val isRunning: Boolean,
         val isLiked: Boolean
@@ -133,10 +133,12 @@ fun RoutineListWithImageScreen() {
     // 2. 서버에서 받았다고 가정한 샘플 데이터
     val routines = remember {
         listOf(
-            RoutineInfo(1, "매일 조깅하기", "운동", 16, isRunning = true, isLiked = true),
-            RoutineInfo(2, "아침 책읽기", "독서", 25, isRunning = false, isLiked = false),
-            RoutineInfo(3, "영어 공부", "학습", 8, isRunning = true, isLiked = false),
-            RoutineInfo(4, "요리 배우기", "취미", 112, isRunning = false, isLiked = true),
+            // tag = "운동" -> tags = listOf("운동")
+            RoutineInfo(1, "매일 조깅하기", listOf("운동"), 16, isRunning = true, isLiked = true),
+            // 여러 태그가 있는 경우
+            RoutineInfo(2, "아침 책읽기", listOf("독서", "자기계발"), 25, isRunning = false, isLiked = false),
+            RoutineInfo(3, "영어 공부", listOf("학습", "외국어"), 8, isRunning = true, isLiked = false),
+            RoutineInfo(4, "요리 배우기", listOf("취미", "쿠킹"), 112, isRunning = false, isLiked = true),
         )
     }
 
@@ -174,7 +176,7 @@ fun RoutineListWithImageScreen() {
                     RoutineCardWithImage(
                         isRunning = routine.isRunning,
                         routineName = routine.name,
-                        tag = routine.tag,
+                        tags = routine.tags,
                         likeCount = currentLikeCount,
                         isLiked = isLiked,
                         onClick = {

@@ -54,6 +54,7 @@ fun EmptyFollowContent(
             )
 
             Spacer(modifier=Modifier.padding(3.dp))
+
             Text(
 
                 text = subMessage,

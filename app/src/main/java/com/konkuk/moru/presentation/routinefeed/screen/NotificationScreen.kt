@@ -4,22 +4,28 @@ import android.R.attr.color
 import android.R.attr.onClick
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.konkuk.moru.R
 import com.konkuk.moru.presentation.routinefeed.component.notification.NotificationGroup
 
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppBar
@@ -66,7 +72,8 @@ fun NotificationScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                            contentDescription = "뒤로가기"
+                            contentDescription = "뒤로가기",
+                            modifier = Modifier.size(32.dp)
                         )
                     }
                 },
@@ -115,6 +122,12 @@ fun NotificationScreen(
                             "더보기",
                             color = Color.Gray,
                             fontWeight = FontWeight.Bold
+                        )
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_arrow_down),
+                            contentDescription = "아래화살표",
+                            tint = Color.Unspecified, // 원본 아이콘 색상 사용
+                            modifier=Modifier.size(16.dp)
                         )
                     }
                 }

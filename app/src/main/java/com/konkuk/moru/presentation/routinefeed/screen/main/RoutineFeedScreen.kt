@@ -22,7 +22,6 @@ import com.konkuk.moru.R
 import com.konkuk.moru.presentation.routinefeed.component.MoruLiveSection
 import com.konkuk.moru.presentation.routinefeed.component.TitledRoutineSection
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.HomeTopAppBar
-import com.konkuk.moru.presentation.routinefeed.component.topAppBar.HomeTopAppBarPreviewWithNoNotification
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
 import com.konkuk.moru.presentation.routinefeed.data.RoutineInfo
 import com.konkuk.moru.presentation.routinefeed.data.RoutineSectionModel
@@ -58,24 +57,24 @@ fun RoutineFeedScreen(modifier: Modifier = Modifier,
             RoutineSectionModel(
                 title = "지금 가장 핫한 루틴은?",
                 routines = listOf(
-                    RoutineInfo(1, "아침 10분 요가하하하", "건강", 112, false, true),
-                    RoutineInfo(2, "매일 TIL 작성하기", "개발", 98, false, false),
-                    RoutineInfo(3, "점심시간 산책", "운동", 76, true, false),
-                    RoutineInfo(4, "하루 30분 책읽기", "독서", 65, false, true),
-                    RoutineInfo(5, "외국어 단어 10개", "학습", 51, false, false)
+                    RoutineInfo(1, "아침 10분 요가하하하", listOf("건강"), 112, false, true),
+                    RoutineInfo(2, "매일 TIL 작성하기", listOf("개발"), 98, false, false),
+                    RoutineInfo(3, "점심시간 산책", listOf("운동"), 76, true, false),
+                    RoutineInfo(4, "하루 30분 책읽기", listOf("독서"), 65, false, true),
+                    RoutineInfo(5, "외국어 단어 10개", listOf("학습"), 51, false, false)
                 )
             ),
             RoutineSectionModel(
                 "MORU님과 딱 맞는 루틴",
-                List(5) { RoutineInfo(it + 10, "맞춤 루틴", "독서", 25, false, it % 3 == 0) }
+                List(5) { RoutineInfo(it + 10, "맞춤 루틴", listOf("독서"), 25, false, it % 3 == 0) }
             ),
             RoutineSectionModel(
                 "#지하철#독서",
-                List(5) { RoutineInfo(it + 20, "맞춤 루틴", "독서", 25, false, it % 3 == 0) }
+                List(5) { RoutineInfo(it + 20, "맞춤 루틴", listOf("독서"), 25, false, it % 3 == 0) }
             ),
             RoutineSectionModel(
                 "#운동#명상",
-                List(5) { RoutineInfo(it + 30, "맞춤 루틴", "독서", 25, false, it % 3 == 0) }
+                List(5) { RoutineInfo(it + 30, "맞춤 루틴", listOf("독서"), 25, false, it % 3 == 0) }
             )
         )
     }
@@ -109,7 +108,7 @@ fun RoutineFeedScreen(modifier: Modifier = Modifier,
                     // ◀ 2. 클릭 시에는 화면 이동만 요청합니다.
                     //    빨간 점 유무와 관계없이 항상 알림 화면으로 이동합니다.
                     onNavigateToNotification()
-                    if(hasNotification){hasNotification = !hasNotification}
+                    hasNotification = false
                 },
 
                 onLogoClick = {}
@@ -194,8 +193,8 @@ private fun RoutineFeedScreenWithDataPreview() {
 private fun RoutineFeedScreenWithoutLivePreview() {
     val routineSections = remember {
         listOf(
-            RoutineSectionModel("지금 가장 핫한 루틴은?", List(5) { RoutineInfo(it, "루틴명", "#운동", 16, false, false) }),
-            RoutineSectionModel("MORU님과 딱 맞는 루틴", List(5) { RoutineInfo(it + 10, "맞춤 루틴", "#독서", 25, false, false) })
+            RoutineSectionModel("지금 가장 핫한 루틴은?", List(5) { RoutineInfo(it, "루틴명", listOf("#운동"), 16, false, false) }),
+            RoutineSectionModel("MORU님과 딱 맞는 루틴", List(5) { RoutineInfo(it + 10, "맞춤 루틴", listOf("#독서"), 25, false, false) })
         )
     }
 

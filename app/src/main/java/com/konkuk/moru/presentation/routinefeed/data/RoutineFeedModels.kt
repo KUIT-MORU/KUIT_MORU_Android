@@ -12,7 +12,7 @@ data class LiveUserInfo(
 data class RoutineInfo(
     val id: Int,
     val name: String,
-    val tag: String,
+    val tags: List<String>,
     val likes: Int,
     val isRunning: Boolean,
     var isLiked: Boolean
