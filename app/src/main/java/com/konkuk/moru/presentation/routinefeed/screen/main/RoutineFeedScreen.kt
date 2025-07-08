@@ -58,7 +58,7 @@ fun RoutineFeedScreen(modifier: Modifier = Modifier,
             RoutineSectionModel(
                 title = "지금 가장 핫한 루틴은?",
                 routines = listOf(
-                    RoutineInfo(1, "아침 10분 요가", "건강", 112, false, true),
+                    RoutineInfo(1, "아침 10분 요가하하하", "건강", 112, false, true),
                     RoutineInfo(2, "매일 TIL 작성하기", "개발", 98, false, false),
                     RoutineInfo(3, "점심시간 산책", "운동", 76, true, false),
                     RoutineInfo(4, "하루 30분 책읽기", "독서", 65, false, true),

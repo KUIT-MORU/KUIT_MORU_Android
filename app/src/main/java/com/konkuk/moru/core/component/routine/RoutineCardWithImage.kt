@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextOverflow
 import com.konkuk.moru.R // 실제 프로젝트의 R 클래스를 임포트하세요.
 
 class MainActivity : ComponentActivity() {
@@ -61,7 +62,9 @@ fun RoutineCardWithImage(
     onClick: () -> Unit,
 ) {
     Column(
-        modifier = modifier.clickable { onClick() }
+        modifier = modifier
+            .width(98.dp)
+            .clickable { onClick() }
     ) {
         val imageResource = if (isRunning) {
             R.drawable.ic_routine_rectangle_running
@@ -75,7 +78,7 @@ fun RoutineCardWithImage(
             modifier = Modifier
                 .width(98.dp)
                 .height(130.dp),
-            contentScale = ContentScale.Fit
+            //contentScale = ContentScale.Fit
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -83,7 +86,9 @@ fun RoutineCardWithImage(
         Text(
             text = routineName,
             fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
+            fontSize = 12.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
