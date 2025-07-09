@@ -9,5 +9,5 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier) {
-    Text(text = "Home Screen", modifier = modifier.background(color = colors.black50Opacity), style = typography.head_EB_24)
+    Text(text = "Home Screen", modifier = modifier.background(color = colors.black50Oopacity), style = typography.head_EB_24)
 }
