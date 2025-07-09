@@ -3,6 +3,10 @@ package com.konkuk.moru.presentation.navigation
 sealed class Route(
     val route: String
 ) {
+    data object Login : Route("login")
+    data object SignUp : Route("sign_up")
+    data object Main : Route("main")
+
     data object Home : Route(route = "home")
 
     data object RoutineFeed : Route(route = "routine_feed")
