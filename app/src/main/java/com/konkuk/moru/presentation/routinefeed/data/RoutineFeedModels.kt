@@ -22,3 +22,13 @@ data class RoutineSectionModel(
     val title: String,
     val routines: List<RoutineInfo>
 )
+
+/* ---------- 모델 ---------- */
+data class HotRoutine(
+    val id: Int,
+    val name: String,
+    val tags: List<String>,
+    val likes: Int,
+    val isLiked: Boolean,
+    val isRunning: Boolean
+)
