@@ -125,12 +125,12 @@ private fun UserProfileContent(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, top = 24.dp, bottom = 8.dp)
+                    .padding(start = 17.dp, top = 13.dp)
             )
         }
         if (state.userRoutines.isEmpty()) {
             item {
-                EmptyRoutineView(modifier = Modifier.padding(vertical = 48.dp))
+                EmptyRoutineView(modifier = Modifier.padding(vertical = 93.dp))
             }
         } else {
             items(state.userRoutines, key = { it.id }) { routine ->
@@ -267,15 +267,15 @@ private fun ExpandableRoutineSection(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 24.dp),
+                        .padding(vertical = 25.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_profile_with_background),
+                        painter = painterResource(id = R.drawable.ic_person_standing),
                         contentDescription = null,
                         modifier = Modifier.size(32.dp),
-                        tint = Color.Gray
+                        tint = Color.Unspecified
                     )
                     Text("현재 실행중인 루틴이 없습니다.", color = Color.Gray)
                 }
