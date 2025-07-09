@@ -28,7 +28,7 @@ data class MoruColors(
     val veryLightGray: Color,
     val charcoalBlack: Color,
     val black50Oopacity: Color,
-    val Red: Color
+    val red: Color
 )
 
 val defaultMoruColors = MoruColors(
@@ -42,7 +42,7 @@ val defaultMoruColors = MoruColors(
     veryLightGray = VeryLightGray,
     charcoalBlack = CharcoalBlack,
     black50Oopacity = Black50Oopacity,
-    Red = Red
+    red = Red
 )
 
 val LocalMoruColorsProvider = staticCompositionLocalOf { defaultMoruColors }
