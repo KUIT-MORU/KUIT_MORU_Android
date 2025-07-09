@@ -98,7 +98,8 @@ fun LoginTextFieldBasic(
         decorationBox = { innerTextField ->
             Box(
                 modifier = Modifier
-                    .fillMaxSize().padding(horizontal = 16.dp),
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
                 if (value.isEmpty()) {

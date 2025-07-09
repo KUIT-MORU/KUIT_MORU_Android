@@ -38,7 +38,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             MORUTheme {
                 val navController = rememberNavController()
-                val isLoggedIn = remember { mutableStateOf(false) } // 로그인 상태를 관리하는 상태 변수로 실제로는 DataStore 등을 사용해 토큰이나 로그인 상태를 저장해야 함
+                val isLoggedIn =
+                    remember { mutableStateOf(false) } // 로그인 상태를 관리하는 상태 변수로 실제로는 DataStore 등을 사용해 토큰이나 로그인 상태를 저장해야 함
 
                 AppNavGraph(
                     navController = navController,
