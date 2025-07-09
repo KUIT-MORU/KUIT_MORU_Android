@@ -64,7 +64,7 @@ fun InsightGraphA(
                 Text(
                     text = (averageScore - myScore).toInt().toString() + "점 ",
                     style = typography.desc_M_12,
-                    color = colors.red
+                    color = colors.Red
                 )
                 Text(text = "낮아요. 분발해요!", style = typography.desc_M_12, color = colors.darkGray)
             }
@@ -72,7 +72,7 @@ fun InsightGraphA(
                 Text(
                     text = (myScore - averageScore).toInt().toString() + "점 ",
                     style = typography.desc_M_12,
-                    color = colors.red
+                    color = colors.Red
                 )
                 Text(
                     text = "높아요. 우수한 상태시네요!",

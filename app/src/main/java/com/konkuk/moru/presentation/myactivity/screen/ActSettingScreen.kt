@@ -77,7 +77,7 @@ fun ActSettingScreen(
                 ) {
                     Text(
                         text = title,
-                        color = if (title == "탈퇴") colors.red else colors.black,
+                        color = if (title == "탈퇴") colors.Red else colors.black,
                         style = typography.desc_M_16,
                         modifier = Modifier.weight(1f)
                     )
