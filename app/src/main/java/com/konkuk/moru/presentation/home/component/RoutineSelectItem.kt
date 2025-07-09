@@ -53,23 +53,25 @@ fun RoutineSelectItem(
 
     Box(
         modifier = modifier
-            .width(328.dp)
+            .width(196.dp)
             .height(52.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(backgroundColor)
             .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(10.dp))
             .clickable { onClick() }
-
+            .padding(top = 11.dp, bottom = 10.dp)
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 19.dp, bottom = 17.dp),
+                .fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Spacer(modifier = modifier.size(30.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             Box(
-                modifier = Modifier.width(153.dp)
+                modifier = Modifier
+                    .width(153.dp)
+                    .height(31.dp),
+                contentAlignment = Alignment.CenterStart
             ) {
                 Text(
                     text = text,
@@ -77,13 +79,14 @@ fun RoutineSelectItem(
                     color = colors.charcoalBlack
                 )
             }
-            Spacer(modifier = Modifier.size(103.dp))
+            Spacer(modifier = Modifier.width(5.dp))
             Box(
                 modifier = Modifier
                     .size(18.dp)
                     .clip(CircleShape)
                     .background(if (isSelected) colors.limeGreen else Color.Transparent)
-                    .border(width = 1.dp, color = iconBorder, shape = CircleShape)
+                    .border(width = 1.dp, color = iconBorder, shape = CircleShape),
+                contentAlignment = Alignment.Center
 
             ) {
                 if (isSelected) {
@@ -91,13 +94,10 @@ fun RoutineSelectItem(
                         painter = painterResource(id = R.drawable.check_icon),
                         contentDescription = null,
                         modifier = Modifier
-                            .width(10.31.dp)
-                            .height(7.48.dp)
-                            .align(Alignment.Center)
+                            .size(16.dp)
                     )
                 }
             }
-            Spacer(modifier = Modifier.width(25.dp))
         }
     }
 }
