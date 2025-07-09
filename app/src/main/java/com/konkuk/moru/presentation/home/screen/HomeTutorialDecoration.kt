@@ -1,9 +1,13 @@
 package com.konkuk.moru.presentation.home.component
 
+import android.R.attr.strokeWidth
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -25,6 +29,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -85,7 +90,7 @@ fun HomeTutorialDecoration(
             modifier = modifier.offset(x = 159.dp, y = 582.dp)
         )
 
-        SimpleBottomTailBalloon(text = "바로 생성하기! > ", offsetX = 213.dp, offsetY = 451.dp)
+        SimpleBottomTailBalloon(image = R.drawable.right_arrow_green,text = "바로 생성하기!", offsetX = 213.dp, offsetY = 451.dp)
 
         Box(
             modifier = modifier
@@ -183,11 +188,15 @@ fun DotWithBentArrow(startX: Dp, startY: Dp, verticalLength: Dp, horizontalLengt
 @Composable
 fun SimpleBottomTailBalloon(
     text: String,
+    image:Int,
     offsetX: Dp,
     offsetY: Dp,
     balloonWidth: Dp = 138.dp,
     balloonHeight: Dp = 42.dp
 ) {
+    //올리브 그린 색 미리 빼기(colors.oliveGreen 은 MORUTheme.colors 에 들어 있는 CompositionLocal 값이라)
+    val borderColor = colors.oliveGreen
+    val strokeWidthDp = 2.dp
     val tailHeight = 8.dp
     val tailWidth = 12.dp
     Box(
@@ -198,43 +207,56 @@ fun SimpleBottomTailBalloon(
         Canvas(
             modifier = Modifier.size(width = balloonWidth, height = balloonHeight + tailHeight)
         ) {
+            val strokePx     = strokeWidthDp.toPx()
             val cornerRadius = 10.dp.toPx()
-            val strokeWidth = 1.dp.toPx()
             val tailHeightPx = tailHeight.toPx()
-            val tailWidthPx = tailWidth.toPx()
-            val balloonRight = size.width
+            val tailWidthPx  = tailWidth.toPx()
+
             val balloonBottom = size.height - tailHeightPx
-            val tailTipX = size.width - 16.dp.toPx()
-            val tailStartX = tailTipX - tailWidthPx / 2
-            val tailEndX = tailTipX + tailWidthPx / 2
-            val tailTipY = size.height
+            val tailTipX      = size.width - 16.dp.toPx()
+            val tailStartX    = tailTipX - tailWidthPx / 2
+            val tailEndX      = tailTipX + tailWidthPx / 2
+
             val path = Path().apply {
                 addRoundRect(
                     RoundRect(
-                        0f,
-                        0f,
-                        balloonRight,
-                        balloonBottom,
+                        0f, 0f,
+                        size.width, balloonBottom,
                         CornerRadius(cornerRadius)
                     )
                 )
                 moveTo(tailStartX, balloonBottom)
-                lineTo(tailTipX, tailTipY)
+                lineTo(tailTipX, size.height)
                 lineTo(tailEndX, balloonBottom)
                 close()
             }
-            drawPath(path, Color(0xffF3FFD9))
-            drawPath(path, Color(0xffF3FFD9), style = Stroke(width = strokeWidth))
+
+            /* ① 테두리를 먼저 그린 뒤 → ② 안쪽을 채운다 */
+            drawPath(path, borderColor, style = Stroke(width = strokePx))
+            drawPath(path, Color(0xFFF3FFD9))
         }
+
+        val inner = strokeWidthDp
         Box(
             modifier = Modifier
-                .size(balloonWidth, balloonHeight)
-                .border(width=1.dp,color=colors.oliveGreen,shape= RoundedCornerShape(8.dp))
-                .padding(horizontal = 8.dp)
-            ,
+                .offset(inner, inner)
+                .size(balloonWidth  - inner * 2, balloonHeight - inner * 2)
+                .padding(horizontal = 8.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text(text, style = typography.body_SB_16, color = colors.oliveGreen)
+            Spacer(modifier = Modifier.width(5.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text, style = typography.body_SB_16, color = colors.oliveGreen)
+                Spacer(modifier = Modifier.width(11.dp))
+                Image(
+                    painter = painterResource(id=image),
+                    contentDescription = "초록색 오른쪽 화살표",
+                    modifier = Modifier
+                        .size(width = 14.dp, height = 18.dp),
+                )
+            }
         }
     }
 }
