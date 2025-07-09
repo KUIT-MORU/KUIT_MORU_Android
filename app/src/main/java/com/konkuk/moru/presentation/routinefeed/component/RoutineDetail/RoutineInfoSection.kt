@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.konkuk.moru.presentation.routinefeed.data.RoutineDetail
@@ -90,3 +91,5 @@ private fun TagChip(text: String, backgroundColor: Color) {
         )
     }
 }
+
+

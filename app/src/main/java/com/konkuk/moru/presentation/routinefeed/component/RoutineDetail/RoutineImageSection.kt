@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 import coil3.compose.AsyncImage
@@ -41,4 +42,25 @@ fun RoutineImageSection(imageUrl: String?) {
             )
         }
     }
+}
+
+
+@Preview(showBackground = true, name = "Image Section (With Image)")
+@Composable
+fun RoutineImageSectionPreview_WithImage() {
+    RoutineImageSection(
+        imageUrl = "https://images.unsplash.com/photo-1542744173-8e7e53415bb0" // 예시 이미지 URL
+    )
+}
+
+/**
+ * RoutineImageSection 프리뷰
+ * 2. 이미지가 없을 경우 (null 또는 blank)
+ */
+@Preview(showBackground = true, name = "Image Section (No Image)")
+@Composable
+fun RoutineImageSectionPreview_NoImage() {
+    RoutineImageSection(
+        imageUrl = null
+    )
 }
