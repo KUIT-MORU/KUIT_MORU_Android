@@ -225,6 +225,6 @@ fun HomeScreen(
     heightDp = 800
 )
 @Composable
-private fun HomeScreenPreview() {
-    HomeScreen()
+fun HomeScreen(modifier: Modifier = Modifier) {
+    Text(text = "Home Screen", modifier = modifier.background(color = colors.black50Oopacity), style = typography.head_EB_24)
 }
