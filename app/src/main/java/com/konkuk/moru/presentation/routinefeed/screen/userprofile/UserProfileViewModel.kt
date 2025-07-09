@@ -3,23 +3,14 @@ package com.konkuk.moru.presentation.routinefeed.screen.userprofile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.konkuk.moru.presentation.routinefeed.data.RoutineInfo
+import com.konkuk.moru.presentation.routinefeed.data.UserProfileUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class UserProfileUiState(
-    val nickname: String = "",
-    val bio: String = "",
-    val routineCount: Int = 0,
-    val followerCount: Int = 0,
-    val followingCount: Int = 0,
-    val isFollowing: Boolean = false,
-    val runningRoutines: List<RoutineInfo> = emptyList(),
-    val userRoutines: List<RoutineInfo> = emptyList(),
-    val isRunningRoutineExpanded: Boolean = true
-)
+
 
 class UserProfileViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(UserProfileUiState())

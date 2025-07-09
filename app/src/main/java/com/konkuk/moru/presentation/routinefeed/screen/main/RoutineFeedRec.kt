@@ -16,17 +16,10 @@ import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.routine.RoutineListItem
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppBar
+import com.konkuk.moru.presentation.routinefeed.data.HotRoutine
 import com.konkuk.moru.ui.theme.MORUTheme
 
-/* ---------- 모델 ---------- */
-data class HotRoutine(
-    val id: Int,
-    val name: String,
-    val tags: List<String>,
-    val likes: Int,
-    val isLiked: Boolean,
-    val isRunning: Boolean
-)
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,11 +31,11 @@ fun HotRoutineListScreen(
     val routines = remember {
         List(20) {
             HotRoutine(
-                id        = it,
-                name      = "아침 운동",
-                tags      = listOf("#모닝루틴", "#스트레칭"),
-                likes     = 16,
-                isLiked   = false,
+                id = it,
+                name = "아침 운동",
+                tags = listOf("#모닝루틴", "#스트레칭"),
+                likes = 16,
+                isLiked = false,
                 isRunning = it % 2 == 0
             )
         }

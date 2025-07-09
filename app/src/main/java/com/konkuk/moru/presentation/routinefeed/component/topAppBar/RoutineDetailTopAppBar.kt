@@ -1,4 +1,4 @@
-package com.konkuk.moru.presentation.routinefeed.screen.main // 패키지 경로는 맞게 수정해주세요
+package com.konkuk.moru.presentation.routinedetail // 패키지 경로는 맞게 수정해주세요
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -32,6 +32,13 @@ import coil3.compose.AsyncImage
 import com.konkuk.moru.R // R 파일 경로는 맞게 수정해주세요
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.chip.MoruChip
+import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetail
+import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetailTopAppBar
+import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineHeader
+import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineStep
+import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineStepSection
+import com.konkuk.moru.presentation.routinefeed.screen.main.SimilarRoutine
+import com.konkuk.moru.presentation.routinefeed.screen.main.SimilarRoutinesSection
 
 /* --- 1. 데이터 모델 (초기 버전 기준) --- */
 data class RoutineDetail(
@@ -157,7 +164,7 @@ fun RoutineDetailTopAppBar(
 }
 
 @Composable
-fun RoutineHeader(routineDetail: RoutineDetail) {
+fun RoutineHeader(routineDetail: com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetail) {
     Box(
         modifier = Modifier.fillMaxWidth().aspectRatio(1f),
         contentAlignment = Alignment.BottomStart
@@ -167,7 +174,7 @@ fun RoutineHeader(routineDetail: RoutineDetail) {
             contentDescription = "루틴 대표 이미지",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
-            error = painterResource(id = R.drawable.ic_info),
+            error = painterResource(id = R.drawable.ic_antenna),
             placeholder = painterResource(id = R.drawable.ic_person_standing)
         )
         Box(
@@ -189,7 +196,7 @@ fun RoutineHeader(routineDetail: RoutineDetail) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun RoutineInfoOverlay(modifier: Modifier = Modifier, routineDetail: RoutineDetail) {
+private fun RoutineInfoOverlay(modifier: Modifier = Modifier, routineDetail: com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetail) {
     val contentColor = Color.White
     Column(
         modifier = modifier,
@@ -229,7 +236,7 @@ private fun RoutineInfoOverlay(modifier: Modifier = Modifier, routineDetail: Rou
 }
 
 @Composable
-fun RoutineStepSection(modifier: Modifier = Modifier, steps: List<RoutineStep>) {
+fun RoutineStepSection(modifier: Modifier = Modifier, steps: List<com.konkuk.moru.presentation.routinefeed.screen.main.RoutineStep>) {
     Column(modifier = modifier) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -249,7 +256,10 @@ fun RoutineStepSection(modifier: Modifier = Modifier, steps: List<RoutineStep>) 
         Spacer(Modifier.height(16.dp))
         Column {
             steps.forEachIndexed { index, step ->
-                RoutineStepItem(stepNumber = index + 1, step = step)
+                _root_ide_package_.com.konkuk.moru.presentation.routinefeed.screen.main.RoutineStepItem(
+                    stepNumber = index + 1,
+                    step = step
+                )
                 // 5번 요청 반영: 구분선 추가
                 if (index < steps.lastIndex) {
                     HorizontalDivider(
@@ -264,7 +274,7 @@ fun RoutineStepSection(modifier: Modifier = Modifier, steps: List<RoutineStep>) 
 }
 
 @Composable
-fun RoutineStepItem(stepNumber: Int, step: RoutineStep) {
+fun RoutineStepItem(stepNumber: Int, step: com.konkuk.moru.presentation.routinefeed.screen.main.RoutineStep) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(text = "$stepNumber", style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
         Spacer(Modifier.width(16.dp))
@@ -274,7 +284,7 @@ fun RoutineStepItem(stepNumber: Int, step: RoutineStep) {
 }
 
 @Composable
-fun SimilarRoutinesSection(modifier: Modifier = Modifier, routines: List<SimilarRoutine>) {
+fun SimilarRoutinesSection(modifier: Modifier = Modifier, routines: List<com.konkuk.moru.presentation.routinefeed.screen.main.SimilarRoutine>) {
     Column(modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -289,14 +299,16 @@ fun SimilarRoutinesSection(modifier: Modifier = Modifier, routines: List<Similar
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(routines.size) { index ->
-                SimilarRoutineCard(routine = routines[index])
+                _root_ide_package_.com.konkuk.moru.presentation.routinefeed.screen.main.SimilarRoutineCard(
+                    routine = routines[index]
+                )
             }
         }
     }
 }
 
 @Composable
-fun SimilarRoutineCard(routine: SimilarRoutine) {
+fun SimilarRoutineCard(routine: com.konkuk.moru.presentation.routinefeed.screen.main.SimilarRoutine) {
     Column(modifier = Modifier.width(140.dp)) {
         // 4번 요청 반영: 보내주신 아이콘 사용
         Image(
@@ -315,27 +327,43 @@ fun SimilarRoutineCard(routine: SimilarRoutine) {
 @Preview(showBackground = true)
 @Composable
 fun RoutineDetailScreenPreview() {
-    val sampleData = RoutineDetail(
-        imageUrl = null, // Preview에서는 기본 아이콘 표시됨
-        authorName = "모루",
-        authorProfileUrl = null,
-        routineTitle = "집중력을 높이는 아침 루틴",
-        routineCategory = "집중",
-        routineDescription = "이 루틴은 당신의 아침을 활기차게 만들어 줄 것입니다.",
-        tags = listOf("명상", "독서", "아침"),
-        likeCount = 16,
-        isLiked = true,
-        isBookmarked = false,
-        steps = listOf(
-            RoutineStep("물 한잔 마시기", "00:30"),
-            RoutineStep("5분 명상하기", "05:00"),
-            RoutineStep("책 10페이지 읽기", "10:00")
-        ),
-        similarRoutines = List(5) {
-            SimilarRoutine(null, "루틴명명명", "#운동하자")
-        }
-    )
+    val sampleData =
+        _root_ide_package_.com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetail(
+            imageUrl = null, // Preview에서는 기본 아이콘 표시됨
+            authorName = "모루",
+            authorProfileUrl = null,
+            routineTitle = "집중력을 높이는 아침 루틴",
+            routineCategory = "집중",
+            routineDescription = "이 루틴은 당신의 아침을 활기차게 만들어 줄 것입니다.",
+            tags = listOf("명상", "독서", "아침"),
+            likeCount = 16,
+            isLiked = true,
+            isBookmarked = false,
+            steps = listOf(
+                _root_ide_package_.com.konkuk.moru.presentation.routinefeed.screen.main.RoutineStep(
+                    "물 한잔 마시기",
+                    "00:30"
+                ),
+                _root_ide_package_.com.konkuk.moru.presentation.routinefeed.screen.main.RoutineStep(
+                    "5분 명상하기",
+                    "05:00"
+                ),
+                _root_ide_package_.com.konkuk.moru.presentation.routinefeed.screen.main.RoutineStep(
+                    "책 10페이지 읽기",
+                    "10:00"
+                )
+            ),
+            similarRoutines = List(5) {
+                _root_ide_package_.com.konkuk.moru.presentation.routinefeed.screen.main.SimilarRoutine(
+                    null,
+                    "루틴명명명",
+                    "#운동하자"
+                )
+            }
+        )
     MaterialTheme {
-        RoutineDetailScreen(routineDetail = sampleData)
+        _root_ide_package_.com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetailScreen(
+            routineDetail = sampleData
+        )
     }
 }

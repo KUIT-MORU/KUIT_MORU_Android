@@ -54,6 +54,7 @@ import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.routine.RoutineListItem
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppBar
 import com.konkuk.moru.presentation.routinefeed.data.RoutineInfo
+import com.konkuk.moru.presentation.routinefeed.data.UserProfileUiState
 import com.konkuk.moru.ui.theme.MORUTheme
 
 // --- 실제 앱에서 사용하는 Composable ---
