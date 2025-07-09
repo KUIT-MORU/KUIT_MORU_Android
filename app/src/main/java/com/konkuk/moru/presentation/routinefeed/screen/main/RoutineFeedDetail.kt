@@ -32,33 +32,11 @@ import coil3.compose.AsyncImage
 import com.konkuk.moru.R // R 파일 경로는 맞게 수정해주세요
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.chip.MoruChip
+import com.konkuk.moru.presentation.routinefeed.data.RoutineDetail
+import com.konkuk.moru.presentation.routinefeed.data.RoutineStep
+import com.konkuk.moru.presentation.routinefeed.data.SimilarRoutine
 
 /* --- 1. 데이터 모델 (초기 버전 기준) --- */
-data class RoutineDetail(
-    val imageUrl: String?,
-    val authorName: String,
-    val authorProfileUrl: String?,
-    val routineTitle: String,
-    val routineCategory: String,
-    val routineDescription: String,
-    val tags: List<String>,
-    var likeCount: Int,
-    var isLiked: Boolean,
-    var isBookmarked: Boolean,
-    val steps: List<RoutineStep>,
-    val similarRoutines: List<SimilarRoutine>
-)
-
-data class RoutineStep(
-    val name: String,
-    val duration: String
-)
-
-data class SimilarRoutine(
-    val imageUrl: String?,
-    val name: String,
-    val tag: String
-)
 
 
 /* --- 2. 화면 전체를 구성하는 메인 컴포저블 --- */
@@ -167,7 +145,7 @@ fun RoutineHeader(routineDetail: RoutineDetail) {
             contentDescription = "루틴 대표 이미지",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
-            error = painterResource(id = R.drawable.ic_info),
+            error = painterResource(id = R.drawable.ic_antenna_color),
             placeholder = painterResource(id = R.drawable.ic_person_standing)
         )
         Box(

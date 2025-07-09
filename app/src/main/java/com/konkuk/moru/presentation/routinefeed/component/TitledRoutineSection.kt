@@ -40,12 +40,19 @@ fun TitledRoutineSection(
     Column(modifier = modifier.padding(vertical = 12.dp))// 다음 항목 윗부분이랑 합쳐서 24 나오게 했습니다.
     {
         Row(
-            modifier = Modifier.fillMaxWidth().clickable { onMoreClick() }.padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onMoreClick() }
+                .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(text = title, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-            Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "더보기", modifier = Modifier.size(28.dp))
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = "더보기",
+                modifier = Modifier.size(28.dp)
+            )
         }
         Spacer(modifier = Modifier.height(16.dp))
         LazyRow(
@@ -73,10 +80,38 @@ fun TitledRoutineSection(
 fun TitledRoutineSectionPreview() {
     // 1. 프리뷰에 사용할 가상 데이터(샘플) 생성
     val sampleRoutines = listOf(
-        RoutineInfo(id = 1, isRunning = true, name = "아침 조깅", tags = listOf("#운동"), likes = 25, isLiked = true),
-        RoutineInfo(id = 2, isRunning = false, name = "미라클 모닝", tags = listOf("#자기계발"), likes = 42, isLiked = false),
-        RoutineInfo(id = 3, isRunning = false, name = "책 20페이지 읽기", tags = listOf("#독서"), likes = 18, isLiked = true),
-        RoutineInfo(id = 4, isRunning = false, name = "물 2L 마시기", tags = listOf("#건강"), likes = 33, isLiked = false)
+        RoutineInfo(
+            id = 1,
+            isRunning = true,
+            name = "아침 조깅",
+            tags = listOf("#운동"),
+            likes = 25,
+            isLiked = true
+        ),
+        RoutineInfo(
+            id = 2,
+            isRunning = false,
+            name = "미라클 모닝",
+            tags = listOf("#자기계발"),
+            likes = 42,
+            isLiked = false
+        ),
+        RoutineInfo(
+            id = 3,
+            isRunning = false,
+            name = "책 20페이지 읽기",
+            tags = listOf("#독서"),
+            likes = 18,
+            isLiked = true
+        ),
+        RoutineInfo(
+            id = 4,
+            isRunning = false,
+            name = "물 2L 마시기",
+            tags = listOf("#건강"),
+            likes = 33,
+            isLiked = false
+        )
     )
 
     // 2. 좋아요 수는 상태에 따라 변할 수 있으므로 Map 형태로 관리

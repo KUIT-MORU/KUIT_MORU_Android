@@ -68,11 +68,17 @@ fun MoruLiveSection(
             }
         } else {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Image(painter = painterResource(id = R.drawable.ic_antenna), contentDescription = "No Live", modifier = Modifier.size(48.dp))
+                Image(
+                    painter = painterResource(id = R.drawable.ic_antenna),
+                    contentDescription = "No Live",
+                    modifier = Modifier.size(48.dp)
+                )
                 Text(text = "진행중인 라이브가 없어요", color = Color.Gray, fontSize = 16.sp)
             }
         }
@@ -81,6 +87,6 @@ fun MoruLiveSection(
 
 @Composable
 @Preview
-fun MoruLiveSection(){
+fun MoruLiveSection() {
     MoruLiveSection()
 }

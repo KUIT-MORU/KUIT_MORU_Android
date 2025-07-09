@@ -356,7 +356,7 @@ private fun UserProfileScreenPreview(isDataEmpty: Boolean = false) {
                             )
                         }
                     },
-                    spacingBetweenIconAndTitle =24.dp,
+                    spacingBetweenIconAndTitle = 24.dp,
                     // 프리뷰에서도 간격 테스트 가능
                 )
             }
