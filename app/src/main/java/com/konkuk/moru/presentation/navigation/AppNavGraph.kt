@@ -54,30 +54,39 @@ fun AppNavGraph(navController: NavHostController, isLoggedIn: Boolean) {
                 modifier = Modifier.systemBarsPadding(),
                 contentWindowInsets = WindowInsets.safeDrawing,
                 bottomBar = {
-                    NavigationBar(
-                        modifier = Modifier.height(41.dp),
-                        containerColor = Color.White
+                    if (currentRoute !in listOf(
+                            Route.ActSetting.route,
+                            Route.ActProfile.route,
+                            Route.ActFabTag.route,
+                            Route.ActRecord.route,
+                            Route.ActScrab.route //navbar 숨기고 싶은 route 추가
+                        )
                     ) {
-                        bottomNavItems.forEach { item ->
-                            NavigationBarItem(
-                                selected = currentRoute == item.route,
-                                onClick = {
-                                    if (currentRoute != item.route) {
-                                        navControllerForTabs.navigate(item.route) {
-                                            launchSingleTop = true
-                                            restoreState = true
+                        NavigationBar(
+                            modifier = Modifier.height(41.dp),
+                            containerColor = Color.White
+                        ) {
+                            bottomNavItems.forEach { item ->
+                                NavigationBarItem(
+                                    selected = currentRoute == item.route,
+                                    onClick = {
+                                        if (currentRoute != item.route) {
+                                            navControllerForTabs.navigate(item.route) {
+                                                launchSingleTop = true
+                                                restoreState = true
+                                            }
                                         }
+                                    },
+                                    icon = {
+                                        Icon(
+                                            painter = painterResource(id = item.icon),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp),
+                                            tint = Color.Black
+                                        )
                                     }
-                                },
-                                icon = {
-                                    Icon(
-                                        painter = painterResource(id = item.icon),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp),
-                                        tint = Color.Black
-                                    )
-                                }
-                            )
+                                )
+                            }
                         }
                     }
                 }

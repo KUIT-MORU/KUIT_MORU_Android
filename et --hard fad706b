@@ -1,0 +1,21 @@
+[33mfad706b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mfeature/homeANDroutinefocus[m[33m, [m[1;32mfeature/home&routinefocus[m[33m)[m HEAD@{0}: checkout: moving from feature/home&routinefocus to master
+[33mfad706b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mfeature/homeANDroutinefocus[m[33m, [m[1;32mfeature/home&routinefocus[m[33m)[m HEAD@{1}: checkout: moving from feature/homeANDroutinefocus to feature/home&routinefocus
+[33mfad706b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mfeature/homeANDroutinefocus[m[33m, [m[1;32mfeature/home&routinefocus[m[33m)[m HEAD@{2}: merge master: Fast-forward
+[33mf857257[m[33m ([m[1;31morigin/feature/homeANDroutinefocus[m[33m, [m[1;31morigin/feature/home&routinefocus[m[33m)[m HEAD@{3}: checkout: moving from feature/homeANDroutinefocus to feature/homeANDroutinefocus
+[33mf857257[m[33m ([m[1;31morigin/feature/homeANDroutinefocus[m[33m, [m[1;31morigin/feature/home&routinefocus[m[33m)[m HEAD@{4}: checkout: moving from feature/home&routinefocus to feature/homeANDroutinefocus
+[33mfad706b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mfeature/homeANDroutinefocus[m[33m, [m[1;32mfeature/home&routinefocus[m[33m)[m HEAD@{5}: merge master: Fast-forward
+[33mf857257[m[33m ([m[1;31morigin/feature/homeANDroutinefocus[m[33m, [m[1;31morigin/feature/home&routinefocus[m[33m)[m HEAD@{6}: checkout: moving from master to feature/home&routinefocus
+[33mfad706b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mfeature/homeANDroutinefocus[m[33m, [m[1;32mfeature/home&routinefocus[m[33m)[m HEAD@{7}: pull origin master: Fast-forward
+[33mc120dbf[m HEAD@{8}: checkout: moving from feature/homeANDroutinefocus to master
+[33mf857257[m[33m ([m[1;31morigin/feature/homeANDroutinefocus[m[33m, [m[1;31morigin/feature/home&routinefocus[m[33m)[m HEAD@{9}: commit: feat : 간편 루틴 실행 화면 구현
+[33mb1827ea[m HEAD@{10}: commit: chore : 불필요한 uistate 삭제
+[33mcad3b41[m HEAD@{11}: commit: style : 온보딩 화면 말풍선 구현 방식 수정
+[33m4c5b82a[m HEAD@{12}: commit: feat : 홈_루틴 선택 시 화면 컴포넌트 및 screen 구현
+[33mfe852ee[m HEAD@{13}: commit: style : BottomBar 배치 수정 및 온보딩 화면 수정
+[33mf582364[m HEAD@{14}: commit: feat : 홈 메인 페이지 컴포넌트 구헌과 ui 배치
+[33mb4c3d44[m HEAD@{15}: commit: feat : 홈 화면 기본 틀 완료(BottomBar 제외)
+[33mc4fdfc4[m HEAD@{16}: commit: feat : 좌우 page indicator를 위한 의존성 추가
+[33m5967152[m HEAD@{17}: commit (amend): feat : 공통 컴포넌트 생성
+[33md39a8b7[m HEAD@{18}: commit: feat : 공통 컴포넌트 생성
+[33mc120dbf[m HEAD@{19}: checkout: moving from master to feature/homeANDroutinefocus
+[33mc120dbf[m HEAD@{20}: clone: from https://github.com/KUIT-MORU/KUIT_MORU_Android.git

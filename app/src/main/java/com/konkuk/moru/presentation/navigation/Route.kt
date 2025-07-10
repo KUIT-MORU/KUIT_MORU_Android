@@ -15,7 +15,11 @@ sealed class Route(
 
     data object MyActivity : Route(route = "my_activity")
 
-    object Notification : Route("notification")
-    
+    data object Notification : Route("notification")
+
     data object ActSetting : Route(route = "act_setting")
+    data object ActScrab: Route(route = "act_scrab")
+    data object ActFabTag: Route(route = "act_fab_tag")
+    data object ActProfile: Route(route = "act_profile")
+    data object ActRecord: Route(route = "act_record")
 }
