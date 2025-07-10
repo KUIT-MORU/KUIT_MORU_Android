@@ -76,7 +76,7 @@ fun UserItem(
             backgroundColor = backgroundColor,
             contentColor = contentColor,
             shape = RoundedCornerShape(140.dp),
-            fontSize = 14.sp,
+            textStyle = MORUTheme.typography.title_B_14,
             modifier = Modifier
                 .wrapContentWidth() // 텍스트 크기에 따라 폭 조정
                 .defaultMinSize(minWidth = 64.dp, minHeight = 32.dp)

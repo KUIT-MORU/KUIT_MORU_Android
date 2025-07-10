@@ -182,7 +182,7 @@ private fun ProfileHeader(
                     backgroundColor = backgroundColor,
                     contentColor = contentColor,
                     shape = RoundedCornerShape(140.dp),
-                    fontSize = 14.sp,
+                    textStyle = MORUTheme.typography.title_B_14,
                     modifier = Modifier
                         .height(37.dp)
                         .width(88.dp)

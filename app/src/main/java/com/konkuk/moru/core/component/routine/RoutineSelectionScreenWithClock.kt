@@ -1,5 +1,6 @@
 package com.konkuk.moru.core.component.routine
 
+// ... 다른 import 구문들은 그대로 ...
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,8 +11,11 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf // [추가됨]
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,40 +24,56 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.konkuk.moru.R // 실제 프로젝트의 R 클래스를 임포트하세요.
+import com.konkuk.moru.R
 
 @Composable
-fun RoutineListItem(
+fun RoutineListItemWithClock(
     modifier: Modifier = Modifier,
     isRunning: Boolean,
     routineName: String,
     tags: List<String>,
     likeCount: Int,
     isLiked: Boolean,
-    showCheckbox: Boolean = false,
-    isChecked: Boolean = false,
-    onCheckedChange: (Boolean) -> Unit = {},
-    onLikeClick: () -> Unit
+    onLikeClick: () -> Unit,
+    onClockClick: () -> Unit // onDeleteClick -> onClockClick 이름 명확화
 ) {
-    // ▼▼▼ [수정됨] Row 전체를 감싸던 clickable Modifier 제거 ▼▼▼
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 12.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val imageResource = if (isRunning) R.drawable.ic_routine_square_running else R.drawable.ic_routine_square_stop
-        Image(painter = painterResource(id = imageResource), contentDescription = routineName, modifier = Modifier.size(72.dp))
+        val imageResource =
+            if (isRunning) R.drawable.ic_routine_square_running else R.drawable.ic_routine_square_stop
+        Image(
+            painter = painterResource(id = imageResource),
+            contentDescription = routineName,
+            modifier = Modifier.size(72.dp)
+        )
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column(modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.Center
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(4.dp) // 간격 추가
         ) {
-            Text(text = routineName, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically // 수직 정렬 추가
+            ) {
+                Text(text = routineName, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                // [수정됨] 시계 아이콘에 clickable Modifier 추가
+                Image(
+                    painter = painterResource(id = R.drawable.ic_clock),
+                    contentDescription = "시간 설정",
+                    modifier = Modifier
+                        .size(25.dp)
+                        .clickable { onClockClick() } // 클릭 시 콜백 호출
+                )
+            }
             Text(text = tags.joinToString(" "), color = Color.Gray, fontSize = 12.sp)
 
-            // 이제 이 Row의 clickable이 정상적으로 동작합니다.
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.clickable { onLikeClick() }
@@ -72,27 +92,12 @@ fun RoutineListItem(
                 )
             }
         }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        if (showCheckbox) {
-            IconButton(onClick = { onCheckedChange(!isChecked) }) {
-                val icon = if (isChecked) R.drawable.check_box else R.drawable.empty_box
-                Icon(
-                    painter = painterResource(icon),
-                    contentDescription = "Checkbox",
-                    tint = Color.Unspecified,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RoutineSelectionScreen() {
-    // 변경점: 데이터 모델에 isLiked 필드 추가
+fun RoutineSelectionWithClockScreen() {
     data class RoutineInfoWithCheck(
         val id: Int,
         val name: String,
@@ -100,52 +105,75 @@ fun RoutineSelectionScreen() {
         val likes: Int,
         val isLiked: Boolean,
         val isRunning: Boolean,
-        val isChecked: Boolean,
-        val showCheckbox:Boolean
     )
 
     val routines = remember {
         listOf(
-            RoutineInfoWithCheck(1, "아침 운동", listOf("#모닝루틴", "#스트레칭"), 16, true, true, true,true),
-            RoutineInfoWithCheck(2, "저녁 독서", listOf("#취미", "#자기계발"), 32, false, false, false,true),
-            RoutineInfoWithCheck(3, "영어 단어 암기", listOf("#학습", "#외국어"), 8, false, false, true,true),
-            RoutineInfoWithCheck(4, "요가", listOf("#운동", "#명상"), 50, true, true, false,true)
+            RoutineInfoWithCheck(1, "아침 운동", listOf("#모닝루틴", "#스트레칭"), 16, true, true),
+            RoutineInfoWithCheck(2, "저녁 독서", listOf("#취미", "#자기계발"), 32, false, false),
+            RoutineInfoWithCheck(3, "영어 단어 암기", listOf("#학습", "#외국어"), 8, false, false),
+            RoutineInfoWithCheck(4, "요가", listOf("#운동", "#명상"), 50, true, true)
         )
     }
 
-    // 변경점: 체크 상태와 더불어 좋아요 상태/카운트 로컬 관리
-    val checkedStates = remember { mutableStateMapOf<Int, Boolean>().apply { routines.forEach { put(it.id, it.isChecked) } } }
     val likedStates = remember { mutableStateMapOf<Int, Boolean>().apply { routines.forEach { put(it.id, it.isLiked) } } }
     val likeCounts = remember { mutableStateMapOf<Int, Int>().apply { routines.forEach { put(it.id, it.likes) } } }
 
+    // [추가됨] 모달을 띄울 루틴 정보를 저장하는 상태. null이면 모달이 보이지 않음.
+    var selectedRoutineForModal by remember { mutableStateOf<RoutineInfoWithCheck?>(null) }
+
+    // [추가됨] 모달(AlertDialog) UI 구현
+    if (selectedRoutineForModal != null) {
+        AlertDialog(
+            onDismissRequest = { selectedRoutineForModal = null }, // 모달 바깥 클릭 시 닫기
+            title = {
+                Text(text = "'${selectedRoutineForModal!!.name}' 루틴")
+            },
+            text = {
+                Text(text = "여기에 시간 설정과 관련된 UI를 추가할 수 있습니다.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // TODO: 시간 설정 완료 로직
+                        selectedRoutineForModal = null // 확인 버튼 클릭 시 닫기
+                    }
+                ) {
+                    Text("확인")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { selectedRoutineForModal = null } // 취소 버튼 클릭 시 닫기
+                ) {
+                    Text("취소")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("루틴 선택") }) }
     ) { paddingValues ->
         LazyColumn(modifier = Modifier.padding(paddingValues)) {
             items(routines) { routine ->
-                val isChecked = checkedStates[routine.id] ?: false
                 val isLiked = likedStates[routine.id] ?: false
                 val currentLikeCount = likeCounts[routine.id] ?: 0
 
-                RoutineListItem(
+                RoutineListItemWithClock(
                     isRunning = routine.isRunning,
                     routineName = routine.name,
                     tags = routine.tags,
                     likeCount = currentLikeCount,
                     isLiked = isLiked,
-                    isChecked = isChecked,
-                    showCheckbox = routine.showCheckbox,
-                    onCheckedChange = { newCheckedState ->
-                        checkedStates[routine.id] = newCheckedState
-                        println("서버로 '${routine.name}' 체크 상태 전송: $newCheckedState")
-                    },
-                    // 변경점: onLikeClick 로직 구현
                     onLikeClick = {
                         val newLikeStatus = !isLiked
                         likedStates[routine.id] = newLikeStatus
                         likeCounts[routine.id] = if (newLikeStatus) currentLikeCount + 1 else currentLikeCount - 1
-                        println("서버로 '${routine.name}' 좋아요 상태 전송: $newLikeStatus")
+                    },
+                    // [추가됨] 시계 클릭 시 selectedRoutineForModal 상태에 현재 루틴 정보 저장
+                    onClockClick = {
+                        selectedRoutineForModal = routine
                     }
                 )
             }
@@ -153,11 +181,10 @@ fun RoutineSelectionScreen() {
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
-fun RoutineSelectionScreenPreview() {
+fun RoutineSelectionWithClockScreenPreview() {
     MaterialTheme {
-        RoutineSelectionScreen()
+        RoutineSelectionWithClockScreen()
     }
 }
