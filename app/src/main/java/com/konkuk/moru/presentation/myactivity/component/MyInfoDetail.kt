@@ -1,6 +1,7 @@
 package com.konkuk.moru.presentation.myactivity.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +27,7 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 fun MyInfoDetail(
     myInfoDetailIcon: Int,
     title: String,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -46,6 +48,7 @@ fun MyInfoDetail(
                 .fillMaxWidth()
                 .height(57.dp)
                 .padding(start = 16.dp, end = 16.dp)
+                .clickable(onClick = onClick)
         ) {
             Row(
                 modifier = Modifier
