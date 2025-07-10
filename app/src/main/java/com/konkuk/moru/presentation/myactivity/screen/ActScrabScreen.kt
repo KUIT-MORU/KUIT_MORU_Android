@@ -74,12 +74,13 @@ fun ActScrabScreen(
                 }
             }
         }
+        Spacer(modifier = Modifier.height(27.86.dp))
         if (selectedIndex.value != null) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(colors.charcoalBlack)
-                    .padding(vertical = 16.dp)
+                    .height(80.dp)
                     .clickable { selectedIndex.value = null },
                 contentAlignment = Alignment.Center
             ) {
