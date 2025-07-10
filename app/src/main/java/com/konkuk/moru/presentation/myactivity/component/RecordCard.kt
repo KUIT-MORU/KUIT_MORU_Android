@@ -38,59 +38,34 @@ fun RecordCard(
     Column(
         modifier = Modifier
             .width(90.dp)
-            .height(100.dp)
+            .height(139.dp)
             .clip(RoundedCornerShape(8.dp))
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(100.dp)
         ) {
             Image(
                 painter = painterResource(id = imageResId),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(4.dp))
+                    .border(
+                        width = 1.dp,
+                        color = colors.lightGray,
+                        shape = RoundedCornerShape(size = 4.dp)
+                    )
             )
 
-            if (completeFlag) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 6.dp, end = 6.dp)
-                        .background(colors.black, shape = RoundedCornerShape(size = 100.dp))
-                        .width(32.dp)
-                        .height(17.dp)
-
-                ) {
-                    Text(
-                        text = "완료",
-                        color = Color(0xFFFFFFFF),
-                        style = typography.desc_M_12,
-                        modifier = Modifier
-                    )
-                }
-            } else {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 6.dp, end = 6.dp)
-                        .border(
-                            width = 1.dp,
-                            color = colors.black,
-                            shape = RoundedCornerShape(size = 100.dp)
-                        )
-                        .width(40.dp)
-                        .height(18.dp)
-                ) {
-                    Text(
-                        text = "미완료",
-                        color = colors.black,
-                        style = typography.desc_M_12,
-                        modifier = Modifier
-                    )
-                }
+            Box(
+                modifier = modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 6.dp, end = 6.dp)
+            ) {
+                CompleteCheck(completeFlag)
             }
 
             Box(
@@ -105,30 +80,39 @@ fun RecordCard(
                     modifier = Modifier
                 )
             }
+
+            if (completeFlag) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(3.dp)
+                        .align(Alignment.BottomCenter)
+                        .background(colors.limeGreen)
+                ) {}
+            }
         }
-    }
+        Spacer(modifier = Modifier.height(4.dp))
 
-    Spacer(modifier = Modifier.height(4.dp))
-
-    Text(
-        text = title,
-        color = colors.black,
-        style = typography.body_SB_14,
-        modifier = Modifier.padding(horizontal = 4.dp)
-    )
-
-    Spacer(modifier = Modifier.height(4.dp))
-    Box(modifier = Modifier.width(85.dp)) {
         Text(
-            text = tags.joinToString(" ") { "#$it" },
-            color = colors.mediumGray,
-            style = typography.time_R_12,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            softWrap = false,
-            modifier = Modifier
-                .fillMaxWidth()
+            text = title,
+            color = colors.black,
+            style = typography.body_SB_14,
+            modifier = Modifier.padding(horizontal = 4.dp)
         )
+
+        Spacer(modifier = Modifier.height(4.dp))
+        Box(modifier = Modifier.width(85.dp)) {
+            Text(
+                text = tags.joinToString(" ") { "#$it" },
+                color = colors.mediumGray,
+                style = typography.time_R_12,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                softWrap = false,
+                modifier = Modifier
+                    .fillMaxWidth()
+            )
+        }
     }
 }
 
