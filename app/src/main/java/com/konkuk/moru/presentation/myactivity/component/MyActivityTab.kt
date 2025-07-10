@@ -18,15 +18,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.konkuk.moru.core.util.modifier.noRippleClickable
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 import com.konkuk.moru.R
+import com.konkuk.moru.presentation.navigation.Route
 
 @Composable
 fun MyActivityTab(
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
+    navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
     val tabTitles = listOf("내 정보", "인사이트")
@@ -73,11 +76,14 @@ fun MyActivityTab(
         when (selectedTab) {
             0 -> {
                 Spacer(modifier = Modifier.height(24.dp))
-                MyInfoDetail(myInfoDetailIcon = R.drawable.ic_heart_a , title = "내 관심 태그")
+                MyInfoDetail(myInfoDetailIcon = R.drawable.ic_heart_a , title = "내 관심 태그", modifier = Modifier.noRippleClickable { navController.navigate(
+                    Route.ActFabTag.route) })
                 Spacer(modifier = Modifier.height(6.dp))
-                MyInfoDetail(myInfoDetailIcon = R.drawable.ic_graph_a , title = "내 기록")
+                MyInfoDetail(myInfoDetailIcon = R.drawable.ic_graph_a , title = "내 기록", modifier = Modifier.noRippleClickable { navController.navigate(
+                    Route.ActRecord.route) })
                 Spacer(modifier = Modifier.height(6.dp))
-                MyInfoDetail(myInfoDetailIcon = R.drawable.ic_scrap_a , title = "스크랩한 루틴")
+                MyInfoDetail(myInfoDetailIcon = R.drawable.ic_scrap_a , title = "스크랩한 루틴", modifier = Modifier.noRippleClickable { navController.navigate(
+                    Route.ActRecord.route) })
             }
 
             1 -> {

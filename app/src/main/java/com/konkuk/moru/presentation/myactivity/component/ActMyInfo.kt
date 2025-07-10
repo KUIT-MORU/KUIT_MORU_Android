@@ -23,7 +23,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.konkuk.moru.R
+import com.konkuk.moru.core.util.modifier.noRippleClickable
+import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
@@ -34,6 +37,7 @@ fun ActMyInfo(
     followingCount: Int = 0,
     userName: String = "사용자명",
     selfInfo: String = "자기소개",
+    navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -103,6 +107,7 @@ fun ActMyInfo(
                 modifier = Modifier
                     .padding(end = 12.dp)
                     .size(24.dp)
+                    .noRippleClickable { navController.navigate(Route.ActProfile.route) }
             )
         }
         Spacer(modifier = Modifier.height(6.dp))
@@ -119,17 +124,4 @@ fun ActMyInfo(
                 modifier = Modifier.padding(start = 16.dp))
         }
     }
-}
-
-@Preview
-@Composable
-private fun ActMyInfoPreview() {
-    ActMyInfo(
-        routineCount = 4,
-        followerCount = 628,
-        followingCount = 221,
-        userName = "사용자명",
-        selfInfo = "자기소개",
-        modifier = Modifier
-    )
 }
