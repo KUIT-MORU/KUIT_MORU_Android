@@ -62,25 +62,29 @@ fun MainNavGraph(
 
         composable(route = Route.ActScrab.route) {
             ActScrabScreen(
-                modifier = modifier.padding(innerPadding)
+                modifier = modifier.padding(innerPadding),
+                navController = navController
             )
         }
 
         composable(route = Route.ActFabTag.route){
             ActFabTagScreen(
-                modifier = modifier.padding(innerPadding)
+                modifier = modifier.padding(innerPadding),
+                navController = navController
             )
         }
 
         composable(route = Route.ActRecord.route){
             ActRecordScreen(
-                modifier = modifier.padding(innerPadding)
+                modifier = modifier.padding(innerPadding),
+                navController = navController
             )
         }
 
         composable(route = Route.ActProfile.route){
             ActProfileScreen(
-                modifier = modifier.padding(innerPadding)
+                modifier = modifier.padding(innerPadding),
+                navController = navController
             )
         }
     }
