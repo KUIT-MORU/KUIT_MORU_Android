@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.konkuk.moru.ui.theme.MORUTheme
+import java.time.format.TextStyle
 
 /**
  * Moru 디자인 시스템의 칩 (태그, 필터)
@@ -46,8 +48,9 @@ import com.konkuk.moru.ui.theme.MORUTheme
 
 @Composable
 fun MoruChip(
-    fontSize: TextUnit = 14.sp,
+
     text: String,
+    textStyle: TextStyle? = null,
     onClick: () -> Unit,
     isSelected: Boolean,
     border: BorderStroke? = null,
@@ -58,7 +61,8 @@ fun MoruChip(
     modifier: Modifier = Modifier,
     shape: Shape = CircleShape,
     startIconContent: (@Composable () -> Unit)? = null, // ◀ 시작 아이콘용 파라미터
-    endIconContent: (@Composable () -> Unit)? = null     // ◀ 끝 아이콘용 파라미터
+    endIconContent: (@Composable () -> Unit)? = null,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 12.dp, vertical = 6.dp)// ◀ 끝 아이콘용 파라미터
 ) {
     val backgroundColor = if (isSelected) selectedBackgroundColor else unselectedBackgroundColor
     val contentColor = if (isSelected) selectedContentColor else unselectedContentColor
@@ -74,7 +78,7 @@ fun MoruChip(
         border = border
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            modifier = Modifier.padding(contentPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // 시작 아이콘
@@ -83,7 +87,10 @@ fun MoruChip(
                 Spacer(modifier = Modifier.width(4.dp))
             }
 
-            Text(text = text,fontSize=fontSize)
+            Text(
+                text = text,
+                style = MORUTheme.typography.body_SB_14 // 기본 스타일 지정
+            )
 
             // 끝 아이콘
             if (endIconContent != null) {
