@@ -1,4 +1,3 @@
-import org.gradle.kotlin.dsl.implementation
 import java.util.Properties
 
 plugins {
@@ -20,7 +19,7 @@ android {
 
     defaultConfig {
         applicationId = "com.konkuk.moru"
-        minSdk = 24
+        minSdk = 27
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -100,6 +99,9 @@ dependencies {
     implementation ("com.google.accompanist:accompanist-pager:0.28.0")
     implementation ("com.google.accompanist:accompanist-pager-indicators:0.28.0")
     implementation("androidx.compose.foundation:foundation:1.4.3")
+
+    // Material Icons 확장 라이브러리 (Outlined, Rounded, Sharp 아이콘 포함)
+    implementation("androidx.compose.material:material-icons-extended")
 }
 
 configurations.all {
