@@ -1,6 +1,7 @@
 package com.konkuk.moru.presentation.myactivity.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -76,14 +77,14 @@ fun MyActivityTab(
         when (selectedTab) {
             0 -> {
                 Spacer(modifier = Modifier.height(24.dp))
-                MyInfoDetail(myInfoDetailIcon = R.drawable.ic_heart_a , title = "내 관심 태그", modifier = Modifier.noRippleClickable { navController.navigate(
+                MyInfoDetail(myInfoDetailIcon = R.drawable.ic_heart_a , title = "내 관심 태그", onClick = { navController.navigate(
                     Route.ActFabTag.route) })
                 Spacer(modifier = Modifier.height(6.dp))
-                MyInfoDetail(myInfoDetailIcon = R.drawable.ic_graph_a , title = "내 기록", modifier = Modifier.noRippleClickable { navController.navigate(
+                MyInfoDetail(myInfoDetailIcon = R.drawable.ic_graph_a , title = "내 기록", onClick = { navController.navigate(
                     Route.ActRecord.route) })
                 Spacer(modifier = Modifier.height(6.dp))
-                MyInfoDetail(myInfoDetailIcon = R.drawable.ic_scrap_a , title = "스크랩한 루틴", modifier = Modifier.noRippleClickable { navController.navigate(
-                    Route.ActRecord.route) })
+                MyInfoDetail(myInfoDetailIcon = R.drawable.ic_scrap_a , title = "스크랩한 루틴", onClick = { navController.navigate(
+                    Route.ActScrab.route) })
             }
 
             1 -> {
