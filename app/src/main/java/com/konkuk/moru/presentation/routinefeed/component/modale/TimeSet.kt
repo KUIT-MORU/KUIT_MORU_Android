@@ -50,7 +50,7 @@ enum class RepeatMode { NONE, EVERYDAY, WEEKDAYS, WEEKENDS }
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun RoutineScreen(isPreview: Boolean = false) {
+fun TimeSet(isPreview: Boolean = false) {
     // Material3에 맞는 올바른 state 선언
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -107,7 +107,7 @@ fun RoutineScreen(isPreview: Boolean = false) {
  */
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-private fun TimePickerSheetContent(
+ fun TimePickerSheetContent(  //private 삭제함 일단
     onConfirm: (LocalTime, Set<DayOfWeek>, Boolean) -> Unit
 ) {
     var selectedAmPm by remember { mutableStateOf("오후") }
@@ -372,5 +372,5 @@ private fun DayOfWeekSelector(selectedDays: Set<DayOfWeek>, onDayClick: (DayOfWe
 @Composable
 fun RoutineScreenPreview() {
     // 프리뷰에서 바로 시트가 보이도록 isPreview = true 전달
-    RoutineScreen(isPreview = true)
+    TimeSet(isPreview = true)
 }

@@ -6,7 +6,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -18,6 +22,7 @@ import com.konkuk.moru.presentation.myactivity.screen.ActRecordScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActScrabScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActSettingScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesScreen
+import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesViewModel
 import com.konkuk.moru.presentation.routinefeed.screen.NotificationScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedScreen
 
@@ -49,8 +54,21 @@ fun MainNavGraph(
         }
 
         composable(route = Route.MyRoutine.route) {
+            // 1. Hilt를 통해 방금 만든 ViewModel 인스턴스를 가져옵니다.
+            val viewModel: MyRoutinesViewModel = viewModel()
+
+            // 2. ViewModel의 routines 상태를 구독합니다.
+            val routines by viewModel.routines.collectAsState()
+
+            // 3. MyRoutinesScreen에 상태와 이벤트 핸들러를 전달합니다.
             MyRoutinesScreen(
-                modifier = modifier.padding(innerPadding)
+                modifier = modifier.padding(innerPadding),
+                routines = routines, // ✅ ViewModel의 데이터
+                onConfirmTimeSet = viewModel::onTimeSetConfirm,
+                onNavigateToCreateRoutine = { /* ... */ },
+                onNavigateToRoutineFeed = { /* ... */ },
+                onInfoClick = viewModel::onInfoClick, // ✅ ViewModel의 함수
+                onTrashClick = viewModel::onTrashClick  // ✅ ViewModel의 함수
             )
         }
 
