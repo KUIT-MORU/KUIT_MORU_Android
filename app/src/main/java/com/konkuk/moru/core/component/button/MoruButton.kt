@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
@@ -32,7 +34,6 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.konkuk.moru.ui.theme.MORUTheme
-
 
 
 /**
@@ -55,11 +56,10 @@ fun MoruButton(
     text: String,
     onClick: () -> Unit,
     backgroundColor: Color,
-
+    textStyle: TextStyle? = null,
     contentColor: Color,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    fontSize: TextUnit = 14.sp,
     shape: Shape = RoundedCornerShape(12.dp),
     disabledBackgroundColor: Color = Color.LightGray,
     disabledContentColor: Color = Color.Gray,
@@ -82,8 +82,11 @@ fun MoruButton(
                 iconContent()
                 Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
             }
-            Text(text = text,
-                fontSize=fontSize)
+            Text(
+                text = text,
+                // 2. Elvis 연산자(?:)를 사용해 textStyle이 null이면 MaterialTheme 값을 사용합니다.
+                style = textStyle ?: MORUTheme.typography.body_SB_16
+            )
         }
     }
 }

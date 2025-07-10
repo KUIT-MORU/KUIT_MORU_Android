@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.routinefeed.screen.main // 패키지 경로는 맞게 수정해주세요
 
+import RoutineDetailTopAppBar
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -35,6 +36,7 @@ import com.konkuk.moru.core.component.chip.MoruChip
 import com.konkuk.moru.presentation.routinefeed.data.RoutineDetail
 import com.konkuk.moru.presentation.routinefeed.data.RoutineStep
 import com.konkuk.moru.presentation.routinefeed.data.SimilarRoutine
+import com.konkuk.moru.ui.theme.MORUTheme
 
 /* --- 1. 데이터 모델 (초기 버전 기준) --- */
 
@@ -93,51 +95,14 @@ fun RoutineDetailScreen(routineDetail: RoutineDetail) {
 
 /* --- 3. 화면을 구성하는 하위 컴포저블들 --- */
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun RoutineDetailTopAppBar(
-    likeCount: Int,
-    isLiked: Boolean,
-    isBookmarked: Boolean,
-    onLikeClick: () -> Unit,
-    onBookmarkClick: () -> Unit,
-    onBackClick: () -> Unit
-) {
-    TopAppBar(
-        title = { /* 제목 없음 */ },
-        navigationIcon = {
-            IconButton(onClick = onBackClick) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
-            }
-        },
-        actions = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onLikeClick) {
-                    Icon(
-                        imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                        contentDescription = "좋아요",
-                        tint = if (isLiked) Color.Red else Color.Gray
-                    )
-                }
-                Text(text = "$likeCount", style = MaterialTheme.typography.bodyLarge)
-            }
-            IconButton(onClick = onBookmarkClick) {
-                Icon(
-                    imageVector = if (isBookmarked) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
-                    contentDescription = "북마크",
-                    // 3번 요청 반영: 북마크 활성화 색상 변경
-                    tint = if (isBookmarked) Color.Black else Color.Gray
-                )
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
-    )
-}
+
 
 @Composable
 fun RoutineHeader(routineDetail: RoutineDetail) {
     Box(
-        modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1f),
         contentAlignment = Alignment.BottomStart
     ) {
         AsyncImage(
@@ -173,12 +138,34 @@ private fun RoutineInfoOverlay(modifier: Modifier = Modifier, routineDetail: Rou
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AsyncImage(model = routineDetail.authorProfileUrl, contentDescription = "작성자 프로필", modifier = Modifier.size(32.dp).clip(CircleShape))
-            Text(text = routineDetail.authorName, color = contentColor, fontWeight = FontWeight.Bold)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            AsyncImage(
+                model = routineDetail.authorProfileUrl,
+                contentDescription = "작성자 프로필",
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+            )
+            Text(
+                text = routineDetail.authorName,
+                color = contentColor,
+                fontWeight = FontWeight.Bold
+            )
         }
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(text = routineDetail.routineTitle, color = contentColor, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = routineDetail.routineTitle,
+                color = contentColor,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
             MoruChip(
                 text = routineDetail.routineCategory,
                 onClick = {},
@@ -189,8 +176,15 @@ private fun RoutineInfoOverlay(modifier: Modifier = Modifier, routineDetail: Rou
                 unselectedContentColor = Color.Transparent
             )
         }
-        Text(text = routineDetail.routineDescription, color = contentColor, style = MaterialTheme.typography.bodyMedium)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = routineDetail.routineDescription,
+            color = contentColor,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             routineDetail.tags.forEach { tag ->
                 MoruChip(
                     text = "#$tag",
@@ -211,16 +205,17 @@ fun RoutineStepSection(modifier: Modifier = Modifier, steps: List<RoutineStep>) 
     Column(modifier = modifier) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+            //horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("STEP", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.width(16.dp))
             MoruButton(
-                text = "내 루틴에 추가",
+                text = ("내 루틴에 추가"),
                 onClick = { /* ... */ },
-                backgroundColor = Color(0xFFF1F3F5),
-                contentColor = Color.Black,
-                fontSize = 12.sp,
+                backgroundColor = MORUTheme.colors.limeGreen,
+                contentColor = Color.White,
+                textStyle = MORUTheme.typography.body_SB_14,
                 iconContent = { Icon(Icons.Default.CalendarToday, "캘린더", Modifier.size(16.dp)) }
             )
         }
@@ -246,7 +241,11 @@ fun RoutineStepItem(stepNumber: Int, step: RoutineStep) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(text = "$stepNumber", style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
         Spacer(Modifier.width(16.dp))
-        Text(text = step.name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        Text(
+            text = step.name,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f)
+        )
         Text(text = step.duration, style = MaterialTheme.typography.bodyLarge)
     }
 }
@@ -255,11 +254,22 @@ fun RoutineStepItem(stepNumber: Int, step: RoutineStep) {
 fun SimilarRoutinesSection(modifier: Modifier = Modifier, routines: List<SimilarRoutine>) {
     Column(modifier = modifier) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "이 루틴과 비슷한 루틴", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "더보기", modifier = Modifier.rotate(180f))
+            Text(
+                text = "이 루틴과 비슷한 루틴",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "더보기",
+                modifier = Modifier.rotate(180f)
+            )
         }
         Spacer(Modifier.height(12.dp))
         LazyRow(
@@ -280,11 +290,18 @@ fun SimilarRoutineCard(routine: SimilarRoutine) {
         Image(
             painter = painterResource(id = R.drawable.ic_routine_square_stop),
             contentDescription = routine.name,
-            modifier = Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(12.dp)),
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(RoundedCornerShape(12.dp)),
             contentScale = ContentScale.Crop
         )
         Spacer(Modifier.height(8.dp))
-        Text(text = routine.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+        Text(
+            text = routine.name,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold
+        )
         Text(text = routine.tag, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
     }
 }
