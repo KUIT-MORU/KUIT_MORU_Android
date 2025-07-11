@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.konkuk.moru.ui.theme.MORUTheme
 
 /**
  * 정보 전달용 중앙 정렬 다이얼로그
@@ -31,7 +32,7 @@ fun CenteredInfoDialog(
     Dialog(onDismissRequest = onDismissRequest) {
         Surface(
             // 이전 다이얼로그와 동일한 크기 설정
-            modifier = Modifier.size(width = 312.dp, height = 164.dp),
+            modifier = Modifier.size(width = 264.dp, height = 80.dp),
             shape = RoundedCornerShape(14.dp),
             color = dialogColor
         ) {
@@ -53,6 +54,6 @@ fun CenteredInfoDialogPreview() {
         onDismissRequest = {},
         dialogColor = Color(0xFF3A3A3A),
     ) {
-        Text(text = "수정되었습니다!", color = Color(0xFFE0E0E0))
+        Text(text = "수정되었습니다!", color = Color(0xFFE0E0E0), style = MORUTheme.typography.desc_M_14)
     }
 }

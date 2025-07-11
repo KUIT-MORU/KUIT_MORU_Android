@@ -3,13 +3,11 @@ package com.konkuk.moru.presentation.navigation
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -25,7 +23,7 @@ import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesViewModel
 import com.konkuk.moru.presentation.routinefeed.screen.NotificationScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedScreen
-
+import java.time.DayOfWeek
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -54,21 +52,31 @@ fun MainNavGraph(
         }
 
         composable(route = Route.MyRoutine.route) {
-            // 1. Hilt를 통해 방금 만든 ViewModel 인스턴스를 가져옵니다.
             val viewModel: MyRoutinesViewModel = viewModel()
+            val uiState by viewModel.uiState.collectAsState()
+            val routinesToDisplay by viewModel.routinesToDisplay.collectAsState()
 
-            // 2. ViewModel의 routines 상태를 구독합니다.
-            val routines by viewModel.routines.collectAsState()
-
-            // 3. MyRoutinesScreen에 상태와 이벤트 핸들러를 전달합니다.
             MyRoutinesScreen(
                 modifier = modifier.padding(innerPadding),
-                routines = routines, // ✅ ViewModel의 데이터
-                onConfirmTimeSet = viewModel::onTimeSetConfirm,
-                onNavigateToCreateRoutine = { /* ... */ },
-                onNavigateToRoutineFeed = { /* ... */ },
-                onInfoClick = viewModel::onInfoClick, // ✅ ViewModel의 함수
-                onTrashClick = viewModel::onTrashClick  // ✅ ViewModel의 함수
+                uiState = uiState,
+                routinesToDisplay = routinesToDisplay,
+                onSortOptionSelected = viewModel::onSortOptionSelected,
+                onDaySelected = { day: DayOfWeek? -> viewModel.onDaySelected(day) },
+                onTrashClick = viewModel::onTrashClick,
+                onCheckRoutine = viewModel::onCheckRoutine,
+                onDeleteClick = viewModel::showDeleteDialog,
+                onDismissDeleteDialog = viewModel::dismissDeleteDialog,
+                onConfirmDelete = viewModel::deleteCheckedRoutines,
+                onOpenTimePicker = viewModel::openTimePicker,
+                onCloseTimePicker = viewModel::closeTimePicker,
+                onConfirmTimeSet = viewModel::onConfirmTimeSet,
+                onLikeClick = viewModel::onLikeClick,
+                onShowInfoTooltip = viewModel::onShowInfoTooltip,
+                onDismissInfoTooltip = viewModel::onDismissInfoTooltip,
+                onNavigateToCreateRoutine = { /* TODO: 루틴 생성 화면으로 이동 */ },
+                onNavigateToRoutineFeed = {
+                    navController.navigate(Route.RoutineFeed.route)
+                }
             )
         }
 
@@ -88,11 +96,9 @@ fun MainNavGraph(
 
         composable(route = Route.Notification.route) {
             NotificationScreen(
-                // NotificationScreen의 뒤로가기 버튼을 누르면 이전 화면으로 돌아가도록 설정합니다.
                 onNavigateBack = {
                     navController.popBackStack()
-
-               }
+                }
             )
         }
 
@@ -103,21 +109,21 @@ fun MainNavGraph(
             )
         }
 
-        composable(route = Route.ActFabTag.route){
+        composable(route = Route.ActFabTag.route) {
             ActFabTagScreen(
                 modifier = modifier.padding(innerPadding),
                 navController = navController
             )
         }
 
-        composable(route = Route.ActRecord.route){
+        composable(route = Route.ActRecord.route) {
             ActRecordScreen(
                 modifier = modifier.padding(innerPadding),
                 navController = navController
             )
         }
 
-        composable(route = Route.ActProfile.route){
+        composable(route = Route.ActProfile.route) {
             ActProfileScreen(
                 modifier = modifier.padding(innerPadding),
                 navController = navController

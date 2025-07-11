@@ -1,8 +1,6 @@
-package com.konkuk.moru.presentation.routinefeed.component.modale
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.FlingBehavior
@@ -35,94 +33,55 @@ import com.konkuk.moru.R
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.ui.theme.MORUTheme
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalTime
+import java.time.format.TextStyle as JavaTextStyle
 import java.util.Locale
 import kotlin.math.abs
 
 enum class RepeatMode { NONE, EVERYDAY, WEEKDAYS, WEEKENDS }
 
-/**
- * 메인 스크린. 하단 시트를 제어합니다.
- * @param isPreview 프리뷰 환경인지 여부. true일 경우 시트가 초기에 열린 상태로 보입니다.
- */
-@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TimeSet(isPreview: Boolean = false) {
-    // Material3에 맞는 올바른 state 선언
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val scope = rememberCoroutineScope()
-    // 프리뷰 여부에 따라 시트 노출을 결정하는 상태
-    var showSheet by remember { mutableStateOf(isPreview) }
-
-    // 메인 스크린의 배경 UI (예시)
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFE8F5E9))
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Button(onClick = {
-            // 버튼 클릭 시 상태를 true로 변경하여 시트를 보여줌
-            showSheet = true
-        }) {
-            Text("시간 설정 열기")
-        }
-    }
-
-    // showSheet 상태가 true일 때만 ModalBottomSheet를 띄움
-    if (showSheet) {
-        ModalBottomSheet(
-            onDismissRequest = {
-                // 닫힐 때 상태를 false로 변경
-                showSheet = false
-            },
-            sheetState = sheetState,
-            dragHandle = { BottomSheetDefaults.DragHandle() },
-            containerColor = Color.White
-        ) {
-            TimePickerSheetContent(
-                onConfirm = { time, days, alarm ->
-                    println("설정된 시간: $time, 요일: $days, 알림: $alarm")
-                    scope.launch {
-                        sheetState.hide()
-                    }.invokeOnCompletion {
-                        if (!sheetState.isVisible) {
-                            showSheet = false
-                        }
-                    }
-                }
-            )
-        }
-    }
-}
-
-
-/**
- * 하단 시트 내부에 들어갈 컨텐츠
- */
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
- fun TimePickerSheetContent(  //private 삭제함 일단
+fun TimePickerSheetContent(
     onConfirm: (LocalTime, Set<DayOfWeek>, Boolean) -> Unit
 ) {
-    var selectedAmPm by remember { mutableStateOf("오후") }
-    var selectedHour by remember { mutableStateOf(2) }
-    var selectedMinute by remember { mutableStateOf(1) }
-    var selectedDays by remember { mutableStateOf(setOf<DayOfWeek>()) }
-    var repeatMode by remember { mutableStateOf(RepeatMode.NONE) }
-    var isAlarmOn by remember { mutableStateOf(true) }
+    // 1. 초기화를 위한 기본값 정의
+    val defaultAmPm = "오후"
+    val defaultHour = 2
+    val defaultMinute = 1
+    val defaultRepeatMode = RepeatMode.NONE
+    val defaultIsAlarmOn = true
+
+    var selectedAmPm by remember { mutableStateOf(defaultAmPm) }
+    var selectedHour by remember { mutableStateOf(defaultHour) }
+    var selectedMinute by remember { mutableStateOf(defaultMinute) }
+    var selectedDays by remember { mutableStateOf(emptySet<DayOfWeek>()) }
+    var repeatMode by remember { mutableStateOf(defaultRepeatMode) }
+    var isAlarmOn by remember { mutableStateOf(defaultIsAlarmOn) }
+
+    // 2. 상태를 기본값으로 되돌리는 초기화 함수
+    fun resetToDefaults() {
+        selectedAmPm = defaultAmPm
+        selectedHour = defaultHour
+        selectedMinute = defaultMinute
+        selectedDays = emptySet()
+        repeatMode = defaultRepeatMode
+        isAlarmOn = defaultIsAlarmOn
+    }
 
     LaunchedEffect(repeatMode) {
         selectedDays = when (repeatMode) {
             RepeatMode.EVERYDAY -> DayOfWeek.values().toSet()
-            RepeatMode.WEEKDAYS -> setOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY)
+            RepeatMode.WEEKDAYS -> setOf(
+                DayOfWeek.MONDAY,
+                DayOfWeek.TUESDAY,
+                DayOfWeek.WEDNESDAY,
+                DayOfWeek.THURSDAY,
+                DayOfWeek.FRIDAY
+            )
             RepeatMode.WEEKENDS -> setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
-            RepeatMode.NONE -> setOf()
+            RepeatMode.NONE -> if (selectedDays.size > 1) emptySet() else selectedDays
         }
     }
     val onDayClick = { day: DayOfWeek ->
@@ -134,12 +93,7 @@ fun TimeSet(isPreview: Boolean = false) {
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            "반복",
-            color = Color.Black,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Text("반복", color = Color.Black, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
 
         val itemHeight = 40.dp
@@ -201,9 +155,11 @@ fun TimeSet(isPreview: Boolean = false) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             val icon = if (isAlarmOn) Icons.Outlined.CheckBox else Icons.Outlined.CheckBoxOutlineBlank
-            val tint = if (isAlarmOn) Color.Black else Color.Gray
-
-            Icon(imageVector = icon, contentDescription = "알림 받기", tint = tint)
+            Icon(
+                imageVector = icon,
+                contentDescription = "알림 받기",
+                tint = if (isAlarmOn) Color.Black else Color.Gray
+            )
             Spacer(modifier = Modifier.width(8.dp))
             Text("알림 받기", color = Color.Black, fontWeight = FontWeight(400))
         }
@@ -217,7 +173,7 @@ fun TimeSet(isPreview: Boolean = false) {
         ) {
             MoruButton(
                 text = "초기화",
-                onClick = { /* TODO: 초기화 로직 */ },
+                onClick = { resetToDefaults() },
                 backgroundColor = MORUTheme.colors.lightGray,
                 contentColor = Color(0xFF595959),
                 shape = RoundedCornerShape(10.dp),
@@ -228,7 +184,7 @@ fun TimeSet(isPreview: Boolean = false) {
                     Icon(
                         modifier = Modifier.size(16.dp),
                         painter = painterResource(id = R.drawable.ic_reset),
-                        contentDescription = "초기화 아이콘"
+                        contentDescription = "초기화"
                     )
                 }
             )
@@ -243,7 +199,7 @@ fun TimeSet(isPreview: Boolean = false) {
                     onConfirm(LocalTime.of(hour24, selectedMinute), selectedDays, isAlarmOn)
                 },
                 backgroundColor = MORUTheme.colors.limeGreen,
-                contentColor = Color.White,
+                contentColor = Color.Black,
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier
                     .weight(1f)
@@ -264,7 +220,8 @@ private fun WheelPicker(
     val itemCount = Int.MAX_VALUE
     val actualItemCount = items.size
     val centralIndex = itemCount / 2
-    val initialIndex = centralIndex + (items.indexOf(initialItem) - (centralIndex % actualItemCount))
+    val initialIndex =
+        centralIndex + (items.indexOf(initialItem).takeIf { it != -1 } ?: 0) - (centralIndex % actualItemCount)
 
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
     val flingBehavior: FlingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
@@ -272,13 +229,12 @@ private fun WheelPicker(
     val derivedCentralItemIndex by remember {
         derivedStateOf {
             val layoutInfo = listState.layoutInfo
-            if (layoutInfo.visibleItemsInfo.isEmpty()) {
-                0
-            } else {
-                val viewportCenter = (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2
+            if (layoutInfo.visibleItemsInfo.isEmpty()) 0
+            else {
+                val viewportCenter =
+                    (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2
                 layoutInfo.visibleItemsInfo
-                    .minByOrNull { abs(it.offset + it.size / 2 - viewportCenter) }
-                    ?.index ?: 0
+                    .minByOrNull { abs(it.offset + it.size / 2 - viewportCenter) }?.index ?: 0
             }
         }
     }
@@ -286,9 +242,7 @@ private fun WheelPicker(
     LaunchedEffect(listState) {
         snapshotFlow { derivedCentralItemIndex }
             .distinctUntilChanged()
-            .collect { index ->
-                onSelectionChanged(items[index % actualItemCount])
-            }
+            .collect { index -> onSelectionChanged(items[index % actualItemCount]) }
     }
 
     LazyColumn(
@@ -347,7 +301,7 @@ private fun RepeatModeSelector(selectedMode: RepeatMode, onModeSelected: (Repeat
 private fun DayOfWeekSelector(selectedDays: Set<DayOfWeek>, onDayClick: (DayOfWeek) -> Unit) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
         DayOfWeek.values().forEach { day ->
-            val dayShortName = day.getDisplayName(java.time.format.TextStyle.SHORT, Locale.KOREAN)
+            val dayShortName = day.getDisplayName(JavaTextStyle.SHORT, Locale.KOREAN)
             val isSelected = selectedDays.contains(day)
             Box(
                 modifier = Modifier
@@ -367,10 +321,22 @@ private fun DayOfWeekSelector(selectedDays: Set<DayOfWeek>, onDayClick: (DayOfWe
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
-fun RoutineScreenPreview() {
-    // 프리뷰에서 바로 시트가 보이도록 isPreview = true 전달
-    TimeSet(isPreview = true)
+fun TimeSetPreview() {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    MORUTheme {
+        ModalBottomSheet(
+            onDismissRequest = {},
+            sheetState = sheetState,
+            dragHandle = { BottomSheetDefaults.DragHandle() },
+            containerColor = Color.White
+        ) {
+            TimePickerSheetContent(
+                onConfirm = { _, _, _ ->}
+            )
+        }
+    }
 }
