@@ -30,7 +30,7 @@ fun TooltipBubble(
     Box(
         // Modifier 순서 중요: background를 먼저 그리고, padding으로 콘텐츠 영역을 한정합니다.
         modifier = modifier
-            .height(53.dp)
+            //.height(53.dp)
             .background(color = backgroundColor, shape = shape)
             .padding(top = tailHeight), // 꼬리 높이만큼 위쪽에 패딩을 적용
         contentAlignment = Alignment.Center
@@ -50,7 +50,7 @@ fun SpecificTooltipPreview() {
     )
 
     // 2. TooltipBubble 호출 시 크기, 모양, 색상, 그리고 꼬리 높이를 전달
-    Box(modifier = Modifier.padding(20.dp)) {
+    Box(modifier = Modifier.padding(30.dp)) {
         TooltipBubble(
             modifier = Modifier
                 .width(328.dp)

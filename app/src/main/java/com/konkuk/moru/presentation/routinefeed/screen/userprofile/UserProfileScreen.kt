@@ -199,9 +199,9 @@ private fun ProfileHeader(
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = state.nickname, fontWeight = FontWeight.Bold)
+        Text(text = state.nickname,style= MORUTheme.typography.time_R_16 ,fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(4.dp))
-        Text(text = state.bio, fontSize = 14.sp, color = Color.DarkGray)
+        Text(text = state.bio, fontSize = 14.sp, style = MORUTheme.typography.time_R_14, color = Color.DarkGray)
     }
 }
 

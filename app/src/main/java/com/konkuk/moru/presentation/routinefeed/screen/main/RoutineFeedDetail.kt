@@ -187,13 +187,18 @@ private fun RoutineInfoOverlay(modifier: Modifier = Modifier, routineDetail: Rou
         ) {
             routineDetail.tags.forEach { tag ->
                 MoruChip(
+                    modifier = Modifier
+                        .wrapContentWidth()
+                        .height(33.dp),
+                        //.width(47.dp),
                     text = "#$tag",
                     onClick = {},
                     isSelected = true,
-                    selectedBackgroundColor = Color.White.copy(alpha = 0.2f),
-                    selectedContentColor = contentColor,
+                    selectedBackgroundColor = MORUTheme.colors.darkGray,
+                    selectedContentColor = MORUTheme.colors.limeGreen,
                     unselectedBackgroundColor = Color.Transparent,
-                    unselectedContentColor = Color.Transparent
+                    unselectedContentColor = Color.Transparent,
+                    contentPadding = PaddingValues(horizontal = 5.dp, vertical = 1.4.dp)
                 )
             }
         }
