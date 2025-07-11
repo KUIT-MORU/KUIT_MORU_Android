@@ -265,7 +265,6 @@ private fun RoutineFocusIntroScreenPreview() {
         onBackClick = {}, //뒤로 가기 구현해야함
         routineTitle = "주말 아침 루틴",
         hashTag = "태그1 태그2",
-        //타입에 따라 보이는 컴포넌트 다름
-        focusType = FocusType.SIMPLE
+        focusType = FocusType.FOCUS //타입에 따라 보이는 컴포넌트 다름(SIMPLE,FOCUS)
     )
 }

@@ -29,7 +29,7 @@ fun StatusBarMock(
 
     Row(
         modifier = modifier
-            .fillMaxWidth()
+            .width(360.dp)
             .height(24.dp)
             .background(backgroundColor)
             .padding(horizontal = 12.dp, vertical = 4.dp),
@@ -46,7 +46,7 @@ fun StatusBarMock(
         // 오른쪽 아이콘들
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Image(
                 painter = painterResource(id = R.drawable.ic_signal),
