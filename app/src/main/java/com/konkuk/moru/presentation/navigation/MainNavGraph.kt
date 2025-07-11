@@ -1,5 +1,7 @@
 package com.konkuk.moru.presentation.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -16,8 +18,11 @@ import com.konkuk.moru.presentation.myactivity.screen.ActRecordScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActScrabScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActSettingScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesScreen
-import com.konkuk.moru.presentation.routinefeed.screen.RoutineFeedScreen
+import com.konkuk.moru.presentation.routinefeed.screen.NotificationScreen
+import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedScreen
 
+
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainNavGraph(
     navController: NavHostController,
@@ -36,7 +41,10 @@ fun MainNavGraph(
 
         composable(route = Route.RoutineFeed.route) {
             RoutineFeedScreen(
-                modifier = modifier.padding(innerPadding)
+                modifier = modifier.padding(innerPadding),
+                onNavigateToNotification = {
+                    navController.navigate(Route.Notification.route)
+                }
             )
         }
 
@@ -57,6 +65,16 @@ fun MainNavGraph(
             ActSettingScreen(
                 modifier = modifier.padding(innerPadding),
                 navController = navController
+            )
+        }
+
+        composable(route = Route.Notification.route) {
+            NotificationScreen(
+                // NotificationScreen의 뒤로가기 버튼을 누르면 이전 화면으로 돌아가도록 설정합니다.
+                onNavigateBack = {
+                    navController.popBackStack()
+
+               }
             )
         }
 
