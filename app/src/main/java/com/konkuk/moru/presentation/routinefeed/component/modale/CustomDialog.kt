@@ -1,10 +1,8 @@
 package com.konkuk.moru.presentation.routinefeed.component.modale
-
-
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,85 +11,69 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.konkuk.moru.core.component.button.MoruButton
+import com.konkuk.moru.ui.theme.MORUTheme
 
 @Composable
 fun CustomDialog(
     onDismissRequest: () -> Unit,
-    onConfirmation: () -> Unit = {},
-    showTwoButtons: Boolean,
-    dialogColor: Color = Color(0xFF2C2C2C),
+    onConfirmation: () -> Unit,
+    // ❗️ content를 Composable 람다로 다시 받아서 유연성 확보
     content: @Composable () -> Unit,
-    onConfirmationcontent: String = "확인",
-    onDismisscontent: String = "취소"
+    showTwoButtons: Boolean = true,
+    confirmButtonText: String = "확인",
+    dismissButtonText: String = "취소"
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
         Surface(
-            // 1. 다이얼로그 크기 고정
-            modifier = Modifier.size(width = 312.dp, height = 164.dp),
-            shape = RoundedCornerShape(4.dp), // 사진과 유사하게 모서리 변경
-            color = dialogColor
+            modifier = Modifier.size(width = 280.dp, height = 150.dp),
+            shape = RoundedCornerShape(14.dp),
+            color = Color.White // ❗️ 흰색 배경으로 변경
         ) {
-            // 2. Column 레이아웃 재구성
             Column(
-                modifier = Modifier.fillMaxSize(), // Surface를 꽉 채우도록 변경
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(6.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // 메인 컨텐츠를 담는 Box, 위쪽 여백 추가
+                // --- 상단 컨텐츠 (Composable 람다 호출) ---
+                // Box를 사용해 컨텐츠가 중앙에 오도록 함
                 Box(
-                    modifier = Modifier.padding(top = 61.dp),
+                    modifier = Modifier.weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
                     content()
                 }
 
-                // 남는 공간을 모두 차지해서 아래 요소들을 밀어내는 Spacer
-                Spacer(modifier = Modifier.weight(1f))
-
-                // 버튼 표시 여부에 따라 UI 분기
+                // --- 하단 버튼 ---
                 if (showTwoButtons) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp), // 버튼 영역의 높이 지정
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // 왼쪽 절반 영역 (취소 버튼)
-                        Box(
-                            modifier = Modifier.weight(1f),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            TextButton(onClick = { onDismissRequest() }) {
-                                Text(
-                                    onDismisscontent,
-                                    color = Color(0xFFEBFFC0),
-                                    fontSize = 14.sp,
-                                    lineHeight = 15.sp
-                                )
-                            }
-                        }
-                        // 오른쪽 절반 영역 (확인 버튼)
-                        Box(
-                            modifier = Modifier.weight(1f),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            TextButton(onClick = { onConfirmation() }) {
-                                Text(
-                                    onConfirmationcontent,
-                                    color = Color(0xFFEBFFC0),
-                                    fontSize = 14.sp,
-                                    lineHeight = 15.sp
-                                )
-                            }
-                        }
+                        MoruButton(
+                            modifier = Modifier.weight(1f).height(48.dp),
+                            text = dismissButtonText,
+                            onClick = onDismissRequest,
+                            backgroundColor = MORUTheme.colors.lightGray,
+                            contentColor = MORUTheme.colors.darkGray
+                        )
+                        MoruButton(
+                            modifier = Modifier.weight(1f).height(48.dp),
+                            text = confirmButtonText,
+                            onClick = onConfirmation,
+                            backgroundColor = MORUTheme.colors.limeGreen,
+                            contentColor = Color.Black
+                        )
                     }
                 }
             }
@@ -99,19 +81,21 @@ fun CustomDialog(
     }
 }
 
-// Preview 코드도 dialogColor를 맞춰서 확인하기 용이하도록 수정
 @Preview(name = "Custom Dialog Preview")
 @Composable
-fun CustomDialogCustomTextPreview() {
-    CustomDialog(
-        showTwoButtons = true,
-        dialogColor = Color(0xFF212120), // 사진과 유사한 배경색으로 변경
-        onConfirmation = {},
-        onDismissRequest = {},
-        content = {
-            Text(text = "수정을 완료하시겠습니까?", color = Color(0xFFFFFFFF)) // 사진과 유사한 글자색으로 변경
-        },
-        onDismisscontent = "취소",
-        onConfirmationcontent = "확인"
-    )
+private fun CustomDialogCustomTextPreview() {
+    MORUTheme {
+        CustomDialog(
+            onConfirmation = {},
+            onDismissRequest = {},
+            // ❗️ content 람다 안에 원하는 UI 요소를 넣는 방식으로 변경
+            content = {
+                Text(
+                    text = "루틴을 삭제하시겠습니까?",
+                    style = MORUTheme.typography.title_B_20,
+                    textAlign = TextAlign.Center
+                )
+            }
+        )
+    }
 }
