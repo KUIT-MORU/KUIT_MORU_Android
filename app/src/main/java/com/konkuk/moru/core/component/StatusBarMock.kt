@@ -1,4 +1,4 @@
-package com.konkuk.moru.core.component
+package com.konkuk.moru.core.component.Switch
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
