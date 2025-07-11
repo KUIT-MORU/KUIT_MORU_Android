@@ -39,9 +39,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.konkuk.moru.R
-import com.konkuk.moru.core.component.StatusBarMock
+import com.konkuk.moru.core.component.Switch.StatusBarMock
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
 import com.konkuk.moru.presentation.routinefocus.component.RoutineTimelineItem
+import com.konkuk.moru.presentation.routinefocus.component.SettingSwitchGroup
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 import kotlinx.coroutines.delay
@@ -262,10 +263,14 @@ fun RoutineFocusScreen(
                             .zIndex(3f)
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-//                            SettingSwitchRow("다크 모드", isDarkMode) { isDarkMode = it }
-//                            SettingSwitchRow("방해 금지 모드", isDoNotDisturb) { isDoNotDisturb = it }
-//                            SettingSwitchRow("스텝 완료 진동", isStepVibration) { isStepVibration = it }
-//                            SettingSwitchRow("가로 모드", isLandscapeMode) { isLandscapeMode = it }
+                            SettingSwitchGroup(
+                                settings = listOf(
+                                    Triple("다크 모드", isDarkMode) { isDarkMode = it },
+                                    Triple("방해 금지 모드", isDoNotDisturb) { isDoNotDisturb = it },
+                                    Triple("스텝 완료 진동", isStepVibration) { isStepVibration = it },
+                                    Triple("가로 모드", isLandscapeMode) { isLandscapeMode = it }
+                                )
+                            )
                         }
                     }
                 }
