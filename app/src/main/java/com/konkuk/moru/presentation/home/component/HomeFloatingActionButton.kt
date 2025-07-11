@@ -1,9 +1,7 @@
 package com.konkuk.moru.presentation.home.component
 
-import android.R.attr.contentDescription
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
@@ -14,9 +12,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImagePainter.State.Empty.painter
-import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.R
+import com.konkuk.moru.ui.theme.MORUTheme.colors
 
 @Composable
 fun HomeFloatingActionButton(

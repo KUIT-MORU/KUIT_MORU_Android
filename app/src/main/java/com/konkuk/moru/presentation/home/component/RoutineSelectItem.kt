@@ -53,7 +53,7 @@ fun RoutineSelectItem(
 
     Box(
         modifier = modifier
-            .width(328.dp)
+            .width(196.dp)
             .height(52.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(backgroundColor)
@@ -64,10 +64,10 @@ fun RoutineSelectItem(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 19.dp, bottom = 17.dp),
+                .padding(top = 11.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Spacer(modifier = modifier.size(30.dp))
+            Spacer(modifier = modifier.size(12.dp))
             Box(
                 modifier = Modifier.width(153.dp)
             ) {
@@ -77,7 +77,7 @@ fun RoutineSelectItem(
                     color = colors.charcoalBlack
                 )
             }
-            Spacer(modifier = Modifier.size(103.dp))
+            Spacer(modifier = Modifier.size(1f.dp))
             Box(
                 modifier = Modifier
                     .size(18.dp)
@@ -97,7 +97,7 @@ fun RoutineSelectItem(
                     )
                 }
             }
-            Spacer(modifier = Modifier.width(25.dp))
+            Spacer(modifier = Modifier.width(8.dp))
         }
     }
 }
