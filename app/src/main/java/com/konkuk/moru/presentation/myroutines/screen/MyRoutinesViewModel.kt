@@ -89,14 +89,21 @@ class MyRoutinesViewModel : ViewModel() {
         _uiState.update { it.copy(showDeleteDialog = false) }
     }
 
+    fun dismissDeleteSuccessDialog() {
+        _uiState.update { it.copy(showDeleteSuccessDialog = false) }
+    }
+
     fun deleteCheckedRoutines() {
+        // 실제 데이터 삭제 로직
         _sourceRoutines.update { currentList ->
             currentList.filterNot { it.isChecked }
         }
+        // UI 상태 업데이트
         _uiState.update {
             it.copy(
-                isDeleteMode = false,
-                showDeleteDialog = false
+                isDeleteMode = false, // 삭제 모드 종료
+                showDeleteDialog = false, // 삭제 '확인' 모달 닫기
+                showDeleteSuccessDialog = true // ✨ 삭제 '성공' 모달 띄우기
             )
         }
     }

@@ -76,7 +76,8 @@ fun MainNavGraph(
                 onNavigateToCreateRoutine = { /* TODO: 루틴 생성 화면으로 이동 */ },
                 onNavigateToRoutineFeed = {
                     navController.navigate(Route.RoutineFeed.route)
-                }
+                },
+                onDismissDeleteSuccessDialog = viewModel::dismissDeleteSuccessDialog
             )
         }
 

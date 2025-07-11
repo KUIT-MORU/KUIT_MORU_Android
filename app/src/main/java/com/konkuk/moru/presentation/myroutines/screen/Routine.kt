@@ -1,8 +1,5 @@
 package com.konkuk.moru.presentation.myroutines.screen
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
 import java.time.DayOfWeek
 import java.time.LocalTime
 
@@ -18,7 +15,6 @@ data class MyRoutine(
     val scheduledTime: LocalTime? = null,
     val scheduledDays: Set<DayOfWeek> = emptySet()
 )
-
 
 
 // ❗️ 추가: 인메모리 상태 관리를 위한 데이터 클래스
