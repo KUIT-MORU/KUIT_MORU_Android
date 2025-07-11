@@ -4,7 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,10 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -37,6 +34,7 @@ import androidx.navigation.NavHostController
 import com.konkuk.moru.R
 import com.konkuk.moru.core.util.modifier.noRippleClickable
 import com.konkuk.moru.presentation.myactivity.component.BackTitle
+import com.konkuk.moru.presentation.myactivity.component.MyNickNameInputField
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
@@ -102,34 +100,28 @@ fun ActProfileScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(36.dp))
 
-        // 닉네임
-        Text("닉네임")
         if (isEditMode.value) {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                TextField(
-                    value = profileData[0].value,
-                    onValueChange = { profileData[0].value = it },
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    "중복확인",
-                    modifier = Modifier
-                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                    color = Color.Gray
-                )
-            }
+            MyNickNameInputField()
         } else {
+            Text(
+                text = "닉네임",
+                color = colors.black,
+                style = typography.body_SB_16,
+                modifier = Modifier.padding(bottom = 6.dp)
+            )
             OutlinedText(profileData[0].value)
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(21.dp))
 
-        // 성별
-        Text("성별", style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = "성별",
+            color = colors.black,
+            style = typography.body_SB_16,
+            modifier = Modifier.padding(bottom = 6.dp)
+        )
         if (isEditMode.value) {
             Row {
                 listOf("남자", "여자").forEach { gender ->
@@ -151,10 +143,14 @@ fun ActProfileScreen(
             OutlinedText(profileData[1].value)
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(21.dp))
 
-        // 생년월일
-        Text("생년월일", style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = "생년월일",
+            color = colors.black,
+            style = typography.body_SB_16,
+            modifier = Modifier.padding(bottom = 6.dp)
+        )
         if (isEditMode.value) {
             TextField(
                 value = profileData[2].value,
@@ -165,10 +161,14 @@ fun ActProfileScreen(
             OutlinedText(profileData[2].value)
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(21.dp))
 
-        // 자기소개
-        Text("자기소개")
+        Text(
+            text = "자기소개",
+            color = colors.black,
+            style = typography.body_SB_16,
+            modifier = Modifier.padding(bottom = 6.dp)
+            )
         if (isEditMode.value) {
             TextField(
                 value = profileData[3].value,
@@ -184,12 +184,19 @@ fun ActProfileScreen(
 @Composable
 fun OutlinedText(text: String) {
     Box(
+        contentAlignment = Alignment.CenterStart,
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(6.dp))
-            .padding(12.dp)
+            .height(45.dp)
+            .border(1.dp, colors.lightGray, RoundedCornerShape(6.dp))
+            .padding(start = 16.dp)
+
     ) {
-        Text(text)
+        Text(
+            text = text,
+            style = typography.desc_M_14,
+            color = colors.mediumGray
+        )
     }
 }
 
