@@ -34,6 +34,7 @@ import androidx.navigation.NavHostController
 import com.konkuk.moru.R
 import com.konkuk.moru.core.util.modifier.noRippleClickable
 import com.konkuk.moru.presentation.myactivity.component.BackTitle
+import com.konkuk.moru.presentation.myactivity.component.MyGenderInputField
 import com.konkuk.moru.presentation.myactivity.component.MyNickNameInputField
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
@@ -105,42 +106,15 @@ fun ActProfileScreen(
         if (isEditMode.value) {
             MyNickNameInputField()
         } else {
-            Text(
-                text = "닉네임",
-                color = colors.black,
-                style = typography.body_SB_16,
-                modifier = Modifier.padding(bottom = 6.dp)
-            )
-            OutlinedText(profileData[0].value)
+            OutlinedText("닉네임", profileData[0].value)
         }
 
         Spacer(modifier = Modifier.height(21.dp))
 
-        Text(
-            text = "성별",
-            color = colors.black,
-            style = typography.body_SB_16,
-            modifier = Modifier.padding(bottom = 6.dp)
-        )
         if (isEditMode.value) {
-            Row {
-                listOf("남자", "여자").forEach { gender ->
-                    Box(
-                        modifier = Modifier
-                            .padding(end = 8.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(
-                                if (profileData[1].value == gender) Color(0xFFB8EE44) else Color(0xFFF1F3F5)
-                            )
-                            .clickable { profileData[1].value = gender }
-                            .padding(horizontal = 24.dp, vertical = 10.dp)
-                    ) {
-                        Text(gender)
-                    }
-                }
-            }
+            MyGenderInputField()
         } else {
-            OutlinedText(profileData[1].value)
+            OutlinedText("성별", profileData[1].value)
         }
 
         Spacer(modifier = Modifier.height(21.dp))
@@ -158,7 +132,7 @@ fun ActProfileScreen(
                 modifier = Modifier.fillMaxWidth()
             )
         } else {
-            OutlinedText(profileData[2].value)
+            OutlinedText("생년월일", profileData[2].value)
         }
 
         Spacer(modifier = Modifier.height(21.dp))
@@ -176,13 +150,19 @@ fun ActProfileScreen(
                 modifier = Modifier.fillMaxWidth()
             )
         } else {
-            OutlinedText(profileData[3].value)
+            OutlinedText("자기소개", profileData[3].value)
         }
     }
 }
 
 @Composable
-fun OutlinedText(text: String) {
+fun OutlinedText(title: String, text: String) {
+    Text(
+        text = title,
+        color = colors.black,
+        style = typography.body_SB_16,
+        modifier = Modifier.padding(bottom = 6.dp)
+    )
     Box(
         contentAlignment = Alignment.CenterStart,
         modifier = Modifier
