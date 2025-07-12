@@ -16,6 +16,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.konkuk.moru.core.component.ConstantSizeSwitch
+import com.konkuk.moru.ui.theme.MORUTheme
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
@@ -26,14 +28,13 @@ fun SettingSwitchGroup(
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(4.dp))
-            .background(Color.White)
-            .width(IntrinsicSize.Max)
+            .background(Color(0xFFFFFF).copy(alpha = 0.75f))
     ) {
         settings.forEachIndexed { index, (title, checked, onCheckedChange) ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 6.dp, vertical = 8.dp),
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -42,15 +43,9 @@ fun SettingSwitchGroup(
                     style = typography.desc_M_14,
                     color = colors.black
                 )
-                Switch(
+                ConstantSizeSwitch(
                     checked = checked,
-                    onCheckedChange = onCheckedChange,
-                    colors = SwitchDefaults.colors(
-                        uncheckedThumbColor = colors.mediumGray,   // OFF 상태 버튼 색 (회색)
-                        uncheckedTrackColor = colors.lightGray,   // OFF 상태 배경 색 (연회색)
-                        checkedThumbColor = colors.lightGray,           // ON 상태 버튼 색
-                        checkedTrackColor = colors.darkGray         // ON 상태 배경 색
-                    )
+                    onCheckedChange = onCheckedChange
                 )
             }
 
@@ -63,18 +58,21 @@ fun SettingSwitchGroup(
 
 @Preview(showBackground = true, widthDp = 300)
 @Composable
-private fun SettingSwitchGroupPreview() {
+private fun SettingSwitchGroupWithCustomSwitchPreview() {
     val isDarkMode = remember { mutableStateOf(false) }
     val isDoNotDisturb = remember { mutableStateOf(true) }
     val isStepVibration = remember { mutableStateOf(false) }
     val isLandscapeMode = remember { mutableStateOf(false) }
 
-    SettingSwitchGroup(
-        settings = listOf(
-            Triple("다크 모드", isDarkMode.value) { isDarkMode.value = it },
-            Triple("방해 금지 모드", isDoNotDisturb.value) { isDoNotDisturb.value = it },
-            Triple("스텝 완료 진동", isStepVibration.value) { isStepVibration.value = it },
-            Triple("가로 모드", isLandscapeMode.value) { isLandscapeMode.value = it }
+    MORUTheme { // 꼭 MORUTheme 안에서 preview해야 색상 정상 적용
+        SettingSwitchGroup(
+            settings = listOf(
+                Triple("다크 모드", isDarkMode.value) { isDarkMode.value = it },
+                Triple("방해 금지 모드", isDoNotDisturb.value) { isDoNotDisturb.value = it },
+                Triple("스텝 완료 진동", isStepVibration.value) { isStepVibration.value = it },
+                Triple("가로 모드", isLandscapeMode.value) { isLandscapeMode.value = it }
+            )
         )
-    )
+    }
 }
+
