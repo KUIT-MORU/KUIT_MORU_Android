@@ -27,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,7 +52,9 @@ fun ActProfileScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
-    val isEditMode = remember { mutableStateOf(false) }
+    val isEditMode = rememberSaveable { mutableStateOf(false) }
+    val showToast = rememberSaveable { mutableStateOf(false) }
+    val showImagePickerSheet = rememberSaveable { mutableStateOf(false) }
 
     val profileData = remember {
         mutableStateListOf(
@@ -61,9 +64,6 @@ fun ActProfileScreen(
             mutableStateOf("안녕하세요!")
         )
     }
-
-    val showToast = remember { mutableStateOf(false) }
-    val showImagePickerSheet = remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
