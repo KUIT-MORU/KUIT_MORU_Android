@@ -43,7 +43,7 @@ fun ActScrabScreen(
             .fillMaxSize()
             .background(Color(0xFFFFFFFF))
     ) {
-        Spacer(modifier = Modifier.padding(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         Box(
             modifier = Modifier.padding(horizontal = 16.dp)
         ){

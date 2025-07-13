@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -52,9 +53,9 @@ fun ActRecordScreen(
             .background(Color(0xFFFFFFFF))
             .padding(start = 16.dp, end = 16.dp)
     ) {
-        Spacer(modifier = Modifier.padding(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         BackTitle(title = "내 기록", navController = navController)
-        Spacer(modifier = Modifier.padding(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 90.dp),

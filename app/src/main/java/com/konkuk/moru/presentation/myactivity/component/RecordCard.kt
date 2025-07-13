@@ -91,27 +91,31 @@ fun RecordCard(
                 ) {}
             }
         }
-        Spacer(modifier = Modifier.height(4.dp))
 
-        Text(
-            text = title,
-            color = colors.black,
-            style = typography.body_SB_14,
-            modifier = Modifier.padding(horizontal = 4.dp)
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-        Box(modifier = Modifier.width(85.dp)) {
+        Column(modifier = Modifier
+            .fillMaxWidth()
+            .height(39.dp)) {
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = tags.joinToString(" ") { "#$it" },
-                color = colors.mediumGray,
-                style = typography.time_R_12,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                softWrap = false,
-                modifier = Modifier
-                    .fillMaxWidth()
+                text = title,
+                color = colors.black,
+                style = typography.body_SB_14,
+                modifier = Modifier.padding(horizontal = 4.dp)
             )
+            Spacer(modifier = Modifier.weight(1f))
+            Box(modifier = Modifier.width(85.dp)) {
+                Text(
+                    text = tags.joinToString(" ") { "#$it" },
+                    color = colors.mediumGray,
+                    style = typography.time_R_12,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    softWrap = false,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 4.dp)
+                )
+            }
         }
     }
 }
