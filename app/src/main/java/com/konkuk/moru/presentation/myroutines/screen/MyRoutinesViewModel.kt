@@ -2,6 +2,7 @@ package com.konkuk.moru.presentation.myroutines.screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.konkuk.moru.data.model.Routine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,25 +17,22 @@ import java.time.LocalTime
 
 class MyRoutinesViewModel : ViewModel() {
 
-    // 1. 서버에서 가져온 원본 데이터 (Private)
-    private val _sourceRoutines = MutableStateFlow<List<MyRoutine>>(emptyList())
+    // [수정] 원본 데이터 타입을 MyRoutine에서 통합 Routine으로 변경
+    private val _sourceRoutines = MutableStateFlow<List<Routine>>(emptyList())
 
-    // 2. UI의 상태 (선택된 필터, 정렬 옵션 등)
     private val _uiState = MutableStateFlow(MyRoutinesUiState())
     val uiState: StateFlow<MyRoutinesUiState> = _uiState.asStateFlow()
 
-    // 3. 최종적으로 화면에 표시될 데이터 (필터링과 정렬이 적용된 결과)
-    val routinesToDisplay: StateFlow<List<MyRoutine>> = combine(
+    // [수정] 화면 표시용 데이터 타입도 통합 Routine으로 변경
+    val routinesToDisplay: StateFlow<List<Routine>> = combine(
         _sourceRoutines,
         uiState
     ) { routines, state ->
-        //요일 필터링
         val filteredByDay = if (state.selectedDay == null) {
             routines
         } else {
             routines.filter { it.scheduledDays.contains(state.selectedDay) }
         }
-        // 정렬 옵션 적용
         when (state.selectedSortOption) {
             SortOption.BY_TIME -> filteredByDay.sortedBy { it.scheduledTime ?: LocalTime.MAX }
             SortOption.LATEST -> filteredByDay.sortedByDescending { it.id }
@@ -94,16 +92,14 @@ class MyRoutinesViewModel : ViewModel() {
     }
 
     fun deleteCheckedRoutines() {
-        // 실제 데이터 삭제 로직
         _sourceRoutines.update { currentList ->
             currentList.filterNot { it.isChecked }
         }
-        // UI 상태 업데이트
         _uiState.update {
             it.copy(
-                isDeleteMode = false, // 삭제 모드 종료
-                showDeleteDialog = false, // 삭제 '확인' 모달 닫기
-                showDeleteSuccessDialog = true // ✨ 삭제 '성공' 모달 띄우기
+                isDeleteMode = false,
+                showDeleteDialog = false,
+                showDeleteSuccessDialog = true
             )
         }
     }
@@ -125,7 +121,6 @@ class MyRoutinesViewModel : ViewModel() {
         closeTimePicker()
     }
 
-    // ✅ [추가] 좋아요 클릭 이벤트 핸들러
     fun onLikeClick(routineId: Int) {
         _sourceRoutines.update { currentList ->
             currentList.map { routine ->
@@ -141,11 +136,7 @@ class MyRoutinesViewModel : ViewModel() {
         }
     }
 
-    // ✅ [추가] 정보 아이콘 클릭 이벤트 핸들러
     fun onShowInfoTooltip() {
-        // 현재 구조에서는 Screen이 툴팁 표시를 직접 관리하므로
-        // ViewModel에서는 로그를 남기거나 비워두어도 괜찮습니다.
-        // 또는 UiState에 showInfoTooltip 변수를 추가하여 관리할 수도 있습니다.
         _uiState.update { it.copy(showInfoTooltip = true) }
     }
 
@@ -157,23 +148,36 @@ class MyRoutinesViewModel : ViewModel() {
 
     private fun loadRoutines() {
         viewModelScope.launch {
+            // [수정] 샘플 데이터를 새로운 통합 Routine 클래스로 변경
             _sourceRoutines.value = listOf(
-                MyRoutine(
+                Routine(
                     id = 1,
-                    name = "아침 운동",
+                    title = "아침 운동", // name -> title
+                    description = "상쾌한 아침을 여는 10분 스트레칭",
+                    imageUrl = null,
+                    category = "건강",
                     tags = listOf("#모닝루틴", "#스트레칭"),
+                    authorName = "사용자",
+                    authorProfileUrl = null,
                     likes = 16,
                     isLiked = true,
+                    isBookmarked = false,
                     isRunning = false,
                     scheduledTime = LocalTime.of(7, 30),
                     scheduledDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY)
                 ),
-                MyRoutine(
+                Routine(
                     id = 2,
-                    name = "오전 명상",
+                    title = "오전 명상", // name -> title
+                    description = "차분한 하루를 위한 명상 시간",
+                    imageUrl = null,
+                    category = "정신",
                     tags = listOf("#마음챙김", "#집중"),
+                    authorName = "사용자",
+                    authorProfileUrl = null,
                     likes = 25,
                     isLiked = false,
+                    isBookmarked = true,
                     isRunning = true,
                     scheduledTime = LocalTime.of(9, 0),
                     scheduledDays = setOf(
@@ -184,32 +188,50 @@ class MyRoutinesViewModel : ViewModel() {
                         DayOfWeek.FRIDAY
                     )
                 ),
-                MyRoutine(
+                Routine(
                     id = 3,
-                    name = "점심 후 산책",
+                    title = "점심 후 산책", // name -> title
+                    description = "식후 가벼운 산책으로 건강 챙기기",
+                    imageUrl = null,
+                    category = "건강",
                     tags = listOf("#건강", "#소화"),
+                    authorName = "사용자",
+                    authorProfileUrl = null,
                     likes = 112,
                     isLiked = true,
+                    isBookmarked = false,
                     isRunning = false,
                     scheduledTime = LocalTime.of(13, 0),
                     scheduledDays = DayOfWeek.values().toSet()
                 ),
-                MyRoutine(
+                Routine(
                     id = 4,
-                    name = "영어 공부",
+                    title = "영어 공부", // name -> title
+                    description = "매일 30분, 꾸준한 영어 공부 습관",
+                    imageUrl = null,
+                    category = "자기계발",
                     tags = listOf("#자기계발", "#외국어"),
+                    authorName = "사용자",
+                    authorProfileUrl = null,
                     likes = 42,
                     isLiked = false,
+                    isBookmarked = false,
                     isRunning = true,
                     scheduledTime = LocalTime.of(21, 0),
                     scheduledDays = setOf(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY)
                 ),
-                MyRoutine(
+                Routine(
                     id = 5,
-                    name = "일기 쓰기",
+                    title = "일기 쓰기", // name -> title
+                    description = "하루를 돌아보며 정리하는 시간",
+                    imageUrl = null,
+                    category = "정신",
                     tags = listOf("#회고", "#감사"),
+                    authorName = "사용자",
+                    authorProfileUrl = null,
                     likes = 33,
                     isLiked = false,
+                    isBookmarked = true,
                     isRunning = false,
                     scheduledTime = null,
                     scheduledDays = setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
