@@ -1,47 +1,52 @@
+// 🎯 아래 코드를 복사해서 HotRoutineListScreen.kt 파일 전체에 붙여넣으세요.
+
 package com.konkuk.moru.presentation.routinefeed.screen.main
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.*
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.konkuk.moru.R
 import com.konkuk.moru.core.component.routine.RoutineListItem
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppBar
-import com.konkuk.moru.presentation.routinefeed.data.HotRoutine
 import com.konkuk.moru.ui.theme.MORUTheme
-
-
+// [수정] 통합 Routine 모델을 임포트하고, 기존 HotRoutine 임포트는 삭제합니다.
+import com.konkuk.moru.data.model.Routine
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HotRoutineListScreen(
-    title: String,             // ← 홈에서 선택한 섹션 제목
+    title: String,
     onBack: () -> Unit = {}
 ) {
-    /* 더미 데이터 (TODO: 서버에서 받아오기) */
+    // [수정] 더미 데이터를 통합 Routine 모델로 변경합니다.
     val routines = remember {
         List(20) {
-            HotRoutine(
+            Routine(
                 id = it,
-                name = "아침 운동",
+                title = "아침 운동", // name -> title
                 tags = listOf("#모닝루틴", "#스트레칭"),
                 likes = 16,
                 isLiked = false,
-                isRunning = it % 2 == 0
+                isRunning = it % 2 == 0,
+                // -- 통합 모델에 필요한 나머지 필드 추가 --
+                description = "상쾌한 아침을 위한 운동",
+                imageUrl = null,
+                category = "건강",
+                authorName = "모루",
+                authorProfileUrl = null,
+                isBookmarked = false
             )
         }
     }
 
-    /* 좋아요 UI 상태 */
+    /* 좋아요 UI 상태 (수정 필요 없음) */
     val likeStates = remember {
         mutableStateMapOf<Int, Boolean>().apply {
             routines.forEach { put(it.id, it.isLiked) }
@@ -57,7 +62,7 @@ fun HotRoutineListScreen(
     Scaffold(
         topBar = {
             BasicTopAppBar(
-                title = title,                        // ✔ 동적 타이틀
+                title = title,
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -68,9 +73,9 @@ fun HotRoutineListScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF212120),             // 배경: 블랙
-                    titleContentColor = MORUTheme.colors.limeGreen, // 타이틀: 라임
-                    navigationIconContentColor = Color.White,       // 아이콘: 흰색
+                    containerColor = Color(0xFF212120),
+                    titleContentColor = MORUTheme.colors.limeGreen,
+                    navigationIconContentColor = Color.White,
                     actionIconContentColor = Color.White
                 ),
                 titleStyle = MORUTheme.typography.time_R_16
@@ -85,18 +90,17 @@ fun HotRoutineListScreen(
             items(routines) { r ->
                 val liked = likeStates[r.id] ?: false
                 RoutineListItem(
-                    isRunning    = r.isRunning,
-                    routineName  = r.name,
-                    tags         = r.tags,
-                    likeCount    = likeCounts[r.id] ?: 0,
-                    isLiked      = liked,
-                    showCheckbox = false,             // ✔ 체크박스 숨김
-                    onLikeClick  = {
+                    isRunning = r.isRunning,
+                    routineName = r.title, // [수정] name -> title
+                    tags = r.tags,
+                    likeCount = likeCounts[r.id] ?: 0,
+                    isLiked = liked,
+                    showCheckbox = false,
+                    onLikeClick = {
                         val newState = !liked
                         likeStates[r.id] = newState
                         likeCounts[r.id] = (likeCounts[r.id] ?: 0) +
                                 if (newState) 1 else -1
-                        // TODO: 서버에 좋아요 상태 전송
                     }
                 )
             }

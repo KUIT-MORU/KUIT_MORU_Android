@@ -6,9 +6,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,6 +23,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.konkuk.moru.ui.theme.moruFontSemiBold
 
 /**
  * 가장 기본적인 형태의 TopAppBar
@@ -53,7 +61,7 @@ fun BasicTopAppBar(
                 // 전달받은 간격으로 Spacer 추가
                 Spacer(modifier = Modifier.width(spacingBetweenIconAndTitle))
                 // 타이틀 텍스트 배치
-                Text(text = title, style = titleStyle)
+                Text(text = title, style = titleStyle, fontFamily = moruFontSemiBold,fontSize=16.sp)
             }
         },
         // ◀ 3. 기존 navigationIcon 슬롯은 비워둡니다.

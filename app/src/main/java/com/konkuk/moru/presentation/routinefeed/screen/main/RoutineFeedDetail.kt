@@ -1,22 +1,42 @@
-package com.konkuk.moru.presentation.routinefeed.screen.main // 패키지 경로는 맞게 수정해주세요
+package com.konkuk.moru.presentation.routinefeed.screen.main
 
 import RoutineDetailTopAppBar
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,28 +48,27 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.konkuk.moru.R // R 파일 경로는 맞게 수정해주세요
+import com.konkuk.moru.R
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.chip.MoruChip
-import com.konkuk.moru.presentation.routinefeed.data.RoutineDetail
-import com.konkuk.moru.presentation.routinefeed.data.RoutineStep
-import com.konkuk.moru.presentation.routinefeed.data.SimilarRoutine
 import com.konkuk.moru.ui.theme.MORUTheme
+// [수정] 통합 Routine 모델 및 관련 클래스 임포트
+import com.konkuk.moru.data.model.Routine
+import com.konkuk.moru.data.model.RoutineStep
+import com.konkuk.moru.data.model.SimilarRoutine
 
-/* --- 1. 데이터 모델 (초기 버전 기준) --- */
 
-
-/* --- 2. 화면 전체를 구성하는 메인 컴포저블 --- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RoutineDetailScreen(routineDetail: RoutineDetail) {
-    var isLiked by remember { mutableStateOf(routineDetail.isLiked) }
-    var likeCount by remember { mutableStateOf(routineDetail.likeCount) }
-    var isBookmarked by remember { mutableStateOf(routineDetail.isBookmarked) }
+fun RoutineDetailScreen(routine: Routine) { // [수정] routineDetail -> routine, 타입 변경
+    // [수정] 통합 Routine 모델의 필드를 사용하여 초기 상태 설정
+    var isLiked by remember { mutableStateOf(routine.isLiked) }
+    var likeCount by remember { mutableStateOf(routine.likes) } // likes 필드 사용
+    var isBookmarked by remember { mutableStateOf(routine.isBookmarked) }
 
     Scaffold(
+        containerColor = Color.White,
         topBar = {
             RoutineDetailTopAppBar(
                 likeCount = likeCount,
@@ -70,35 +89,27 @@ fun RoutineDetailScreen(routineDetail: RoutineDetail) {
                 .fillMaxSize()
                 .background(Color.White)
         ) {
-            // 1, 2번 요청 반영: 이미지와 정보를 합친 헤더
-            item { RoutineHeader(routineDetail = routineDetail) }
+            item { RoutineHeader(routine = routine) } // [수정] routine 전달
 
-            // STEP 섹션
             item {
                 RoutineStepSection(
                     modifier = Modifier.padding(16.dp),
-                    steps = routineDetail.steps
+                    steps = routine.steps // [수정] routine에서 steps 사용
                 )
             }
 
-            // 비슷한 루틴 섹션
             item {
                 SimilarRoutinesSection(
                     modifier = Modifier.padding(top = 24.dp, bottom = 16.dp),
-                    routines = routineDetail.similarRoutines
+                    routines = routine.similarRoutines // [수정] routine에서 similarRoutines 사용
                 )
             }
         }
     }
 }
 
-
-/* --- 3. 화면을 구성하는 하위 컴포저블들 --- */
-
-
-
 @Composable
-fun RoutineHeader(routineDetail: RoutineDetail) {
+fun RoutineHeader(routine: Routine) { // [수정] 파라미터 타입 변경
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -106,7 +117,7 @@ fun RoutineHeader(routineDetail: RoutineDetail) {
         contentAlignment = Alignment.BottomStart
     ) {
         AsyncImage(
-            model = routineDetail.imageUrl,
+            model = routine.imageUrl, // [수정] 필드명 변경
             contentDescription = "루틴 대표 이미지",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
@@ -125,14 +136,14 @@ fun RoutineHeader(routineDetail: RoutineDetail) {
         )
         RoutineInfoOverlay(
             modifier = Modifier.padding(16.dp),
-            routineDetail = routineDetail
+            routine = routine // [수정] routine 전달
         )
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun RoutineInfoOverlay(modifier: Modifier = Modifier, routineDetail: RoutineDetail) {
+private fun RoutineInfoOverlay(modifier: Modifier = Modifier, routine: Routine) { // [수정] 파라미터 타입 변경
     val contentColor = Color.White
     Column(
         modifier = modifier,
@@ -143,14 +154,14 @@ private fun RoutineInfoOverlay(modifier: Modifier = Modifier, routineDetail: Rou
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             AsyncImage(
-                model = routineDetail.authorProfileUrl,
+                model = routine.authorProfileUrl, // [수정] 필드명 변경
                 contentDescription = "작성자 프로필",
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
             )
             Text(
-                text = routineDetail.authorName,
+                text = routine.authorName, // [수정] 필드명 변경
                 color = contentColor,
                 fontWeight = FontWeight.Bold
             )
@@ -161,13 +172,13 @@ private fun RoutineInfoOverlay(modifier: Modifier = Modifier, routineDetail: Rou
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = routineDetail.routineTitle,
+                text = routine.title, // [수정] 필드명 변경
                 color = contentColor,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
             MoruChip(
-                text = routineDetail.routineCategory,
+                text = routine.category, // [수정] 필드명 변경
                 onClick = {},
                 isSelected = true,
                 selectedBackgroundColor = Color(0xFFD9F7A2),
@@ -177,7 +188,7 @@ private fun RoutineInfoOverlay(modifier: Modifier = Modifier, routineDetail: Rou
             )
         }
         Text(
-            text = routineDetail.routineDescription,
+            text = routine.description, // [수정] 필드명 변경
             color = contentColor,
             style = MaterialTheme.typography.bodyMedium
         )
@@ -185,12 +196,11 @@ private fun RoutineInfoOverlay(modifier: Modifier = Modifier, routineDetail: Rou
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            routineDetail.tags.forEach { tag ->
+            routine.tags.forEach { tag ->
                 MoruChip(
                     modifier = Modifier
                         .wrapContentWidth()
                         .height(33.dp),
-                        //.width(47.dp),
                     text = "#$tag",
                     onClick = {},
                     isSelected = true,
@@ -205,12 +215,13 @@ private fun RoutineInfoOverlay(modifier: Modifier = Modifier, routineDetail: Rou
     }
 }
 
+// ... RoutineStepSection, RoutineStepItem, SimilarRoutinesSection, SimilarRoutineCard 함수는 수정할 필요 없음 ...
+// (이미 통합 모델의 RoutineStep, SimilarRoutine과 구조가 동일하기 때문)
 @Composable
 fun RoutineStepSection(modifier: Modifier = Modifier, steps: List<RoutineStep>) {
     Column(modifier = modifier) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            //horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("STEP", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -228,7 +239,6 @@ fun RoutineStepSection(modifier: Modifier = Modifier, steps: List<RoutineStep>) 
         Column {
             steps.forEachIndexed { index, step ->
                 RoutineStepItem(stepNumber = index + 1, step = step)
-                // 5번 요청 반영: 구분선 추가
                 if (index < steps.lastIndex) {
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 16.dp),
@@ -291,7 +301,6 @@ fun SimilarRoutinesSection(modifier: Modifier = Modifier, routines: List<Similar
 @Composable
 fun SimilarRoutineCard(routine: SimilarRoutine) {
     Column(modifier = Modifier.width(140.dp)) {
-        // 4번 요청 반영: 보내주신 아이콘 사용
         Image(
             painter = painterResource(id = R.drawable.ic_routine_square_stop),
             contentDescription = routine.name,
@@ -311,21 +320,24 @@ fun SimilarRoutineCard(routine: SimilarRoutine) {
     }
 }
 
-/* --- 4. Preview --- */
+
 @Preview(showBackground = true)
 @Composable
 fun RoutineDetailScreenPreview() {
-    val sampleData = RoutineDetail(
-        imageUrl = null, // Preview에서는 기본 아이콘 표시됨
+    // [수정] Preview용 샘플 데이터를 통합 Routine 클래스로 생성
+    val sampleData = Routine(
+        id = 0,
+        title = "집중력을 높이는 아침 루틴",
+        description = "이 루틴은 당신의 아침을 활기차게 만들어 줄 것입니다.",
+        imageUrl = null,
+        category = "집중",
+        tags = listOf("명상", "독서", "아침"),
         authorName = "모루",
         authorProfileUrl = null,
-        routineTitle = "집중력을 높이는 아침 루틴",
-        routineCategory = "집중",
-        routineDescription = "이 루틴은 당신의 아침을 활기차게 만들어 줄 것입니다.",
-        tags = listOf("명상", "독서", "아침"),
-        likeCount = 16,
+        likes = 16,
         isLiked = true,
         isBookmarked = false,
+        isRunning = false,
         steps = listOf(
             RoutineStep("물 한잔 마시기", "00:30"),
             RoutineStep("5분 명상하기", "05:00"),
@@ -335,7 +347,7 @@ fun RoutineDetailScreenPreview() {
             SimilarRoutine(null, "루틴명명명", "#운동하자")
         }
     )
-    MaterialTheme {
-        RoutineDetailScreen(routineDetail = sampleData)
+    MORUTheme { // MORUTheme으로 감싸서 Preview 확인
+        RoutineDetailScreen(routine = sampleData)
     }
 }

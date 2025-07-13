@@ -2,7 +2,6 @@ package com.konkuk.moru.presentation.routinefeed.screen.userprofile
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,7 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -48,16 +46,14 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.konkuk.moru.R // 실제 R 파일 경로
+import com.konkuk.moru.R
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.routine.RoutineListItem
+import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppBar
-import com.konkuk.moru.presentation.routinefeed.data.RoutineInfo
 import com.konkuk.moru.presentation.routinefeed.data.UserProfileUiState
 import com.konkuk.moru.ui.theme.MORUTheme
 
-// --- 실제 앱에서 사용하는 Composable ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserProfileScreen(
@@ -67,6 +63,7 @@ fun UserProfileScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
+        containerColor = Color.White,
         topBar = {
             BasicTopAppBar(
                 title = "사용자명",
@@ -90,7 +87,6 @@ fun UserProfileScreen(
     }
 }
 
-// --- UI 구조를 담당하는 Composable (Stateless) ---
 @Composable
 private fun UserProfileContent(
     modifier: Modifier = Modifier,
@@ -137,7 +133,7 @@ private fun UserProfileContent(
             items(state.userRoutines, key = { it.id }) { routine ->
                 RoutineListItem(
                     isRunning = routine.isRunning,
-                    routineName = routine.name,
+                    routineName = routine.title,
                     tags = routine.tags,
                     likeCount = routine.likes,
                     isLiked = routine.isLiked,
@@ -148,7 +144,8 @@ private fun UserProfileContent(
     }
 }
 
-// --- 세부 UI 컴포넌트들 ---
+// --- [수정] 생략되었던 세부 UI 컴포넌트들 모두 포함 ---
+
 @Composable
 private fun ProfileHeader(
     state: UserProfileUiState,
@@ -186,7 +183,6 @@ private fun ProfileHeader(
                     modifier = Modifier
                         .height(37.dp)
                         .width(88.dp)
-
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 ProfileStats(
@@ -199,7 +195,7 @@ private fun ProfileHeader(
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = state.nickname,style= MORUTheme.typography.time_R_16 ,fontWeight = FontWeight.Bold)
+        Text(text = state.nickname, style = MORUTheme.typography.time_R_16, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(4.dp))
         Text(text = state.bio, fontSize = 14.sp, style = MORUTheme.typography.time_R_14, color = Color.DarkGray)
     }
@@ -238,7 +234,7 @@ private fun StatItem(label: String, count: Int, onClick: (() -> Unit)? = null) {
 @Composable
 private fun ExpandableRoutineSection(
     isExpanded: Boolean,
-    routines: List<RoutineInfo>,
+    routines: List<Routine>,
     nickname: String,
     onToggle: () -> Unit,
     onLikeClick: (Int) -> Unit
@@ -285,7 +281,7 @@ private fun ExpandableRoutineSection(
                     routines.forEach { routine ->
                         RoutineListItem(
                             isRunning = routine.isRunning,
-                            routineName = routine.name,
+                            routineName = routine.title,
                             tags = routine.tags,
                             likeCount = routine.likes,
                             isLiked = routine.isLiked,
@@ -298,16 +294,18 @@ private fun ExpandableRoutineSection(
     }
 }
 
-// --- 프리뷰를 위한 Composable ---
+
+// --- 프리뷰 ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun UserProfileScreenPreview(isDataEmpty: Boolean = false) {
+    // [수정] 프리뷰용 샘플 데이터를 통합 Routine 모델로 변경
     val sampleRunningRoutines = remember {
-        listOf(RoutineInfo(1, "아침 운동 1", listOf("#테그그그그그", "#tag"), 16, true, false))
+        listOf(Routine(1, "아침 운동 1", "", null, "운동", listOf("#테그그그그그", "#tag"), "모루", null, 16, true, false, true))
     }
     val sampleUserRoutines = remember {
         List(5) { index ->
-            RoutineInfo(index + 2, "아침 운동", listOf("#모닝루틴", "#스트레칭"), 16, false, index % 2 == 0)
+            Routine(index + 2, "아침 운동", "", null, "운동", listOf("#모닝루틴", "#스트레칭"), "모루", null, 16, false, index % 2 == 0, false)
         }
     }
 
@@ -344,6 +342,7 @@ private fun UserProfileScreenPreview(isDataEmpty: Boolean = false) {
 
     MORUTheme {
         Scaffold(
+            containerColor = Color.White,
             topBar = {
                 BasicTopAppBar(
                     title = "사용자명",
@@ -357,7 +356,6 @@ private fun UserProfileScreenPreview(isDataEmpty: Boolean = false) {
                         }
                     },
                     spacingBetweenIconAndTitle = 24.dp,
-                    // 프리뷰에서도 간격 테스트 가능
                 )
             }
         ) { paddingValues ->
