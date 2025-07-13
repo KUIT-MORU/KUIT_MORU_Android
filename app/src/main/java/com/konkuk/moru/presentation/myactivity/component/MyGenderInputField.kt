@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,12 +35,9 @@ fun MyGenderInputField(modifier: Modifier = Modifier) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Bottom
+        Box(
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text(
                 "성별",
@@ -49,34 +48,34 @@ fun MyGenderInputField(modifier: Modifier = Modifier) {
         }
         Box(
             modifier = Modifier
-                .border(
-                    width = 2.dp,
-                    color = if (selectedGender != "") Color(0xFF9E5FFF) else Color.Transparent,
-                    shape = RoundedCornerShape(8.dp)
-                )
+                .clip(RoundedCornerShape(4.dp))
+                .background(colors.veryLightGray)
+                .height(45.dp)
                 .padding(4.dp)
         ) {
             Row {
                 listOf("남자", "여자").forEach { gender ->
                     val isSelected = selectedGender == gender
                     Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
+                            .fillMaxHeight()
                             .weight(1f)
                             .clip(RoundedCornerShape(6.dp))
                             .background(
-                                if (isSelected) Color(0xFFB8EE44) else Color(0xFFF1F3F5)
+                                if (isSelected) colors.paleLime else Color.Transparent
                             )
                             .border(
                                 width = 1.dp,
-                                color = if (isSelected) Color(0xFFB8EE44) else Color.Transparent,
+                                color = if (isSelected) colors.limeGreen else Color.Transparent,
                                 shape = RoundedCornerShape(6.dp)
                             )
                             .clickable { selectedGender = gender }
-                            .padding(horizontal = 24.dp, vertical = 10.dp)
                     ) {
                         Text(
                             text = gender,
-                            color = if (isSelected) Color.Black else Color.Gray
+                            color = if (isSelected) colors.oliveGreen else colors.mediumGray,
+                            style = typography.desc_M_14
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))

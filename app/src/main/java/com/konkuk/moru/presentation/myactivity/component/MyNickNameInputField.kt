@@ -72,7 +72,6 @@ fun MyNickNameInputField(modifier: Modifier = Modifier) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -90,13 +89,11 @@ fun MyNickNameInputField(modifier: Modifier = Modifier) {
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(45.dp)
-                .border(1.dp, borderColor, RoundedCornerShape(6.dp))
+                .border(1.dp, borderColor, RoundedCornerShape(10.5.dp))
                 .padding(end = 16.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -115,7 +112,7 @@ fun MyNickNameInputField(modifier: Modifier = Modifier) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(horizontal = 12.dp),
+                                .padding(horizontal = 16.dp),
                             contentAlignment = Alignment.CenterStart
                         ) {
                             if (text.isEmpty()) {
