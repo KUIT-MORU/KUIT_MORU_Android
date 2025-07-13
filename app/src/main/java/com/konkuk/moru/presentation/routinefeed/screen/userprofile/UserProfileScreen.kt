@@ -63,6 +63,7 @@ fun UserProfileScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
+        containerColor = Color.White,
         topBar = {
             BasicTopAppBar(
                 title = "사용자명",
@@ -341,6 +342,7 @@ private fun UserProfileScreenPreview(isDataEmpty: Boolean = false) {
 
     MORUTheme {
         Scaffold(
+            containerColor = Color.White,
             topBar = {
                 BasicTopAppBar(
                     title = "사용자명",
