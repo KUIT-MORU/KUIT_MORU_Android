@@ -115,7 +115,12 @@ class MyRoutinesViewModel : ViewModel() {
     fun onConfirmTimeSet(routineId: Int, time: LocalTime, days: Set<DayOfWeek>, alarm: Boolean) {
         _sourceRoutines.update { currentList ->
             currentList.map {
-                if (it.id == routineId) it.copy(scheduledTime = time, scheduledDays = days) else it
+                // [수정] it.copy에 isAlarmEnabled = alarm 추가
+                if (it.id == routineId) it.copy(
+                    scheduledTime = time,
+                    scheduledDays = days,
+                    isAlarmEnabled = alarm // ◀◀◀ [수정] 전달받은 alarm 값을 저장
+                ) else it
             }
         }
         closeTimePicker()

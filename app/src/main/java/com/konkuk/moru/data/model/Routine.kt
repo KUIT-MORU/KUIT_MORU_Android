@@ -29,6 +29,7 @@ data class Routine(
     // 시간 정보 (내 루틴)
     val scheduledTime: LocalTime? = null,
     val scheduledDays: Set<DayOfWeek> = emptySet(),
+    var isAlarmEnabled: Boolean = false,
 
     // 상세 화면용 정보
     val steps: List<RoutineStep> = emptyList(),
