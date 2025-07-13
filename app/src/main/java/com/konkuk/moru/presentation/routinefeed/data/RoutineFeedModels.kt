@@ -1,6 +1,7 @@
 package com.konkuk.moru.presentation.routinefeed.data
 
 import androidx.annotation.DrawableRes
+import com.konkuk.moru.data.model.Routine
 
 data class RoutineInfo(
     val id: Int,
@@ -13,18 +14,9 @@ data class RoutineInfo(
 
 data class RoutineSectionModel(
     val title: String,
-    val routines: List<RoutineInfo>
+    val routines: List<Routine>
 )
-
-/* ---------- 모델 ---------- */
-data class HotRoutine(
-    val id: Int,
-    val name: String,
-    val tags: List<String>,
-    val likes: Int,
-    val isLiked: Boolean,
-    val isRunning: Boolean
-)
+// 전체 Routine으로 수정해놈
 
 data class LiveUserInfo(
     val id: Int,

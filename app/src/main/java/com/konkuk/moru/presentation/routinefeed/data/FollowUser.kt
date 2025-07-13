@@ -1,5 +1,7 @@
 package com.konkuk.moru.presentation.routinefeed.data
 
+import com.konkuk.moru.data.model.Routine
+
 data class FollowUser(
     val id: Int,
     val profileImageUrl: String, // 임시로 비워두거나 기본 이미지 URL 사용
@@ -16,7 +18,7 @@ data class UserProfileUiState(
     val followerCount: Int = 0,
     val followingCount: Int = 0,
     val isFollowing: Boolean = false,
-    val runningRoutines: List<RoutineInfo> = emptyList(),
-    val userRoutines: List<RoutineInfo> = emptyList(),
+    val runningRoutines: List<Routine> = emptyList(),
+    val userRoutines: List<Routine> = emptyList(),
     val isRunningRoutineExpanded: Boolean = true
 )
