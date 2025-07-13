@@ -50,6 +50,7 @@ fun RoutineDetailScreen(routineDetail: RoutineDetail) {
     var isBookmarked by remember { mutableStateOf(routineDetail.isBookmarked) }
 
     Scaffold(
+        containerColor = Color.White,
         topBar = {
             RoutineDetailTopAppBar(
                 likeCount = likeCount,

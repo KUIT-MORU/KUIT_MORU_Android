@@ -17,6 +17,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.konkuk.moru.ui.theme.moruFontSemiBold
 
 /**
  * 가장 기본적인 형태의 TopAppBar
@@ -53,7 +55,7 @@ fun BasicTopAppBar(
                 // 전달받은 간격으로 Spacer 추가
                 Spacer(modifier = Modifier.width(spacingBetweenIconAndTitle))
                 // 타이틀 텍스트 배치
-                Text(text = title, style = titleStyle)
+                Text(text = title, style = titleStyle, fontFamily = moruFontSemiBold,fontSize=16.sp)
             }
         },
         // ◀ 3. 기존 navigationIcon 슬롯은 비워둡니다.
