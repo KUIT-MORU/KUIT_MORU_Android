@@ -81,6 +81,7 @@ fun FollowScreenContent(
     onFollowClick: (FollowUser) -> Unit
 ) {
     Scaffold(
+        modifier=Modifier.padding(11.dp),
         containerColor = Color.White,
         topBar = {
             BasicTopAppBar(
