@@ -1,5 +1,8 @@
 package com.konkuk.moru.presentation.myactivity.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -17,8 +20,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +41,7 @@ import com.konkuk.moru.presentation.myactivity.component.MyNickNameInputField
 import com.konkuk.moru.presentation.myactivity.component.SelfIntroductionField
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
+import kotlinx.coroutines.delay
 
 @Composable
 fun ActProfileScreen(
@@ -55,81 +59,128 @@ fun ActProfileScreen(
         )
     }
 
-    Column(
+    val showToast = remember { mutableStateOf(false) }
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Color(0xFFFFFFFF))
-            .padding(top = 14.dp, start = 16.dp, end = 16.dp)
-            .verticalScroll(rememberScrollState())
+            .background(color = Color.White) // 배경 설정
     ) {
-        BackTitle(title = "내 프로필", navController)
-
-        Spacer(modifier = Modifier.height(38.dp))
-
-        Box(
-            contentAlignment = Alignment.Center,
+        Column(
             modifier = Modifier
-                .size(110.dp)
-                .align(Alignment.CenterHorizontally)
-                .background(color = colors.veryLightGray, shape = CircleShape)
+                .fillMaxSize()
+                .background(color = Color(0xFFFFFFFF))
+                .padding(top = 14.dp, start = 16.dp, end = 16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_profile_basic),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
+            BackTitle(title = "내 프로필", navController)
+
+            Spacer(modifier = Modifier.height(38.dp))
+
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(55.69.dp)
-            )
+                    .size(110.dp)
+                    .align(Alignment.CenterHorizontally)
+                    .background(color = colors.veryLightGray, shape = CircleShape)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_profile_basic),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(55.69.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .width(68.dp)
+                    .height(32.dp)
+                    .align(Alignment.CenterHorizontally)
+                    .background(
+                        if (isEditMode.value) colors.paleLime else colors.veryLightGray,
+                        shape = RoundedCornerShape(30.dp)
+                    ),
+            ) {
+                Text(
+                    text = if (isEditMode.value) "완료" else "수정",
+                    color = if (isEditMode.value) colors.oliveGreen else colors.black,
+                    style = typography.desc_M_16,
+                    modifier = Modifier
+                        .noRippleClickable {
+                            if (isEditMode.value) {
+                                showToast.value = true
+                            }
+                            isEditMode.value = !isEditMode.value
+                        }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(36.dp))
+            if (isEditMode.value) {
+                MyNickNameInputField()
+            } else {
+                OutlinedText("닉네임", profileData[0].value)
+            }
+
+            Spacer(modifier = Modifier.height(21.dp))
+            if (isEditMode.value) {
+                MyGenderInputField()
+            } else {
+                OutlinedText("성별", profileData[1].value)
+            }
+
+            Spacer(modifier = Modifier.height(21.dp))
+            if (isEditMode.value) {
+                MyBirthInputField()
+            } else {
+                OutlinedText("생년월일", profileData[2].value)
+            }
+
+            Spacer(modifier = Modifier.height(21.dp))
+            if (isEditMode.value) {
+                SelfIntroductionField()
+            } else {
+                OutlinedText("자기소개", profileData[3].value)
+            }
         }
+    }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
+    AnimatedVisibility(
+        visible = showToast.value,
+        enter = fadeIn(),
+        exit = fadeOut()
+    ) {
         Box(
-            contentAlignment = Alignment.Center,
             modifier = Modifier
-                .width(68.dp)
-                .height(32.dp)
-                .align(Alignment.CenterHorizontally)
-                .background(
-                    if (isEditMode.value) colors.paleLime else colors.veryLightGray,
-                    shape = RoundedCornerShape(30.dp)
-                ),
+                .fillMaxSize()
+                .background(colors.black.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = if (isEditMode.value) "완료" else "수정",
-                color = if (isEditMode.value) colors.oliveGreen else colors.black,
-                style = typography.desc_M_16,
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .noRippleClickable { isEditMode.value = !isEditMode.value }
-            )
+                    .background(colors.black, shape = RoundedCornerShape(10.dp))
+                    .height(80.dp)
+                    .padding(horizontal = 48.dp)
+            ) {
+                Text(
+                    text = "수정되었습니다",
+                    color = Color.White,
+                    style = typography.desc_M_14
+                )
+            }
         }
+    }
 
-        Spacer(modifier = Modifier.height(36.dp))
-        if (isEditMode.value) {
-            MyNickNameInputField()
-        } else {
-            OutlinedText("닉네임", profileData[0].value)
-        }
-
-        Spacer(modifier = Modifier.height(21.dp))
-        if (isEditMode.value) {
-            MyGenderInputField()
-        } else {
-            OutlinedText("성별", profileData[1].value)
-        }
-
-        Spacer(modifier = Modifier.height(21.dp))
-        if (isEditMode.value) {
-            MyBirthInputField()
-        } else {
-            OutlinedText("생년월일", profileData[2].value)
-        }
-
-        Spacer(modifier = Modifier.height(21.dp))
-        if (isEditMode.value) {
-            SelfIntroductionField()
-        } else {
-            OutlinedText("자기소개", profileData[3].value)
+    LaunchedEffect(showToast.value) {
+        if (showToast.value) {
+            delay(1000L)
+            showToast.value = false
         }
     }
 }
