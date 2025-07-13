@@ -1,33 +1,206 @@
 package com.konkuk.moru.presentation.myactivity.screen
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.konkuk.moru.R
 import com.konkuk.moru.presentation.myactivity.component.BackTitle
 import com.konkuk.moru.ui.theme.MORUTheme.colors
+import com.konkuk.moru.ui.theme.MORUTheme.typography
+
+// ---------------- 데이터 클래스 ----------------
+
+data class TagDto(
+    val id: Int,
+    val name: String,
+    val isSelected: Boolean = false
+)
+
+fun generateDummyTags(): List<TagDto> {
+    val sampleTagWords = listOf(
+        "자바", "코틀린", "파이썬", "웹", "앱", "프론트", "백엔드", "데이터",
+        "AI", "알고", "디자인", "UX", "UI", "서버", "DB", "리액트", "뷰", "안드로",
+        "IOS", "기획", "보안", "게임", "클라우드", "머신", "딥러닝", "마케팅",
+        "영상", "블록", "핀테크", "스타트"
+    )
+
+    val tags = sampleTagWords.mapIndexed { index, word ->
+        TagDto(id = index, name = "#$word")
+    }
+
+    val selected = tags.shuffled().take(8).map { it.copy(isSelected = true) }
+
+    return tags.map { tag ->
+        selected.find { it.id == tag.id }?.copy(isSelected = true) ?: tag
+    }
+}
+
+// ---------------- Composable ----------------
 
 @Composable
 fun ActFabTagScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
-    val scrollState = rememberScrollState()
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .background(colors.veryLightGray)
-            .padding(start = 16.dp, end = 16.dp)
+    var allTags by remember { mutableStateOf(generateDummyTags()) }
+    val interestedTags = allTags.filter { it.isSelected }
+
+    var query by remember { mutableStateOf("") }
+
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = Color.White
     ) {
-        Spacer(modifier = Modifier.padding(16.dp))
-        BackTitle(title = "내 관심태그", navController = navController)
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    Spacer(modifier = Modifier.height(14.dp))
+                    BackTitle(title = "내 기록", navController = navController)
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(colors.lightGray)
+                    )
+                }
+            },
+            bottomBar = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                        .height(60.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(colors.mediumGray)
+                        .clickable {
+                            // TODO: 관심태그 저장
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "관심태그 추가",
+                        color = Color.White,
+                        style = typography.body_SB_16
+                    )
+                }
+            }
+        ) { innerPadding ->
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(45.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .border(1.dp, colors.lightGray, shape = RoundedCornerShape(24.dp))
+                        .background(Color(0xFFF5F6F8)),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_magnifying),
+                            contentDescription = "Search Icon",
+                            modifier = Modifier
+                                .size(20.dp)
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        BasicTextField(
+                            value = query,
+                            onValueChange = { query = it },
+                            singleLine = true,
+                            textStyle = typography.time_R_14.copy(color = Color.Black),
+                            modifier = Modifier.weight(1f),
+                            decorationBox = { innerTextField ->
+                                if (query.isEmpty()) {
+                                    Text(
+                                        text = "태그를 검색해 보세요.",
+                                        style = typography.time_R_14,
+                                        color = colors.mediumGray
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(25.dp))
+                Text("관심태그", style = MaterialTheme.typography.bodyLarge)
+
+                Spacer(modifier = Modifier.height(24.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    interestedTags.forEach { tag ->
+                        TagChip(tag.name)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(90.dp))
+                Text("전체태그", style = MaterialTheme.typography.bodyLarge)
+
+                Spacer(modifier = Modifier.height(24.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    allTags.forEach { tag ->
+                        TagChip(tag.name)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TagChip(text: String) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .clip(RoundedCornerShape(140.dp))
+            .background(Color(0xFFF5F6F8))
+            .padding(horizontal = 13.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = text,
+            style = typography.time_R_14,
+            color = colors.mediumGray
+            )
     }
 }
