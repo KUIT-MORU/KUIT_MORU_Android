@@ -6,12 +6,14 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -38,6 +40,7 @@ import com.konkuk.moru.presentation.myactivity.component.BackTitle
 import com.konkuk.moru.presentation.myactivity.component.MyBirthInputField
 import com.konkuk.moru.presentation.myactivity.component.MyGenderInputField
 import com.konkuk.moru.presentation.myactivity.component.MyNickNameInputField
+import com.konkuk.moru.presentation.myactivity.component.PhotoButtonModal
 import com.konkuk.moru.presentation.myactivity.component.SelfIntroductionField
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
@@ -60,11 +63,12 @@ fun ActProfileScreen(
     }
 
     val showToast = remember { mutableStateOf(false) }
+    val showImagePickerSheet = remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Color.White) // 배경 설정
+            .background(color = Color.White)
     ) {
         Column(
             modifier = Modifier
@@ -78,19 +82,42 @@ fun ActProfileScreen(
             Spacer(modifier = Modifier.height(38.dp))
 
             Box(
-                contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .size(110.dp)
                     .align(Alignment.CenterHorizontally)
-                    .background(color = colors.veryLightGray, shape = CircleShape)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_profile_basic),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
+                Box(
                     modifier = Modifier
-                        .size(55.69.dp)
-                )
+                        .fillMaxSize()
+                        .background(color = colors.veryLightGray, shape = CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_profile_basic),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.size(55.69.dp)
+                    )
+                }
+
+                if (isEditMode.value) {
+                    Box(
+                        modifier = Modifier
+                            .size(25.dp)
+                            .offset(x = -4.dp, y = -4.dp)
+                            .align(Alignment.BottomEnd)
+                            .clickable {
+                                showImagePickerSheet.value = true
+                            }
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_edit_profile),
+                            contentDescription = "Edit",
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -182,6 +209,10 @@ fun ActProfileScreen(
             delay(1000L)
             showToast.value = false
         }
+    }
+
+    if (showImagePickerSheet.value) {
+        PhotoButtonModal(showImagePickerSheet)
     }
 }
 
