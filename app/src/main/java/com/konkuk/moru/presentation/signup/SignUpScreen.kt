@@ -1,6 +1,5 @@
 package com.konkuk.moru.presentation.signup
 
-import android.opengl.ETC1.isValid
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -174,6 +172,11 @@ fun SignUpScreen(navController: NavController) {
                     }
                 } else {
                     // 유효성 검사 실패 시 처리
+                    // ========= 비활성 버튼도 임시로 작동하도록 설정. 추후 기능 제거 필요 =====
+                    navController.navigate("main") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                    // ============================================================
                 }
             }
         }
