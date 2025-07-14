@@ -79,7 +79,7 @@ fun MyActivityTab(
 
     when (selectedTab) {
         0 -> {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(40.dp))
             MyInfoDetail(myInfoDetailIcon = R.drawable.ic_heart_a, title = "내 관심 태그", onClick = {
                 navController.navigate(
                     Route.ActFabTag.route

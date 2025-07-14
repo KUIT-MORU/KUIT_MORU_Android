@@ -38,7 +38,7 @@ fun MyInfoDetail(
         Box(
             modifier = modifier
                 .fillMaxWidth()
-                .background(colors.lightGray)
+                .background(colors.veryLightGray)
                 .height(1.dp)
         ) {  }
         Row(
@@ -50,19 +50,7 @@ fun MyInfoDetail(
                 .padding(start = 16.dp, end = 16.dp)
                 .clickable(onClick = onClick)
         ) {
-            Row(
-                modifier = Modifier
-            ){
-                Icon(
-                    painterResource(myInfoDetailIcon),
-                    contentDescription = "MyInfoDetail Icon",
-                    tint = colors.mediumGray,
-                    modifier = Modifier
-                        .size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(text = title, style = typography.body_SB_14)
-            }
+            Text(text = title, style = typography.body_SB_14)
             Icon(
                 painterResource(R.drawable.ic_arrow_b),
                 contentDescription = "Arrow Icon",
@@ -75,7 +63,7 @@ fun MyInfoDetail(
         Box(
             modifier = modifier
                 .fillMaxWidth()
-                .background(colors.lightGray)
+                .background(colors.veryLightGray)
                 .height(1.dp)
         ) {  }
     }
