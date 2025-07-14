@@ -37,7 +37,7 @@ fun MyProfileTitle(
             .padding(start = 16.dp, end = 16.dp)
     ) {
         Text(
-            text = "MY PROFILE",
+            text = "Profile",
             style = typography.body_SB_16,
             color = colors.black,
             modifier = Modifier
