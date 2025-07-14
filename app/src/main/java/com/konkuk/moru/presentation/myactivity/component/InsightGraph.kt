@@ -70,7 +70,13 @@ fun InsightGraph() {
                         weekendUser = 0.5f,
                         weekendAll = 1.0f
                     )
-                    2 -> GraphPage3()
+                    2 -> InsightGraphC(
+                        morning = 60f,
+                        afternoon = 45f,
+                        night = 100f,
+                        lateNight = 25f
+                    )
+
                 }
             }
         }
