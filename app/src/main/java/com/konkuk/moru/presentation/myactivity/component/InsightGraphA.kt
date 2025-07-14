@@ -155,44 +155,42 @@ fun InsightGraphA(
                 val avgX = xToScreen(averageScore)
                 val avgY = getYFromX(normalizedPoints, avgX)
                 drawCircle(
-                    color = limeGreen,
-                    radius = 12.dp.toPx(),
-                    center = Offset(avgX, avgY),
-                    style = Stroke(width = 2.dp.toPx())
+                    color = Color.White,
+                    radius = 6.dp.toPx(),
+                    center = Offset(avgX, avgY)
                 )
                 drawCircle(
-                    color = Color.White,
-                    radius = 12.dp.toPx(),
-                    center = Offset(avgX, avgY)
+                    color = limeGreen,
+                    radius = 6.dp.toPx(),
+                    center = Offset(avgX, avgY),
+                    style = Stroke(width = 2.dp.toPx())
                 )
 
                 val myX = xToScreen(myScore)
                 val myY = getYFromX(normalizedPoints, myX)
                 drawCircle(
                     color = Color.White,
-                    radius = 12.dp.toPx(),
+                    radius = 6.dp.toPx(),
                     center = Offset(myX, myY),
                 )
                 drawCircle(
                     color = oliveGreen,
-                    radius = 12.dp.toPx(),
+                    radius = 6.dp.toPx(),
                     center = Offset(myX, myY),
                     style = Stroke(width = 2.dp.toPx())
                 )
 
                 drawContext.canvas.nativeCanvas.apply {
-                    drawText("평균", avgX - 20.dp.toPx(), avgY - 16.dp.toPx(), Paint().apply {
+                    val labelPaint = Paint().apply {
                         color = mediumGray.toArgb()
                         textSize = fontSizePx
                         typeface = customTypeface
                         isAntiAlias = true
-                    })
-                    drawText("내 위치", myX - 20.dp.toPx(), myY - 16.dp.toPx(), Paint().apply {
-                        color = mediumGray.toArgb()
-                        textSize = fontSizePx
-                        typeface = customTypeface
-                        isAntiAlias = true
-                    })
+                        textAlign = Paint.Align.CENTER
+                    }
+
+                    drawText("평균", avgX, avgY - 15.dp.toPx(), labelPaint)
+                    drawText("내 위치", myX, myY - 15.dp.toPx(), labelPaint)
                 }
             }
         }
