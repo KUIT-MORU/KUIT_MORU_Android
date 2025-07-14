@@ -24,7 +24,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -32,15 +32,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -48,28 +49,61 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.chip.MoruChip
-import com.konkuk.moru.ui.theme.MORUTheme
-// [수정] 통합 Routine 모델 및 관련 클래스 임포트
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.model.RoutineStep
 import com.konkuk.moru.data.model.SimilarRoutine
-
+import com.konkuk.moru.ui.theme.MORUTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RoutineDetailScreen(routine: Routine) { // [수정] routineDetail -> routine, 타입 변경
-    // [수정] 통합 Routine 모델의 필드를 사용하여 초기 상태 설정
+fun RoutineDetailScreen(routine: Routine) {
     var isLiked by remember { mutableStateOf(routine.isLiked) }
-    var likeCount by remember { mutableStateOf(routine.likes) } // likes 필드 사용
+    var likeCount by remember { mutableIntStateOf(routine.likes) }
     var isBookmarked by remember { mutableStateOf(routine.isBookmarked) }
 
     Scaffold(
         containerColor = Color.White,
-        topBar = {
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                item { RoutineHeader(routine = routine) }
+
+                item {
+                    RoutineStepSection(
+                        modifier = Modifier.padding(16.dp),
+                        steps = routine.steps
+                    )
+                }
+
+                // 👇 2. 섹션 사이에 두꺼운 구분선 추가
+                item {
+                    HorizontalDivider(
+                        thickness = 8.dp,
+                        color = MORUTheme.colors.veryLightGray
+                    )
+                }
+
+                item {
+                    SimilarRoutinesSection(
+                        // 👇 modifier의 top padding 제거
+                        modifier = Modifier.padding(bottom = 16.dp),
+                        routines = routine.similarRoutines
+                    )
+                }
+            }
+
             RoutineDetailTopAppBar(
                 likeCount = likeCount,
                 isLiked = isLiked,
@@ -79,37 +113,20 @@ fun RoutineDetailScreen(routine: Routine) { // [수정] routineDetail -> routine
                     if (isLiked) likeCount++ else likeCount--
                 },
                 onBookmarkClick = { isBookmarked = !isBookmarked },
-                onBackClick = { /* 뒤로가기 */ }
+                onBackClick = { /* 뒤로가기 */ },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.Transparent,
+                    navigationIconContentColor = Color.White,
+                    actionIconContentColor = Color.White,
+                    titleContentColor = Color.White
+                )
             )
-        }
-    ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-                .background(Color.White)
-        ) {
-            item { RoutineHeader(routine = routine) } // [수정] routine 전달
-
-            item {
-                RoutineStepSection(
-                    modifier = Modifier.padding(16.dp),
-                    steps = routine.steps // [수정] routine에서 steps 사용
-                )
-            }
-
-            item {
-                SimilarRoutinesSection(
-                    modifier = Modifier.padding(top = 24.dp, bottom = 16.dp),
-                    routines = routine.similarRoutines // [수정] routine에서 similarRoutines 사용
-                )
-            }
         }
     }
 }
 
 @Composable
-fun RoutineHeader(routine: Routine) { // [수정] 파라미터 타입 변경
+fun RoutineHeader(routine: Routine) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -117,12 +134,12 @@ fun RoutineHeader(routine: Routine) { // [수정] 파라미터 타입 변경
         contentAlignment = Alignment.BottomStart
     ) {
         AsyncImage(
-            model = routine.imageUrl, // [수정] 필드명 변경
+            model = routine.imageUrl,
             contentDescription = "루틴 대표 이미지",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
-            error = painterResource(id = R.drawable.ic_antenna_color),
-            placeholder = painterResource(id = R.drawable.ic_person_standing)
+            placeholder = painterResource(id = R.drawable.ic_profile_with_background),
+            error = painterResource(id = R.drawable.ic_launcher_background)
         )
         Box(
             modifier = Modifier
@@ -134,89 +151,108 @@ fun RoutineHeader(routine: Routine) { // [수정] 파라미터 타입 변경
                     )
                 )
         )
+        // 이 부분은 이전과 동일하게 유지
         RoutineInfoOverlay(
             modifier = Modifier.padding(16.dp),
-            routine = routine // [수정] routine 전달
+            routine = routine
         )
     }
 }
 
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun RoutineInfoOverlay(modifier: Modifier = Modifier, routine: Routine) { // [수정] 파라미터 타입 변경
+private fun RoutineInfoOverlay(modifier: Modifier = Modifier, routine: Routine) {
     val contentColor = Color.White
+
+    val displayTitle = if (routine.title.length > 8) {
+        "${routine.title.take(8)}..."
+    } else {
+        routine.title
+    }
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            AsyncImage(
-                model = routine.authorProfileUrl, // [수정] 필드명 변경
-                contentDescription = "작성자 프로필",
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-            )
-            Text(
-                text = routine.authorName, // [수정] 필드명 변경
-                color = contentColor,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.Top
         ) {
-            Text(
-                text = routine.title, // [수정] 필드명 변경
-                color = contentColor,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-            MoruChip(
-                text = routine.category, // [수정] 필드명 변경
-                onClick = {},
-                isSelected = true,
-                selectedBackgroundColor = Color(0xFFD9F7A2),
-                selectedContentColor = Color.Black,
-                unselectedBackgroundColor = Color.Transparent,
-                unselectedContentColor = Color.Transparent
-            )
-        }
-        Text(
-            text = routine.description, // [수정] 필드명 변경
-            color = contentColor,
-            style = MaterialTheme.typography.bodyMedium
-        )
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            routine.tags.forEach { tag ->
-                MoruChip(
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                AsyncImage(
+                    model = routine.authorProfileUrl,
+                    contentDescription = "작성자 프로필",
                     modifier = Modifier
-                        .wrapContentWidth()
-                        .height(33.dp),
-                    text = "#$tag",
-                    onClick = {},
-                    isSelected = true,
-                    selectedBackgroundColor = MORUTheme.colors.darkGray,
-                    selectedContentColor = MORUTheme.colors.limeGreen,
-                    unselectedBackgroundColor = Color.Transparent,
-                    unselectedContentColor = Color.Transparent,
-                    contentPadding = PaddingValues(horizontal = 5.dp, vertical = 1.4.dp)
+                        .size(40.dp)
+                        .clip(CircleShape),
+                    placeholder = painterResource(id = R.drawable.ic_profile_with_background),
+                    error = painterResource(id = R.drawable.ic_profile_with_background)
+                )
+                Text(
+                    text = routine.authorName,
+                    color = Color(0xFF1A1A1A),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
                 )
             }
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = displayTitle,
+                        color = Color(0xFF595959),
+                        style = MORUTheme.typography.head_EB_24,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    MoruChip(
+                        text = routine.category,
+                        onClick = {},
+                        isSelected = true,
+                        selectedBackgroundColor = Color(0xFFD9F7A2),
+                        selectedContentColor = Color(0xFF8CCD00),
+                        unselectedBackgroundColor = Color.Transparent,
+                        unselectedContentColor = Color.Transparent
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        routine.tags.forEach { tag ->
+                            MoruChip(
+                                modifier = Modifier
+                                    .wrapContentWidth()
+                                    .height(19.dp),
+                                text = "#$tag",
+                                onClick = {},
+                                isSelected = true,
+                                selectedBackgroundColor = MORUTheme.colors.darkGray,
+                                selectedContentColor = MORUTheme.colors.limeGreen,
+                                unselectedBackgroundColor = Color.Transparent,
+                                unselectedContentColor = Color.Transparent,
+                                contentPadding = PaddingValues(horizontal = 5.dp, vertical = 1.4.dp)
+                            )
+                        }
+                    }
+                }
+            }
         }
+
+        Text(
+            text = routine.description,
+            color = contentColor,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
-
-// ... RoutineStepSection, RoutineStepItem, SimilarRoutinesSection, SimilarRoutineCard 함수는 수정할 필요 없음 ...
-// (이미 통합 모델의 RoutineStep, SimilarRoutine과 구조가 동일하기 때문)
 @Composable
 fun RoutineStepSection(modifier: Modifier = Modifier, steps: List<RoutineStep>) {
     Column(modifier = modifier) {
@@ -224,7 +260,7 @@ fun RoutineStepSection(modifier: Modifier = Modifier, steps: List<RoutineStep>) 
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("STEP", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("STEP", style = MORUTheme.typography.title_B_20, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.width(16.dp))
             MoruButton(
                 text = ("내 루틴에 추가"),
@@ -236,14 +272,39 @@ fun RoutineStepSection(modifier: Modifier = Modifier, steps: List<RoutineStep>) 
             )
         }
         Spacer(Modifier.height(16.dp))
+
         Column {
+            // 👇 이 부분이 수정되었습니다.
+            // 리스트 맨 위의 구분선은 한 줄로 유지합니다.
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = Color.Black.copy(alpha = 0.5f)
+            )
             steps.forEachIndexed { index, step ->
-                RoutineStepItem(stepNumber = index + 1, step = step)
+                RoutineStepItem(
+                    stepNumber = steps.indexOf(step) + 1,
+                    step = step,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                )
+
+                // 마지막 아이템이 아닐 경우에만 두 줄 구분선을 그립니다.
                 if (index < steps.lastIndex) {
+                    Column {
+                        HorizontalDivider(
+                            thickness = 1.dp,
+                            color = Color.Black.copy(alpha = 0.5f)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp)) // 두 줄 사이의 간격
+                        HorizontalDivider(
+                            thickness = 1.dp,
+                            color = Color.Black.copy(alpha = 0.5f)
+                        )
+                    }
+                } else {
+                    // 마지막 아이템 아래에는 한 줄 구분선만 그립니다.
                     HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 16.dp),
                         thickness = 1.dp,
-                        color = Color.LightGray.copy(alpha = 0.5f)
+                        color = Color.Black.copy(alpha = 0.5f)
                     )
                 }
             }
@@ -252,22 +313,35 @@ fun RoutineStepSection(modifier: Modifier = Modifier, steps: List<RoutineStep>) 
 }
 
 @Composable
-fun RoutineStepItem(stepNumber: Int, step: RoutineStep) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(text = "$stepNumber", style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
+fun RoutineStepItem(stepNumber: Int, step: RoutineStep, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Spacer(Modifier.width(16.dp))
+        Text(text = "$stepNumber", style = MORUTheme.typography.body_SB_14, color = Color.Gray)
+        Spacer(Modifier.width(41.dp))
         Text(
             text = step.name,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MORUTheme.typography.body_SB_14,
             modifier = Modifier.weight(1f)
         )
-        Text(text = step.duration, style = MaterialTheme.typography.bodyLarge)
+        Text(text = step.duration, style = MORUTheme.typography.body_SB_14)
+        Spacer(Modifier.width(12.dp))
+
     }
 }
 
+
 @Composable
 fun SimilarRoutinesSection(modifier: Modifier = Modifier, routines: List<SimilarRoutine>) {
-    Column(modifier = modifier) {
+    // 👇 1. Column에 배경색과 패딩을 직접 적용
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MORUTheme.colors.veryLightGray)
+            .padding(vertical = 24.dp)
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -276,17 +350,16 @@ fun SimilarRoutinesSection(modifier: Modifier = Modifier, routines: List<Similar
         ) {
             Text(
                 text = "이 루틴과 비슷한 루틴",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f)
+                style = MORUTheme.typography.title_B_20,
+                fontWeight = FontWeight.Bold
             )
             Icon(
-                Icons.AutoMirrored.Filled.ArrowBack,
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = "더보기",
-                modifier = Modifier.rotate(180f)
+                modifier = Modifier.size(16.dp)
             )
         }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(24.dp))
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -300,14 +373,13 @@ fun SimilarRoutinesSection(modifier: Modifier = Modifier, routines: List<Similar
 
 @Composable
 fun SimilarRoutineCard(routine: SimilarRoutine) {
-    Column(modifier = Modifier.width(140.dp)) {
+    Column(modifier = Modifier.width(72.dp).height(115.dp)) {
         Image(
             painter = painterResource(id = R.drawable.ic_routine_square_stop),
             contentDescription = routine.name,
             modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
-                .clip(RoundedCornerShape(12.dp)),
+                .height(72.dp)
+                .aspectRatio(1f),
             contentScale = ContentScale.Crop
         )
         Spacer(Modifier.height(8.dp))
@@ -324,7 +396,6 @@ fun SimilarRoutineCard(routine: SimilarRoutine) {
 @Preview(showBackground = true)
 @Composable
 fun RoutineDetailScreenPreview() {
-    // [수정] Preview용 샘플 데이터를 통합 Routine 클래스로 생성
     val sampleData = Routine(
         id = 0,
         title = "집중력을 높이는 아침 루틴",
@@ -347,7 +418,7 @@ fun RoutineDetailScreenPreview() {
             SimilarRoutine(null, "루틴명명명", "#운동하자")
         }
     )
-    MORUTheme { // MORUTheme으로 감싸서 Preview 확인
+    MORUTheme {
         RoutineDetailScreen(routine = sampleData)
     }
 }
