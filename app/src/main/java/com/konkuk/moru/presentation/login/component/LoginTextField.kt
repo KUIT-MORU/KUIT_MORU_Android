@@ -85,7 +85,7 @@ fun LoginTextFieldBasic(
         textStyle = typography.desc_M_14.copy(
             color = Color.White,
         ),
-        cursorBrush = SolidColor(Color.White),
+        cursorBrush = SolidColor(colors.limeGreen),
         modifier = Modifier
             .fillMaxWidth()
             .height(46.dp)

@@ -2,6 +2,7 @@ package com.konkuk.moru.presentation.login
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,16 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,14 +25,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.konkuk.moru.presentation.login.component.LoginTextField
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.konkuk.moru.presentation.login.component.LoginTextFieldBasic
 import com.konkuk.moru.presentation.login.component.LogoWithTitle
 import com.konkuk.moru.presentation.navigation.Route
@@ -42,17 +43,37 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
 fun LoginScreen(navController: NavController) {
+    val systemUiController = rememberSystemUiController()
+    val backgroundColor = colors.charcoalBlack
+
+    SideEffect {
+        systemUiController.setStatusBarColor(
+            darkIcons = false, // 상태바 아이콘을 흰색으로 설정
+            color = backgroundColor
+        )
+    }
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 
+    val focusManager = LocalFocusManager.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(color = colors.charcoalBlack)
-            .padding(horizontal = 32.dp),
+            .padding(horizontal = 32.dp)
+            .systemBarsPadding()
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = {
+                        focusManager.clearFocus() // 화면을 탭하면 포커스를 해제
+                    }
+                )
+            },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(screenHeight * 0.1825f))
