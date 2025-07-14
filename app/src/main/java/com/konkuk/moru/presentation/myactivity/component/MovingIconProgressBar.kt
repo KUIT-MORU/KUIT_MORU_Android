@@ -1,8 +1,10 @@
 package com.konkuk.moru.presentation.myactivity.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,18 +28,35 @@ fun MovingIconProgressBar(
     progress: Float = 0f,
     modifier: Modifier = Modifier
 ) {
-    BoxWithConstraints(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(37.dp)
+            .height(42.dp),
+        verticalArrangement = Arrangement.Bottom
     ) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(32.dp)
+        ) {
+            val iconOffsetX = maxWidth * progress.coerceIn(0f, 1f) - 16.dp // 아이콘 중심 보정
+
+            Icon(
+                painter = painterResource(R.drawable.ic_run),
+                contentDescription = "Running Icon",
+                tint = colors.limeGreen,
+                modifier = Modifier
+                    .size(32.dp)
+                    .absoluteOffset(x = iconOffsetX)
+            )
+        }
+
         Box(
             modifier = Modifier
-                .align(Alignment.BottomStart)
                 .fillMaxWidth()
-                .height(7.dp)
+                .height(10.dp)
                 .clip(RoundedCornerShape(4.dp))
-                .background(colors.lightGray)
+                .background(colors.veryLightGray)
         ) {
             Box(
                 modifier = Modifier
@@ -46,20 +65,5 @@ fun MovingIconProgressBar(
                     .background(colors.limeGreen)
             )
         }
-        val iconOffset = this@BoxWithConstraints.maxWidth * progress - 12.dp
-        Icon(
-            painter = painterResource(R.drawable.ic_run),
-            contentDescription = "Running Icon",
-            tint = colors.limeGreen,
-            modifier = Modifier
-                .absoluteOffset(x = iconOffset)
-                .size(24.dp)
-        )
     }
-}
-
-@Preview
-@Composable
-private fun MovingIconProgressBarPreview() {
-    MovingIconProgressBar(0.648f)
 }

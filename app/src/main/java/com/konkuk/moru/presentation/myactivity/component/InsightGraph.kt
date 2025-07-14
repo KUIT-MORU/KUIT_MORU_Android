@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
@@ -27,16 +28,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
+import com.konkuk.moru.core.util.modifier.softShadow
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import kotlinx.coroutines.launch
 
 @Composable
 fun InsightGraph() {
     val pagerState = rememberPagerState(pageCount = { 3 })
-    val coroutineScope = rememberCoroutineScope()
 
     Column(
-        modifier = Modifier.height(240.dp)
+        modifier = Modifier
+            .fillMaxHeight()
+            .padding(horizontal = 16.dp)
     ) {
         Row(
             modifier = Modifier
@@ -45,94 +48,48 @@ fun InsightGraph() {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            if (pagerState.currentPage > 0) {
-                Box(
-                    modifier = Modifier
-                        .width(7.5.dp)
-                        .clickable {
-                            coroutineScope.launch {
-                                pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                            }
-                        },
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_arrow_d),
-                        contentDescription = "다음",
-                        modifier = Modifier
-                            .width(7.5.dp)
-                            .height(15.dp)
-                    )
-                }
-            } else {
-                Spacer(modifier = Modifier.width(7.5.dp))
-            }
-
             HorizontalPager(
                 state = pagerState,
                 pageSize = PageSize.Fill,
                 modifier = Modifier
                     .weight(1f)
-                    .shadow(
-                        elevation = 12.dp,
-                        shape = RoundedCornerShape(16.dp),
-                        clip = false,
-                        ambientColor = Color.Black.copy(alpha = 0.3f),
-                        spotColor = Color.Black.copy(alpha = 0.3f)
+                    .softShadow(
+                        color = Color.Black,
+                        alpha = 0.05f,
+                        shadowRadius = 16.dp,
+                        cornerRadius = 16.dp
                     )
                     .background(Color.White, shape = RoundedCornerShape(4.dp))
             ) { page ->
                 when (page) {
-                    0 -> InsightGraphA(70f, 80f)
-                    1 -> GraphPage2()
-                    2 -> GraphPage3()
-                }
-            }
-
-            if (pagerState.currentPage < 2) {
-                Box(
-                    modifier = Modifier
-                        .width(7.5.dp)
-                        .clickable {
-                            coroutineScope.launch {
-                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                            }
-                        },
-                    contentAlignment = Alignment.CenterEnd
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_arrow_c),
-                        contentDescription = "다음",
-                        modifier = Modifier
-                            .width(7.5.dp)
-                            .height(15.dp)
+                    0 -> InsightGraphA(70f, 60f)
+                    1 -> InsightGraphB(
+                        userName = "정해찬",
+                        weekdayUser = 0.4f,
+                        weekdayAll = 0.7f,
+                        weekendUser = 0.5f,
+                        weekendAll = 1.0f
                     )
+                    2 -> InsightGraphC(
+                        morning = 60f,
+                        afternoon = 45f,
+                        night = 100f,
+                        lateNight = 25f
+                    )
+
                 }
-            } else {
-                Spacer(modifier = Modifier.width(7.5.dp))
             }
         }
+        Spacer(modifier = Modifier.height(24.dp))
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            PageIndicator(
+                currentPage = pagerState.currentPage,
+                pageCount = 3
+            )
+        }
     }
-}
 
-@Composable
-fun GraphPage2() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.lightGray)
-    ) {
-        Text(text = "그래프 2")
-    }
-}
-
-@Composable
-fun GraphPage3() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.lightGray)
-    ) {
-        Text(text = "그래프 3")
-    }
 }

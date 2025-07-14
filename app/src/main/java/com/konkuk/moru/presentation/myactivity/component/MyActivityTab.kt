@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,61 +36,71 @@ fun MyActivityTab(
 ) {
     val tabTitles = listOf("내 정보", "인사이트")
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Box(
-            modifier = modifier
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 78.dp)
-                .height(40.dp)
-                .clip(RoundedCornerShape(200.dp))
-                .background(color = colors.veryLightGray)
+                .padding(horizontal = 32.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxSize().padding(start=4.dp, end =4.dp)
-            ) {
-                tabTitles.forEachIndexed { index, title ->
+            tabTitles.forEachIndexed { index, title ->
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .noRippleClickable { onTabSelected(index) },
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = title,
+                        style = typography.body_SB_14,
+                        color = if (index == selectedTab) colors.black else colors.mediumGray
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
                     Box(
                         modifier = Modifier
-                            .height(32.dp)
-                            .weight(1f)
-                            .clip(RoundedCornerShape(200.dp))
-                            .background(color = if (index == selectedTab) Color(0xFFFFFFFF) else colors.veryLightGray)
-                            .noRippleClickable {onTabSelected(index)},
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = title,
-                            style = typography.body_SB_14,
-                            color = if (index == selectedTab)
-                                colors.black
-                            else
-                                colors.mediumGray
-                        )
-                    }
+                            .height(2.dp)
+                            .width(100.dp)
+                            .background(
+                                if (index == selectedTab) colors.black else Color.Transparent
+                            )
+                    )
                 }
             }
         }
 
-        when (selectedTab) {
-            0 -> {
-                Spacer(modifier = Modifier.height(24.dp))
-                MyInfoDetail(myInfoDetailIcon = R.drawable.ic_heart_a , title = "내 관심 태그", onClick = { navController.navigate(
-                    Route.ActFabTag.route) })
-                Spacer(modifier = Modifier.height(6.dp))
-                MyInfoDetail(myInfoDetailIcon = R.drawable.ic_graph_a , title = "내 기록", onClick = { navController.navigate(
-                    Route.ActRecord.route) })
-                Spacer(modifier = Modifier.height(6.dp))
-                MyInfoDetail(myInfoDetailIcon = R.drawable.ic_scrap_a , title = "스크랩한 루틴", onClick = { navController.navigate(
-                    Route.ActScrab.route) })
-            }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(colors.veryLightGray)
+        )
+    }
 
-            1 -> {
-                InsightContentSection(70)
-            }
+    when (selectedTab) {
+        0 -> {
+            Spacer(modifier = Modifier.height(40.dp))
+            MyInfoDetail(myInfoDetailIcon = R.drawable.ic_heart_a, title = "내 관심 태그", onClick = {
+                navController.navigate(
+                    Route.ActFabTag.route
+                )
+            })
+            Spacer(modifier = Modifier.height(6.dp))
+            MyInfoDetail(myInfoDetailIcon = R.drawable.ic_graph_a, title = "내 기록", onClick = {
+                navController.navigate(
+                    Route.ActRecord.route
+                )
+            })
+            Spacer(modifier = Modifier.height(6.dp))
+            MyInfoDetail(myInfoDetailIcon = R.drawable.ic_scrap_a, title = "스크랩한 루틴", onClick = {
+                navController.navigate(
+                    Route.ActScrab.route
+                )
+            })
+        }
+
+        1 -> {
+            InsightContentSection(70)
         }
     }
 }

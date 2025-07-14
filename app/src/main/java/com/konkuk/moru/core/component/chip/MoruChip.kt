@@ -23,13 +23,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.konkuk.moru.ui.theme.MORUTheme
-import java.time.format.TextStyle
+
 
 /**
  * Moru 디자인 시스템의 칩 (태그, 필터)
@@ -89,7 +90,7 @@ fun MoruChip(
 
             Text(
                 text = text,
-                style = MORUTheme.typography.body_SB_14 // 기본 스타일 지정
+                style = textStyle ?: MORUTheme.typography.body_SB_14 // textStyle이 null이면 기본값 사용
             )
 
             // 끝 아이콘
