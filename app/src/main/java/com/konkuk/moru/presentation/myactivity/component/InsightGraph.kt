@@ -63,7 +63,13 @@ fun InsightGraph() {
             ) { page ->
                 when (page) {
                     0 -> InsightGraphA(70f, 80f)
-                    1 -> GraphPage2()
+                    1 -> InsightGraphB(
+                        userName = "정해찬",
+                        weekdayUser = 0.4f,
+                        weekdayAll = 0.7f,
+                        weekendUser = 0.5f,
+                        weekendAll = 1.0f
+                    )
                     2 -> GraphPage3()
                 }
             }
@@ -80,17 +86,6 @@ fun InsightGraph() {
         }
     }
 
-}
-
-@Composable
-fun GraphPage2() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.lightGray)
-    ) {
-        Text(text = "그래프 2")
-    }
 }
 
 @Composable
