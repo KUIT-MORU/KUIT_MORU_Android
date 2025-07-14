@@ -50,8 +50,9 @@ fun ActMainScreen(
                 .verticalScroll(scrollState)
                 .fillMaxWidth()
         ) {
+            Spacer(modifier = Modifier.height(28.dp))
+            ActMyInfo(4, 628, 221, "정해찬", "루틴페이스 메이커", 0.5f, navController = navController)
             Spacer(modifier = Modifier.height(24.dp))
-            ActMyInfo(4, 628, 221, "정해찬", "루틴페이스 메이커", 0.7f, navController = navController)
 
             var selectedTab by remember { mutableStateOf(0) }
             MyActivityTab(
