@@ -50,10 +50,8 @@ fun ActMainScreen(
                 .verticalScroll(scrollState)
                 .fillMaxWidth()
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-            ActMyInfo(4, 628, 221, "정해찬", "루틴을 꼭 지키고 말겠어! 저는 정해찬입니다. 아주 긴 문장을 쓰기 위해 아무 말이나 작성 중입니다.", navController = navController)
-            Spacer(modifier = Modifier.height(24.dp))
-            RoutinePaceCard("간헐적 루틴러", 0.7f)
+            Spacer(modifier = Modifier.height(28.dp))
+            ActMyInfo(4, 628, 221, "정해찬", "루틴페이스 메이커", 0.5f, navController = navController)
             Spacer(modifier = Modifier.height(24.dp))
 
             var selectedTab by remember { mutableStateOf(0) }
