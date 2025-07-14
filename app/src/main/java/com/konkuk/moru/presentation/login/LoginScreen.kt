@@ -88,7 +88,10 @@ fun LoginScreen(navController: NavController) {
 
         LoginTextFieldBasic(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = {
+                email = it
+                errorMessage = null
+            },
             placeholder = "이메일",
             keyboardType = KeyboardType.Email
         )
@@ -97,7 +100,10 @@ fun LoginScreen(navController: NavController) {
 
         LoginTextFieldBasic(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = {
+                password = it
+                errorMessage = null
+            },
             placeholder = "비밀번호",
             keyboardType = KeyboardType.Password,
             visualTransformation = PasswordVisualTransformation()
