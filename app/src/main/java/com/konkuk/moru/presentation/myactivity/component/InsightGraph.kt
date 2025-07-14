@@ -55,14 +55,14 @@ fun InsightGraph() {
                     .weight(1f)
                     .softShadow(
                         color = Color.Black,
-                        alpha = 0.12f,
+                        alpha = 0.05f,
                         shadowRadius = 16.dp,
                         cornerRadius = 16.dp
                     )
                     .background(Color.White, shape = RoundedCornerShape(4.dp))
             ) { page ->
                 when (page) {
-                    0 -> InsightGraphA(70f, 80f)
+                    0 -> InsightGraphA(70f, 60f)
                     1 -> InsightGraphB(
                         userName = "정해찬",
                         weekdayUser = 0.4f,
@@ -92,15 +92,4 @@ fun InsightGraph() {
         }
     }
 
-}
-
-@Composable
-fun GraphPage3() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.lightGray)
-    ) {
-        Text(text = "그래프 3")
-    }
 }

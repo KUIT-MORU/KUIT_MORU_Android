@@ -3,6 +3,7 @@ package com.konkuk.moru.presentation.myactivity.component
 import android.graphics.Paint
 import android.graphics.Typeface
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -64,7 +65,7 @@ fun InsightGraphA(
                 Text(
                     text = (averageScore - myScore).toInt().toString() + "점 ",
                     style = typography.desc_M_12,
-                    color = colors.red
+                    color = Color(0xFF0300B2)
                 )
                 Text(text = "낮아요. 분발해요!", style = typography.desc_M_12, color = colors.darkGray)
             }
@@ -104,7 +105,7 @@ fun InsightGraphA(
             modifier = modifier
                 .fillMaxWidth()
                 .height(105.dp)
-                .padding(horizontal = 8.5.dp)
+                .padding(horizontal = 27.5.dp)
         ) {
             val width = constraints.maxWidth.toFloat()
             val height = constraints.maxHeight.toFloat()
@@ -194,15 +195,21 @@ fun InsightGraphA(
                 }
             }
         }
-        BoxWithConstraints(modifier = Modifier.fillMaxWidth().height(26.dp).align(Alignment.CenterHorizontally)) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(26.dp)
+        ) {
             val width = constraints.maxWidth.toFloat()
             val steps = 5
 
-            Row(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp)
+            ) {
                 for (i in 0..steps) {
                     Box(
-                        modifier = Modifier
-                            .weight(1f),
+                        modifier = Modifier,
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
