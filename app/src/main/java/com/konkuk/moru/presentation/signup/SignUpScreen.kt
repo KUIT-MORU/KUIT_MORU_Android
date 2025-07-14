@@ -1,9 +1,11 @@
 package com.konkuk.moru.presentation.signup
 
+import android.opengl.ETC1.isValid
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,24 +35,24 @@ import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
+import com.konkuk.moru.presentation.signup.component.SignUpButton
 
 @Composable
 fun SignUpScreen(navController: NavController) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val focusManager = LocalFocusManager.current
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    val isEmailValid = remember(email) {
-        android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
-    }
+    var isEmailValid by remember { mutableStateOf(false) }
     val isPasswordValid = remember(password) {
-        password.isNotBlank()
+        password.length >= 8 && password.contains(Regex("[0-9]")) && password.contains(Regex("[!@#\$%^&*(),.?\":{}|<>]"))
     }
-    //val isFormValid = isEmailValid && isPasswordValid
-    val isFormValid = true // 임시로 유효성 검사 생략
+    val isFormValid = isEmailValid && isPasswordValid
+    //val isFormValid = true // 임시로 유효성 검사 생략
 
-    val focusManager = LocalFocusManager.current
+    var emailInvalidMessage by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
@@ -81,7 +83,8 @@ fun SignUpScreen(navController: NavController) {
                 .fillMaxWidth()
                 .weight(1f)
                 .background(Color(0xFFFFFFFF))
-                .padding(horizontal = 32.dp),
+                .padding(horizontal = 32.dp)
+                .padding(bottom = 10.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column {
@@ -102,11 +105,35 @@ fun SignUpScreen(navController: NavController) {
 
                 SignUpTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = {
+                        email = it
+                        isEmailValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+                        emailInvalidMessage =
+                            if (email.isNotBlank() && !isEmailValid) {
+                                "이메일 형식이 올바르지 않습니다."
+                            } else {
+                                null
+                            }
+                    },
+                    isValid = email.isEmpty() || isEmailValid,
                     placeholder = "이메일",
                     keyboardType = KeyboardType.Email
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(24.dp)
+                ) {
+                    emailInvalidMessage?.let {
+                        Text(
+                            text = it,
+                            style = typography.desc_M_12,
+                            color = colors.red,
+                            modifier = Modifier.padding(top = 6.dp, start = 4.dp)
+                        )
+                    }
+                }
 
                 Text(
                     text = "비밀번호",
@@ -118,24 +145,36 @@ fun SignUpScreen(navController: NavController) {
                 SignUpTextField(
                     value = password,
                     onValueChange = { password = it },
+                    isValid = password.isEmpty() || isPasswordValid,
                     placeholder = "비밀번호",
                     keyboardType = KeyboardType.Password,
                     visualTransformation = PasswordVisualTransformation()
                 )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = "8자 이상, 숫자 특수문자를 포함해주세요.",
+                    style = typography.desc_M_12,
+                    color = if (password.isNotBlank() && !isPasswordValid) {
+                        colors.red
+                    } else {
+                        colors.mediumGray
+                    },
+                    modifier = Modifier.padding(start = 4.dp)
+                )
             }
 
-            Button(
-                onClick = {
+            SignUpButton(
+                enabled = isFormValid
+            ) {
+                if (isFormValid) {
                     navController.navigate("main") {
                         popUpTo("login") { inclusive = true }
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 10.dp),
-                enabled = isFormValid // ✅ 여기!
-            ) {
-                Text("가입하기")
+                } else {
+                    // 유효성 검사 실패 시 처리
+                }
             }
         }
     }

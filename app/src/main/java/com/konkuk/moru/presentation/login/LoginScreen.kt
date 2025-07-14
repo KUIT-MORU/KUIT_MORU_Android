@@ -110,7 +110,7 @@ fun LoginScreen(navController: NavController) {
         ) {
             errorMessage?.let {
                 Text(
-                    text = "이메일 또는 비밀번호가 일치하지 않습니다.",
+                    text = it,
                     style = typography.desc_M_12,
                     color = colors.red,
                     modifier = Modifier.padding(top = 6.dp)

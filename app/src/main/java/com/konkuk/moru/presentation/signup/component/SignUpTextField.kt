@@ -31,6 +31,7 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 fun SignUpTextField(
     value: String,
     onValueChange: (String) -> Unit,
+    isValid: Boolean,
     placeholder: String,
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
@@ -38,7 +39,12 @@ fun SignUpTextField(
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
 
-    val borderColor = if (isFocused) colors.limeGreen else colors.lightGray
+    val borderColor =
+        if (isValid) {
+            if (isFocused) colors.limeGreen else colors.lightGray
+        } else {
+            colors.red
+        }
 
     BasicTextField(
         value = value,
@@ -84,6 +90,7 @@ private fun BasicPreview() {
     SignUpTextField(
         value = "",
         onValueChange = {},
+        isValid = true,
         placeholder = "이메일",
         keyboardType = KeyboardType.Email,
         visualTransformation = VisualTransformation.None,
