@@ -15,6 +15,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -36,21 +37,18 @@ fun RoutineDetailTopAppBar(
     onBackClick: () -> Unit,
     onLikeClick: () -> Unit,
     onBookmarkClick: () -> Unit,
+    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors()
 ) {
     TopAppBar(
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.Transparent,
-            // ❗ [수정] 아이콘별로 색상을 따로 지정할 것이므로 공통 색상 설정 제거
-            // actionIconContentColor = Color.Black,
-            navigationIconContentColor = Color.Black
-        ),
+        colors = colors,
         title = { /* 제목 없음 */ },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(
                     modifier = Modifier.size(32.dp),
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                    contentDescription = "뒤로가기"
+                    contentDescription = "뒤로가기",
+                    tint = Color.Black
                 )
             }
         },
@@ -68,7 +66,7 @@ fun RoutineDetailTopAppBar(
                     imageVector = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     contentDescription = "좋아요",
                     // ❗ [수정] isLiked 상태에 따라 색상 명시적 지정 (기존 코드 참고)
-                    tint = if (isLiked) Color.Red else Color.Gray
+                    tint = if (isLiked) Color.Red else Color.Black
                 )
                 Text(
                     text = "$likeCount",
@@ -84,7 +82,7 @@ fun RoutineDetailTopAppBar(
                     imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                     contentDescription = "북마크",
                     // ❗ [수정] isBookmarked 상태에 따라 색상 명시적 지정 (기존 코드 참고)
-                    tint = if (isBookmarked) Color.Black else Color.Gray
+                    tint = if (isBookmarked) Color.Black else Color.Black
                 )
             }
         }
@@ -94,21 +92,31 @@ fun RoutineDetailTopAppBar(
 /**
  * 미리보기
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, backgroundColor = 0xFFE0E0E0)
 @Composable
 private fun RoutineDetailTopAppBarPreview() {
     Column {
         // 기본 상태
         RoutineDetailTopAppBar(
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent,
+                navigationIconContentColor = Color.Black
+            ),
             likeCount = 16,
             isLiked = false,
             isBookmarked = false,
             onBackClick = {},
             onLikeClick = {},
             onBookmarkClick = {}
+
         )
         // 좋아요와 북마크가 모두 활성화된 상태
         RoutineDetailTopAppBar(
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent,
+                navigationIconContentColor = Color.Black
+            ),
             likeCount = 17,
             isLiked = true,
             isBookmarked = true,
