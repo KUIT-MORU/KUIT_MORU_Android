@@ -26,6 +26,7 @@ import com.konkuk.moru.presentation.routinefeed.screen.NotificationScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.HotRoutineListScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetailScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedScreen
+import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedViewModel
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 import java.time.DayOfWeek
@@ -48,10 +49,15 @@ fun MainNavGraph(
         }
 
         composable(route = Route.RoutineFeed.route) {
+            val viewModel: RoutineFeedViewModel = viewModel()
+            val uiState by viewModel.uiState.collectAsState()
+
             RoutineFeedScreen(
                 modifier = modifier.padding(innerPadding),
                 navController = navController,
-                onNavigateToNotification = {
+                uiState = uiState,
+                onNotificationClick = {
+                    viewModel.onNotificationViewed() // ViewModel의 함수 호출
                     navController.navigate(Route.Notification.route)
                 }
             )
@@ -80,8 +86,15 @@ fun MainNavGraph(
             val routinesToShow = when {
                 title.startsWith("#") -> {
                     val tags = title.removePrefix("#").split("#").filter { it.isNotEmpty() }
-                    dummyRoutines.filter { routine -> tags.all { tagToFind -> routine.tags.contains(tagToFind) } }
+                    dummyRoutines.filter { routine ->
+                        tags.all { tagToFind ->
+                            routine.tags.contains(
+                                tagToFind
+                            )
+                        }
+                    }
                 }
+
                 title == "지금 가장 핫한 루틴은?" -> dummyRoutines.filter { it.likes > 70 }
                 title == "MORU님과 딱 맞는 루틴" -> dummyRoutines.filter { it.authorName == "MORU" }
                 else -> emptyList()
