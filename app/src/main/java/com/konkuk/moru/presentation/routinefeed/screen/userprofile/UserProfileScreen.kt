@@ -137,7 +137,8 @@ private fun UserProfileContent(
                     tags = routine.tags,
                     likeCount = routine.likes,
                     isLiked = routine.isLiked,
-                    onLikeClick = { onLikeClick(routine.id) }
+                    onLikeClick = { onLikeClick(routine.id) },
+                    onItemClick = {}
                 )
             }
         }
@@ -285,7 +286,8 @@ private fun ExpandableRoutineSection(
                             tags = routine.tags,
                             likeCount = routine.likes,
                             isLiked = routine.isLiked,
-                            onLikeClick = { onLikeClick(routine.id) }
+                            onLikeClick = { onLikeClick(routine.id) },
+                            onItemClick = {}
                         )
                     }
                 }

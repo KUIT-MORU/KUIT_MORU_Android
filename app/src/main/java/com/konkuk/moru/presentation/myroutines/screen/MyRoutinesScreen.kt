@@ -87,7 +87,8 @@ fun MyRoutinesScreen(
     onShowInfoTooltip: () -> Unit,
     onDismissInfoTooltip: () -> Unit,
     onNavigateToCreateRoutine: () -> Unit,
-    onNavigateToRoutineFeed: () -> Unit
+    onNavigateToRoutineFeed: () -> Unit,
+    onNavigateToDetail: (Int) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -163,7 +164,8 @@ fun MyRoutinesScreen(
                                     onCheckedChange = { isChecked ->
                                         onCheckRoutine(routine.id, isChecked)
                                     },
-                                    onLikeClick = { onLikeClick(routine.id) }
+                                    onLikeClick = { onLikeClick(routine.id) },
+                                    onItemClick = { onCheckRoutine(routine.id, !routine.isChecked) }
                                 )
                             } else {
                                 RoutineListItemWithClock(
@@ -173,7 +175,8 @@ fun MyRoutinesScreen(
                                     likeCount = routine.likes,
                                     isLiked = routine.isLiked,
                                     onLikeClick = { onLikeClick(routine.id) },
-                                    onClockClick = { onOpenTimePicker(routine.id) }
+                                    onClockClick = { onOpenTimePicker(routine.id) },
+                                    onItemClick = {onNavigateToDetail(routine.id)}
                                 )
                             }
                         }
@@ -200,11 +203,12 @@ fun MyRoutinesScreen(
                     tailHeight = 11.5.dp
                 ) {
                     Text(
-                        text = "시간대가 설정되지 않은 루틴은 인사이트 분석 시에 제외됩니다.\n정확한 인사이트를 원한다면 시간대를 설정해보세요!",
+                        text = "시간대가 설정되지 않은 루틴은 인사이트 분석 시에 제외됩니다.정확한 인사이트를 원한다면 시간대를 설정해보세요!",
                         color = Color.White,
                         fontFamily = moruFontLight,
                         fontSize = 12.sp,
                         lineHeight = 18.sp,
+                        maxLines = 2,
                         textAlign = TextAlign.Start,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
                     )
@@ -369,7 +373,8 @@ private fun MyRoutinesScreenPreview() {
             onDismissInfoTooltip = {},
             onNavigateToCreateRoutine = {},
             onNavigateToRoutineFeed = {},
-            onDismissDeleteSuccessDialog = {}
+            onDismissDeleteSuccessDialog = {},
+            onNavigateToDetail={}
         )
     }
 }
@@ -430,7 +435,8 @@ private fun MyRoutinesScreenDeleteModePreview() {
             onDismissInfoTooltip = {},
             onNavigateToCreateRoutine = {},
             onNavigateToRoutineFeed = {},
-            onDismissDeleteSuccessDialog = {}
+            onDismissDeleteSuccessDialog = {},
+            onNavigateToDetail = {}
         )
     }
 }
@@ -458,7 +464,8 @@ private fun MyRoutinesScreenWithTooltipPreview() {
             onDismissInfoTooltip = {},
             onNavigateToCreateRoutine = {},
             onNavigateToRoutineFeed = {},
-            onDismissDeleteSuccessDialog = {}
+            onDismissDeleteSuccessDialog = {},
+            onNavigateToDetail = {}
         )
     }
 }

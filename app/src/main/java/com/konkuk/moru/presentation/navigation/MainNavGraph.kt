@@ -1,7 +1,6 @@
 package com.konkuk.moru.presentation.navigation
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+import DummyData.dummyRoutines
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -10,8 +9,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.konkuk.moru.presentation.home.screen.HomeScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActFabTagScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActMainScreen
@@ -22,16 +23,21 @@ import com.konkuk.moru.presentation.myactivity.screen.ActSettingScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesViewModel
 import com.konkuk.moru.presentation.routinefeed.screen.NotificationScreen
+import com.konkuk.moru.presentation.routinefeed.screen.main.HotRoutineListScreen
+import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetailScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedScreen
+import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedViewModel
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 import java.time.DayOfWeek
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainNavGraph(
+    modifier: Modifier = Modifier,
     navController: NavHostController,
-    innerPadding: PaddingValues = PaddingValues(),
-    modifier: Modifier = Modifier
+    innerPadding: PaddingValues = PaddingValues()
 ) {
+
     NavHost(
         navController = navController,
         startDestination = Route.Home.route
@@ -43,13 +49,69 @@ fun MainNavGraph(
         }
 
         composable(route = Route.RoutineFeed.route) {
+            val viewModel: RoutineFeedViewModel = viewModel()
+            val uiState by viewModel.uiState.collectAsState()
+
             RoutineFeedScreen(
                 modifier = modifier.padding(innerPadding),
-                onNavigateToNotification = {
+                navController = navController,
+                uiState = uiState,
+                onNotificationClick = {
+                    viewModel.onNotificationViewed() // ViewModel의 함수 호출
                     navController.navigate(Route.Notification.route)
                 }
             )
         }
+
+        composable(
+            route = Route.RoutineFeedDetail.route,
+            arguments = listOf(navArgument("routineId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val routineId = backStackEntry.arguments?.getInt("routineId")
+            dummyRoutines.find { it.id == routineId }?.let { routine ->
+                RoutineDetailScreen(
+                    routine = routine,
+                    onBackClick = { navController.popBackStack() }
+                )
+            } ?: navController.popBackStack()
+        }
+
+        composable(
+            route = Route.RoutineFeedRec.route,
+            arguments = listOf(navArgument("title") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val encodedTitle = backStackEntry.arguments?.getString("title") ?: ""
+            val title = URLDecoder.decode(encodedTitle, StandardCharsets.UTF_8.toString())
+
+            val routinesToShow = when {
+                title.startsWith("#") -> {
+                    val tags = title.removePrefix("#").split("#").filter { it.isNotEmpty() }
+                    dummyRoutines.filter { routine ->
+                        tags.all { tagToFind ->
+                            routine.tags.contains(
+                                tagToFind
+                            )
+                        }
+                    }
+                }
+
+                title == "지금 가장 핫한 루틴은?" -> dummyRoutines.filter { it.likes > 70 }
+                title == "MORU님과 딱 맞는 루틴" -> dummyRoutines.filter { it.authorName == "MORU" }
+                else -> emptyList()
+            }
+
+            HotRoutineListScreen(
+                title = title,
+                routines = routinesToShow,
+                onBack = { navController.popBackStack() },
+                onRoutineClick = { routineId ->
+                    navController.navigate(Route.RoutineFeedDetail.createRoute(routineId))
+                }
+            )
+        }
+
+
+
 
         composable(route = Route.MyRoutine.route) {
             val viewModel: MyRoutinesViewModel = viewModel()
@@ -76,6 +138,9 @@ fun MainNavGraph(
                 onNavigateToCreateRoutine = { /* TODO: 루틴 생성 화면으로 이동 */ },
                 onNavigateToRoutineFeed = {
                     navController.navigate(Route.RoutineFeed.route)
+                },
+                onNavigateToDetail = { routineId ->
+                    navController.navigate(Route.RoutineFeedDetail.createRoute(routineId))
                 },
                 onDismissDeleteSuccessDialog = viewModel::dismissDeleteSuccessDialog
             )
