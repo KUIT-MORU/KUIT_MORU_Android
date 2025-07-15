@@ -40,6 +40,7 @@ import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.chip.MoruChip
 import com.konkuk.moru.core.component.routine.RoutineListItem
 import com.konkuk.moru.core.component.routine.RoutineListItemWithClock
+import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.routinefeed.component.modale.CenteredInfoDialog
 import com.konkuk.moru.presentation.routinefeed.component.modale.CustomDialog
 import com.konkuk.moru.presentation.routinefeed.component.tooltip.TooltipBubble
@@ -52,9 +53,6 @@ import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalTime
 
-// --- 데이터 클래스 및 Enum (코드의 완전성을 위해 추가) ---
-// 실제 프로젝트의 데이터 클래스로 대체해주세요.
-
 enum class SortOption { BY_TIME, LATEST, POPULAR }
 
 data class MyRoutinesUiState(
@@ -62,19 +60,18 @@ data class MyRoutinesUiState(
     val selectedDay: DayOfWeek? = null,
     val isDeleteMode: Boolean = false,
     val showDeleteDialog: Boolean = false,
-    val showInfoTooltip: Boolean = false, // 💡 **FIX**: 툴팁 표시를 위한 상태 추가
+    val showInfoTooltip: Boolean = false,
     val editingRoutineId: Int? = null,
-    val showDeleteSuccessDialog: Boolean = false //
+    val showDeleteSuccessDialog: Boolean = false
 )
 
 
 @OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MyRoutinesScreen(
     modifier: Modifier = Modifier,
     uiState: MyRoutinesUiState,
-    routinesToDisplay: List<MyRoutine>,
+    routinesToDisplay: List<Routine>, // [수정] MyRoutine -> Routine
     onSortOptionSelected: (SortOption) -> Unit,
     onDaySelected: (DayOfWeek?) -> Unit,
     onTrashClick: () -> Unit,
@@ -82,14 +79,13 @@ fun MyRoutinesScreen(
     onDeleteClick: () -> Unit,
     onDismissDeleteDialog: () -> Unit,
     onConfirmDelete: () -> Unit,
-    onDismissDeleteSuccessDialog: () -> Unit, // ✨ 이 줄을 추가하세요
+    onDismissDeleteSuccessDialog: () -> Unit,
     onOpenTimePicker: (Int) -> Unit,
     onCloseTimePicker: () -> Unit,
-    // 💡 **FIX**: `alarm: Boolean` 파라미터 추가하여 기존 기능 유지
     onConfirmTimeSet: (Int, LocalTime, Set<DayOfWeek>, Boolean) -> Unit,
     onLikeClick: (Int) -> Unit,
     onShowInfoTooltip: () -> Unit,
-    onDismissInfoTooltip: () -> Unit, // 💡 **FIX**: 툴팁을 닫기 위한 콜백 추가
+    onDismissInfoTooltip: () -> Unit,
     onNavigateToCreateRoutine: () -> Unit,
     onNavigateToRoutineFeed: () -> Unit
 ) {
@@ -104,7 +100,7 @@ fun MyRoutinesScreen(
                     onInfoClick = onShowInfoTooltip,
                     onTrashClick = onTrashClick,
                     selectedDay = uiState.selectedDay,
-                    onDaySelected = { day -> onDaySelected(day) } // ViewModel에 선택된 요일 전달
+                    onDaySelected = { day -> onDaySelected(day) }
                 )
             },
             containerColor = Color.White
@@ -115,7 +111,6 @@ fun MyRoutinesScreen(
                     .padding(paddingValues)
                     .background(Color.White)
             ) {
-                // --- 정렬 칩 및 삭제 버튼 ---
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -151,7 +146,6 @@ fun MyRoutinesScreen(
                     }
                 }
 
-                // --- 루틴 목록 또는 빈 화면 ---
                 if (routinesToDisplay.isEmpty()) {
                     EmptyMyRoutineView(onNavigateToCreateRoutine, onNavigateToRoutineFeed)
                 } else {
@@ -160,7 +154,7 @@ fun MyRoutinesScreen(
                             if (uiState.isDeleteMode) {
                                 RoutineListItem(
                                     isRunning = routine.isRunning,
-                                    routineName = routine.name,
+                                    routineName = routine.title, // [수정] name -> title
                                     tags = routine.tags,
                                     likeCount = routine.likes,
                                     isLiked = routine.isLiked,
@@ -174,7 +168,7 @@ fun MyRoutinesScreen(
                             } else {
                                 RoutineListItemWithClock(
                                     isRunning = routine.isRunning,
-                                    routineName = routine.name,
+                                    routineName = routine.title, // [수정] name -> title
                                     tags = routine.tags,
                                     likeCount = routine.likes,
                                     isLiked = routine.isLiked,
@@ -188,11 +182,10 @@ fun MyRoutinesScreen(
             }
         }
 
-        // 💡 **FIX**: 정보 툴팁 UI 추가 (기존 코드와 동일하게)
         if (uiState.showInfoTooltip) {
             LaunchedEffect(Unit) {
                 delay(3000L)
-                onDismissInfoTooltip() // 3초 후 ViewModel에 툴팁 닫기 이벤트 전달
+                onDismissInfoTooltip()
             }
             Box(
                 modifier = Modifier
@@ -220,14 +213,12 @@ fun MyRoutinesScreen(
         }
     }
 
-    // --- TimePicker BottomSheet ---
     if (uiState.editingRoutineId != null) {
         ModalBottomSheet(
             onDismissRequest = onCloseTimePicker,
             sheetState = sheetState
         ) {
             TimePickerSheetContent(
-                // 💡 **FIX**: `alarm` 파라미터 받아서 onConfirmTimeSet으로 전달
                 onConfirm = { time, days, alarm ->
                     onConfirmTimeSet(uiState.editingRoutineId, time, days, alarm)
                     scope.launch { sheetState.hide() }.invokeOnCompletion {
@@ -240,7 +231,6 @@ fun MyRoutinesScreen(
         }
     }
 
-    // --- 삭제 확인 다이얼로그 ---
     if (uiState.showDeleteDialog) {
         CustomDialog(
             onDismissRequest = onDismissDeleteDialog,
@@ -255,7 +245,6 @@ fun MyRoutinesScreen(
         )
     }
     if (uiState.showDeleteSuccessDialog) {
-        // 2초 뒤에 자동으로 다이얼로그가 닫히도록 설정
         LaunchedEffect(Unit) {
             delay(2000L)
             onDismissDeleteSuccessDialog()
@@ -328,23 +317,36 @@ private fun EmptyMyRoutineView(
 @Preview(showBackground = true, name = "내 루틴 - 기본 모드")
 @Composable
 private fun MyRoutinesScreenPreview() {
+    // [수정] Preview용 샘플 데이터를 새로운 Routine 클래스로 변경
     val sampleRoutines = listOf(
-        MyRoutine(
-            1,
-            "아침 운동",
-            listOf("#모닝루틴", "#스트레칭"),
-            16,
-            true,
-            false,
+        Routine(
+            id = 1,
+            title = "아침 운동",
+            description = "상쾌한 아침을 여는 10분 스트레칭",
+            imageUrl = null,
+            category = "건강",
+            tags = listOf("#모닝루틴", "#스트레칭"),
+            authorName = "사용자",
+            authorProfileUrl = null,
+            likes = 16,
+            isLiked = true,
+            isBookmarked = false,
+            isRunning = false,
             scheduledTime = LocalTime.of(8, 0)
         ),
-        MyRoutine(
-            2,
-            "오전 명상",
-            listOf("#마음챙김", "#집중"),
-            25,
-            false,
-            true,
+        Routine(
+            id = 2,
+            title = "오전 명상",
+            description = "차분한 하루를 위한 명상 시간",
+            imageUrl = null,
+            category = "정신",
+            tags = listOf("#마음챙김", "#집중"),
+            authorName = "사용자",
+            authorProfileUrl = null,
+            likes = 25,
+            isLiked = false,
+            isBookmarked = true,
+            isRunning = true,
             scheduledTime = LocalTime.of(9, 30)
         )
     )
@@ -376,9 +378,38 @@ private fun MyRoutinesScreenPreview() {
 @Preview(showBackground = true, name = "내 루틴 - 삭제 모드")
 @Composable
 private fun MyRoutinesScreenDeleteModePreview() {
+    // [수정] Preview용 샘플 데이터를 새로운 Routine 클래스로 변경
     val sampleRoutines = listOf(
-        MyRoutine(1, "아침 운동", listOf("#모닝루틴", "#스트레칭"), 16, true, false, isChecked = true),
-        MyRoutine(2, "오전 명상", listOf("#마음챙김", "#집중"), 25, false, true, isChecked = false)
+        Routine(
+            id = 1,
+            title = "아침 운동",
+            description = "",
+            imageUrl = null,
+            category = "건강",
+            tags = listOf("#모닝루틴", "#스트레칭"),
+            authorName = "사용자",
+            authorProfileUrl = null,
+            likes = 16,
+            isLiked = true,
+            isBookmarked = false,
+            isRunning = false,
+            isChecked = true
+        ),
+        Routine(
+            id = 2,
+            title = "오전 명상",
+            description = "",
+            imageUrl = null,
+            category = "정신",
+            tags = listOf("#마음챙김", "#집중"),
+            authorName = "사용자",
+            authorProfileUrl = null,
+            likes = 25,
+            isLiked = false,
+            isBookmarked = true,
+            isRunning = true,
+            isChecked = false
+        )
     )
     MORUTheme {
         MyRoutinesScreen(

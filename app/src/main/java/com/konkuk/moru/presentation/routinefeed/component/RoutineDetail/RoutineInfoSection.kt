@@ -1,3 +1,4 @@
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -9,17 +10,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.konkuk.moru.presentation.routinefeed.data.RoutineDetail
+import com.konkuk.moru.data.model.Routine // [수정] 통합 Routine 모델 임포트
 
-
-@OptIn(ExperimentalLayoutApi::class) // FlowRow를 사용하기 위해 필요
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RoutineInfoSection(
     modifier: Modifier = Modifier,
-    routineDetail: RoutineDetail // ✅ 초기 데이터 모델을 파라미터로 받습니다.
+    routine: Routine // [수정] 파라미터 타입을 통합 Routine으로 변경
 ) {
     Column(
         modifier = modifier,
@@ -31,7 +30,7 @@ fun RoutineInfoSection(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             AsyncImage(
-                model = routineDetail.authorProfileUrl, // ✅ routineDetail에서 데이터 사용
+                model = routine.authorProfileUrl, // [수정] 필드명 변경
                 contentDescription = "작성자 프로필 이미지",
                 modifier = Modifier
                     .size(32.dp)
@@ -39,7 +38,7 @@ fun RoutineInfoSection(
                     .background(Color.LightGray)
             )
             Text(
-                text = routineDetail.authorName, // ✅ routineDetail에서 데이터 사용
+                text = routine.authorName, // [수정] 필드명 변경
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold
             )
@@ -47,14 +46,14 @@ fun RoutineInfoSection(
 
         // 2. 루틴 제목
         Text(
-            text = routineDetail.routineTitle, // ✅ routineDetail에서 데이터 사용
+            text = routine.title, // [수정] 필드명 변경 (routineTitle -> title)
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
 
         // 3. 루틴 설명
         Text(
-            text = routineDetail.routineDescription, // ✅ routineDetail에서 데이터 사용
+            text = routine.description, // [수정] 필드명 변경 (routineDescription -> description)
             style = MaterialTheme.typography.bodyLarge,
             color = Color.DarkGray
         )
@@ -65,19 +64,16 @@ fun RoutineInfoSection(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             TagChip(
-                text = routineDetail.routineCategory, // ✅ routineDetail에서 데이터 사용
+                text = routine.category, // [수정] 필드명 변경 (routineCategory -> category)
                 backgroundColor = Color(0xFFD9F7A2)
             )
-            routineDetail.tags.forEach { tag -> // ✅ routineDetail에서 데이터 사용
+            routine.tags.forEach { tag -> // [수정] 필드명 변경
                 TagChip(text = "#$tag", backgroundColor = Color(0xFFF1F3F5))
             }
         }
     }
 }
 
-/**
- * 태그 표시용 재사용 컴포저블
- */
 @Composable
 private fun TagChip(text: String, backgroundColor: Color) {
     Surface(
@@ -91,5 +87,3 @@ private fun TagChip(text: String, backgroundColor: Color) {
         )
     }
 }
-
-

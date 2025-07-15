@@ -2,14 +2,14 @@ package com.konkuk.moru.presentation.routinefeed.screen.userprofile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.konkuk.moru.presentation.routinefeed.data.RoutineInfo
+// [수정] 통합 Routine 모델과 UiState를 임포트합니다.
+import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.routinefeed.data.UserProfileUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
 
 class UserProfileViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(UserProfileUiState())
@@ -21,7 +21,7 @@ class UserProfileViewModel : ViewModel() {
 
     private fun loadUserProfile() {
         viewModelScope.launch {
-            // 가상 데이터 (서버 연동 시 교체)
+            // [수정] 가상 데이터를 통합 Routine 모델로 변경합니다.
             _uiState.update {
                 it.copy(
                     nickname = "팔로우",
@@ -31,23 +31,21 @@ class UserProfileViewModel : ViewModel() {
                     followingCount = 221,
                     isFollowing = false,
                     runningRoutines = listOf(
-                        RoutineInfo(1, "아침 운동 1", listOf("#테그그그그그", "#tag"), 16, true, false)
+                        Routine(1, "아침 운동 1", "", null, "운동", listOf("#테그그그그그", "#tag"), "모루", null, 16, true, false, true)
                     ),
-                    userRoutines = emptyList()
+                    userRoutines = emptyList() // 필요 시 여기도 채워주세요.
                 )
             }
         }
     }
 
     fun toggleFollow() {
-        val previousState = _uiState.value // 롤백을 위해 현재 상태 저장
+        val previousState = _uiState.value
         val isNowFollowing = !previousState.isFollowing
 
-        // 1. UI 즉시 업데이트
         _uiState.update { currentState ->
             currentState.copy(
                 isFollowing = isNowFollowing,
-                // 팔로우하면 상대방의 팔로워 수 +1, 언팔로우하면 -1
                 followerCount = if (isNowFollowing) {
                     currentState.followerCount + 1
                 } else {
@@ -56,21 +54,16 @@ class UserProfileViewModel : ViewModel() {
             )
         }
 
-// 2. 서버 API 요청 (실패 시 롤백 로직 포함)
         viewModelScope.launch {
             try {
-                // TODO: 실제 서버 API를 호출하는 로직을 여기에 구현합니다.
+                // TODO: 실제 서버 API 호출
                 println("서버 API 요청: 팔로우 상태 -> $isNowFollowing")
-                // 만약 서버 요청이 실패했다면 아래 catch 블록으로 빠집니다.
-                // 성공 시에는 아무것도 할 필요 없습니다. UI는 이미 갱신되었으니까요.
             } catch (e: Exception) {
-                // API 요청 실패! UI를 이전 상태로 되돌립니다.
                 _uiState.value = previousState
                 println("서버 API 요청 실패! UI를 원래대로 롤백합니다.")
             }
         }
     }
-
 
     fun toggleRunningRoutineExpansion() {
         _uiState.update { it.copy(isRunningRoutineExpanded = !it.isRunningRoutineExpanded) }

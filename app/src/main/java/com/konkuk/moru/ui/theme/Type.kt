@@ -1,5 +1,6 @@
 package com.konkuk.moru.ui.theme
 
+import android.R.attr.fontFamily
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.TextStyle
@@ -24,6 +25,7 @@ data class MoruTypography(
     val title_B_14: TextStyle,
     val title_B_12: TextStyle,
 
+    val body_SB_24: TextStyle,
     val body_SB_16: TextStyle,
     val body_SB_14: TextStyle,
 
@@ -69,6 +71,11 @@ val defaultMoruTypography = MoruTypography(
         lineHeight = 12.sp
     ),
 
+    body_SB_24 = TextStyle(
+        fontFamily = moruFontSemiBold,
+        fontSize = 24.sp,
+        lineHeight = 24.sp
+    ),
     body_SB_16 = TextStyle(
         fontFamily = moruFontSemiBold,
         fontSize = 16.sp,

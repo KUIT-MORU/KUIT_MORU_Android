@@ -1,11 +1,14 @@
 package com.konkuk.moru.presentation.myactivity.component
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,7 +40,8 @@ fun ActMyInfo(
     followerCount: Int = 0,
     followingCount: Int = 0,
     userName: String = "사용자명",
-    selfInfo: String = "자기소개",
+    routinePace: String = "미정",
+    progress: Float = 0.1f,
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
@@ -45,83 +50,81 @@ fun ActMyInfo(
             .fillMaxWidth()
             .padding(start = 16.dp, end = 16.dp)
             .background(Color(0xFFFFFFFF))
-            .height(144.dp)
+            .height(214.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(80.dp)
+                .height(126.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .padding(start = 16.dp)
-                    .size(80.dp)
-                    .clip(CircleShape)
-                    .background(color = colors.lightGray)
-            ) {}
+            RoutinePaceCard(userName, routinePace, progress, modifier = Modifier.weight(1f))
 
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically,
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .padding(end = 36.dp)
+                    .fillMaxHeight()
+                    .width(96.dp)
+                    .padding(end = 16.dp)
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "루틴", style = typography.body_SB_16)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = routineCount.toString(), style = typography.time_R_12)
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(CircleShape)
+                        .background(color = colors.veryLightGray)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_profile_basic),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.size(40.5.dp)
+                    )
                 }
-                Spacer(modifier = Modifier.width(25.dp))
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "팔로워", style = typography.body_SB_16)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = followerCount.toString(), style = typography.time_R_12)
-                }
-                Spacer(modifier = Modifier.width(25.dp))
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "팔로잉", style = typography.body_SB_16)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = followingCount.toString(), style = typography.time_R_12)
+                Spacer(modifier = Modifier.height(16.dp))
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .width(80.dp)
+                        .height(30.dp)
+                        .background(color = colors.paleLime, shape = RoundedCornerShape(100.dp))
+                        .clickable { navController.navigate(Route.ActProfile.route) }
+                ){
+                    Text(
+                        text = "프로필 수정",
+                        style = typography.desc_M_12,
+                        color = colors.oliveGreen
+                    )
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(32.dp))
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .padding(start = 35.dp)
-        ) {
-            Text(
-                text = userName,
-                style = typography.desc_M_12,
-                modifier = Modifier
-                    .padding(top = 6.dp, bottom = 4.dp, end = 2.dp)
-            )
-
-            Icon(
-                painterResource(R.drawable.ic_pencil),
-                contentDescription = "Settings Icon",
-                tint = colors.mediumGray,
-                modifier = Modifier
-                    .padding(end = 12.dp)
-                    .size(24.dp)
-                    .noRippleClickable { navController.navigate(Route.ActProfile.route) }
-            )
-        }
-        Spacer(modifier = Modifier.height(6.dp))
-        Box(
-            contentAlignment = Alignment.CenterStart,
-            modifier = Modifier
                 .fillMaxWidth()
-                .background(color = colors.veryLightGray, shape = RoundedCornerShape(4.dp))
-                .height(34.dp)
+                .padding(horizontal = 59.dp)
         ) {
-            val trimmedSelfInfo = if (selfInfo.length > 40) selfInfo.take(40) + "…" else selfInfo
-            Text(text = trimmedSelfInfo,
-                style = typography.time_R_10,
-                modifier = Modifier.padding(start = 16.dp))
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(text = "루틴", style = typography.body_SB_16)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = routineCount.toString(), style = typography.time_R_12)
+            }
+
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(text = "팔로워", style = typography.body_SB_16)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = followerCount.toString(), style = typography.time_R_12)
+            }
+
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(text = "팔로잉", style = typography.body_SB_16)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = followingCount.toString(), style = typography.time_R_12)
+            }
         }
     }
 }

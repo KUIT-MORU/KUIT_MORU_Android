@@ -25,7 +25,6 @@ import com.konkuk.moru.presentation.routinefeed.data.Notification
 import java.time.Duration
 import java.time.LocalDateTime
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NotificationRow(notification: Notification) {
     // 구조화된 데이터를 조합하여 AnnotatedString을 만듭니다.
@@ -77,7 +76,6 @@ fun NotificationRow(notification: Notification) {
 }
 
 // 이 파일의 다른 부분은 이전과 동일합니다.
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun formatTimestamp(timestamp: LocalDateTime): String {
     val now = LocalDateTime.now()

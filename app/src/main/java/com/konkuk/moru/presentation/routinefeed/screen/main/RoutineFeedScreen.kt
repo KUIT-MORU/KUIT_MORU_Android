@@ -1,3 +1,5 @@
+// 🎯 아래 코드를 복사해서 RoutineFeedScreen.kt 파일 전체에 붙여넣으세요.
+
 package com.konkuk.moru.presentation.routinefeed.screen.main
 
 import androidx.compose.foundation.layout.Spacer
@@ -23,61 +25,50 @@ import com.konkuk.moru.presentation.routinefeed.component.MoruLiveSection
 import com.konkuk.moru.presentation.routinefeed.component.TitledRoutineSection
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.HomeTopAppBar
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
-import com.konkuk.moru.presentation.routinefeed.data.RoutineInfo
 import com.konkuk.moru.presentation.routinefeed.data.RoutineSectionModel
+// [수정] 통합 Routine 모델을 임포트합니다.
+import com.konkuk.moru.data.model.Routine
 
-
-/**
- * 실제 앱에서 호출될 메인 스크린.
- * ViewModel로부터 데이터를 받아 RoutineFeedContent에 전달하는 역할을 하게 됩니다.
- * 현재는 샘플 데이터를 생성합니다.
- */
 @Composable
-fun RoutineFeedScreen(modifier: Modifier = Modifier,
-                      onNavigateToNotification: () -> Unit={}) {
-    // --- Sample Data ---
-
+fun RoutineFeedScreen(
+    modifier: Modifier = Modifier,
+    onNavigateToNotification: () -> Unit = {}
+) {
     var searchQuery by remember { mutableStateOf("") }
     var hasNotification by remember { mutableStateOf(true) }
 
     val liveUsers = remember {
-        listOf(
-            LiveUserInfo(1, "사용자명", "#운동하자", R.drawable.ic_avatar),
-            LiveUserInfo(2, "사용자명", "#운동하자", R.drawable.ic_avatar),
-            LiveUserInfo(3, "사용자명", "#운동하자", R.drawable.ic_avatar),
-            LiveUserInfo(3, "사용자명", "#운동하자", R.drawable.ic_avatar),
-            LiveUserInfo(3, "사용자명", "#운동하자", R.drawable.ic_avatar),
-            LiveUserInfo(3, "사용자명", "#운동하자", R.drawable.ic_avatar),
-            LiveUserInfo(3, "사용자명", "#운동하자", R.drawable.ic_avatar),
-            LiveUserInfo(3, "사용자명", "#운동하자", R.drawable.ic_avatar),
-        )
+        List(8) { LiveUserInfo(it, "사용자명", "#운동하자", R.drawable.ic_avatar) }
     }
+
+    // [수정] 샘플 데이터를 통합 Routine 모델로 변경합니다.
     val routineSections = remember {
         listOf(
             RoutineSectionModel(
                 title = "지금 가장 핫한 루틴은?",
                 routines = listOf(
-                    RoutineInfo(1, "아침 10분 요가하하하", listOf("건강"), 112, false, true),
-                    RoutineInfo(2, "매일 TIL 작성하기", listOf("개발"), 98, false, false),
-                    RoutineInfo(3, "점심시간 산책", listOf("운동"), 76, true, false),
-                    RoutineInfo(4, "하루 30분 책읽기", listOf("독서"), 65, false, true),
-                    RoutineInfo(5, "외국어 단어 10개", listOf("학습"), 51, false, false)
+                    Routine(1, "아침 10분 요가", "간단한 요가로 하루를 시작해요", null, "건강", listOf("건강"), "요가마스터", null, 112, true, false, false),
+                    Routine(2, "매일 TIL 작성하기", "개발 지식을 매일 기록합니다", null, "개발", listOf("개발"), "개발왕", null, 98, false, true, false),
+                    Routine(3, "점심시간 산책", "식사 후 가벼운 산책", null, "운동", listOf("운동"), "산책러", null, 76, true, false, true),
+                    Routine(4, "하루 30분 책읽기", "마음의 양식을 쌓는 시간", null, "독서", listOf("독서"), "북웜", null, 65, false, true, false),
+                    Routine(5, "외국어 단어 10개 암기", "꾸준함이 생명", null, "학습", listOf("학습"), "언어천재", null, 51, false, false, false)
                 )
             ),
             RoutineSectionModel(
                 "MORU님과 딱 맞는 루틴",
-                List(5) { RoutineInfo(it + 10, "맞춤 루틴", listOf("독서"), 25, false, it % 3 == 0) }
+                List(5) { Routine(it + 10, "맞춤 루틴", "", null, "독서", listOf("독서"), "MORU", null, 25, false, it % 3 == 0, false) }
             ),
             RoutineSectionModel(
                 "#지하철#독서",
-                List(5) { RoutineInfo(it + 20, "맞춤 루틴", listOf("독서"), 25, false, it % 3 == 0) }
+                List(5) { Routine(it + 20, "맞춤 루틴", "", null, "독서", listOf("독서"), "지하철독서왕", null, 25, false, it % 3 == 0, false) }
             ),
             RoutineSectionModel(
                 "#운동#명상",
-                List(5) { RoutineInfo(it + 30, "맞춤 루틴", listOf("독서"), 25, false, it % 3 == 0) }
+                List(5) { Routine(it + 30, "맞춤 루틴", "", null, "운동", listOf("운동", "명상"), "헬창", null, 25, false, it % 3 == 0, false) }
             )
         )
     }
+
     val likedStates = remember {
         mutableStateMapOf<Int, Boolean>().apply {
             routineSections.flatMap { it.routines }.forEach { put(it.id, it.isLiked) }
@@ -89,35 +80,23 @@ fun RoutineFeedScreen(modifier: Modifier = Modifier,
         }
     }
 
-
     Scaffold(
         topBar = {
             HomeTopAppBar(
                 searchQuery = searchQuery,
-                onQueryChange = { newQuery ->
-                    searchQuery = newQuery
-                },
-                onSearch = { query ->
-                    println("Search triggered for: '$query'")
-                },
+                onQueryChange = { newQuery -> searchQuery = newQuery },
+                onSearch = { query -> println("Search triggered for: '$query'") },
                 hasNotification = hasNotification,
-                /*onNotificationClick = {
-                    hasNotification = !hasNotification
-                },*/
                 onNotificationClick = {
-                    // ◀ 2. 클릭 시에는 화면 이동만 요청합니다.
-                    //    빨간 점 유무와 관계없이 항상 알림 화면으로 이동합니다.
                     onNavigateToNotification()
                     hasNotification = false
                 },
-
                 onLogoClick = {}
             )
         }
     ) { paddingValues ->
-        // --- 3. RoutineFeedContent에 paddingValues를 전달 ---
         RoutineFeedContent(
-            modifier = modifier.padding(paddingValues), // Scaffold가 제공하는 패딩 적용
+            modifier = modifier.padding(paddingValues),
             liveUsers = liveUsers,
             routineSections = routineSections.map { section ->
                 section.copy(routines = section.routines.map { routine ->
@@ -138,10 +117,6 @@ fun RoutineFeedScreen(modifier: Modifier = Modifier,
     }
 }
 
-/**
- * UI의 실제 내용을 구성하는 stateless 컴포저블.
- * 데이터를 파라미터로 받아 화면을 그리기만 합니다.
- */
 @Composable
 private fun RoutineFeedContent(
     modifier: Modifier = Modifier,
@@ -191,14 +166,14 @@ private fun RoutineFeedScreenWithDataPreview() {
 @Preview(name = "라이브 유저 없을 때", showBackground = true)
 @Composable
 private fun RoutineFeedScreenWithoutLivePreview() {
+    // [수정] 프리뷰용 샘플 데이터를 통합 Routine 모델로 변경합니다.
     val routineSections = remember {
         listOf(
-            RoutineSectionModel("지금 가장 핫한 루틴은?", List(5) { RoutineInfo(it, "루틴명", listOf("#운동"), 16, false, false) }),
-            RoutineSectionModel("MORU님과 딱 맞는 루틴", List(5) { RoutineInfo(it + 10, "맞춤 루틴", listOf("#독서"), 25, false, false) })
+            RoutineSectionModel("지금 가장 핫한 루틴은?", List(5) { Routine(it, "루틴명", "", null, "운동", listOf("#운동"), "모루", null, 16, false, false, false) }),
+            RoutineSectionModel("MORU님과 딱 맞는 루틴", List(5) { Routine(it + 10, "맞춤 루틴", "", null, "독서", listOf("#독서"), "모루", null, 25, false, false, false) })
         )
     }
 
-    // ✅ 1. 프리뷰에서도 상태를 관리할 변수들을 만듭니다.
     val likedStates = remember {
         mutableStateMapOf<Int, Boolean>().apply {
             routineSections.flatMap { it.routines }.forEach { put(it.id, it.isLiked) }
@@ -213,7 +188,6 @@ private fun RoutineFeedScreenWithoutLivePreview() {
     MaterialTheme {
         RoutineFeedContent(
             liveUsers = emptyList(),
-            // ✅ 2. isLiked 상태가 UI에 반영되도록 routines 리스트를 map으로 가공합니다.
             routineSections = routineSections.map { section ->
                 section.copy(routines = section.routines.map { routine ->
                     routine.copy(isLiked = likedStates[routine.id] ?: routine.isLiked)
@@ -224,7 +198,6 @@ private fun RoutineFeedScreenWithoutLivePreview() {
             onLiveTitleClick = {},
             onRoutineClick = {},
             onMoreClick = {},
-            // ✅ 3. onLikeClick에 실제 상태 업데이트 로직을 채워줍니다.
             onLikeClick = { routineId, newLikeStatus ->
                 likedStates[routineId] = newLikeStatus
                 val currentCount = likeCounts[routineId] ?: 0
