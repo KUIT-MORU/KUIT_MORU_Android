@@ -1,4 +1,4 @@
-package com.konkuk.moru.presentation.login.component
+package com.konkuk.moru.presentation.signup.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,9 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -30,42 +28,10 @@ import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
-fun LoginTextField(
+fun SignUpTextField(
     value: String,
     onValueChange: (String) -> Unit,
-    placeholder: String,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    visualTransformation: VisualTransformation = VisualTransformation.None
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(placeholder, style = typography.desc_M_14) },
-        textStyle = typography.desc_M_14,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        visualTransformation = visualTransformation,
-        singleLine = true,
-        shape = RoundedCornerShape(4.dp),
-        colors = TextFieldDefaults.colors(
-            focusedIndicatorColor = colors.limeGreen,
-            unfocusedIndicatorColor = colors.darkGray,
-            focusedContainerColor = Color.Transparent,
-            unfocusedContainerColor = Color.Transparent,
-            focusedTextColor = Color.White,
-            unfocusedTextColor = Color.White,
-            focusedPlaceholderColor = colors.lightGray,
-            unfocusedPlaceholderColor = colors.mediumGray
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(46.dp),
-    )
-}
-
-@Composable
-fun LoginTextFieldBasic(
-    value: String,
-    onValueChange: (String) -> Unit,
+    isValid: Boolean,
     placeholder: String,
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
@@ -73,7 +39,12 @@ fun LoginTextFieldBasic(
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
 
-    val borderColor = if (isFocused) colors.limeGreen else colors.darkGray
+    val borderColor =
+        if (isValid) {
+            if (isFocused) colors.limeGreen else colors.lightGray
+        } else {
+            colors.red
+        }
 
     BasicTextField(
         value = value,
@@ -82,13 +53,11 @@ fun LoginTextFieldBasic(
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         visualTransformation = visualTransformation,
         interactionSource = interactionSource,
-        textStyle = typography.desc_M_14.copy(
-            color = Color.White,
-        ),
+        textStyle = typography.desc_M_14,
         cursorBrush = SolidColor(colors.limeGreen),
         modifier = Modifier
             .fillMaxWidth()
-            .height(46.dp)
+            .height(45.dp)
             .border(
                 width = 1.dp,
                 color = borderColor,
@@ -106,7 +75,7 @@ fun LoginTextFieldBasic(
                     Text(
                         text = placeholder,
                         style = typography.desc_M_14,
-                        color = if (isFocused) colors.lightGray else colors.mediumGray,
+                        color = if (isFocused) colors.darkGray else colors.mediumGray,
                     )
                 }
                 innerTextField()
@@ -115,12 +84,13 @@ fun LoginTextFieldBasic(
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF212120)
+@Preview(showBackground = true)
 @Composable
 private fun BasicPreview() {
-    LoginTextFieldBasic(
+    SignUpTextField(
         value = "",
         onValueChange = {},
+        isValid = true,
         placeholder = "이메일",
         keyboardType = KeyboardType.Email,
         visualTransformation = VisualTransformation.None,

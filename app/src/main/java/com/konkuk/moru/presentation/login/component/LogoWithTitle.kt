@@ -24,7 +24,7 @@ fun LogoWithTitle() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
-            painter = painterResource(id = R.drawable.ic_moru_logo),
+            painter = painterResource(id = R.drawable.ic_login_moru_logo),
             contentDescription = "Moru Logo",
             modifier = Modifier
                 .padding(0.dp)
