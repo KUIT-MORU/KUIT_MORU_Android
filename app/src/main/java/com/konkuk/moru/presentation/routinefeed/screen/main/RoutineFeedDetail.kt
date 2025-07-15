@@ -29,7 +29,6 @@ import coil3.compose.AsyncImage
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.chip.MoruChip
-import com.konkuk.moru.data.DummyData
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.model.RoutineStep
 import com.konkuk.moru.data.model.SimilarRoutine

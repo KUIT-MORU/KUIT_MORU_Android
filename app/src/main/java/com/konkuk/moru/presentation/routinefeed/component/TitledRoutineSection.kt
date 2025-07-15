@@ -24,7 +24,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.konkuk.moru.core.component.routine.RoutineCardWithImage
-import com.konkuk.moru.data.DummyData
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.ui.theme.MORUTheme
 

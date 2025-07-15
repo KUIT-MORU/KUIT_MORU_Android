@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.core.component.routine.RoutineListItem
-import com.konkuk.moru.data.DummyData
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppBar
 import com.konkuk.moru.ui.theme.MORUTheme

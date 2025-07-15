@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.konkuk.moru.R
-import com.konkuk.moru.data.DummyData
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.routinefeed.component.MoruLiveSection

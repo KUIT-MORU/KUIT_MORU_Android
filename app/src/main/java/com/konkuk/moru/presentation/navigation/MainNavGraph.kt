@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.navigation
 
+import DummyData.dummyRoutines
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -12,7 +13,6 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.konkuk.moru.data.DummyData.dummyRoutines
 import com.konkuk.moru.presentation.home.screen.HomeScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActFabTagScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActMainScreen
