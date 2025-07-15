@@ -2,6 +2,8 @@ package com.konkuk.moru.presentation.routinefeed.component.tooltip
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -16,7 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.konkuk.moru.ui.theme.moruFontLight
+import com.konkuk.moru.ui.theme.moruFontSemiBold
 
 
 @Composable
@@ -27,14 +29,14 @@ fun TooltipBubble(
     tailHeight: Dp = 0.dp, // 꼬리 높이를 인자로 받도록 추가
     content: @Composable () -> Unit
 ) {
-    Box(
-        // Modifier 순서 중요: background를 먼저 그리고, padding으로 콘텐츠 영역을 한정합니다.
+    Column(
         modifier = modifier
-            //.height(53.dp)
-            .background(color = backgroundColor, shape = shape)
-            .padding(top = tailHeight), // 꼬리 높이만큼 위쪽에 패딩을 적용
-        contentAlignment = Alignment.Center
+            .background(color = backgroundColor, shape = shape),
+        horizontalAlignment = Alignment.CenterHorizontally // 내부 콘텐츠를 수평 중앙 정렬합니다.
     ) {
+        // [수정] 꼬리 높이만큼의 공간을 Spacer로 명시적으로 확보합니다.
+        Spacer(modifier = Modifier.height(tailHeight))
+
         content()
     }
 }
@@ -50,11 +52,10 @@ fun SpecificTooltipPreview() {
     )
 
     // 2. TooltipBubble 호출 시 크기, 모양, 색상, 그리고 꼬리 높이를 전달
-    Box(modifier = Modifier.padding(30.dp)) {
+    Box(modifier = Modifier.padding(20.dp)) {
         TooltipBubble(
-            modifier = Modifier
-                .width(328.dp)
-                .height(53.dp),
+            modifier = Modifier,
+                //.width(328.dp),
             shape = customBubbleShape,
             backgroundColor = Color.Black,
             tailHeight = 11.56811.dp
@@ -63,11 +64,12 @@ fun SpecificTooltipPreview() {
             Text(
                 text = "시간대가 설정되지 않은 루틴은 인사이트 분석 시에 제외됩니다.\n정확한 인사이트를 원한다면 시간대를 설정해보세요!",
                 color = Color.White,
-                fontFamily = moruFontLight,
+                fontFamily = moruFontSemiBold,
                 fontSize = 12.sp,
                 lineHeight = 18.sp,
+                maxLines = 2,
                 textAlign = TextAlign.Start,
-                modifier = Modifier.padding(horizontal = 10.dp)
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
             )
         }
     }
