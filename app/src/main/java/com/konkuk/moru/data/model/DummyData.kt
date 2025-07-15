@@ -1,11 +1,23 @@
 
+import com.konkuk.moru.R
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.model.RoutineStep
 import com.konkuk.moru.data.model.SimilarRoutine
+import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
 import java.time.DayOfWeek
 
 object DummyData {
 
+    val dummyLiveUsers = listOf(
+        LiveUserInfo(1, "운동하는 제니", "#오운완", R.drawable.ic_avatar),
+        LiveUserInfo(2, "책읽는 라이언", "#북스타그램", R.drawable.ic_avatar),
+        LiveUserInfo(3, "개발자 모루", "#TIL", R.drawable.ic_avatar),
+        LiveUserInfo(4, "요리왕 준", "#집밥", R.drawable.ic_avatar),
+        LiveUserInfo(5, "여행가 에밀리", "#여행에미치다", R.drawable.ic_avatar),
+        LiveUserInfo(6, "명상하는 소피아", "#마음챙김", R.drawable.ic_avatar),
+        LiveUserInfo(7, "기상인증 챌린저", "#미라클모닝", R.drawable.ic_avatar),
+        LiveUserInfo(8, "기타치는 브라운", "#음악", R.drawable.ic_avatar),
+    )
     val dummyRoutines = listOf(
         // "지금 가장 핫한 루틴은?" (likes > 70)
         Routine(

@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.konkuk.moru.R
@@ -32,14 +33,11 @@ data class RoutineFeedSectionModel(
 fun RoutineFeedScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    onNavigateToNotification: () -> Unit = {},
+    uiState: RoutineFeedUiState,
+    onNotificationClick: () -> Unit,
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    var hasNotification by remember { mutableStateOf(true) }
-
-    val liveUsers = remember {
-        List(8) { LiveUserInfo(it, "사용자명", "#운동하자", R.drawable.ic_avatar) }
-    }
+    val liveUsers = DummyData.dummyLiveUsers
 
     val routineSections = remember {
         listOf(
@@ -79,8 +77,8 @@ fun RoutineFeedScreen(
                 searchQuery = searchQuery,
                 onQueryChange = { newQuery -> searchQuery = newQuery },
                 onSearch = { query -> println("Search triggered for: '$query'") },
-                hasNotification = hasNotification,
-                onNotificationClick = onNavigateToNotification,
+                hasNotification = uiState.hasNotification,
+                onNotificationClick = onNotificationClick,
                 onLogoClick = {}
             )
         }
@@ -120,9 +118,7 @@ private fun RoutineFeedContent(
                     onTitleClick = { println("Live title clicked") }
                 )
             }
-            item {
-                Spacer(modifier = Modifier.height(14.dp))
-            }
+            item { Spacer(modifier = Modifier.height(14.dp)) }
             items(routineSections) { section ->
                 TitledRoutineSection(
                     title = section.title,
@@ -149,6 +145,10 @@ private fun RoutineFeedContent(
 @Composable
 private fun RoutineFeedScreenPreview() {
     MaterialTheme {
-        RoutineFeedScreen(navController = rememberNavController())
+        RoutineFeedScreen(
+            navController = rememberNavController(),
+            uiState = RoutineFeedUiState(hasNotification = true),
+            onNotificationClick = {}
+        )
     }
 }
