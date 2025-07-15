@@ -37,7 +37,7 @@ fun ConstantSizeSwitch(
 ) {
     // 스위치 트랙(배경)의 색상을 애니메이션으로 처리
     val trackColor by animateColorAsState(
-        targetValue = if (checked) MORUTheme.colors.lightGray else Color.Black,
+        targetValue =  if (checked) MORUTheme.colors.darkGray else MORUTheme.colors.lightGray,
         animationSpec = tween(durationMillis = 300),
         label = "trackColor"
     )
