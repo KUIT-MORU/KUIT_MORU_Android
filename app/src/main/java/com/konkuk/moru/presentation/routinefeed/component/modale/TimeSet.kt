@@ -41,7 +41,6 @@ import kotlin.math.abs
 
 enum class RepeatMode { NONE, EVERYDAY, WEEKDAYS, WEEKENDS }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TimePickerSheetContent(
     onConfirm: (LocalTime, Set<DayOfWeek>, Boolean) -> Unit
@@ -296,7 +295,7 @@ private fun RepeatModeSelector(selectedMode: RepeatMode, onModeSelected: (Repeat
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
+
 @Composable
 private fun DayOfWeekSelector(selectedDays: Set<DayOfWeek>, onDayClick: (DayOfWeek) -> Unit) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
@@ -322,7 +321,6 @@ private fun DayOfWeekSelector(selectedDays: Set<DayOfWeek>, onDayClick: (DayOfWe
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
 fun TimeSetPreview() {
