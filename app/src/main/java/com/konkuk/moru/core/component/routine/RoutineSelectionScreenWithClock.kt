@@ -43,12 +43,13 @@ fun RoutineListItemWithClock(
     likeCount: Int,
     isLiked: Boolean,
     onLikeClick: () -> Unit,
-    onClockClick: () -> Unit
-    // ❗️ scheduledTime 파라미터를 완전히 제거했습니다.
+    onClockClick: () -> Unit,
+    onItemClick: () -> Unit
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .clickable(onClick=onItemClick)
             .padding(vertical = 12.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -109,7 +110,8 @@ private fun RoutineListItemWithClockPreview2() {
             likeCount = 120,
             isLiked = true,
             onLikeClick = {},
-            onClockClick = {}
+            onClockClick = {},
+            onItemClick = {}
         )
     }
 }
@@ -127,7 +129,8 @@ private fun RoutineListItemWithClockPreview1() {
             isLiked = true,
             // 시간이 설정되지 않은 경우
             onLikeClick = {},
-            onClockClick = {}
+            onClockClick = {},
+            onItemClick = {}
         )
     }
 }
@@ -144,7 +147,8 @@ private fun RoutineListItemWithClockTimeSetPreview() {
             likeCount = 32,
             isLiked = false, // 오후 10:30
             onLikeClick = {},
-            onClockClick = {}
+            onClockClick = {},
+            onItemClick = {}
         )
     }
 }

@@ -87,7 +87,8 @@ fun MyRoutinesScreen(
     onShowInfoTooltip: () -> Unit,
     onDismissInfoTooltip: () -> Unit,
     onNavigateToCreateRoutine: () -> Unit,
-    onNavigateToRoutineFeed: () -> Unit
+    onNavigateToRoutineFeed: () -> Unit,
+    onNavigateToDetail: (Int) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -163,7 +164,8 @@ fun MyRoutinesScreen(
                                     onCheckedChange = { isChecked ->
                                         onCheckRoutine(routine.id, isChecked)
                                     },
-                                    onLikeClick = { onLikeClick(routine.id) }
+                                    onLikeClick = { onLikeClick(routine.id) },
+                                    onItemClick = { onCheckRoutine(routine.id, !routine.isChecked) }
                                 )
                             } else {
                                 RoutineListItemWithClock(
@@ -173,7 +175,8 @@ fun MyRoutinesScreen(
                                     likeCount = routine.likes,
                                     isLiked = routine.isLiked,
                                     onLikeClick = { onLikeClick(routine.id) },
-                                    onClockClick = { onOpenTimePicker(routine.id) }
+                                    onClockClick = { onOpenTimePicker(routine.id) },
+                                    onItemClick = {onNavigateToDetail(routine.id)}
                                 )
                             }
                         }
@@ -369,7 +372,8 @@ private fun MyRoutinesScreenPreview() {
             onDismissInfoTooltip = {},
             onNavigateToCreateRoutine = {},
             onNavigateToRoutineFeed = {},
-            onDismissDeleteSuccessDialog = {}
+            onDismissDeleteSuccessDialog = {},
+            onNavigateToDetail={}
         )
     }
 }
@@ -430,7 +434,8 @@ private fun MyRoutinesScreenDeleteModePreview() {
             onDismissInfoTooltip = {},
             onNavigateToCreateRoutine = {},
             onNavigateToRoutineFeed = {},
-            onDismissDeleteSuccessDialog = {}
+            onDismissDeleteSuccessDialog = {},
+            onNavigateToDetail = {}
         )
     }
 }
@@ -458,7 +463,8 @@ private fun MyRoutinesScreenWithTooltipPreview() {
             onDismissInfoTooltip = {},
             onNavigateToCreateRoutine = {},
             onNavigateToRoutineFeed = {},
-            onDismissDeleteSuccessDialog = {}
+            onDismissDeleteSuccessDialog = {},
+            onNavigateToDetail = {}
         )
     }
 }

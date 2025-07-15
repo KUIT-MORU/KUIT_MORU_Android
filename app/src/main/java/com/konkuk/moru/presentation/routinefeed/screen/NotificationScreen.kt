@@ -101,7 +101,7 @@ fun NotificationScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp,top=0.dp)
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp, top = 0.dp)
         ) {
             // 초기 카테고리 표시
             initialCategories.forEach { category ->
@@ -132,7 +132,7 @@ fun NotificationScreen(
                             painter = painterResource(id = R.drawable.ic_arrow_down),
                             contentDescription = "아래화살표",
                             tint = Color.Unspecified, // 원본 아이콘 색상 사용
-                            modifier=Modifier.size(16.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                 }
