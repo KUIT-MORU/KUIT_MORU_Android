@@ -1,7 +1,5 @@
 package com.konkuk.moru.presentation.navigation
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -34,9 +32,9 @@ import java.time.DayOfWeek
 
 @Composable
 fun MainNavGraph(
+    modifier: Modifier = Modifier,
     navController: NavHostController,
-    innerPadding: PaddingValues = PaddingValues(),
-    modifier: Modifier = Modifier
+    innerPadding: PaddingValues = PaddingValues()
 ) {
 
     NavHost(
