@@ -1,7 +1,6 @@
 package com.konkuk.moru.presentation.routinefeed.screen.userprofile
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -83,8 +82,8 @@ fun UserProfileScreen(
             onFollowClick = viewModel::toggleFollow,
             onToggleExpansion = viewModel::toggleRunningRoutineExpansion,
             onLikeClick = viewModel::toggleLike,
-            onFollowerClick = { navController.navigate(Route.Follow.createRoute("follower")) },
-            onFollowingClick = { navController.navigate(Route.Follow.createRoute("following")) }
+            onFollowerClick = { navController.navigate(Route.Follow.createRoute(uiState.userId, "follower")) },
+            onFollowingClick = { navController.navigate(Route.Follow.createRoute(uiState.userId, "following")) }
         )
     }
 }

@@ -1,10 +1,26 @@
 package com.konkuk.moru.data.model // 실제 프로젝트 경로에 맞게 확인해주세요.
 
-import com.konkuk.moru.R
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
+import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowRelation
 import java.time.DayOfWeek
 
 object DummyData {
+
+    val dummyFollowRelations = listOf(
+        // 1번 유저(제니)가 다른 사람들을 팔로우
+        FollowRelation(followerId = 1, followingId = 3),   // 제니 -> 모루
+        FollowRelation(followerId = 1, followingId = 101), // 제니 -> 요가마스터
+        FollowRelation(followerId = 1, followingId = 102), // 제니 -> 개발왕
+
+        // 3번 유저(모루)가 다른 사람들을 팔로우
+        FollowRelation(followerId = 3, followingId = 1),   // 모루 -> 제니
+        FollowRelation(followerId = 3, followingId = 102), // 모루 -> 개발왕
+
+        // 다른 유저들이 101번 유저(요가마스터)를 팔로우
+        FollowRelation(followerId = 2, followingId = 101), // 라이언 -> 요가마스터
+        FollowRelation(followerId = 3, followingId = 101), // 모루 -> 요가마스터
+        FollowRelation(followerId = 4, followingId = 101), // 준 -> 요가마스터
+    )
     val dummyLiveUsers = listOf(
         LiveUserInfo(1, "운동하는 제니", "#오운완", "https://images.unsplash.com/photo-1580489944761-15a19d654956"),
         LiveUserInfo(2, "책읽는 라이언", "#북스타그램", "https://images.unsplash.com/photo-1548142813-c348350df52b"),

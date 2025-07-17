@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.konkuk.moru.data.model.DummyData
-import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.routinefeed.data.UserProfileUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,17 +43,20 @@ class UserProfileViewModel @Inject constructor(
             val user = DummyData.dummyLiveUsers.find { it.userId == userId }
             // 더미 데이터에서 authorId가 일치하는 루틴 목록을 찾습니다.
             val userRoutines = DummyData.dummyRoutines.filter { it.authorId == userId }
+            val followerCount = DummyData.dummyFollowRelations.count { it.followingId == userId }
+            val followingCount = DummyData.dummyFollowRelations.count { it.followerId == userId }
 
             if (user != null) {
                 // 찾은 사용자 정보로 UI 상태를 업데이트합니다.
                 _uiState.update {
                     it.copy(
+                        userId = userId,
                         profileImageUrl = user.profileImageUrl,
                         nickname = user.name,
                         bio = "자기소개입니다. (ID: ${user.userId})", // 실제 앱에서는 user 모델에 bio 필드가 있어야 합니다.
                         routineCount = userRoutines.size,
-                        followerCount = (100..1000).random(), // 임시 팔로워 수
-                        followingCount = (50..500).random(), // 임시 팔로잉 수
+                        followerCount = followerCount,
+                        followingCount = followingCount,
                         isFollowing = false, // 기본 상태는 false로 설정
                         runningRoutines = userRoutines.filter { routine -> routine.isRunning },
                         userRoutines = userRoutines.filter { routine -> !routine.isRunning }

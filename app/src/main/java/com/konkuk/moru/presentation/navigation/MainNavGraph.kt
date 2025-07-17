@@ -75,7 +75,7 @@ fun MainNavGraph(
                 RoutineDetailScreen(
                     routine = routine,
                     onBackClick = { navController.popBackStack() },
-                    navController=navController
+                    navController = navController
                 )
             } ?: navController.popBackStack()
         }
@@ -151,7 +151,6 @@ fun MainNavGraph(
         }
 
 
-
         // [추가] UserProfileScreen 내비게이션 설정
         composable(
             route = Route.UserProfile.route,
@@ -165,7 +164,9 @@ fun MainNavGraph(
         // [추가] FollowScreen 내비게이션 설정
         composable(
             route = Route.Follow.route,
-            arguments = listOf(navArgument("selectedTab") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("userId") { type = NavType.IntType },
+                navArgument("selectedTab") { type = NavType.StringType })
         ) { backStackEntry ->
             val selectedTab = backStackEntry.arguments?.getString("selectedTab")
             FollowScreen(
