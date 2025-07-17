@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -233,18 +234,36 @@ fun RoutineFocusScreen(
     }
 
     // 메인 컨텐츠를 Box로 감싸기
-    Box(modifier = Modifier.fillMaxSize()
-        .background(Color.White)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                if (isDarkMode) colors.black else Color.White
+            )
     ) {
+        // ✅ 1. 시간 초과 시 배경 오버레이 (하단 제외)
+        if (showOverlay) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top=24.dp,bottom = 133.dp) // 하단 영역 제외
+                    .background(colors.limeGreen.copy(alpha = 0.5f))
+                    .zIndex(1f)
+            )
+        }
+
         // 상단 StatusBar, 루틴 타이틀, 타이머, 메모장
         Column() {
             // 상단 상태 바
-            StatusBarMock(isDarkMode = false)
+            if (isDarkMode)
+                StatusBarMock(isDarkMode = true)
+            else
+                StatusBarMock(isDarkMode = false)
 
             //시간초과시의 영역만 칠하기 위해 또 Column에
             Column(
                 modifier = Modifier
-                    .background(if (showOverlay) colors.limeGreen.copy(alpha = 0.5f) else Color.White),
+                    .background(if (isDarkMode) colors.black else Color.White),
             ) {
                 // Top Bar: X 버튼, 설정 버튼
                 Row(
@@ -258,7 +277,7 @@ fun RoutineFocusScreen(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_x),
                         contentDescription = "종료",
-                        tint = colors.black,
+                        tint = if (isDarkMode) Color.White else colors.black,
                         modifier = Modifier
                             .size(24.dp)
                             .clickable { onDismiss() }
@@ -267,7 +286,7 @@ fun RoutineFocusScreen(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_gear),
                         contentDescription = "설정",
-                        tint = colors.black,
+                        tint = if (isDarkMode) Color.White else colors.black,
                         modifier = Modifier
                             .size(24.dp)
                             .clickable {
@@ -280,7 +299,7 @@ fun RoutineFocusScreen(
                 Text(
                     text = "주말 아침 루틴",
                     style = typography.desc_M_16,
-                    color = colors.black,
+                    color = if (isDarkMode) Color.White else colors.black,
                     modifier = Modifier.padding(start = 16.dp)
                 )
                 Spacer(modifier = Modifier.height(6.dp))
@@ -288,7 +307,7 @@ fun RoutineFocusScreen(
                 Text(
                     text = currentTitle,
                     style = typography.title_B_20,
-                    color = colors.black,
+                    color = if (isDarkMode) colors.limeGreen else colors.black,
                     modifier = Modifier.padding(start = 16.dp)
                 )
                 Spacer(modifier = Modifier.height(9.dp))
@@ -298,7 +317,7 @@ fun RoutineFocusScreen(
                     text = formatTime(elapsedSeconds),
                     fontSize = 64.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (isTimeout) colors.oliveGreen else Color.Black,
+                    color = if (isTimeout) colors.oliveGreen else if (isDarkMode) Color.White else Color.Black,
                     modifier = Modifier
                         .fillMaxWidth()
                         .wrapContentSize(Alignment.Center)
@@ -308,7 +327,7 @@ fun RoutineFocusScreen(
                 Icon(
                     painter = painterResource(id = if (!isUserPaused) R.drawable.ic_pause else R.drawable.baseline_play_arrow_24),
                     contentDescription = if (!isUserPaused) "정지" else "시작",
-                    tint = colors.black,
+                    tint = if (isDarkMode) Color.White else colors.black,
                     modifier = Modifier
                         .fillMaxWidth()
                         .wrapContentSize(Alignment.Center)
@@ -335,7 +354,8 @@ fun RoutineFocusScreen(
                                 title = title,
                                 index = index, // 1,2,3,4,...
                                 currentStep = step,
-                                isTimeout = showOverlay
+                                isTimeout = showOverlay,
+                                isDarkMode = isDarkMode
                             )
                         }
                     }
@@ -374,7 +394,7 @@ fun RoutineFocusScreen(
                                                 showFinishPopup = true
                                             }
                                         },
-                                    tint = if (isFinalStep && showOverlay) colors.oliveGreen else colors.limeGreen
+                                    tint = if (showOverlay) colors.oliveGreen else colors.limeGreen
                                 )
                             }
 
@@ -389,7 +409,11 @@ fun RoutineFocusScreen(
                                         Text(
                                             text = "FINISH !",
                                             style = typography.body_SB_16,
-                                            color = if (isFinalStep && showOverlay) colors.oliveGreen else colors.black,
+                                            color = when {
+                                                isDarkMode -> Color.White
+                                                isFinalStep && showOverlay -> colors.oliveGreen
+                                                else -> colors.black
+                                            }
                                         )
                                     }
 
@@ -397,7 +421,7 @@ fun RoutineFocusScreen(
                                         Text(
                                             text = "NEXT STEP",
                                             style = typography.body_SB_16,
-                                            color = colors.oliveGreen,
+                                            color = if (isDarkMode) Color.White else colors.oliveGreen
                                         )
                                     }
                                 }
@@ -408,84 +432,85 @@ fun RoutineFocusScreen(
             }
         }
 
-        // 하단 메뉴 버튼 + TOTAL 영역을 고정
+        // 하단 메뉴 버튼 + TOTAL 영역을 고정하기 위해 따로 Column 씌움
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .wrapContentHeight()
         ) {
-            // ✅ 1. 사용 앱 or 메모장 (우선순위 조정 가능)
-            when {
-                showAppIcons -> {
-                    Box(
+            // ✅ 1. 앱 아이콘 (항상 위에)
+            if (showAppIcons) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(88.dp)
+                        .background(if (isDarkMode) colors.black else Color.White)
+                ) {
+                    Row(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(88.dp)
-                            .background(Color.White)
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp, vertical = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 16.dp, vertical = 20.dp),
-                            horizontalArrangement = Arrangement.spacedBy(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            repeat(3) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.ic_default),
-                                    contentDescription = "사용앱 ${it + 1}",
-                                    modifier = Modifier.size(48.dp)
-                                )
-                            }
+                        repeat(3) {
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_default),
+                                contentDescription = "사용앱 ${it + 1}",
+                                modifier = Modifier.size(48.dp)
+                            )
                         }
                     }
                 }
-                showMemoPad -> {
-                    Box(
+            }
+
+            // ✅ 2. 메모장 (항상 아래에)
+            if (showMemoPad) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(153.dp)
+                        .background(colors.veryLightGray)
+                ) {
+                    @OptIn(ExperimentalMaterial3Api::class)
+                    TextField(
+                        value = memoText,
+                        onValueChange = { memoText = it },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(153.dp)
-                            .background(colors.veryLightGray)
-                    ) {
-                        @OptIn(ExperimentalMaterial3Api::class)
-                        TextField(
-                            value = memoText,
-                            onValueChange = { memoText = it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(130.dp)
-                                .padding(horizontal = 16.dp, vertical = 10.dp),
-                            placeholder = {
-                                Text(
-                                    text = "메모 하기...",
-                                    style = typography.desc_M_14,
-                                    color = colors.darkGray
-                                )
-                            },
-                            textStyle = typography.body_SB_16.copy(color = colors.black),
-                            singleLine = false,
-                            maxLines = 5,
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                disabledContainerColor = Color.Transparent,
-                                errorContainerColor = Color.Transparent,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                disabledIndicatorColor = Color.Transparent,
-                                errorIndicatorColor = Color.Transparent,
-                                cursorColor = colors.black
+                            .height(130.dp)
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        placeholder = {
+                            Text(
+                                text = "메모 하기...",
+                                style = typography.desc_M_14,
+                                color = colors.darkGray
                             )
+                        },
+                        textStyle = typography.body_SB_16.copy(color = colors.black),
+                        singleLine = false,
+                        maxLines = 5,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            errorContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            errorIndicatorColor = Color.Transparent,
+                            cursorColor = colors.black
                         )
-                    }
+                    )
                 }
             }
-            // 메뉴 아이콘과 채팅 아이콘 버튼
+
+            // ✅ 3. 하단 메뉴 버튼 줄
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(53.dp)
-                    .background(colors.veryLightGray)
+                    .background(if (isDarkMode) colors.black else colors.veryLightGray)
                     .padding(top = 15.dp, bottom = 14.dp, start = 16.dp, end = 14.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -497,7 +522,8 @@ fun RoutineFocusScreen(
                         .size(24.dp)
                         .clickable {
                             showAppIcons = !showAppIcons
-                        }
+                        },
+                    colorFilter = ColorFilter.tint(if (isDarkMode) colors.mediumGray else colors.black)
                 )
                 Image(
                     painter = painterResource(id = R.drawable.chatting_icon),
@@ -506,16 +532,17 @@ fun RoutineFocusScreen(
                         .size(24.dp)
                         .clickable {
                             showMemoPad = !showMemoPad
-                        }
+                        },
+                    colorFilter = ColorFilter.tint(if (isDarkMode) colors.mediumGray else colors.black)
                 )
             }
 
-            // 하단 TOTAL
+            // ✅ 4. TOTAL 영역
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(80.dp)
-                    .background(colors.black)
+                    .background(if (isDarkMode) Color(0xFF383838) else colors.black)
                     .padding(top = 24.dp, bottom = 25.dp, start = 16.dp, end = 18.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -526,12 +553,13 @@ fun RoutineFocusScreen(
                     color = colors.limeGreen
                 )
                 Text(
-                    text = formatTotalTime(totalElapsedSeconds + elapsedSeconds),  // 현재 step 진행 시간 포함
+                    text = formatTotalTime(totalElapsedSeconds + elapsedSeconds),
                     style = typography.body_SB_16,
                     color = colors.limeGreen
                 )
             }
         }
+
 
         // 팝업 1(종료 확인 팝업) - 메인 컨텐츠와 별도로 위치
         if (showFinishPopup) {
@@ -767,7 +795,7 @@ fun RoutineFocusScreen(
 @Composable
 private fun RoutineFocusScreenPreview() {
     val dummyItems = listOf(
-        "샤워하기" to "5m",
+        "샤워하기" to "3s",
         "청소하기" to "10s",
         "밥먹기" to "7s",
         "옷갈아입기" to "5s"

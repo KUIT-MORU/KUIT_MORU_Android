@@ -21,7 +21,8 @@ fun RoutineTimelineItem(
     title: String, //세부 루틴명
     index: Int, // 1부터 시작
     currentStep: Int, // 1부터 시작
-    isTimeout: Boolean // 시간 초과 유무
+    isTimeout: Boolean, // 시간 초과 유무
+    isDarkMode: Boolean // 다크 모드 유무
 ) {
     val colors = MORUTheme.colors
     val typography = MORUTheme.typography
@@ -30,7 +31,8 @@ fun RoutineTimelineItem(
     val isActive = index <= currentStep
 
     // 진행상태에 따른 텍스트
-    val textColor = if (isActive) colors.black else colors.darkGray
+    val textColor =
+        if (isActive && !isDarkMode) colors.black else if (isActive && isDarkMode) Color.White else colors.darkGray
     val lineColor = when {
         isTimeout && isActive -> colors.black
         !isTimeout && isActive -> colors.limeGreen
@@ -85,7 +87,7 @@ fun RoutineTimelineItem(
                 if (isActive) {
                     //원 내부 칠하기
                     drawCircle(
-                        color = Color.White,
+                        color = if(isDarkMode) colors.black else Color.White,
                         center = Offset(centerX, centerY),
                         radius = 6.dp.toPx(),
                         style = Fill
@@ -121,9 +123,11 @@ fun RoutineTimelineItem(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(
+    showBackground = true
+)
 @Composable
-fun RoutineTimelineItemPreview() {
+fun RoutineTimelineItemPreview1() {
     val routineItems = listOf(
         "샤워하기" to "15m",
         "청소하기" to "10m",
@@ -131,6 +135,7 @@ fun RoutineTimelineItemPreview() {
         "옷갈아입기" to "3m"
     )
 
+    // isTimeout = false + 화이트 모드
     Column {
         routineItems.forEachIndexed { rawIndex, (title, time) ->
             val index = rawIndex + 1
@@ -139,12 +144,27 @@ fun RoutineTimelineItemPreview() {
                 title = title,
                 index = index,
                 currentStep = 2, // limeGreen 스타일은 1, 2번만 적용됨
-                isTimeout = false
+                isTimeout = false,
+                isDarkMode = false
             )
         }
-        Spacer(modifier = Modifier.height(16.dp))
+    }
+}
 
-        // isTimeout = true (모두 검정색 표시)
+@Preview(
+    showBackground = true
+)
+@Composable
+fun RoutineTimelineItemPreview2() {
+    val routineItems = listOf(
+        "샤워하기" to "15m",
+        "청소하기" to "10m",
+        "밥먹기" to "30m",
+        "옷갈아입기" to "3m"
+    )
+
+    // isTimeout = true + 화이트 모드
+    Column {
         routineItems.forEachIndexed { rawIndex, (title, time) ->
             val index = rawIndex + 1
             RoutineTimelineItem(
@@ -152,7 +172,65 @@ fun RoutineTimelineItemPreview() {
                 title = title,
                 index = index,
                 currentStep = 2,   // 중요하지 않음
-                isTimeout = true   // ← 시간 초과 상태
+                isTimeout = true,   // ← 시간 초과 상태
+                isDarkMode = false
+            )
+        }
+    }
+}
+
+@Preview(
+    showBackground = true,
+    backgroundColor = 0xFF000000
+)
+@Composable
+fun RoutineTimelineItemPreview3() {
+    val routineItems = listOf(
+        "샤워하기" to "15m",
+        "청소하기" to "10m",
+        "밥먹기" to "30m",
+        "옷갈아입기" to "3m"
+    )
+    // isTimeout = false + 다크모드
+    Column {
+        routineItems.forEachIndexed { rawIndex, (title, time) ->
+            val index = rawIndex + 1
+            RoutineTimelineItem(
+                time = time,
+                title = title,
+                index = index,
+                currentStep = 2, // limeGreen 스타일은 1, 2번만 적용됨
+                isTimeout = false,
+                isDarkMode = true
+            )
+        }
+    }
+}
+
+@Preview(
+    showBackground = true,
+    backgroundColor = 0xFF000000
+)
+@Composable
+fun RoutineTimelineItemPreview4() {
+    val routineItems = listOf(
+        "샤워하기" to "15m",
+        "청소하기" to "10m",
+        "밥먹기" to "30m",
+        "옷갈아입기" to "3m"
+    )
+
+    // isTimeout = true + 다크모드
+    Column {
+        routineItems.forEachIndexed { rawIndex, (title, time) ->
+            val index = rawIndex + 1
+            RoutineTimelineItem(
+                time = time,
+                title = title,
+                index = index,
+                currentStep = 2, // limeGreen 스타일은 1, 2번만 적용됨
+                isTimeout = false,
+                isDarkMode = true
             )
         }
     }
