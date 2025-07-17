@@ -25,20 +25,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.chip.MoruChip
+import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.model.RoutineStep
 import com.konkuk.moru.data.model.SimilarRoutine
+import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoutineDetailScreen(
     routine: Routine,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    navController: NavController
 ) {
     var isLiked by remember { mutableStateOf(routine.isLiked) }
     var likeCount by remember { mutableIntStateOf(routine.likes) }
@@ -56,7 +61,12 @@ fun RoutineDetailScreen(
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                item { RoutineHeader(routine = routine) }
+                item {
+                    RoutineHeader(
+                        routine = routine,
+                        navController = navController
+                    )
+                }
 
                 item {
                     RoutineStepSection(
@@ -102,7 +112,10 @@ fun RoutineDetailScreen(
 }
 
 @Composable
-fun RoutineHeader(routine: Routine) {
+fun RoutineHeader(
+    routine: Routine,
+    navController: NavController
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -129,7 +142,8 @@ fun RoutineHeader(routine: Routine) {
         )
         RoutineInfoOverlay(
             modifier = Modifier.padding(16.dp),
-            routine = routine
+            routine = routine,
+            navController = navController
         )
     }
 }
@@ -137,7 +151,10 @@ fun RoutineHeader(routine: Routine) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun RoutineInfoOverlay(modifier: Modifier = Modifier, routine: Routine) {
+private fun RoutineInfoOverlay(
+    modifier: Modifier = Modifier, routine: Routine,
+    navController: NavController
+) {
     val contentColor = Color.White
 
     val displayTitle = if (routine.title.length > 8) {
@@ -154,7 +171,11 @@ private fun RoutineInfoOverlay(modifier: Modifier = Modifier, routine: Routine) 
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.Top
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable {
+                // Routine 모델에 authorId가 있다는 가정 하에 작성
+                // 만약 없다면 userId를 전달할 방법을 찾아야 합니다.
+                navController.navigate(Route.UserProfile.createRoute(routine.authorId))
+            }) {
                 AsyncImage(
                     model = routine.authorProfileUrl,
                     contentDescription = "작성자 프로필",
@@ -228,6 +249,7 @@ private fun RoutineInfoOverlay(modifier: Modifier = Modifier, routine: Routine) 
         )
     }
 }
+
 @Composable
 fun RoutineStepSection(modifier: Modifier = Modifier, steps: List<RoutineStep>) {
     Column(modifier = modifier) {
@@ -333,10 +355,10 @@ fun SimilarRoutinesSection(modifier: Modifier = Modifier, routines: List<Similar
         }
         Spacer(Modifier.height(24.dp))
         LazyRow(
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp,top=0.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp, top = 0.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
 
-        ) {
+            ) {
             items(routines) { routine ->
                 SimilarRoutineCard(routine = routine)
             }
@@ -376,8 +398,9 @@ fun SimilarRoutineCard(routine: SimilarRoutine) {
 fun RoutineDetailScreenPreview() {
     MORUTheme {
         RoutineDetailScreen(
-            routine = DummyData.dummyRoutines.first(),
-            onBackClick = {}
+            routine = DummyData.feedRoutines.first(),
+            onBackClick = {},
+            navController = rememberNavController()
         )
     }
 }

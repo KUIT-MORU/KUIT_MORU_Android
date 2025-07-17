@@ -1,7 +1,6 @@
 package com.konkuk.moru.presentation.routinefeed.screen.userprofile
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -46,10 +45,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import coil3.compose.AsyncImage
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.routine.RoutineListItem
 import com.konkuk.moru.data.model.Routine
+import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppBar
 import com.konkuk.moru.presentation.routinefeed.data.UserProfileUiState
 import com.konkuk.moru.ui.theme.MORUTheme
@@ -81,8 +82,8 @@ fun UserProfileScreen(
             onFollowClick = viewModel::toggleFollow,
             onToggleExpansion = viewModel::toggleRunningRoutineExpansion,
             onLikeClick = viewModel::toggleLike,
-            onFollowerClick = { navController.navigate("follow_screen/follower") },
-            onFollowingClick = { navController.navigate("follow_screen/following") }
+            onFollowerClick = { navController.navigate(Route.Follow.createRoute(uiState.userId, "follower")) },
+            onFollowingClick = { navController.navigate(Route.Follow.createRoute(uiState.userId, "following")) }
         )
     }
 }
@@ -130,14 +131,14 @@ private fun UserProfileContent(
                 EmptyRoutineView(modifier = Modifier.padding(vertical = 93.dp))
             }
         } else {
-            items(state.userRoutines, key = { it.id }) { routine ->
+            items(state.userRoutines, key = { it.routineId }) { routine ->
                 RoutineListItem(
                     isRunning = routine.isRunning,
                     routineName = routine.title,
                     tags = routine.tags,
                     likeCount = routine.likes,
                     isLiked = routine.isLiked,
-                    onLikeClick = { onLikeClick(routine.id) },
+                    onLikeClick = { onLikeClick(routine.routineId) },
                     onItemClick = {}
                 )
             }
@@ -164,9 +165,11 @@ private fun ProfileHeader(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_profile_with_background),
+            AsyncImage(
+                model = state.profileImageUrl, // UiState에서 URL을 가져옵니다.
                 contentDescription = "프로필 사진",
+                placeholder = painterResource(id = R.drawable.ic_profile_with_background), // 로딩 중에 보여줄 이미지
+                error = painterResource(id = R.drawable.ic_profile_with_background), // 에러 시 보여줄 이미지
                 modifier = Modifier
                     .size(80.dp)
                     .clip(CircleShape),
@@ -286,7 +289,7 @@ private fun ExpandableRoutineSection(
                             tags = routine.tags,
                             likeCount = routine.likes,
                             isLiked = routine.isLiked,
-                            onLikeClick = { onLikeClick(routine.id) },
+                            onLikeClick = { onLikeClick(routine.routineId) },
                             onItemClick = {}
                         )
                     }
@@ -303,11 +306,11 @@ private fun ExpandableRoutineSection(
 private fun UserProfileScreenPreview(isDataEmpty: Boolean = false) {
     // [수정] 프리뷰용 샘플 데이터를 통합 Routine 모델로 변경
     val sampleRunningRoutines = remember {
-        listOf(Routine(1, "아침 운동 1", "", null, "운동", listOf("#테그그그그그", "#tag"), "모루", null, 16, true, false, true))
+        listOf(Routine(1, "아침 운동 1", "", null, "운동", listOf("#테그그그그그", "#tag"), 1,"모루", null, 16, true, false, true))
     }
     val sampleUserRoutines = remember {
         List(5) { index ->
-            Routine(index + 2, "아침 운동", "", null, "운동", listOf("#모닝루틴", "#스트레칭"), "모루", null, 16, false, index % 2 == 0, false)
+            Routine(index + 2, "아침 운동", "", null, "운동", listOf("#모닝루틴", "#스트레칭"), 2,"모루", null, 16, false, index % 2 == 0, false)
         }
     }
 
@@ -316,23 +319,24 @@ private fun UserProfileScreenPreview(isDataEmpty: Boolean = false) {
 
     val likedStates = remember {
         val allRoutines = sampleRunningRoutines + sampleUserRoutines
-        mutableStateMapOf(*allRoutines.map { it.id to it.isLiked }.toTypedArray())
+        mutableStateMapOf(*allRoutines.map { it.routineId to it.isLiked }.toTypedArray())
     }
     val likeCounts = remember {
         val allRoutines = sampleRunningRoutines + sampleUserRoutines
-        mutableStateMapOf(*allRoutines.map { it.id to it.likes }.toTypedArray())
+        mutableStateMapOf(*allRoutines.map { it.routineId to it.likes }.toTypedArray())
     }
 
     val runningRoutines = sampleRunningRoutines.map {
-        it.copy(isLiked = likedStates[it.id] ?: it.isLiked, likes = likeCounts[it.id] ?: it.likes)
+        it.copy(isLiked = likedStates[it.routineId] ?: it.isLiked, likes = likeCounts[it.routineId] ?: it.likes)
     }
     val userRoutines = sampleUserRoutines.map {
-        it.copy(isLiked = likedStates[it.id] ?: it.isLiked, likes = likeCounts[it.id] ?: it.likes)
+        it.copy(isLiked = likedStates[it.routineId] ?: it.isLiked, likes = likeCounts[it.routineId] ?: it.likes)
     }
 
     val state = UserProfileUiState(
         nickname = "팔로우",
         bio = "자기소개입니다. 자기소개입니다.",
+        profileImageUrl = "https://images.unsplash.com/photo-1580489944761-15a19d654956",
         routineCount = if (isDataEmpty) 0 else 4,
         followerCount = 628,
         followingCount = 221,

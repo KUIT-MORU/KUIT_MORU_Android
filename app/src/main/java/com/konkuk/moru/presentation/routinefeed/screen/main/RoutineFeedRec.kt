@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.core.component.routine.RoutineListItem
+import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppBar
 import com.konkuk.moru.ui.theme.MORUTheme
@@ -28,10 +29,10 @@ fun HotRoutineListScreen(
     onRoutineClick: (Int) -> Unit
 ) {
     var likeStates by remember(routines) {
-        mutableStateOf(routines.associate { it.id to it.isLiked })
+        mutableStateOf(routines.associate { it.routineId to it.isLiked })
     }
     var likeCounts by remember(routines) {
-        mutableStateOf(routines.associate { it.id to it.likes })
+        mutableStateOf(routines.associate { it.routineId to it.likes })
     }
 
     Scaffold(
@@ -64,8 +65,8 @@ fun HotRoutineListScreen(
             contentPadding = PaddingValues( bottom = 80.dp)
         ) {
             items(routines) { r ->
-                val liked = likeStates[r.id] ?: false
-                val currentLikeCount = likeCounts[r.id] ?: r.likes
+                val liked = likeStates[r.routineId] ?: false
+                val currentLikeCount = likeCounts[r.routineId] ?: r.likes
 
                 RoutineListItem(
                     isRunning = r.isRunning,
@@ -76,12 +77,12 @@ fun HotRoutineListScreen(
                     showCheckbox = false,
                     onLikeClick = {
                         val newState = !liked
-                        likeStates = likeStates.toMutableMap().apply { this[r.id] = newState }
+                        likeStates = likeStates.toMutableMap().apply { this[r.routineId] = newState }
                         likeCounts = likeCounts.toMutableMap().apply {
-                            this[r.id] = currentLikeCount + if (newState) 1 else -1
+                            this[r.routineId] = currentLikeCount + if (newState) 1 else -1
                         }
                     },
-                    onItemClick = { onRoutineClick(r.id) }
+                    onItemClick = { onRoutineClick(r.routineId) }
                 )
             }
         }
@@ -94,7 +95,7 @@ private fun HotPreview() {
     MORUTheme {
         HotRoutineListScreen(
             title = "지금 가장 핫한 루틴은?",
-            routines = DummyData.dummyRoutines,
+            routines = DummyData.feedRoutines,
             onBack = {},
             onRoutineClick = {}
         )

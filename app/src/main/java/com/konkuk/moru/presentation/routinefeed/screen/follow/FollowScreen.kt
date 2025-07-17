@@ -49,13 +49,18 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FollowScreen(
-    onBackClick: () -> Unit, viewModel: FollowViewModel = hiltViewModel()
+    onBackClick: () -> Unit,
+    viewModel: FollowViewModel = hiltViewModel(),
+    selectedTab: String?
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val tabs = listOf("팔로워", "팔로잉")
-    val pagerState = rememberPagerState { tabs.size }
+    //val pagerState = rememberPagerState { tabs.size }
     val scope = rememberCoroutineScope()
-
+    val initialPage = if (selectedTab == "following") 1 else 0
+    val pagerState = rememberPagerState(initialPage = initialPage) { tabs.size }
+   
+   
     FollowScreenContent(
         uiState = uiState,
         tabs = tabs,
@@ -81,7 +86,7 @@ fun FollowScreenContent(
     onFollowClick: (FollowUser) -> Unit
 ) {
     Scaffold(
-        modifier=Modifier.padding(11.dp),
+        modifier = Modifier.padding(11.dp),
         containerColor = Color.White,
         topBar = {
             BasicTopAppBar(
@@ -107,7 +112,7 @@ fun FollowScreenContent(
                 }) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
-                        modifier=Modifier.height(42.dp),
+                        modifier = Modifier.height(42.dp),
                         selected = pagerState.currentPage == index,
                         onClick = {
                             scope.launch {

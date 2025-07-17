@@ -151,7 +151,7 @@ fun MyRoutinesScreen(
                     EmptyMyRoutineView(onNavigateToCreateRoutine, onNavigateToRoutineFeed)
                 } else {
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(items = routinesToDisplay, key = { it.id }) { routine ->
+                        items(items = routinesToDisplay, key = { it.routineId }) { routine ->
                             if (uiState.isDeleteMode) {
                                 RoutineListItem(
                                     isRunning = routine.isRunning,
@@ -162,10 +162,10 @@ fun MyRoutinesScreen(
                                     showCheckbox = true,
                                     isChecked = routine.isChecked,
                                     onCheckedChange = { isChecked ->
-                                        onCheckRoutine(routine.id, isChecked)
+                                        onCheckRoutine(routine.routineId, isChecked)
                                     },
-                                    onLikeClick = { onLikeClick(routine.id) },
-                                    onItemClick = { onCheckRoutine(routine.id, !routine.isChecked) }
+                                    onLikeClick = { onLikeClick(routine.routineId) },
+                                    onItemClick = { onCheckRoutine(routine.routineId, !routine.isChecked) }
                                 )
                             } else {
                                 RoutineListItemWithClock(
@@ -174,9 +174,9 @@ fun MyRoutinesScreen(
                                     tags = routine.tags,
                                     likeCount = routine.likes,
                                     isLiked = routine.isLiked,
-                                    onLikeClick = { onLikeClick(routine.id) },
-                                    onClockClick = { onOpenTimePicker(routine.id) },
-                                    onItemClick = {onNavigateToDetail(routine.id)}
+                                    onLikeClick = { onLikeClick(routine.routineId) },
+                                    onClockClick = { onOpenTimePicker(routine.routineId) },
+                                    onItemClick = {onNavigateToDetail(routine.routineId)}
                                 )
                             }
                         }
@@ -324,12 +324,13 @@ private fun MyRoutinesScreenPreview() {
     // [수정] Preview용 샘플 데이터를 새로운 Routine 클래스로 변경
     val sampleRoutines = listOf(
         Routine(
-            id = 1,
+            routineId = 1,
             title = "아침 운동",
             description = "상쾌한 아침을 여는 10분 스트레칭",
             imageUrl = null,
             category = "건강",
             tags = listOf("#모닝루틴", "#스트레칭"),
+            authorId = 1,
             authorName = "사용자",
             authorProfileUrl = null,
             likes = 16,
@@ -339,12 +340,13 @@ private fun MyRoutinesScreenPreview() {
             scheduledTime = LocalTime.of(8, 0)
         ),
         Routine(
-            id = 2,
+            routineId = 2,
             title = "오전 명상",
             description = "차분한 하루를 위한 명상 시간",
             imageUrl = null,
             category = "정신",
             tags = listOf("#마음챙김", "#집중"),
+            authorId = 2,
             authorName = "사용자",
             authorProfileUrl = null,
             likes = 25,
@@ -386,12 +388,13 @@ private fun MyRoutinesScreenDeleteModePreview() {
     // [수정] Preview용 샘플 데이터를 새로운 Routine 클래스로 변경
     val sampleRoutines = listOf(
         Routine(
-            id = 1,
+            routineId = 1,
             title = "아침 운동",
             description = "",
             imageUrl = null,
             category = "건강",
             tags = listOf("#모닝루틴", "#스트레칭"),
+            authorId = 3,
             authorName = "사용자",
             authorProfileUrl = null,
             likes = 16,
@@ -401,12 +404,13 @@ private fun MyRoutinesScreenDeleteModePreview() {
             isChecked = true
         ),
         Routine(
-            id = 2,
+            routineId = 2,
             title = "오전 명상",
             description = "",
             imageUrl = null,
             category = "정신",
             tags = listOf("#마음챙김", "#집중"),
+            authorId = 4,
             authorName = "사용자",
             authorProfileUrl = null,
             likes = 25,
