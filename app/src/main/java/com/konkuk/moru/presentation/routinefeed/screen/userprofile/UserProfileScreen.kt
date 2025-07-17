@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import coil3.compose.AsyncImage
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.routine.RoutineListItem
@@ -165,9 +166,11 @@ private fun ProfileHeader(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_profile_with_background),
+            AsyncImage(
+                model = state.profileImageUrl, // UiState에서 URL을 가져옵니다.
                 contentDescription = "프로필 사진",
+                placeholder = painterResource(id = R.drawable.ic_profile_with_background), // 로딩 중에 보여줄 이미지
+                error = painterResource(id = R.drawable.ic_profile_with_background), // 에러 시 보여줄 이미지
                 modifier = Modifier
                     .size(80.dp)
                     .clip(CircleShape),
@@ -334,6 +337,7 @@ private fun UserProfileScreenPreview(isDataEmpty: Boolean = false) {
     val state = UserProfileUiState(
         nickname = "팔로우",
         bio = "자기소개입니다. 자기소개입니다.",
+        profileImageUrl = "https://images.unsplash.com/photo-1580489944761-15a19d654956",
         routineCount = if (isDataEmpty) 0 else 4,
         followerCount = 628,
         followingCount = 221,

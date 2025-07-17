@@ -12,5 +12,5 @@ data class LiveUserInfo(
     val userId: Int,
     val name: String,
     val tag: String,
-    @DrawableRes val profileImageRes: Int
+    val profileImageUrl: String?
 )

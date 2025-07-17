@@ -49,6 +49,7 @@ class UserProfileViewModel @Inject constructor(
                 // 찾은 사용자 정보로 UI 상태를 업데이트합니다.
                 _uiState.update {
                     it.copy(
+                        profileImageUrl = user.profileImageUrl,
                         nickname = user.name,
                         bio = "자기소개입니다. (ID: ${user.userId})", // 실제 앱에서는 user 모델에 bio 필드가 있어야 합니다.
                         routineCount = userRoutines.size,

@@ -6,24 +6,24 @@ import java.time.DayOfWeek
 
 object DummyData {
     val dummyLiveUsers = listOf(
-        LiveUserInfo(1, "운동하는 제니", "#오운완", R.drawable.ic_avatar),
-        LiveUserInfo(2, "책읽는 라이언", "#북스타그램", R.drawable.ic_avatar),
-        LiveUserInfo(3, "개발자 모루", "#TIL", R.drawable.ic_avatar),
-        LiveUserInfo(4, "요리왕 준", "#집밥", R.drawable.ic_avatar),
-        LiveUserInfo(5, "여행가 에밀리", "#여행에미치다", R.drawable.ic_avatar),
-        LiveUserInfo(6, "명상하는 소피아", "#마음챙김", R.drawable.ic_avatar),
-        LiveUserInfo(7, "기상인증 챌린저", "#미라클모닝", R.drawable.ic_avatar),
-        LiveUserInfo(8, "기타치는 브라운", "#음악", R.drawable.ic_avatar),
+        LiveUserInfo(1, "운동하는 제니", "#오운완", "https://images.unsplash.com/photo-1580489944761-15a19d654956"),
+        LiveUserInfo(2, "책읽는 라이언", "#북스타그램", "https://images.unsplash.com/photo-1548142813-c348350df52b"),
+        LiveUserInfo(3, "개발자 모루", "#TIL", null), // MORU는 프로필 이미지가 없는 것으로 설정
+        LiveUserInfo(4, "요리왕 준", "#집밥", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"),
+        LiveUserInfo(5, "여행가 에밀리", "#여행에미치다", "https://images.unsplash.com/photo-1438761681033-6461ffad8d80"),
+        LiveUserInfo(6, "명상하는 소피아", "#마음챙김", "https://images.unsplash.com/photo-1552058544-f2b08422138a"),
+        LiveUserInfo(7, "기상인증 챌린저", "#미라클모닝", "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c"),
+        LiveUserInfo(8, "기타치는 브라운", "#음악", "https://images.unsplash.com/photo-1541533267753-bab141444692"),
 
-        // --- 루틴 작성자들 추가 ---
-        LiveUserInfo(101, "요가마스터", "#요가", R.drawable.ic_profile_with_background),
-        LiveUserInfo(102, "개발왕", "#코딩", R.drawable.ic_profile_with_background),
-        LiveUserInfo(103, "산책러", "#산책", R.drawable.ic_profile_with_background),
-        LiveUserInfo(104, "북웜", "#독서", R.drawable.ic_profile_with_background),
-        LiveUserInfo(105, "꿀잠요정", "#숙면", R.drawable.ic_profile_with_background),
-        LiveUserInfo(201, "지하철독서왕", "#지하철", R.drawable.ic_profile_with_background),
-        LiveUserInfo(202, "웹소설매니아", "#웹소설", R.drawable.ic_profile_with_background),
-        LiveUserInfo(301, "헬창", "#오운완", R.drawable.ic_profile_with_background)
+        // --- 루틴 작성자들도 동일하게 수정 ---
+        LiveUserInfo(101, "요가마스터", "#요가", "https://images.unsplash.com/photo-1552058544-f2b08422138a"),
+        LiveUserInfo(102, "개발왕", "#코딩", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"),
+        LiveUserInfo(103, "산책러", "#산책", "https://images.unsplash.com/photo-1548142813-c348350df52b"),
+        LiveUserInfo(104, "북웜", "#독서", "https://images.unsplash.com/photo-1580489944761-15a19d654956"),
+        LiveUserInfo(105, "꿀잠요정", "#숙면", null),
+        LiveUserInfo(201, "지하철독서왕", "#지하철", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"),
+        LiveUserInfo(202, "웹소설매니아", "#웹소설", null),
+        LiveUserInfo(301, "헬창", "#오운완", "https://images.unsplash.com/photo-1548142813-c348350df52b")
     )
     val dummyRoutines = listOf(
         Routine(
