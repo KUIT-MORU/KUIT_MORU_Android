@@ -62,7 +62,7 @@ fun MoruLiveSection(
                         painter = painterResource(id = user.profileImageRes),
                         username = user.name,
                         tag = user.tag,
-                        modifier = Modifier.clickable { onUserClick(user.id) }
+                        modifier = Modifier.clickable { onUserClick(user.userId) }
                     )
                 }
             }

@@ -17,6 +17,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.konkuk.moru.R
+import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.routinefeed.component.MoruLiveSection
@@ -51,23 +52,37 @@ fun RoutineFeedScreen(
             ),
             RoutineFeedSectionModel(
                 "#지하철#독서",
-                routines = DummyData.dummyRoutines.filter { it.tags.containsAll(listOf("지하철", "독서")) }.take(7)
+                routines = DummyData.dummyRoutines.filter {
+                    it.tags.containsAll(
+                        listOf(
+                            "지하철",
+                            "독서"
+                        )
+                    )
+                }.take(7)
             ),
             RoutineFeedSectionModel(
                 "#운동#명상",
-                routines = DummyData.dummyRoutines.filter { it.tags.containsAll(listOf("운동", "명상")) }.take(7)
+                routines = DummyData.dummyRoutines.filter {
+                    it.tags.containsAll(
+                        listOf(
+                            "운동",
+                            "명상"
+                        )
+                    )
+                }.take(7)
             )
         )
     }
 
     val likedStates = remember {
         mutableStateMapOf<Int, Boolean>().apply {
-            DummyData.dummyRoutines.forEach { put(it.id, it.isLiked) }
+            DummyData.dummyRoutines.forEach { put(it.routineId, it.isLiked) }
         }
     }
     val likeCounts = remember {
         mutableStateMapOf<Int, Int>().apply {
-            DummyData.dummyRoutines.forEach { put(it.id, it.likes) }
+            DummyData.dummyRoutines.forEach { put(it.routineId, it.likes) }
         }
     }
 
@@ -114,7 +129,9 @@ private fun RoutineFeedContent(
             item {
                 MoruLiveSection(
                     liveUsers = liveUsers,
-                    onUserClick = { userId -> println("User $userId clicked") },
+                    onUserClick = { userId ->
+                        navController.navigate(Route.UserProfile.createRoute(userId))
+                    },
                     onTitleClick = { println("Live title clicked") }
                 )
             }
@@ -124,7 +141,7 @@ private fun RoutineFeedContent(
                     title = section.title,
                     routines = section.routines.map { routine ->
                         routine.copy(
-                            isLiked = likedStates[routine.id] ?: routine.isLiked
+                            isLiked = likedStates[routine.routineId] ?: routine.isLiked
                         )
                     },
                     likeCounts = likeCounts,
