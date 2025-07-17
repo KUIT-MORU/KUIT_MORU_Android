@@ -46,4 +46,10 @@ sealed class Route(
     data object ActFabTag : Route(route = "act_fab_tag")
     data object ActProfile : Route(route = "act_profile")
     data object ActRecord : Route(route = "act_record")
+    data object ActRecordDetail : Route(route = "act_record_detail/{routineTitle}") {
+        fun createRoute(routineTitle: String): String {
+            val encoded = URLEncoder.encode(routineTitle, StandardCharsets.UTF_8.toString())
+            return "act_record_detail/$encoded"
+        }
+    }
 }

@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.konkuk.moru.presentation.myactivity.component.BackTitle
 import com.konkuk.moru.presentation.myactivity.component.RecordCard
+import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 
 @Composable
@@ -69,7 +70,10 @@ fun ActRecordScreen(
                     title = title,
                     tags = tags,
                     completeFlag = isComplete,
-                    time = "00:00:00"
+                    time = "00:00:00",
+                    onClick = {
+                        navController.navigate(Route.ActRecordDetail.createRoute(title))
+                    }
                 )
             }
         }

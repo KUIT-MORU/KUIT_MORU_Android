@@ -3,6 +3,7 @@ package com.konkuk.moru.presentation.myactivity.component
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -33,6 +34,7 @@ fun RecordCard(
     imageResId: Int = R.drawable.ic_record_img,
     time: String = "00:00:00",
     completeFlag: Boolean = false,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -40,6 +42,7 @@ fun RecordCard(
             .width(90.dp)
             .height(139.dp)
             .clip(RoundedCornerShape(8.dp))
+            .clickable { onClick() }
     ) {
         Box(
             modifier = Modifier
