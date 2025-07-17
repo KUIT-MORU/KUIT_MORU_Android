@@ -6,9 +6,11 @@ import java.nio.charset.StandardCharsets
 sealed class Route(
     val route: String
 ) {
+    data object AuthCheck : Route("auth_check")
     data object Login : Route("login")
     data object SignUp : Route("sign_up")
     data object Main : Route("main")
+    data object Onboarding : Route("onboarding")
 
     data object Home : Route(route = "home")
 
