@@ -42,7 +42,7 @@ class UserProfileViewModel @Inject constructor(
             // 더미 데이터에서 userId와 일치하는 사용자 정보를 찾습니다.
             val user = DummyData.dummyLiveUsers.find { it.userId == userId }
             // 더미 데이터에서 authorId가 일치하는 루틴 목록을 찾습니다.
-            val userRoutines = DummyData.dummyRoutines.filter { it.authorId == userId }
+            val userRoutines = DummyData.feedRoutines.filter { it.authorId == userId }
             val followerCount = DummyData.dummyFollowRelations.count { it.followingId == userId }
             val followingCount = DummyData.dummyFollowRelations.count { it.followerId == userId }
 

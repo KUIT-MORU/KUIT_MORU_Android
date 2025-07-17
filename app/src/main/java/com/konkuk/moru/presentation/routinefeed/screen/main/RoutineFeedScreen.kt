@@ -44,15 +44,15 @@ fun RoutineFeedScreen(
         listOf(
             RoutineFeedSectionModel(
                 title = "지금 가장 핫한 루틴은?",
-                routines = DummyData.dummyRoutines.filter { it.likes > 70 }.take(7)
+                routines = DummyData.feedRoutines.filter { it.likes > 70 }.take(7)
             ),
             RoutineFeedSectionModel(
                 "MORU님과 딱 맞는 루틴",
-                routines = DummyData.dummyRoutines.filter { it.authorName == "MORU" }.take(7)
+                routines = DummyData.feedRoutines.filter { it.authorName == "MORU" }.take(7)
             ),
             RoutineFeedSectionModel(
                 "#지하철#독서",
-                routines = DummyData.dummyRoutines.filter {
+                routines = DummyData.feedRoutines.filter {
                     it.tags.containsAll(
                         listOf(
                             "지하철",
@@ -63,7 +63,7 @@ fun RoutineFeedScreen(
             ),
             RoutineFeedSectionModel(
                 "#운동#명상",
-                routines = DummyData.dummyRoutines.filter {
+                routines = DummyData.feedRoutines.filter {
                     it.tags.containsAll(
                         listOf(
                             "운동",
@@ -77,12 +77,12 @@ fun RoutineFeedScreen(
 
     val likedStates = remember {
         mutableStateMapOf<Int, Boolean>().apply {
-            DummyData.dummyRoutines.forEach { put(it.routineId, it.isLiked) }
+            DummyData.feedRoutines.forEach { put(it.routineId, it.isLiked) }
         }
     }
     val likeCounts = remember {
         mutableStateMapOf<Int, Int>().apply {
-            DummyData.dummyRoutines.forEach { put(it.routineId, it.likes) }
+            DummyData.feedRoutines.forEach { put(it.routineId, it.likes) }
         }
     }
 

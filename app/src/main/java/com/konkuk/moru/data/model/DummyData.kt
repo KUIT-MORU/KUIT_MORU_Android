@@ -1,10 +1,12 @@
-package com.konkuk.moru.data.model // 실제 프로젝트 경로에 맞게 확인해주세요.
+package com.konkuk.moru.data.model
 
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
 import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowRelation
 import java.time.DayOfWeek
+import java.time.LocalTime
 
 object DummyData {
+    const val MY_USER_ID = 252 // 내 유저 아이디를 3으로 가정
 
     val dummyFollowRelations = listOf(
         // 1번 유저(제니)가 다른 사람들을 팔로우
@@ -22,26 +24,142 @@ object DummyData {
         FollowRelation(followerId = 4, followingId = 101), // 준 -> 요가마스터
     )
     val dummyLiveUsers = listOf(
-        LiveUserInfo(1, "운동하는 제니", "#오운완", "https://images.unsplash.com/photo-1580489944761-15a19d654956"),
-        LiveUserInfo(2, "책읽는 라이언", "#북스타그램", "https://images.unsplash.com/photo-1548142813-c348350df52b"),
+        LiveUserInfo(
+            1,
+            "운동하는 제니",
+            "#오운완",
+            "https://images.unsplash.com/photo-1580489944761-15a19d654956"
+        ),
+        LiveUserInfo(
+            2,
+            "책읽는 라이언",
+            "#북스타그램",
+            "https://images.unsplash.com/photo-1548142813-c348350df52b"
+        ),
         LiveUserInfo(3, "개발자 모루", "#TIL", null), // MORU는 프로필 이미지가 없는 것으로 설정
-        LiveUserInfo(4, "요리왕 준", "#집밥", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"),
-        LiveUserInfo(5, "여행가 에밀리", "#여행에미치다", "https://images.unsplash.com/photo-1438761681033-6461ffad8d80"),
-        LiveUserInfo(6, "명상하는 소피아", "#마음챙김", "https://images.unsplash.com/photo-1552058544-f2b08422138a"),
-        LiveUserInfo(7, "기상인증 챌린저", "#미라클모닝", "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c"),
-        LiveUserInfo(8, "기타치는 브라운", "#음악", "https://images.unsplash.com/photo-1541533267753-bab141444692"),
+        LiveUserInfo(
+            4,
+            "요리왕 준",
+            "#집밥",
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
+        ),
+        LiveUserInfo(
+            5,
+            "여행가 에밀리",
+            "#여행에미치다",
+            "https://images.unsplash.com/photo-1438761681033-6461ffad8d80"
+        ),
+        LiveUserInfo(
+            6,
+            "명상하는 소피아",
+            "#마음챙김",
+            "https://images.unsplash.com/photo-1552058544-f2b08422138a"
+        ),
+        LiveUserInfo(
+            7,
+            "기상인증 챌린저",
+            "#미라클모닝",
+            "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c"
+        ),
+        LiveUserInfo(
+            8,
+            "기타치는 브라운",
+            "#음악",
+            "https://images.unsplash.com/photo-1541533267753-bab141444692"
+        ),
 
         // --- 루틴 작성자들도 동일하게 수정 ---
-        LiveUserInfo(101, "요가마스터", "#요가", "https://images.unsplash.com/photo-1552058544-f2b08422138a"),
-        LiveUserInfo(102, "개발왕", "#코딩", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"),
-        LiveUserInfo(103, "산책러", "#산책", "https://images.unsplash.com/photo-1548142813-c348350df52b"),
-        LiveUserInfo(104, "북웜", "#독서", "https://images.unsplash.com/photo-1580489944761-15a19d654956"),
+        LiveUserInfo(
+            101,
+            "요가마스터",
+            "#요가",
+            "https://images.unsplash.com/photo-1552058544-f2b08422138a"
+        ),
+        LiveUserInfo(
+            102,
+            "개발왕",
+            "#코딩",
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
+        ),
+        LiveUserInfo(
+            103,
+            "산책러",
+            "#산책",
+            "https://images.unsplash.com/photo-1548142813-c348350df52b"
+        ),
+        LiveUserInfo(
+            104,
+            "북웜",
+            "#독서",
+            "https://images.unsplash.com/photo-1580489944761-15a19d654956"
+        ),
         LiveUserInfo(105, "꿀잠요정", "#숙면", null),
-        LiveUserInfo(201, "지하철독서왕", "#지하철", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"),
+        LiveUserInfo(
+            201,
+            "지하철독서왕",
+            "#지하철",
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
+        ),
         LiveUserInfo(202, "웹소설매니아", "#웹소설", null),
         LiveUserInfo(301, "헬창", "#오운완", "https://images.unsplash.com/photo-1548142813-c348350df52b")
     )
-    val dummyRoutines = listOf(
+
+    val myRoutines = listOf(
+        Routine(
+            routineId = 10,
+            title = "MORU 맞춤 루틴 1: 독서",
+            description = "당신을 위한 맞춤 루틴입니다.",
+            imageUrl = "https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=1887&auto=format&fit=crop",
+            category = "독서",
+            tags = listOf("독서"),
+            authorId = MY_USER_ID, // 작성자는 "나"
+            authorName = "MORU",
+            authorProfileUrl = null,
+            likes = 25,
+            isLiked = false,
+            isBookmarked = true,
+            isRunning = false,
+            scheduledTime = LocalTime.of(9, 0),
+            scheduledDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY)
+        ),
+        Routine(
+            routineId = 11,
+            title = "MORU 맞춤 루틴 2: 운동",
+            description = "당신을 위한 맞춤 루틴입니다.",
+            imageUrl = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop",
+            category = "운동",
+            tags = listOf("운동"),
+            authorId = MY_USER_ID, // 작성자는 "나"
+            authorName = "MORU",
+            authorProfileUrl = null,
+            likes = 33,
+            isLiked = true,
+            isBookmarked = false,
+            isRunning = true,
+            scheduledTime = LocalTime.of(19, 30),
+            scheduledDays = setOf(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY)
+        ),
+        // "내 루틴"에 다른 사람이 만든 루틴을 가져온 경우 (북마크)
+        Routine(
+            routineId = 1,
+            title = "아침 10분 요가 (스크랩)",
+            description = "간단한 요가로 하루를 시작해요. 몸과 마음을 깨우는 시간을 가져보세요.",
+            imageUrl = "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2120&auto=format&fit=crop",
+            category = "건강",
+            tags = listOf("건강", "요가"),
+            authorId = 101, // 원작자는 "요가마스터"
+            authorName = "요가마스터",
+            authorProfileUrl = "https://images.unsplash.com/photo-1552058544-f2b08422138a",
+            likes = 112,
+            isLiked = true,
+            isBookmarked = true,
+            isRunning = false,
+            scheduledTime = LocalTime.of(7, 0),
+            scheduledDays = setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
+        )
+    )
+
+    val feedRoutines = listOf(
         Routine(
             routineId = 1,
             title = "아침 10분 요가",

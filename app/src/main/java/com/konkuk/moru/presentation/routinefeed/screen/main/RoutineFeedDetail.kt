@@ -398,7 +398,7 @@ fun SimilarRoutineCard(routine: SimilarRoutine) {
 fun RoutineDetailScreenPreview() {
     MORUTheme {
         RoutineDetailScreen(
-            routine = DummyData.dummyRoutines.first(),
+            routine = DummyData.feedRoutines.first(),
             onBackClick = {},
             navController = rememberNavController()
         )

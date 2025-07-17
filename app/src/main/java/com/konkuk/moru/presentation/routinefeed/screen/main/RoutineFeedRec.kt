@@ -95,7 +95,7 @@ private fun HotPreview() {
     MORUTheme {
         HotRoutineListScreen(
             title = "지금 가장 핫한 루틴은?",
-            routines = DummyData.dummyRoutines,
+            routines = DummyData.feedRoutines,
             onBack = {},
             onRoutineClick = {}
         )

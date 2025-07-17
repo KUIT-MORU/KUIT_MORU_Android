@@ -13,7 +13,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.konkuk.moru.data.model.DummyData.dummyRoutines
+import com.konkuk.moru.data.model.DummyData.feedRoutines
 import com.konkuk.moru.presentation.home.screen.HomeScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActFabTagScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActMainScreen
@@ -71,7 +71,7 @@ fun MainNavGraph(
             arguments = listOf(navArgument("routineId") { type = NavType.IntType })
         ) { backStackEntry ->
             val routineId = backStackEntry.arguments?.getInt("routineId")
-            dummyRoutines.find { it.routineId == routineId }?.let { routine ->
+            feedRoutines.find { it.routineId == routineId }?.let { routine ->
                 RoutineDetailScreen(
                     routine = routine,
                     onBackClick = { navController.popBackStack() },
@@ -90,7 +90,7 @@ fun MainNavGraph(
             val routinesToShow = when {
                 title.startsWith("#") -> {
                     val tags = title.removePrefix("#").split("#").filter { it.isNotEmpty() }
-                    dummyRoutines.filter { routine ->
+                    feedRoutines.filter { routine ->
                         tags.all { tagToFind ->
                             routine.tags.contains(
                                 tagToFind
@@ -99,8 +99,8 @@ fun MainNavGraph(
                     }
                 }
 
-                title == "지금 가장 핫한 루틴은?" -> dummyRoutines.filter { it.likes > 70 }
-                title == "MORU님과 딱 맞는 루틴" -> dummyRoutines.filter { it.authorName == "MORU" }
+                title == "지금 가장 핫한 루틴은?" -> feedRoutines.filter { it.likes > 70 }
+                title == "MORU님과 딱 맞는 루틴" -> feedRoutines.filter { it.authorName == "MORU" }
                 else -> emptyList()
             }
 

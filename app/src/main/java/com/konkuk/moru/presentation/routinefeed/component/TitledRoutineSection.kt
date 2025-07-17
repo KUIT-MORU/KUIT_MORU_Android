@@ -81,8 +81,8 @@ fun TitledRoutineSectionPreview() {
         TitledRoutineSection(
             modifier = Modifier.fillMaxWidth(),
             title = "요즘 인기있는 루틴 🔥",
-            routines = DummyData.dummyRoutines.take(5),
-            likeCounts = DummyData.dummyRoutines.associate { it.routineId to it.likes },
+            routines = DummyData.feedRoutines.take(5),
+            likeCounts = DummyData.feedRoutines.associate { it.routineId to it.likes },
             onRoutineClick = { },
             onLikeClick = { _, _ -> },
             onMoreClick = { _ -> }
