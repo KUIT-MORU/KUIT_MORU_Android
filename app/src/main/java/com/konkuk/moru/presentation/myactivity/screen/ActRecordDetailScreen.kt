@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavHostController
 import com.konkuk.moru.presentation.myactivity.component.RoutineDetailContent
 import java.time.Duration
 import java.time.LocalDateTime
@@ -41,10 +41,10 @@ data class RoutineDetail(
 )
 
 @Composable
-fun ActRecordDetailScreen(modifier: Modifier = Modifier) {
-    val dummyData = remember {
+fun ActRecordDetailScreen(title: String, navController: NavHostController, modifier: Modifier = Modifier) {
+    val dummyData = remember(title) {
         RoutineDetail(
-            title = "루틴 제목",
+            title = title,
             status = RoutineStatus.FOCUSED,
             tags = listOf("#태그1", "#태그2", "#태그3"),
             totalDuration = Duration.ofMinutes(30).plusSeconds(56),
@@ -80,12 +80,6 @@ fun ActRecordDetailScreen(modifier: Modifier = Modifier) {
     }
 
     Column(modifier = modifier.fillMaxSize().background(Color.White)) {
-        RoutineDetailContent(detail = dummyData, modifier = modifier)
+        RoutineDetailContent(detail = dummyData, navController = navController, modifier = modifier)
     }
-}
-
-@Preview
-@Composable
-private fun ActRecordDetailScreenPreview() {
-    ActRecordDetailScreen()
 }

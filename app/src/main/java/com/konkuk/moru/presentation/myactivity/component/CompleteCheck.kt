@@ -24,7 +24,6 @@ fun CompleteCheck(
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-
                 .background(colors.black, shape = RoundedCornerShape(size = 100.dp))
                 .width(32.dp)
                 .height(17.dp)
@@ -41,6 +40,7 @@ fun CompleteCheck(
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
+                .background(color = Color.White, shape = RoundedCornerShape(size = 100.dp))
                 .border(
                     width = 1.dp,
                     color = colors.black,

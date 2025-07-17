@@ -17,6 +17,7 @@ import com.konkuk.moru.presentation.home.screen.HomeScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActFabTagScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActMainScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActProfileScreen
+import com.konkuk.moru.presentation.myactivity.screen.ActRecordDetailScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActRecordScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActScrabScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActSettingScreen
@@ -194,6 +195,18 @@ fun MainNavGraph(
                 modifier = modifier.padding(innerPadding),
                 navController = navController
             )
+        }
+
+        composable(
+            route = Route.ActRecordDetail.route,
+            arguments = listOf(navArgument("routineTitle") {
+                type = NavType.StringType
+            })
+        ) { backStackEntry ->
+            val encodedTitle = backStackEntry.arguments?.getString("routineTitle") ?: ""
+            val decodedTitle = URLDecoder.decode(encodedTitle, StandardCharsets.UTF_8.toString())
+
+            ActRecordDetailScreen(title = decodedTitle, navController = navController)
         }
     }
 }
