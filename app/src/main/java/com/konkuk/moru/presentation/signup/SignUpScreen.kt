@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.signup
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -32,13 +33,20 @@ import com.konkuk.moru.presentation.signup.component.TopBarLogoWithTitle
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.signup.component.SignUpButton
 
 @Composable
-fun SignUpScreen(navController: NavController) {
+fun SignUpScreen(
+    navController: NavController,
+    viewModel: SignUpViewModel = hiltViewModel()
+) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -167,14 +175,22 @@ fun SignUpScreen(navController: NavController) {
                 enabled = isFormValid
             ) {
                 if (isFormValid) {
-                    navController.navigate("main") {
-                        popUpTo("login") { inclusive = true }
-                    }
+                    viewModel.signUp(email, password, context,
+                        onSuccess = {
+                            navController.navigate(Route.AuthCheck.route) {
+                                popUpTo(Route.SignUp.route) { inclusive = true }
+                            }
+                        },
+                        onFailure = { error ->
+                            // TODO: 에러 메시지 UI에 띄우기
+                            Log.e("SignUpScreen", "회원가입 실패: $error")
+                        }
+                    )
                 } else {
                     // 유효성 검사 실패 시 처리
                     // ========= 비활성 버튼도 임시로 작동하도록 설정. 추후 기능 제거 필요 =====
-                    navController.navigate("main") {
-                        popUpTo("login") { inclusive = true }
+                    navController.navigate(Route.Onboarding.route) { // 임시로 온보딩 화면으로 이동
+                        popUpTo(Route.Login.route) { inclusive = true }
                     }
                     // ============================================================
                 }

@@ -23,11 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -39,9 +41,13 @@ import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
-fun LoginScreen(navController: NavController) {
+fun LoginScreen(
+    navController: NavController,
+    viewModel: LoginViewModel = hiltViewModel(),
+) {
     val systemUiController = rememberSystemUiController()
     val backgroundColor = colors.charcoalBlack
+    val context = LocalContext.current
 
     SideEffect {
         systemUiController.setStatusBarColor(
@@ -127,7 +133,21 @@ fun LoginScreen(navController: NavController) {
         LoginButton(
             onClick = {
                 if (isButtonEnabled) {
-                    errorMessage = "이메일 또는 비밀번호가 일치하지 않습니다."
+                    if (true) { // 여기에 실제 로그인 API 호출 로직을 추가해야 합니다.
+                        errorMessage = "이메일 또는 비밀번호가 일치하지 않습니다."
+                    } else {
+                        viewModel.login(email, password, context) {
+                            navController.navigate(Route.AuthCheck.route) {
+                                popUpTo(Route.Login.route) { inclusive = true }
+                            }
+                        }
+                    }
+                } else { // 테스트용으로 임시로 해둠. 삭제 예정
+                    viewModel.login(email, password, context) {
+                        navController.navigate(Route.AuthCheck.route) {
+                            popUpTo(Route.Login.route) { inclusive = true }
+                        }
+                    }
                 }
             },
             enabled = isButtonEnabled
