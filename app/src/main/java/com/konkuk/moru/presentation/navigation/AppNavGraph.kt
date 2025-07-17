@@ -22,20 +22,38 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.konkuk.moru.R
+import com.konkuk.moru.presentation.auth.AuthCheckScreen
 import com.konkuk.moru.presentation.login.LoginScreen
+import com.konkuk.moru.presentation.onboarding.OnboardingScreen
 import com.konkuk.moru.presentation.signup.SignUpScreen
 
 @Composable
-fun AppNavGraph(navController: NavHostController, isLoggedIn: Boolean) {
-    val startDestination = if (isLoggedIn) "main" else "login"
+fun AppNavGraph(
+    navController: NavHostController,
+) {
+    val startDestination = Route.AuthCheck.route
 
     NavHost(navController = navController, startDestination = startDestination) {
+        composable(Route.AuthCheck.route) {
+            AuthCheckScreen(navController)
+        }
+
         composable(Route.Login.route) {
             LoginScreen(navController)
         }
 
         composable(Route.SignUp.route) {
             SignUpScreen(navController)
+        }
+
+        composable(Route.Onboarding.route) {
+            OnboardingScreen(
+                onFinish = {
+                    navController.navigate(Route.Main.route) {
+                        popUpTo(Route.Onboarding.route) { inclusive = true }
+                    }
+                }
+            )
         }
 
         composable(Route.Main.route) {
