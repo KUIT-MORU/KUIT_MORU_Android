@@ -21,8 +21,10 @@ fun RoutineCardList(modifier: Modifier = Modifier) {
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(17.dp)
     ) {
+        // 첫 번째 아이템만 실행중으로 처리
+        RoutineCardItem(isRunning = true)
         //나중에 진짜 루틴들 받아올 것
-        repeat(5) {
+        repeat(4) {
             RoutineCardItem()
         }
     }

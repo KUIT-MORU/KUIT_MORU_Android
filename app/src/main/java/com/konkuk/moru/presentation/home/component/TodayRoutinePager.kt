@@ -22,20 +22,22 @@ data class RoutineData(
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun TodayRoutinePager(
-    modifier: Modifier = Modifier,
     routines: List<RoutineData>
 ) {
     //현재 페이지가 몇 페이지인지 기억하기
     val pagerState = rememberPagerState(initialPage = 0)
 
     Column(
-        modifier = modifier,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(184.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(modifier = Modifier.height(18.dp))
         HorizontalPager(
             count = routines.size,
             state = pagerState,
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp)
         ) { page ->
@@ -49,11 +51,11 @@ fun TodayRoutinePager(
             )
         }
 
-        Spacer(modifier = Modifier.height(19.dp))
+        Spacer(modifier = Modifier.height(22.dp))
 
         HorizontalPagerIndicator(
             pagerState = pagerState,
-            modifier = modifier
+            modifier = Modifier
                 .padding(4.dp),
             activeColor = colors.black,
             inactiveColor = colors.lightGray
@@ -65,7 +67,6 @@ fun TodayRoutinePager(
 @Preview(
     showBackground = true,
     widthDp = 360,
-    heightDp = 800
 )
 @Composable
 private fun TodayRoutinePagerPreview() {

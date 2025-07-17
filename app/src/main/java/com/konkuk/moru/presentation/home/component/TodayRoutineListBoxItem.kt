@@ -2,6 +2,7 @@ package com.konkuk.moru.presentation.home.component
 
 import android.graphics.SumPathEffect
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,7 +41,15 @@ fun TodayRoutineListBoxItem(
         modifier = modifier
             .width(330.dp)
             .height(120.dp)
-            .border(width = 1.dp, color = colors.darkGray, shape = RoundedCornerShape(12.dp))
+            .shadow(
+                elevation = 4.dp,
+                shape = RoundedCornerShape(12.dp),
+                clip = false
+            )
+            .background(
+                color = Color.White,  // 원하는 배경색
+                shape = RoundedCornerShape(12.dp)
+            )
             .padding(8.dp)
     ) {
         Column(
@@ -52,6 +63,7 @@ fun TodayRoutineListBoxItem(
                     .height(72.dp)
             ) {
                 Row() {
+                    // 루틴 이미지
                     Image(
                         painter = painterResource(id = R.drawable.routine_image),
                         contentDescription = "ImageBox",
@@ -69,7 +81,7 @@ fun TodayRoutineListBoxItem(
                             style = typography.title_B_14,
                             color = colors.black,
                         )
-                        Spacer(modifier = modifier.size(1.dp))
+                        Spacer(modifier = modifier.size(2.dp))
                         // 해시태그(ex)#모닝 루틴,#스트레칭)
                         Text(
                             text = hashtag,
