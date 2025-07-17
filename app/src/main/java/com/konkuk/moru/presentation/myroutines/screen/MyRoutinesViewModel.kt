@@ -2,6 +2,7 @@ package com.konkuk.moru.presentation.myroutines.screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.Routine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,7 +36,7 @@ class MyRoutinesViewModel : ViewModel() {
         }
         when (state.selectedSortOption) {
             SortOption.BY_TIME -> filteredByDay.sortedBy { it.scheduledTime ?: LocalTime.MAX }
-            SortOption.LATEST -> filteredByDay.sortedByDescending { it.id }
+            SortOption.LATEST -> filteredByDay.sortedByDescending { it.routineId }
             SortOption.POPULAR -> filteredByDay.sortedByDescending { it.likes }
         }
     }.stateIn(
@@ -73,7 +74,7 @@ class MyRoutinesViewModel : ViewModel() {
 
     fun onCheckRoutine(routineId: Int, isChecked: Boolean) {
         _sourceRoutines.update { currentList ->
-            currentList.map { if (it.id == routineId) it.copy(isChecked = isChecked) else it }
+            currentList.map { if (it.routineId == routineId) it.copy(isChecked = isChecked) else it }
         }
     }
 
@@ -116,7 +117,7 @@ class MyRoutinesViewModel : ViewModel() {
         _sourceRoutines.update { currentList ->
             currentList.map {
                 // [수정] it.copy에 isAlarmEnabled = alarm 추가
-                if (it.id == routineId) it.copy(
+                if (it.routineId == routineId) it.copy(
                     scheduledTime = time,
                     scheduledDays = days,
                     isAlarmEnabled = alarm // ◀◀◀ [수정] 전달받은 alarm 값을 저장
@@ -129,7 +130,7 @@ class MyRoutinesViewModel : ViewModel() {
     fun onLikeClick(routineId: Int) {
         _sourceRoutines.update { currentList ->
             currentList.map { routine ->
-                if (routine.id == routineId) {
+                if (routine.routineId == routineId) {
                     routine.copy(
                         isLiked = !routine.isLiked,
                         likes = if (routine.isLiked) routine.likes - 1 else routine.likes + 1

@@ -1,41 +1,85 @@
 package com.konkuk.moru.presentation.routinefeed.screen.userprofile
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-// [수정] 통합 Routine 모델과 UiState를 임포트합니다.
+import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.routinefeed.data.UserProfileUiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class UserProfileViewModel : ViewModel() {
+@HiltViewModel
+class UserProfileViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle
+) : ViewModel() {
+
     private val _uiState = MutableStateFlow(UserProfileUiState())
     val uiState: StateFlow<UserProfileUiState> = _uiState.asStateFlow()
 
     init {
-        loadUserProfile()
+        // 내비게이션 경로로부터 'userId' 파라미터를 가져옵니다.
+        // 이 "userId"는 NavHost에 정의된 `navArgument("userId")`의 이름과 일치해야 합니다.
+        val userId: Int? = savedStateHandle["userId"]
+
+        if (userId != null) {
+            loadUserProfile(userId)
+        } else {
+            // userId가 없는 비정상적인 경우, 기본 프로필이나 에러 상태를 표시합니다.
+            loadDefaultProfile()
+        }
     }
 
-    private fun loadUserProfile() {
+    /**
+     * 전달받은 userId에 맞는 사용자 정보를 불러와 UI 상태를 업데이트합니다.
+     */
+    private fun loadUserProfile(userId: Int) {
         viewModelScope.launch {
-            // [수정] 가상 데이터를 통합 Routine 모델로 변경합니다.
-            _uiState.update {
-                it.copy(
-                    nickname = "팔로우",
-                    bio = "자기소개입니다. 자기소개입니다.",
-                    routineCount = 4,
-                    followerCount = 628,
-                    followingCount = 221,
-                    isFollowing = false,
-                    runningRoutines = listOf(
-                        Routine(1, "아침 운동 1", "", null, "운동", listOf("#테그그그그그", "#tag"), "모루", null, 16, true, false, true)
-                    ),
-                    userRoutines = emptyList() // 필요 시 여기도 채워주세요.
-                )
+            // 더미 데이터에서 userId와 일치하는 사용자 정보를 찾습니다.
+            val user = DummyData.dummyLiveUsers.find { it.userId == userId }
+            // 더미 데이터에서 authorId가 일치하는 루틴 목록을 찾습니다.
+            val userRoutines = DummyData.dummyRoutines.filter { it.authorId == userId }
+
+            if (user != null) {
+                // 찾은 사용자 정보로 UI 상태를 업데이트합니다.
+                _uiState.update {
+                    it.copy(
+                        nickname = user.name,
+                        bio = "자기소개입니다. (ID: ${user.userId})", // 실제 앱에서는 user 모델에 bio 필드가 있어야 합니다.
+                        routineCount = userRoutines.size,
+                        followerCount = (100..1000).random(), // 임시 팔로워 수
+                        followingCount = (50..500).random(), // 임시 팔로잉 수
+                        isFollowing = false, // 기본 상태는 false로 설정
+                        runningRoutines = userRoutines.filter { routine -> routine.isRunning },
+                        userRoutines = userRoutines.filter { routine -> !routine.isRunning }
+                    )
+                }
+            } else {
+                // 해당하는 유저 정보가 없으면 기본 프로필을 로드합니다.
+                loadDefaultProfile()
             }
+        }
+    }
+
+    /**
+     * userId를 찾지 못했거나 없는 경우 호출되는 기본 상태 로드 함수입니다.
+     */
+    private fun loadDefaultProfile() {
+        _uiState.update {
+            it.copy(
+                nickname = "알 수 없는 사용자",
+                bio = "사용자 정보를 불러오는 데 실패했습니다.",
+                routineCount = 0,
+                followerCount = 0,
+                followingCount = 0,
+                runningRoutines = emptyList(),
+                userRoutines = emptyList()
+            )
         }
     }
 
@@ -72,7 +116,7 @@ class UserProfileViewModel : ViewModel() {
     fun toggleLike(routineId: Int) {
         _uiState.update { currentState ->
             val updatedRunningRoutines = currentState.runningRoutines.map { routine ->
-                if (routine.id == routineId) {
+                if (routine.routineId == routineId) {
                     routine.copy(
                         isLiked = !routine.isLiked,
                         likes = if (!routine.isLiked) routine.likes + 1 else routine.likes - 1
@@ -82,7 +126,7 @@ class UserProfileViewModel : ViewModel() {
                 }
             }
             val updatedUserRoutines = currentState.userRoutines.map { routine ->
-                if (routine.id == routineId) {
+                if (routine.routineId == routineId) {
                     routine.copy(
                         isLiked = !routine.isLiked,
                         likes = if (!routine.isLiked) routine.likes + 1 else routine.likes - 1
