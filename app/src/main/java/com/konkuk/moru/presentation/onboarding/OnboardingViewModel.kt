@@ -33,6 +33,10 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
+    fun skipOnboarding() {
+        completeOnboarding()
+    }
+
     private fun completeOnboarding() {
         viewModelScope.launch {
             OnboardingPreference.setOnboardingComplete(context)

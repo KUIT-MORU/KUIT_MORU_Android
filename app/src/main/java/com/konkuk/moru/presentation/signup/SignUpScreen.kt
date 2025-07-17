@@ -189,9 +189,17 @@ fun SignUpScreen(
                 } else {
                     // 유효성 검사 실패 시 처리
                     // ========= 비활성 버튼도 임시로 작동하도록 설정. 추후 기능 제거 필요 =====
-                    navController.navigate(Route.Onboarding.route) { // 임시로 온보딩 화면으로 이동
-                        popUpTo(Route.Login.route) { inclusive = true }
-                    }
+                    viewModel.signUp(email, password, context,
+                        onSuccess = {
+                            navController.navigate(Route.AuthCheck.route) {
+                                popUpTo(Route.SignUp.route) { inclusive = true }
+                            }
+                        },
+                        onFailure = { error ->
+                            // TODO: 에러 메시지 UI에 띄우기
+                            Log.e("SignUpScreen", "회원가입 실패: $error")
+                        }
+                    )
                     // ============================================================
                 }
             }

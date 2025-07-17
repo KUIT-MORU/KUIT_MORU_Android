@@ -73,11 +73,18 @@ fun OnboardingScreen(
 
         Button(
             onClick = {
-                if (currentPage < OnboardingViewModel.LAST_PAGE_INDEX) {
-                    viewModel.nextPage()
-                } else {
-                    viewModel.nextPage() // 마지막 페이지 → completeOnboarding()
-                }
+                viewModel.skipOnboarding()
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(text = "건너뛰기(임시)")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = {
+                viewModel.nextPage()
             },
             modifier = Modifier.fillMaxWidth()
         ) {
