@@ -1,6 +1,6 @@
 package com.konkuk.moru.presentation.navigation
 
-import DummyData.dummyRoutines
+import FollowScreen
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -15,6 +15,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.konkuk.moru.data.model.DummyData.feedRoutines
 import com.konkuk.moru.presentation.home.FocusType
 import com.konkuk.moru.presentation.home.screen.HomeScreen
 import com.konkuk.moru.presentation.home.screen.RoutineFocusIntroScreen
@@ -24,6 +25,7 @@ import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.myactivity.screen.ActFabTagScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActMainScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActProfileScreen
+import com.konkuk.moru.presentation.myactivity.screen.ActRecordDetailScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActRecordScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActScrabScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActSettingScreen
@@ -34,6 +36,7 @@ import com.konkuk.moru.presentation.routinefeed.screen.main.HotRoutineListScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetailScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedViewModel
+import com.konkuk.moru.presentation.routinefeed.screen.userprofile.UserProfileScreen
 import com.konkuk.moru.presentation.routinefocus.screen.RoutineFocusScreen
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
@@ -94,7 +97,6 @@ fun MainNavGraph(
             }
         }
 
-
         // 간편 루틴 실행 화면
         composable(route = Route.RoutineSimpleRun.route) {
             RoutineSimpleRunScreen(
@@ -107,7 +109,7 @@ fun MainNavGraph(
             )
         }
 
-// 집중 루틴 실행 화면 (몰입화면)
+        // 집중 루틴 실행 화면 (몰입화면)
         composable(route = Route.RoutineFocus.route) {
             RoutineFocusScreen(
                 onDismiss = { navController.popBackStack() },
@@ -141,10 +143,11 @@ fun MainNavGraph(
             arguments = listOf(navArgument("routineId") { type = NavType.IntType })
         ) { backStackEntry ->
             val routineId = backStackEntry.arguments?.getInt("routineId")
-            dummyRoutines.find { it.id == routineId }?.let { routine ->
+            feedRoutines.find { it.routineId == routineId }?.let { routine ->
                 RoutineDetailScreen(
                     routine = routine,
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = { navController.popBackStack() },
+                    navController = navController
                 )
             } ?: navController.popBackStack()
         }
@@ -159,7 +162,7 @@ fun MainNavGraph(
             val routinesToShow = when {
                 title.startsWith("#") -> {
                     val tags = title.removePrefix("#").split("#").filter { it.isNotEmpty() }
-                    dummyRoutines.filter { routine ->
+                    feedRoutines.filter { routine ->
                         tags.all { tagToFind ->
                             routine.tags.contains(
                                 tagToFind
@@ -168,8 +171,8 @@ fun MainNavGraph(
                     }
                 }
 
-                title == "지금 가장 핫한 루틴은?" -> dummyRoutines.filter { it.likes > 70 }
-                title == "MORU님과 딱 맞는 루틴" -> dummyRoutines.filter { it.authorName == "MORU" }
+                title == "지금 가장 핫한 루틴은?" -> feedRoutines.filter { it.likes > 70 }
+                title == "MORU님과 딱 맞는 루틴" -> feedRoutines.filter { it.authorName == "MORU" }
                 else -> emptyList()
             }
 
@@ -219,6 +222,32 @@ fun MainNavGraph(
             )
         }
 
+
+        // [추가] UserProfileScreen 내비게이션 설정
+        composable(
+            route = Route.UserProfile.route,
+            arguments = listOf(navArgument("userId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            // userId는 현재 더미 데이터로만 사용되므로 ViewModel에서 직접 로드합니다.
+            // 실제 앱에서는 hiltViewModel에 userId를 전달하여 해당 유저 데이터를 불러옵니다.
+            UserProfileScreen(navController = navController)
+        }
+
+        // [추가] FollowScreen 내비게이션 설정
+        composable(
+            route = Route.Follow.route,
+            arguments = listOf(
+                navArgument("userId") { type = NavType.IntType },
+                navArgument("selectedTab") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val selectedTab = backStackEntry.arguments?.getString("selectedTab")
+            FollowScreen(
+                onBackClick = { navController.popBackStack() },
+                selectedTab = selectedTab
+            )
+        }
+
+
         composable(route = Route.MyActivity.route) {
             ActMainScreen(
                 modifier = modifier.padding(innerPadding),
@@ -267,6 +296,18 @@ fun MainNavGraph(
                 modifier = modifier.padding(innerPadding),
                 navController = navController
             )
+        }
+
+        composable(
+            route = Route.ActRecordDetail.route,
+            arguments = listOf(navArgument("routineTitle") {
+                type = NavType.StringType
+            })
+        ) { backStackEntry ->
+            val encodedTitle = backStackEntry.arguments?.getString("routineTitle") ?: ""
+            val decodedTitle = URLDecoder.decode(encodedTitle, StandardCharsets.UTF_8.toString())
+
+            ActRecordDetailScreen(title = decodedTitle, navController = navController)
         }
     }
 }
