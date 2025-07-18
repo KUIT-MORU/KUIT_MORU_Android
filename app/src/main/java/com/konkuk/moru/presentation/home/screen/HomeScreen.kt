@@ -28,9 +28,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.MoruBottomBar
 import com.konkuk.moru.core.component.Switch.StatusBarMock
+import com.konkuk.moru.presentation.home.FocusType
 import com.konkuk.moru.presentation.home.component.HomeFloatingActionButton
 import com.konkuk.moru.presentation.home.component.HomeTopAppBar
 import com.konkuk.moru.presentation.home.component.RoutineCardList
@@ -38,6 +42,7 @@ import com.konkuk.moru.presentation.home.component.RoutineData
 import com.konkuk.moru.presentation.home.component.TodayRoutinePager
 import com.konkuk.moru.presentation.home.component.TodayWeekTab
 import com.konkuk.moru.presentation.home.component.WeeklyCalendarView
+import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
@@ -45,6 +50,8 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 // 홈 메인 페이지
 @Composable
 fun HomeScreen(
+    navController: NavHostController,
+    sharedViewModel: SharedRoutineViewModel,
     modifier: Modifier = Modifier
 ) {
     //탭 선택 상태(오늘,이번주)
@@ -99,28 +106,28 @@ fun HomeScreen(
                     HomeTopAppBar()
                 }
                 item {
-                        Box(
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(111.dp)
+                    ) {
+                        // 1.인삿말
+                        Text(
+                            text = "XX님,\n오늘은 어떤 루틴을 시작할까요?",
+                            style = typography.title_B_20.copy(
+                                lineHeight = 30.sp
+                            ),
+                            color = colors.black,
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(111.dp)
-                        ) {
-                            // 1.인삿말
-                            Text(
-                                text = "XX님,\n오늘은 어떤 루틴을 시작할까요?",
-                                style = typography.title_B_20.copy(
-                                    lineHeight = 30.sp
-                                ),
-                                color = colors.black,
-                                modifier = Modifier
-                                    .align(Alignment.TopStart)                  // Box 안의 좌상단
-                                    .padding(                                   // ← 내용 여백
-                                        start = 16.dp,
-                                        top = 26.dp,
-                                        bottom = 25.dp
-                                    )
-                            )
-                        }
+                                .align(Alignment.TopStart)                  // Box 안의 좌상단
+                                .padding(                                   // ← 내용 여백
+                                    start = 16.dp,
+                                    top = 26.dp,
+                                    bottom = 25.dp
+                                )
+                        )
                     }
+                }
                 item {
                     Divider(
                         modifier = Modifier
@@ -190,7 +197,14 @@ fun HomeScreen(
                     when (selectedTab) {
                         // 오늘 탭 선택 시
                         0 -> if (sampleRoutines.isNotEmpty()) {
-                            TodayRoutinePager(routines = sampleRoutines)
+                            TodayRoutinePager(
+                                routines = sampleRoutines,
+                                onRoutineClick = {
+                                    //Focus 타입에 따라 뜨는 intro화면이 다름
+                                    sharedViewModel.setFocusType(FocusType.SIMPLE)
+                                    navController.navigate(Route.RoutineFocusIntro.route)
+                                }
+                            )
                         }
 
                         // 이번주 탭 선택 시
@@ -203,9 +217,6 @@ fun HomeScreen(
                     }
                 }
                 item {
-                    Spacer(modifier = modifier.size(15.dp))
-                }
-                item {
                     Divider(
                         modifier = Modifier
                             .fillMaxWidth(),
@@ -213,21 +224,18 @@ fun HomeScreen(
                         thickness = 7.dp
                     )
                 }
-                item{
-                        Spacer(modifier = modifier.height(3.dp))
-                }
                 item {
                     //루틴 목록
                     Row(
+                        modifier = Modifier.padding(top = 3.dp, start = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = "루틴 목록",
                             style = typography.desc_M_16.copy(fontWeight = FontWeight.Bold),
-                            color = colors.black,
-                            modifier = modifier.padding(start = 16.dp)
+                            color = colors.black
                         )
-                        Spacer(modifier = modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Image(
                             painter = painterResource(id = R.drawable.ic_arrow_c),
                             contentDescription = "오른쪽 화살표",
@@ -235,9 +243,6 @@ fun HomeScreen(
                                 .size(width = 8.dp, height = 12.dp)
                         )
                     }
-                }
-                item{
-                    Spacer(modifier = modifier.size(8.dp))
                 }
                 // 후에 실제 데이터로 오늘 루틴이 있는지 확인
                 if (sampleRoutines.isNotEmpty()) {
@@ -303,5 +308,11 @@ fun HomeScreen(
 )
 @Composable
 private fun HomeScreenPreview() {
-    HomeScreen()
+    val fakeNavController = rememberNavController()
+    val previewSharedViewModel = SharedRoutineViewModel()
+
+    HomeScreen(
+        navController = fakeNavController,
+        sharedViewModel = previewSharedViewModel
+    )
 }
