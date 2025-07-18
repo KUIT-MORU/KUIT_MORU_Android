@@ -123,6 +123,7 @@ fun WeeklyCalendarView(
                 }
             }
         }
+        Spacer(modifier=Modifier.height(18.dp))
     }
 }
 

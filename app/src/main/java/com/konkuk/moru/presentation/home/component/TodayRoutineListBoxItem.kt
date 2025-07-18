@@ -4,6 +4,7 @@ import android.graphics.SumPathEffect
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,25 +36,26 @@ fun TodayRoutineListBoxItem(
     hashtag: String = "#모닝 루틴 #스트레칭",
     heartCount: Int = 16,
     day: String = "토일",
-    time: String = "am 09:00"
+    time: String = "am 09:00",
+    onClick: () -> Unit
 ) {
     Box(
         modifier = modifier
             .width(330.dp)
             .height(120.dp)
             .shadow(
-                elevation = 4.dp,
+                elevation = 8.dp,
                 shape = RoundedCornerShape(12.dp),
-                clip = false
             )
             .background(
                 color = Color.White,  // 원하는 배경색
                 shape = RoundedCornerShape(12.dp)
             )
+            .clickable { onClick() }
             .padding(8.dp)
     ) {
         Column(
-            modifier= Modifier
+            modifier = Modifier
                 .padding(horizontal = 8.dp)
         ) {
             // 1.카드 박스
@@ -131,5 +133,7 @@ fun TodayRoutineListBoxItem(
 )
 @Composable
 private fun TodayRoutineListBoxItemPreview() {
-    TodayRoutineListBoxItem()
+    TodayRoutineListBoxItem(
+        onClick = {}
+    )
 }

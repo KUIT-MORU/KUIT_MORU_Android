@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.home.component
 
+import android.R.attr.onClick
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,7 +23,8 @@ data class RoutineData(
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun TodayRoutinePager(
-    routines: List<RoutineData>
+    routines: List<RoutineData>,
+    onRoutineClick:(RoutineData) -> Unit
 ) {
     //현재 페이지가 몇 페이지인지 기억하기
     val pagerState = rememberPagerState(initialPage = 0)
@@ -47,7 +49,8 @@ fun TodayRoutinePager(
                 hashtag = routine.hashtag,
                 heartCount = routine.heartCount,
                 day = routine.day,
-                time = routine.time
+                time = routine.time,
+                onClick = {onRoutineClick(routine)}
             )
         }
 
@@ -60,6 +63,7 @@ fun TodayRoutinePager(
             activeColor = colors.black,
             inactiveColor = colors.lightGray
         )
+        Spacer(modifier = Modifier.height(18.dp))
     }
 
 }
@@ -76,5 +80,8 @@ private fun TodayRoutinePagerPreview() {
         RoutineData("운동 루틴", "#건강", 12, "수", "pm 06:00 ~ pm 07:00")
     )
 
-    TodayRoutinePager(routines = sampleRoutines)
+    TodayRoutinePager(
+        routines = sampleRoutines,
+        onRoutineClick = {}
+    )
 }
