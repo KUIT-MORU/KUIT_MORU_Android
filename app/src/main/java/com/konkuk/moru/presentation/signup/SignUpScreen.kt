@@ -78,11 +78,7 @@ fun SignUpScreen(
             .fillMaxSize()
             .background(color = colors.charcoalBlack)
             .systemBarsPadding()
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { focusManager.clearFocus() }
-                )
-            }
+            .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) }
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             TopBarLogoWithTitle()
@@ -111,17 +107,25 @@ fun SignUpScreen(
                         value = email,
                         onValueChange = {
                             email = it
-                            isEmailValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+                            isEmailValid =
+                                android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
                             emailInvalidMessage =
-                                if (email.isNotBlank() && !isEmailValid) { "이메일 형식이 올바르지 않습니다." }
-                                else { null }
+                                if (email.isNotBlank() && !isEmailValid) {
+                                    "이메일 형식이 올바르지 않습니다."
+                                } else {
+                                    null
+                                }
                         },
                         isValid = email.isEmpty() || isEmailValid,
                         placeholder = "이메일",
                         keyboardType = KeyboardType.Email
                     )
 
-                    Row(modifier = Modifier.fillMaxWidth().height(24.dp)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(24.dp)
+                    ) {
                         emailInvalidMessage?.let {
                             Text(
                                 text = it,
@@ -151,15 +155,16 @@ fun SignUpScreen(
                         text = "8자 이상, 숫자 특수문자를 포함해주세요.",
                         style = typography.desc_M_12,
                         color =
-                            if (password.isNotBlank() && !isPasswordValid) { colors.red }
-                            else { colors.mediumGray },
+                            if (password.isNotBlank() && !isPasswordValid) {
+                                colors.red
+                            } else {
+                                colors.mediumGray
+                            },
                         modifier = Modifier.padding(start = 4.dp)
                     )
                 }
 
-                SignUpButton(
-                    enabled = isFormValid
-                ) {
+                SignUpButton(enabled = isFormValid) {
                     if (isFormValid) {
                         viewModel.signUp(
                             email, password, context,

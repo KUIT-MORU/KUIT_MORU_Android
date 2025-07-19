@@ -47,5 +47,5 @@ fun CompleteSignupPopup() {
 @Preview(showBackground = true)
 @Composable
 fun PreviewCompleteSignupPopup() {
-        CompleteSignupPopup()
+    CompleteSignupPopup()
 }

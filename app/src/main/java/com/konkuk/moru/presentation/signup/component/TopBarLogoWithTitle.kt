@@ -32,9 +32,7 @@ fun TopBarLogoWithTitle() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
                 painter = painterResource(id = R.drawable.ic_signup_moru_logo),
                 contentDescription = "Moru Logo",
@@ -43,7 +41,9 @@ fun TopBarLogoWithTitle() {
                     .width(30.dp)
                     .height(30.dp)
             )
+
             Spacer(modifier = Modifier.width(3.dp))
+
             Text(
                 text = "MORU",
                 style = typography.desc_M_20,
