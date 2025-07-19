@@ -1,4 +1,4 @@
-package com.konkuk.moru.presentation.signup.component
+package com.konkuk.moru.core.component.button
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,15 +15,16 @@ import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
-fun SignUpButton(
+fun MoruButtonTypeA(
+    text: String,
     enabled: Boolean,
     onClick: () -> Unit
 ) {
-    val backgroundColor = if(enabled) colors.charcoalBlack else colors.mediumGray
-    val textColor = if(enabled) colors.paleLime else Color.White
+    val backgroundColor = if (enabled) colors.charcoalBlack else colors.mediumGray
+    val textColor = if (enabled) colors.paleLime else Color.White
     Button(
-        onClick = onClick,
-        //enabled = enabled,
+        //onClick = { if (enabled) onClick() },
+        onClick = onClick, // Todo 임시로 항상 작동하도록 설정함
         shape = RoundedCornerShape(10.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = backgroundColor,
@@ -34,7 +35,7 @@ fun SignUpButton(
             .height(60.dp)
     ) {
         Text(
-            text = "회원가입",
+            text = text,
             style = typography.body_SB_16
         )
     }
@@ -43,5 +44,5 @@ fun SignUpButton(
 @Preview
 @Composable
 private fun SignUpButtonPreview() {
-    SignUpButton(true){}
+    MoruButtonTypeA(text = "회원가입", enabled = true) {}
 }
