@@ -36,36 +36,37 @@ import com.konkuk.moru.ui.theme.MORUTheme
  * @param text 칩 텍스트
  * @param onClick 클릭 이벤트
  * @param isSelected 선택 상태 여부
+ * @param border 테두리 스타일. 기본값은 null
  * @param selectedBackgroundColor 선택 시 배경색
  * @param selectedContentColor 선택 시 내용 색상
  * @param unselectedBackgroundColor 미선택 시 배경색
  * @param unselectedContentColor 미선택 시 내용 색상
  * @param modifier Modifier
  * @param shape 칩 모양 (기본값: 알약 모양)
- * @param trailingContent 텍스트 뒤에 붙는 콘텐츠 (예: 닫기 아이콘)
+ * @param textStyle 텍스트 스타일. 지정하지 않으면 MORUTheme의 기본 스타일이 적용됩니다.
+ * @param startIconContent 텍스트 앞에 표시될 아이콘 (Nullable)
+ * @param endIconContent 텍스트 뒤에 표시될 아이콘 (Nullable)
+ * @param contentPadding 내부 콘텐츠의 패딩 값
  */
-
 @Composable
 fun MoruChip(
-
     text: String,
-    textStyle: TextStyle? = null,
     onClick: () -> Unit,
     isSelected: Boolean,
-    border: BorderStroke? = null,
     selectedBackgroundColor: Color,
     selectedContentColor: Color,
     unselectedBackgroundColor: Color,
     unselectedContentColor: Color,
     modifier: Modifier = Modifier,
+    border: BorderStroke? = null,
     shape: Shape = CircleShape,
-    startIconContent: (@Composable () -> Unit)? = null, // ◀ 시작 아이콘용 파라미터
+    textStyle: TextStyle? = null,
+    startIconContent: (@Composable () -> Unit)? = null,
     endIconContent: (@Composable () -> Unit)? = null,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 12.dp, vertical = 6.dp)// ◀ 끝 아이콘용 파라미터
+    contentPadding: PaddingValues = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
 ) {
     val backgroundColor = if (isSelected) selectedBackgroundColor else unselectedBackgroundColor
     val contentColor = if (isSelected) selectedContentColor else unselectedContentColor
-
 
     Surface(
         modifier = modifier
@@ -78,7 +79,8 @@ fun MoruChip(
     ) {
         Row(
             modifier = Modifier.padding(contentPadding),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
             // 시작 아이콘
             if (startIconContent != null) {
@@ -105,22 +107,43 @@ fun MoruChip(
 private fun MoruChipWithIconsPreview() {
     Column(
         modifier = Modifier.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        //시작 아이콘만 있는 칩
+        Text("--- 아이콘 예시 ---", fontWeight = FontWeight.Bold)
+
+        // 1. 아이콘이 없는 기본 칩
         MoruChip(
-            text = "#태그",
+            text = "#기본태그",
             isSelected = true,
             onClick = { },
+            selectedBackgroundColor = MORUTheme.colors.paleLime,
+            selectedContentColor = MORUTheme.colors.oliveGreen,
+            unselectedBackgroundColor = MORUTheme.colors.veryLightGray,
+            unselectedContentColor = MORUTheme.colors.darkGray
+        )
+
+        // 2. 시작 아이콘만 있는 칩 (수정됨)
+        MoruChip(
+            text = "선택됨",
+            isSelected = false,
+            onClick = { },
             selectedBackgroundColor = Color.Black,
-            selectedContentColor = MORUTheme.colors.limeGreen,
+            selectedContentColor = Color.White,
             unselectedBackgroundColor = Color.White,
             unselectedContentColor = Color.Black,
-
+            startIconContent = {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Selected",
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         )
-        //끝에 아이콘 있는경우
+
+        // 3. 끝 아이콘만 있는 칩
         MoruChip(
-            text = "#태그",
+            text = "#삭제가능",
             isSelected = true,
             onClick = { },
             selectedBackgroundColor = Color.Black,
@@ -134,48 +157,11 @@ private fun MoruChipWithIconsPreview() {
                     modifier = Modifier.size(14.dp)
                 )
             }
-            )
-
-
-        // 양쪽 아이콘이 모두 있는 칩
-        MoruChip(
-            text = "Status",
-            isSelected = false,
-            onClick = { },
-            selectedBackgroundColor = Color.Black,
-            selectedContentColor = Color.White,
-            unselectedBackgroundColor = Color.White,
-            unselectedContentColor = Color.Black,
-            startIconContent = {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = "Status",
-                    modifier = Modifier.size(18.dp)
-                )
-            },
-            endIconContent = {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Close",
-                    modifier = Modifier.size(18.dp)
-                )
-            }
         )
 
-        // 1. 아이콘이 없는 기본 칩
+        // 4. 양쪽 아이콘이 모두 있는 칩
         MoruChip(
-            text = "#태그",
-            isSelected = true,
-            onClick = { },
-            selectedBackgroundColor = MORUTheme.colors.paleLime,
-            selectedContentColor = MORUTheme.colors.oliveGreen,
-            unselectedBackgroundColor = MORUTheme.colors.veryLightGray,
-            unselectedContentColor = MORUTheme.colors.darkGray
-        )
-
-        // 2. 양쪽 아이콘이 모두 있는 칩
-        MoruChip(
-            text = "Status",
+            text = "모든아이콘",
             isSelected = true,
             onClick = { },
             selectedBackgroundColor = Color.Black,
@@ -200,7 +186,7 @@ private fun MoruChipWithIconsPreview() {
 
         Text("--- 테두리 예시 ---", fontWeight = FontWeight.Bold)
 
-        // 3. 테두리가 있는 칩 (미완료 상태)
+        // 5. 테두리가 있는 칩 (미선택 상태)
         MoruChip(
             text = "미완료",
             isSelected = false,
@@ -209,11 +195,10 @@ private fun MoruChipWithIconsPreview() {
             selectedContentColor = Color.White,
             unselectedBackgroundColor = Color.White,
             unselectedContentColor = MORUTheme.colors.oliveGreen,
-            // ◀ border 파라미터에 BorderStroke 객체를 전달
             border = BorderStroke(width = 1.dp, color = MORUTheme.colors.limeGreen)
         )
 
-        // 4. 테두리가 없는 칩 (완료 상태)
+        // 6. 테두리가 없는 칩 (선택 상태)
         MoruChip(
             text = "완료",
             isSelected = true,
@@ -222,7 +207,7 @@ private fun MoruChipWithIconsPreview() {
             selectedContentColor = Color.White,
             unselectedBackgroundColor = Color.White,
             unselectedContentColor = MORUTheme.colors.oliveGreen,
-            border = null // ◀ border를 null로 설정
+            border = null
         )
     }
 }
