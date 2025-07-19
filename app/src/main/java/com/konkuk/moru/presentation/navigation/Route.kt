@@ -15,6 +15,8 @@ sealed class Route(
     data object Home : Route(route = "home")
 
     data object RoutineFeed : Route(route = "routine_feed")
+
+    data object RoutineSearch : Route("routine_search")
     data object RoutineFeedDetail : Route(route = "routine_feed_detail/{routineId}") {
         fun createRoute(routineId: Int) = "routine_feed_detail/$routineId"
     }

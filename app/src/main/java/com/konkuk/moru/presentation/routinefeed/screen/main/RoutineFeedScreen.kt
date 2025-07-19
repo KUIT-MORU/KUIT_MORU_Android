@@ -89,9 +89,7 @@ fun RoutineFeedScreen(
     Scaffold(
         topBar = {
             HomeTopAppBar(
-                searchQuery = searchQuery,
-                onQueryChange = { newQuery -> searchQuery = newQuery },
-                onSearch = { query -> println("Search triggered for: '$query'") },
+                onSearchClick = { navController.navigate(Route.RoutineSearch.route) },
                 hasNotification = uiState.hasNotification,
                 onNotificationClick = onNotificationClick,
                 onLogoClick = {}

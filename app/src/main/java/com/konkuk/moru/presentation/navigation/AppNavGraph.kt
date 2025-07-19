@@ -77,7 +77,8 @@ fun AppNavGraph(
                             Route.ActProfile.route,
                             Route.ActFabTag.route,
                             Route.ActRecord.route,
-                            Route.ActScrab.route //navbar 숨기고 싶은 route 추가
+                            Route.ActScrab.route, //navbar 숨기고 싶은 route 추가
+                            Route.RoutineSearch.route
                         )
                     ) {
                         NavigationBar(
