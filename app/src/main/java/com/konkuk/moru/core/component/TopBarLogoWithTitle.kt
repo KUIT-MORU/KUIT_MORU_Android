@@ -1,4 +1,4 @@
-package com.konkuk.moru.presentation.signup.component
+package com.konkuk.moru.core.component
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -23,7 +23,7 @@ import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
-fun TopBarLogoWithTitle() {
+fun TopBarLogoWithTitle() { // 회원가입과 온보딩에서 쓰이는 로고와 타이틀 컴포넌트
     Column(
         modifier = Modifier
             .fillMaxWidth()
