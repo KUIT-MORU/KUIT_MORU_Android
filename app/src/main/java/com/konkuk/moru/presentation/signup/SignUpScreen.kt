@@ -30,16 +30,16 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.konkuk.moru.presentation.signup.component.SignUpTextField
-import com.konkuk.moru.presentation.signup.component.TopBarLogoWithTitle
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.konkuk.moru.core.component.TopBarLogoWithTitle
+import com.konkuk.moru.core.component.button.MoruButtonTypeA
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.signup.component.CompleteSignupPopup
-import com.konkuk.moru.presentation.signup.component.SignUpButton
 import kotlinx.coroutines.delay
 
 @Composable
@@ -59,7 +59,7 @@ fun SignUpScreen(
         password.length >= 8 && password.contains(Regex("[0-9]")) && password.contains(Regex("[!@#\$%^&*(),.?\":{}|<>]"))
     }
     val isFormValid = isEmailValid && isPasswordValid
-    //val isFormValid = true // 임시로 유효성 검사 생략
+    //val isFormValid = true // TODO 임시로 유효성 검사 생략
 
     var emailInvalidMessage by remember { mutableStateOf<String?>(null) }
 
@@ -164,7 +164,7 @@ fun SignUpScreen(
                     )
                 }
 
-                SignUpButton(enabled = isFormValid) {
+                MoruButtonTypeA(text = "회원가입", enabled = isFormValid) {
                     if (isFormValid) {
                         viewModel.signUp(
                             email, password, context,
@@ -178,7 +178,7 @@ fun SignUpScreen(
                         )
                     } else {
                         // 유효성 검사 실패 시 처리
-                        // ========= 비활성 버튼도 임시로 작동하도록 설정. 추후 기능 제거 필요 =====
+                        // ========= TODO 비활성 버튼도 임시로 작동하도록 설정. 추후 기능 제거 필요 =====
                         viewModel.signUp(
                             email, password, context,
                             onSuccess = {
