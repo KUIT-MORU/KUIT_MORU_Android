@@ -240,7 +240,7 @@ fun MainNavGraph(
             val encodedTitle = backStackEntry.arguments?.getString("routineTitle") ?: ""
             val decodedTitle = URLDecoder.decode(encodedTitle, StandardCharsets.UTF_8.toString())
 
-            ActRecordDetailScreen(title = decodedTitle, navController = navController)
+            ActRecordDetailScreen(title = decodedTitle, navController = navController, modifier.padding(innerPadding))
         }
     }
 }
