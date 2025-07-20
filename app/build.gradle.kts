@@ -104,6 +104,8 @@ dependencies {
 
     // Material Icons 확장 라이브러리 (Outlined, Rounded, Sharp 아이콘 포함)
     implementation("androidx.compose.material:material-icons-extended")
+
+    implementation("io.coil-kt:coil-compose:2.5.0")
 }
 
 configurations.all {
