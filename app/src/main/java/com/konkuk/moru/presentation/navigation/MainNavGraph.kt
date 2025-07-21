@@ -29,6 +29,7 @@ import com.konkuk.moru.presentation.routinefeed.screen.main.HotRoutineListScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetailScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedViewModel
+import com.konkuk.moru.presentation.routinefeed.screen.search.RoutineSearchHost
 import com.konkuk.moru.presentation.routinefeed.screen.userprofile.UserProfileScreen
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
@@ -64,6 +65,10 @@ fun MainNavGraph(
                     navController.navigate(Route.Notification.route)
                 }
             )
+        }
+
+        composable(route=Route.RoutineSearch.route){
+            RoutineSearchHost(navController=navController)
         }
 
         composable(
@@ -235,7 +240,7 @@ fun MainNavGraph(
             val encodedTitle = backStackEntry.arguments?.getString("routineTitle") ?: ""
             val decodedTitle = URLDecoder.decode(encodedTitle, StandardCharsets.UTF_8.toString())
 
-            ActRecordDetailScreen(title = decodedTitle, navController = navController)
+            ActRecordDetailScreen(title = decodedTitle, navController = navController, modifier.padding(innerPadding))
         }
     }
 }
