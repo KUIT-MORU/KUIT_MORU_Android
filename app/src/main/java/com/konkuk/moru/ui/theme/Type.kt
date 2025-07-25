@@ -26,6 +26,7 @@ data class MoruTypography(
     val title_B_12: TextStyle,
 
     val body_SB_24: TextStyle,
+    val body_SB_20: TextStyle,
     val body_SB_16: TextStyle,
     val body_SB_14: TextStyle,
 
@@ -75,6 +76,11 @@ val defaultMoruTypography = MoruTypography(
         fontFamily = moruFontSemiBold,
         fontSize = 24.sp,
         lineHeight = 24.sp
+    ),
+    body_SB_20 = TextStyle(
+        fontFamily = moruFontSemiBold,
+        fontSize = 20.sp,
+        lineHeight = 20.sp
     ),
     body_SB_16 = TextStyle(
         fontFamily = moruFontSemiBold,

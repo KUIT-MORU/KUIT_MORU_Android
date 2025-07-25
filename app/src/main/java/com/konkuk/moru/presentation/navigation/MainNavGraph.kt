@@ -67,8 +67,8 @@ fun MainNavGraph(
             )
         }
 
-        composable(route=Route.RoutineSearch.route){
-            RoutineSearchHost(navController=navController)
+        composable(route = Route.RoutineSearch.route) {
+            RoutineSearchHost(navController = navController)
         }
 
         composable(
@@ -240,7 +240,11 @@ fun MainNavGraph(
             val encodedTitle = backStackEntry.arguments?.getString("routineTitle") ?: ""
             val decodedTitle = URLDecoder.decode(encodedTitle, StandardCharsets.UTF_8.toString())
 
-            ActRecordDetailScreen(title = decodedTitle, navController = navController, modifier.padding(innerPadding))
+            ActRecordDetailScreen(
+                title = decodedTitle,
+                navController = navController,
+                modifier.padding(innerPadding)
+            )
         }
     }
 }
