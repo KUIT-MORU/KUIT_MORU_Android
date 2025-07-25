@@ -65,14 +65,14 @@ fun CustomDialog(
                             text = dismissButtonText,
                             onClick = onDismissRequest,
                             backgroundColor = MORUTheme.colors.lightGray,
-                            contentColor = MORUTheme.colors.darkGray
+                            contentColor = MORUTheme.colors.mediumGray
                         )
                         MoruButton(
                             modifier = Modifier.weight(1f).height(48.dp),
                             text = confirmButtonText,
                             onClick = onConfirmation,
                             backgroundColor = MORUTheme.colors.limeGreen,
-                            contentColor = Color.Black
+                            contentColor = Color.White
                         )
                     }
                 }

@@ -6,7 +6,7 @@ import java.time.DayOfWeek
 import java.time.LocalTime
 
 object DummyData {
-    const val MY_USER_ID = 252 // 내 유저 아이디를 3으로 가정
+    const val MY_USER_ID = 252 // 내 유저 아이디를 252으로 가정
 
     val dummyFollowRelations = listOf(
         // 1번 유저(제니)가 다른 사람들을 팔로우
