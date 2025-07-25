@@ -121,7 +121,7 @@ fun FollowScreenContent(
                         },
                         text = { Text(text = title) },
                         selectedContentColor = Color.Black,
-                        unselectedContentColor = Color.LightGray
+                        unselectedContentColor = MORUTheme.colors.mediumGray
                     )
                 }
             }
@@ -172,7 +172,7 @@ private fun FollowListContent(
             items(
                 items = users, key = { it.id }) { user ->
                 UserItem(user = user, onFollowClick = onFollowClick)
-                Divider(color = Color(0xFFF1F3F5), thickness = 1.dp)
+                //Divider(color = Color(0xFFF1F3F5), thickness = 1.dp)
             }
         }
     }

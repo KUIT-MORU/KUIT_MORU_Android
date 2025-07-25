@@ -22,16 +22,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.size.Size
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
 import com.konkuk.moru.ui.theme.MORUTheme
-
 @Composable
 fun MoruLiveSection(
     modifier: Modifier = Modifier,
@@ -70,7 +73,11 @@ fun MoruLiveSection(
                         modifier = Modifier.clickable { onUserClick(user.userId) }
                     ) {
                         AsyncImage(
-                            model = user.profileImageUrl,
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(user.profileImageUrl) // 여기에 이미지 URL을 넣습니다.
+                                .size(Size(256, 256)) // 64dp보다 큰 적절한 픽셀 크기로 지정 (256px 정도면 충분)
+                                .crossfade(true) // 부드러운 이미지 전환 효과
+                                .build(),
                             contentDescription = "${user.name}의 프로필 사진",
                             placeholder = painterResource(id = R.drawable.ic_profile_with_background),
                             error = painterResource(id = R.drawable.ic_profile_with_background),

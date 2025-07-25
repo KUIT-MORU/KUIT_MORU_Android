@@ -54,7 +54,7 @@ fun HotRoutineListScreen(
                     navigationIconContentColor = Color.White,
                     actionIconContentColor = Color.White
                 ),
-                titleStyle = MORUTheme.typography.time_R_16
+                titleStyle = MORUTheme.typography.body_SB_16
             )
         }
     ) { inner ->
@@ -62,7 +62,7 @@ fun HotRoutineListScreen(
             modifier = Modifier
                 .padding(inner)
                 .fillMaxSize(),
-            contentPadding = PaddingValues( bottom = 80.dp)
+            contentPadding = PaddingValues( top=18.dp,bottom = 80.dp)
         ) {
             items(routines) { r ->
                 val liked = likeStates[r.routineId] ?: false

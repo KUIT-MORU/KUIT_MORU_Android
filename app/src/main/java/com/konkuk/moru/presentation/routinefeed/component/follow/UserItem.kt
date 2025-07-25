@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -20,6 +21,8 @@ import com.konkuk.moru.R // app/src/main/res/drawable 에 ic_profile_placeholder
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.presentation.routinefeed.data.FollowUser
 import com.konkuk.moru.ui.theme.MORUTheme
+import com.konkuk.moru.ui.theme.moruFontBold
+import com.konkuk.moru.ui.theme.moruFontMedium
 
 @Composable
 fun UserItem(
@@ -51,15 +54,20 @@ fun UserItem(
         ) {
             Text(
                 text = user.username,
-                fontWeight = FontWeight.Bold,
+                fontFamily = moruFontMedium,
+                fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
+                lineHeight = 16.sp,
                 color = Color.Black
             )
-            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = user.bio,
                 fontSize = 10.sp,
-                color = Color.Gray
+                fontWeight = FontWeight(400),
+                lineHeight = 16.sp,
+                color = Color.DarkGray,
+                maxLines = 1, // 텍스트를 최대 1줄로 제한
+                overflow = TextOverflow.Ellipsis
             )
         }
 

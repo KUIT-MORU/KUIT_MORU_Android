@@ -1,6 +1,7 @@
 package com.konkuk.moru.presentation.routinefeed.screen.userprofile
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -119,8 +120,7 @@ private fun UserProfileContent(
         item {
             Text(
                 text = "${state.nickname}님의 루틴",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
+                style = MORUTheme.typography.title_B_20,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 17.dp, top = 13.dp)
@@ -243,7 +243,9 @@ private fun ExpandableRoutineSection(
     onToggle: () -> Unit,
     onLikeClick: (Int) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .background(MORUTheme.colors.veryLightGray)) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -275,10 +277,10 @@ private fun ExpandableRoutineSection(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_person_standing),
                         contentDescription = null,
-                        modifier = Modifier.size(32.dp),
+                        modifier = Modifier.size(30.dp),
                         tint = Color.Unspecified
                     )
-                    Text("현재 실행중인 루틴이 없습니다.", color = Color.Gray)
+                    Text("현재 실행중인 루틴이 없습니다.", color = MORUTheme.colors.darkGray, style = MORUTheme.typography.desc_M_16)
                 }
             } else {
                 Column {

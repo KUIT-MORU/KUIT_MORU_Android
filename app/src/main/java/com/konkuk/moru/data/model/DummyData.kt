@@ -155,7 +155,7 @@ object DummyData {
             isBookmarked = true,
             isRunning = false,
             scheduledTime = LocalTime.of(7, 0),
-            scheduledDays = setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
+            scheduledDays = setOf(DayOfWeek.SATURDAY, DayOfWeek.MONDAY)
         )
     )
 
