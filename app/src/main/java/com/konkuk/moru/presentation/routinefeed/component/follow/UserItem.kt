@@ -17,11 +17,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.konkuk.moru.R // app/src/main/res/drawable 에 ic_profile_placeholder.xml 같은 플레이스홀더 아이콘 필요
+import com.konkuk.moru.R
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.presentation.routinefeed.data.FollowUser
 import com.konkuk.moru.ui.theme.MORUTheme
-import com.konkuk.moru.ui.theme.moruFontBold
 import com.konkuk.moru.ui.theme.moruFontMedium
 
 @Composable
