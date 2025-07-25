@@ -41,39 +41,45 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.konkuk.moru.core.component.button.MoruButtonTypeA
+import com.konkuk.moru.presentation.onboarding.OnboardingViewModel
+import com.konkuk.moru.presentation.onboarding.component.ImageOptionButtonScreen
 import java.util.Calendar
 
 @Composable
-fun UserInfoPage(onNext: () -> Unit) {
+fun UserInfoPage(
+    onNext: () -> Unit,
+    viewModel: OnboardingViewModel? = null
+    //viewModel: OnboardingViewModel = hiltViewModel() //Todo: 프리뷰용으로 대체
+) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
 
-    val profileImage by remember { mutableIntStateOf(R.drawable.ic_basic_profile) }
-    var isNickNameValid by remember { mutableStateOf<Boolean>(false) }
-
     var nickName by remember { mutableStateOf("") }
+    var isNickNameValid by remember { mutableStateOf(false) }
     var gender by remember { mutableStateOf("") }
     var birthDay by remember { mutableStateOf("") }
     var introduction by remember { mutableStateOf("") }
 
+    val isFormValid = isNickNameValid && gender.isNotBlank() && birthDay.isNotBlank()
     var isImageOptionVisible by remember { mutableStateOf(false) }
 
-    val calendar = remember { Calendar.getInstance() } // 날짜 다이얼로그 상태
-
-    val datePickerDialog = remember { // 다이얼로그 로직
+    val calendar = remember { Calendar.getInstance() }
+    val datePickerDialog = remember {
         DatePickerDialog(
             context,
             { _, year, month, dayOfMonth ->
                 val selectedDate = "%04d.%02d.%02d".format(year, month + 1, dayOfMonth)
                 birthDay = selectedDate
+                viewModel?.updateBirthday(selectedDate)
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
         )
     }
-
 
     Box(
         modifier = Modifier
@@ -93,12 +99,12 @@ fun UserInfoPage(onNext: () -> Unit) {
                     .fillMaxWidth()
                     .weight(1f)
                     .background(Color(0xFFFFFFFF))
-                    .padding(horizontal = 32.dp)
                     .padding(bottom = 10.dp, top = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(
+                    modifier = Modifier.padding(horizontal = 32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
@@ -115,7 +121,8 @@ fun UserInfoPage(onNext: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    ProfileSettingCard(image = profileImage) {
+                    ProfileSettingCard() {
+                        focusManager.clearFocus()
                         isImageOptionVisible = true // 메뉴 띄우기
                     }
 
@@ -142,7 +149,8 @@ fun UserInfoPage(onNext: () -> Unit) {
                         value = nickName,
                         onValueChange = {
                             nickName = it
-                            isNickNameValid = it.length in 2..10 // 닉네임 유효성 검사
+                            isNickNameValid = it.length in 2..10
+                            if (isNickNameValid) viewModel?.updateNickname(it)
                         },
                         isValid = isNickNameValid,
                         placeholder = "닉네임",
@@ -157,7 +165,10 @@ fun UserInfoPage(onNext: () -> Unit) {
                     Spacer(modifier = Modifier.height(8.dp))
                     GenderSelection(
                         selectedGender = gender,
-                        onGenderSelect = { gender = it }
+                        onGenderSelect = {
+                            gender = it
+                            viewModel?.updateGender(it)
+                        }
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     Text(
@@ -166,10 +177,7 @@ fun UserInfoPage(onNext: () -> Unit) {
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    BirthdayField(birthday = birthDay, onClick = {
-                        datePickerDialog.show()
-                    })
-
+                    BirthdayField(birthday = birthDay, onClick = { datePickerDialog.show() })
                     Spacer(modifier = Modifier.height(20.dp))
                     Text(
                         text = "자기소개",
@@ -177,10 +185,17 @@ fun UserInfoPage(onNext: () -> Unit) {
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    IntroductionField(value = introduction, onValueChange = { introduction = it })
+                    IntroductionField(
+                        value = introduction,
+                        onValueChange = {
+                            introduction = it
+                            viewModel?.updateIntroduction(it)
+                        }
+                    )
                 }
 
                 Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Image(
@@ -189,9 +204,20 @@ fun UserInfoPage(onNext: () -> Unit) {
                         modifier = Modifier.width(134.dp)
                     )
                     Spacer(modifier = Modifier.height(35.dp))
-                    MoruButtonTypeA(text = "다음", enabled = true) {onNext()}
+                    MoruButtonTypeA(text = "다음", enabled = isFormValid) {onNext()}
                 }
             }
+        }
+        if (isImageOptionVisible){
+            ImageOptionButtonScreen(
+                onImageSelected = {
+                    //Todo 앨범에서 이미지 선택 로직 구현
+                },
+                onCameraSelected = {
+                    //Todo 카메라로 사진 찍는 로직 구현
+                },
+                onCancel = { isImageOptionVisible = false }
+            )
         }
     }
 }

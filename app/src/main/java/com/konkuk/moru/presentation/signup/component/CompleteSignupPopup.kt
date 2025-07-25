@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import com.konkuk.moru.ui.theme.MORUTheme
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 
-
 @Composable
 fun CompleteSignupPopup() {
     Box(

@@ -88,11 +88,15 @@ fun SignUpScreen(
                     .fillMaxWidth()
                     .weight(1f)
                     .background(Color(0xFFFFFFFF))
-                    .padding(horizontal = 32.dp)
                     .padding(bottom = 10.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp)
+                        .weight(1f),
+                ) {
                     Spacer(modifier = Modifier.height(screenHeight * 0.05f))
 
                     Text(text = "회원가입", style = typography.body_SB_24)
@@ -163,35 +167,41 @@ fun SignUpScreen(
                         modifier = Modifier.padding(start = 4.dp)
                     )
                 }
-
-                MoruButtonTypeA(text = "회원가입", enabled = isFormValid) {
-                    if (isFormValid) {
-                        viewModel.signUp(
-                            email, password, context,
-                            onSuccess = {
-                                showPopup = true
-                            },
-                            onFailure = { error ->
-                                // TODO: 에러 메시지 UI에 띄우기
-                                Log.e("SignUpScreen", "회원가입 실패: $error")
-                            }
-                        )
-                    } else {
-                        // 유효성 검사 실패 시 처리
-                        // ========= TODO 비활성 버튼도 임시로 작동하도록 설정. 추후 기능 제거 필요 =====
-                        viewModel.signUp(
-                            email, password, context,
-                            onSuccess = {
-                                showPopup = true
-                            },
-                            onFailure = { error ->
-                                // TODO: 에러 메시지 UI에 띄우기
-                                Log.e("SignUpScreen", "회원가입 실패: $error")
-                            }
-                        )
-                        // ============================================================
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    MoruButtonTypeA(text = "회원가입", enabled = isFormValid) {
+                        if (isFormValid) {
+                            viewModel.signUp(
+                                email, password, context,
+                                onSuccess = {
+                                    showPopup = true
+                                },
+                                onFailure = { error ->
+                                    // TODO: 에러 메시지 UI에 띄우기
+                                    Log.e("SignUpScreen", "회원가입 실패: $error")
+                                }
+                            )
+                        } else {
+                            // 유효성 검사 실패 시 처리
+                            // ========= TODO 비활성 버튼도 임시로 작동하도록 설정. 추후 기능 제거 필요 =====
+                            viewModel.signUp(
+                                email, password, context,
+                                onSuccess = {
+                                    showPopup = true
+                                },
+                                onFailure = { error ->
+                                    // TODO: 에러 메시지 UI에 띄우기
+                                    Log.e("SignUpScreen", "회원가입 실패: $error")
+                                }
+                            )
+                            // ============================================================
+                        }
                     }
                 }
+
             }
         }
         if (showPopup) {

@@ -1,6 +1,7 @@
 package com.konkuk.moru.presentation.onboarding.component
 
 import androidx.compose.runtime.Composable
+import com.konkuk.moru.presentation.onboarding.OnboardingViewModel
 import com.konkuk.moru.presentation.onboarding.page.FinalPage
 import com.konkuk.moru.presentation.onboarding.page.InfoPage1
 import com.konkuk.moru.presentation.onboarding.page.InfoPage2
@@ -10,14 +11,15 @@ import com.konkuk.moru.presentation.onboarding.page.TagSelectionPage
 import com.konkuk.moru.presentation.onboarding.page.UserInfoPage
 
 @Composable
-fun OnboardingPage(page: Int, onNext: () -> Unit) {
+fun OnboardingPage(page: Int, onNext: () -> Unit, viewModel: OnboardingViewModel) {
     when (page) {
         0 -> UserInfoPage(onNext = onNext)
-        1 -> InfoPage1()
-        2 -> TagSelectionPage()
-        3 -> InfoPage2()
-        4 -> PermissionPage()
-        5 -> InfoPage3()
-        6 -> FinalPage()
+        1 -> InfoPage1(onNext = onNext)
+        2 -> TagSelectionPage(onNext = onNext)
+        3 -> InfoPage2(onNext = onNext)
+        4 -> PermissionPage(onNext = onNext)
+        5 -> InfoPage3(onNext = onNext)
+        6 -> FinalPage(onNext = onNext, viewModel = viewModel)
+        else -> throw IllegalArgumentException("Invalid page number: $page")
     }
 }
