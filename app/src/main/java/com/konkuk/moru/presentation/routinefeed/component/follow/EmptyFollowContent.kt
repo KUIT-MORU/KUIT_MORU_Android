@@ -49,17 +49,16 @@ fun EmptyFollowContent(
             Text(
                 text = message,
                 fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
                 color = Color.Black
             )
 
             Spacer(modifier=Modifier.padding(3.dp))
 
             Text(
-
                 text = subMessage,
-                fontSize = 14.sp,
-                color = Color.Gray,
+                style = MORUTheme.typography.desc_M_16,
+                color = Color.DarkGray,
                 textAlign = TextAlign.Center
             )
         }

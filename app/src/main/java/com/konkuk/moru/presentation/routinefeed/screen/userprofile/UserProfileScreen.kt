@@ -36,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -83,8 +84,22 @@ fun UserProfileScreen(
             onFollowClick = viewModel::toggleFollow,
             onToggleExpansion = viewModel::toggleRunningRoutineExpansion,
             onLikeClick = viewModel::toggleLike,
-            onFollowerClick = { navController.navigate(Route.Follow.createRoute(uiState.userId, "follower")) },
-            onFollowingClick = { navController.navigate(Route.Follow.createRoute(uiState.userId, "following")) }
+            onFollowerClick = {
+                navController.navigate(
+                    Route.Follow.createRoute(
+                        uiState.userId,
+                        "follower"
+                    )
+                )
+            },
+            onFollowingClick = {
+                navController.navigate(
+                    Route.Follow.createRoute(
+                        uiState.userId,
+                        "following"
+                    )
+                )
+            }
         )
     }
 }
@@ -160,7 +175,29 @@ private fun ProfileHeader(
     val contentColor =
         if (state.isFollowing) MORUTheme.colors.mediumGray else MORUTheme.colors.limeGreen
 
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp)) {
+    val bottomRoundedCornerShape = RoundedCornerShape(
+        topStart = 0.dp,
+        topEnd = 0.dp,
+        bottomStart = 8.dp,
+        bottomEnd = 8.dp
+    )
+
+
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 4.dp, // 그림자 깊이
+                shape = bottomRoundedCornerShape, // 그림자 모양
+                spotColor = Color.Black.copy(alpha = 0.10f) // 그림자 색상 (필요시)
+            )
+            .background(
+                color = Color.White,
+                shape = bottomRoundedCornerShape
+            )
+            .padding(horizontal = 16.dp, vertical = 20.dp)
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -199,9 +236,18 @@ private fun ProfileHeader(
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = state.nickname, style = MORUTheme.typography.time_R_16, fontWeight = FontWeight.Bold)
+        Text(
+            text = state.nickname,
+            style = MORUTheme.typography.time_R_16,
+            fontWeight = FontWeight.Bold
+        )
         Spacer(modifier = Modifier.height(4.dp))
-        Text(text = state.bio, fontSize = 14.sp, style = MORUTheme.typography.time_R_14, color = Color.DarkGray)
+        Text(
+            text = state.bio,
+            fontSize = 14.sp,
+            style = MORUTheme.typography.time_R_14,
+            color = Color.DarkGray
+        )
     }
 }
 
@@ -243,9 +289,11 @@ private fun ExpandableRoutineSection(
     onToggle: () -> Unit,
     onLikeClick: (Int) -> Unit
 ) {
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .background(MORUTheme.colors.veryLightGray)) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MORUTheme.colors.veryLightGray)
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -280,7 +328,11 @@ private fun ExpandableRoutineSection(
                         modifier = Modifier.size(30.dp),
                         tint = Color.Unspecified
                     )
-                    Text("현재 실행중인 루틴이 없습니다.", color = MORUTheme.colors.darkGray, style = MORUTheme.typography.desc_M_16)
+                    Text(
+                        "현재 실행중인 루틴이 없습니다.",
+                        color = MORUTheme.colors.darkGray,
+                        style = MORUTheme.typography.desc_M_16
+                    )
                 }
             } else {
                 Column {
@@ -308,11 +360,41 @@ private fun ExpandableRoutineSection(
 private fun UserProfileScreenPreview(isDataEmpty: Boolean = false) {
     // [수정] 프리뷰용 샘플 데이터를 통합 Routine 모델로 변경
     val sampleRunningRoutines = remember {
-        listOf(Routine(1, "아침 운동 1", "", null, "운동", listOf("#테그그그그그", "#tag"), 1,"모루", null, 16, true, false, true))
+        listOf(
+            Routine(
+                1,
+                "아침 운동 1",
+                "",
+                null,
+                "운동",
+                listOf("#테그그그그그", "#tag"),
+                1,
+                "모루",
+                null,
+                16,
+                true,
+                false,
+                true
+            )
+        )
     }
     val sampleUserRoutines = remember {
         List(5) { index ->
-            Routine(index + 2, "아침 운동", "", null, "운동", listOf("#모닝루틴", "#스트레칭"), 2,"모루", null, 16, false, index % 2 == 0, false)
+            Routine(
+                index + 2,
+                "아침 운동",
+                "",
+                null,
+                "운동",
+                listOf("#모닝루틴", "#스트레칭"),
+                2,
+                "모루",
+                null,
+                16,
+                false,
+                index % 2 == 0,
+                false
+            )
         }
     }
 
@@ -329,10 +411,16 @@ private fun UserProfileScreenPreview(isDataEmpty: Boolean = false) {
     }
 
     val runningRoutines = sampleRunningRoutines.map {
-        it.copy(isLiked = likedStates[it.routineId] ?: it.isLiked, likes = likeCounts[it.routineId] ?: it.likes)
+        it.copy(
+            isLiked = likedStates[it.routineId] ?: it.isLiked,
+            likes = likeCounts[it.routineId] ?: it.likes
+        )
     }
     val userRoutines = sampleUserRoutines.map {
-        it.copy(isLiked = likedStates[it.routineId] ?: it.isLiked, likes = likeCounts[it.routineId] ?: it.likes)
+        it.copy(
+            isLiked = likedStates[it.routineId] ?: it.isLiked,
+            likes = likeCounts[it.routineId] ?: it.likes
+        )
     }
 
     val state = UserProfileUiState(
@@ -353,7 +441,7 @@ private fun UserProfileScreenPreview(isDataEmpty: Boolean = false) {
             containerColor = Color.White,
             topBar = {
                 BasicTopAppBar(
-                    title = "사용자명",
+                    title = state.nickname,
                     navigationIcon = {
                         IconButton(onClick = { /*TODO*/ }) {
                             Icon(

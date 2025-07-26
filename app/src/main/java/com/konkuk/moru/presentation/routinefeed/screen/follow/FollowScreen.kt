@@ -50,6 +50,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun FollowScreen(
     onBackClick: () -> Unit,
+    onUserClick: (Int) -> Unit,
     viewModel: FollowViewModel = hiltViewModel(),
     selectedTab: String?
 ) {
@@ -59,15 +60,16 @@ fun FollowScreen(
     val scope = rememberCoroutineScope()
     val initialPage = if (selectedTab == "following") 1 else 0
     val pagerState = rememberPagerState(initialPage = initialPage) { tabs.size }
-   
-   
+
+
     FollowScreenContent(
         uiState = uiState,
         tabs = tabs,
         pagerState = pagerState,
         scope = scope,
         onBackClick = onBackClick,
-        onFollowClick = viewModel::toggleFollow
+        onFollowClick = viewModel::toggleFollow,
+        onUserClick = onUserClick
     )
 }
 
@@ -83,7 +85,8 @@ fun FollowScreenContent(
     pagerState: PagerState,
     scope: CoroutineScope,
     onBackClick: () -> Unit,
-    onFollowClick: (FollowUser) -> Unit
+    onFollowClick: (FollowUser) -> Unit,
+    onUserClick: (Int) -> Unit
 ) {
     Scaffold(
         modifier = Modifier.padding(11.dp),
@@ -136,14 +139,16 @@ fun FollowScreenContent(
                         users = uiState.followers,
                         emptyMessage = "내 팔로워가 없어요.",
                         emptySubMessage = "다른 사람들을 찾아보세요!",
-                        onFollowClick = onFollowClick
+                        onFollowClick = onFollowClick,
+                        onUserClick = onUserClick
                     )
 
                     1 -> FollowListContent(
                         users = uiState.followings,
                         emptyMessage = "내 팔로잉이 없어요.",
                         emptySubMessage = "다른 사람들을 찾아보세요!",
-                        onFollowClick = onFollowClick
+                        onFollowClick = onFollowClick,
+                        onUserClick = onUserClick
                     )
                 }
             }
@@ -159,7 +164,8 @@ private fun FollowListContent(
     users: List<FollowUser>,
     emptyMessage: String,
     emptySubMessage: String,
-    onFollowClick: (FollowUser) -> Unit
+    onFollowClick: (FollowUser) -> Unit,
+    onUserClick: (Int) -> Unit
 ) {
     if (users.isEmpty()) {
         EmptyFollowContent(
@@ -171,7 +177,7 @@ private fun FollowListContent(
         ) {
             items(
                 items = users, key = { it.id }) { user ->
-                UserItem(user = user, onFollowClick = onFollowClick)
+                UserItem(user = user, onFollowClick = onFollowClick, onUserClick = onUserClick)
                 //Divider(color = Color(0xFFF1F3F5), thickness = 1.dp)
             }
         }
@@ -240,6 +246,10 @@ private fun FollowScreenPreview() {
                 }
                 // Preview의 상태를 업데이트하여 UI 변경을 확인합니다.
                 uiState = uiState.copy(followers = followers, followings = followings)
+            },
+            onUserClick = { userId ->
+                // Preview에서는 클릭 시 userId를 출력하는 정도로 테스트
+                println("User clicked: $userId")
             })
     }
 }

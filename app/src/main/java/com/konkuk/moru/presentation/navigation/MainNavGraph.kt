@@ -176,7 +176,10 @@ fun MainNavGraph(
             val selectedTab = backStackEntry.arguments?.getString("selectedTab")
             FollowScreen(
                 onBackClick = { navController.popBackStack() },
-                selectedTab = selectedTab
+                selectedTab = selectedTab,
+                onUserClick = { userId ->
+                    navController.navigate(Route.UserProfile.createRoute(userId))
+                },
             )
         }
 

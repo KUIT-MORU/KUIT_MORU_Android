@@ -100,7 +100,10 @@ fun MyRoutineTopAppBar(
             days.forEach { day ->
                 val isSelected = selectedDay == day
                 Tab(
-                    modifier = Modifier.width(80.dp).height(32.dp), // 기존 스타일
+                    modifier = Modifier
+                        //.width(80.dp).height(32.dp), // 기존 스타일
+                        .weight(1f)
+                        .height(32.dp),
                     selected = isSelected,
                     onClick = {
                         // 기능: 같은 요일 클릭 시 선택 해제(null), 다른 요일 클릭 시 선택

@@ -24,3 +24,11 @@ data class UserProfileUiState(
     val userRoutines: List<Routine> = emptyList(),
     val isRunningRoutineExpanded: Boolean = true
 )
+
+
+data class User(
+    val userId: Int,
+    val nickname: String,
+    val bio: String,
+    val profileImageUrl: String?
+)
