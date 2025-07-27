@@ -1,6 +1,5 @@
 package com.konkuk.moru.data.model
 
-import com.konkuk.moru.R
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
 import com.konkuk.moru.presentation.routinefeed.data.User
 import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowRelation
