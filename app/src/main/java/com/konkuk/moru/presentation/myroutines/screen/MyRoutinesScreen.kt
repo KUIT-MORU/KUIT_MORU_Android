@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.chip.MoruChip
@@ -45,7 +46,7 @@ import com.konkuk.moru.presentation.routinefeed.component.modale.CenteredInfoDia
 import com.konkuk.moru.presentation.routinefeed.component.modale.CustomDialog
 import com.konkuk.moru.presentation.routinefeed.component.tooltip.TooltipBubble
 import com.konkuk.moru.presentation.routinefeed.component.tooltip.TooltipShape
-import com.konkuk.moru.presentation.routinefeed.component.topAppBar.MyRoutineTopAppBar
+import com.konkuk.moru.presentation.myroutines.component.MyRoutineTopAppBar
 import com.konkuk.moru.ui.theme.MORUTheme
 import com.konkuk.moru.ui.theme.moruFontLight
 import kotlinx.coroutines.delay
@@ -93,6 +94,11 @@ fun MyRoutinesScreen(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
     val checkedRoutinesCount = routinesToDisplay.count { it.isChecked }
+    val viewModel: MyRoutinesViewModel = viewModel()
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshRoutines()
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         Scaffold(
