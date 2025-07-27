@@ -1,11 +1,11 @@
 package com.konkuk.moru.data.model
 
+import com.konkuk.moru.R
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
 import com.konkuk.moru.presentation.routinefeed.data.User
 import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowRelation
 import java.time.DayOfWeek
 import java.time.LocalTime
-
 object DummyData {
     const val MY_USER_ID = 252 // 내 유저 아이디를 252으로 가정
 
@@ -57,8 +57,6 @@ object DummyData {
             "1일 1커밋. #TIL #오픈소스",
             "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
         ),
-        // '나'의 유저 정보를 dummyUsers에 추가
-
         User(
             201,
             "지하철독서왕",
@@ -102,19 +100,97 @@ object DummyData {
         )
     )
 
+
     // 앱 전체의 루틴을 관리하는 단일 소스. 수정 가능하도록 var와 MutableList 사용
     var feedRoutines: MutableList<Routine> = mutableListOf(
+        // --- '나'의 루틴 (MY_USER_ID) ---
+        Routine(
+            routineId = 501,
+            title = "MORU의 아침 명상",
+            description = "상쾌한 아침을 여는 5분 명상 루틴입니다.",
+            imageUrl = "https://images.unsplash.com/photo-1506126613408-4e0e0f7c50e1",
+            category = "간편", // ✨ 수정
+            tags = listOf("명상", "아침루틴", "집중", "운동"),
+            authorId = MY_USER_ID,
+            authorName = "MORU (나)",
+            authorProfileUrl = null,
+            likes = 42,
+            isLiked = true, isBookmarked = true, isRunning = false,
+            scheduledDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
+            steps = listOf(RoutineStep("편안하게 앉기", "00:30"), RoutineStep("호흡에 집중하기", "03:00")),
+            usedApps = listOf(
+                // ✨ 수정: R.drawable -> 실제 이미지 URL
+                AppInfo("kakao", "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/kakaotalk-icon.png"),
+                AppInfo("Youtube", "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/youtube-logotype-icon.png")
+            )
+        ),
+        Routine(
+            routineId = 502,
+            title = "MORU의 주말 대청소",
+            description = "개운하게 주말을 맞이하는 청소 루틴!",
+            imageUrl = "https://images.unsplash.com/photo-1585421943279-25f1712ba7a8",
+            category = "집중", // ✨ 수정
+            tags = listOf("청소", "주말", "정리"),
+            authorId = MY_USER_ID,
+            authorName = "MORU (나)",
+            authorProfileUrl = null,
+            likes = 15,
+            isLiked = false, isBookmarked = true, isRunning = true,
+            scheduledDays = setOf(DayOfWeek.SATURDAY),
+            steps = listOf(RoutineStep("환기하기", "05:00"), RoutineStep("먼지 털기", "15:00")),
+            usedApps = listOf(
+                // ✨ 수정: R.drawable -> 실제 이미지 URL
+                AppInfo("정리 앱", "https://uxwing.com/wp-content/themes/uxwing/download/house-and-home/dustpan-icon.png")
+            )
+        ),
+        // ✨ [추가] '나'의 루틴 2개 추가
+        Routine(
+            routineId = 503,
+            title = "MORU의 저녁 스트레칭",
+            description = "하루의 피로를 푸는 간단한 스트레칭.",
+            imageUrl = "https://images.unsplash.com/photo-1599901860904-17e6ed7083a0",
+            category = "간편",
+            tags = listOf("스트레칭", "저녁루틴", "건강"),
+            authorId = MY_USER_ID,
+            authorName = "MORU (나)",
+            authorProfileUrl = null,
+            likes = 28,
+            isLiked = true, isBookmarked = false, isRunning = false,
+            scheduledDays = setOf(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY),
+            steps = listOf(RoutineStep("목 스트레칭", "02:00"), RoutineStep("어깨 돌리기", "02:00"))
+        ),
+        Routine(
+            routineId = 504,
+            title = "MORU의 집중 코딩 타임",
+            description = "방해 없이 2시간 동안 코딩에 집중하는 시간.",
+            imageUrl = "https://images.unsplash.com/photo-1517694712202-14dd9538aa97",
+            category = "집중",
+            tags = listOf("코딩", "개발", "집중"),
+            authorId = MY_USER_ID,
+            authorName = "MORU (나)",
+            authorProfileUrl = null,
+            likes = 55,
+            isLiked = false, isBookmarked = true, isRunning = false,
+            scheduledTime = LocalTime.of(20, 0),
+            steps = listOf(RoutineStep("작업 환경 설정", "05:00"), RoutineStep("집중 코딩", "120:00")),
+            usedApps = listOf(
+                // ✨ 수정: R.drawable -> 실제 이미지 URL
+                AppInfo("Github", "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/github-icon.png")
+            )
+        ),
+
+        // --- 다른 사용자의 루틴 ---
         Routine(
             routineId = 1,
             title = "아침 10분 요가",
             description = "간단한 요가로 하루를 시작해요. 몸과 마음을 깨우는 시간을 가져보세요.",
             imageUrl = "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2120&auto=format&fit=crop",
-            category = "건강",
-            tags = listOf("건강", "요가", "아침루틴", "운동", "명상"), // #운동#명상 포함
+            category = "간편", // ✨ 수정
+            tags = listOf("건강", "요가", "아침루틴", "운동", "명상"),
             authorId = 101,
             authorName = "요가마스터",
             authorProfileUrl = "https://images.unsplash.com/photo-1552058544-f2b08422138a",
-            likes = 112, // 핫한 루틴
+            likes = 112,
             isLiked = true, isBookmarked = false, isRunning = false,
             steps = listOf(RoutineStep("매트 준비", "00:30"), RoutineStep("고양이 자세", "02:00"))
         ),
@@ -123,22 +199,21 @@ object DummyData {
             title = "매일 TIL 작성하기",
             description = "개발 지식을 매일 기록합니다. 꾸준함이 실력!",
             imageUrl = "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=2072&auto=format&fit=crop",
-            category = "개발",
+            category = "집중", // ✨ 수정
             tags = listOf("개발", "TIL"),
             authorId = 102,
             authorName = "개발왕",
             authorProfileUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
-            likes = 98, // 핫한 루틴
+            likes = 98,
             isLiked = false, isBookmarked = false, isRunning = false,
             steps = listOf(RoutineStep("어제 배운 내용 복습", "10:00"), RoutineStep("블로그에 TIL 작성", "45:00"))
         ),
-        // [추가] #지하철#독서 루틴
         Routine(
             routineId = 20,
             title = "출근길 지하철 독서",
             description = "이동 시간을 활용한 독서",
             imageUrl = "https://images.unsplash.com/photo-1481627834876-b7833e8f5570",
-            category = "독서",
+            category = "간편", // ✨ 수정
             tags = listOf("독서", "지하철", "자기계발"),
             authorId = 201,
             authorName = "지하철독서왕",
@@ -146,74 +221,37 @@ object DummyData {
             likes = 68,
             isLiked = true, isBookmarked = false, isRunning = false
         ),
-        // [추가] #운동#명상 루틴
         Routine(
             routineId = 31,
             title = "요가와 명상의 조화",
             description = "정적인 움직임 속의 평화",
             imageUrl = "https://images.unsplash.com/photo-1506126613408-4e0e0f7c50e1",
-            category = "운동",
+            category = "집중", // ✨ 수정
             tags = listOf("운동", "명상", "요가"),
             authorId = 101,
             authorName = "요가마스터",
             authorProfileUrl = null,
-            likes = 88, // 핫한 루틴
+            likes = 88,
             isLiked = false, isBookmarked = true, isRunning = false
         ),
-        // [추가] MORU님과 딱 맞는 루틴
         Routine(
             routineId = 10,
             title = "MORU 맞춤 루틴 1: 독서",
             description = "당신을 위한 맞춤 루틴입니다.",
             imageUrl = "https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=1887&auto=format&fit=crop",
-            category = "독서",
+            category = "간편", // ✨ 수정
             tags = listOf("독서", "MORU"),
-            authorId = 3, // authorId는 다르지만 authorName이 "MORU"
+            authorId = 3,
             authorName = "MORU",
             authorProfileUrl = null,
             likes = 25,
             isLiked = false, isBookmarked = true, isRunning = false
-        ),
-        // '내가' 작성한 루틴 예시
-        Routine(
-            routineId = 501,
-            title = "MORU의 아침 명상",
-            description = "상쾌한 아침을 여는 5분 명상 루틴입니다.",
-            imageUrl = "https://images.unsplash.com/photo-1506126613408-4e0e0f7c50e1",
-            category = "명상",
-            tags = listOf("명상", "아침루틴", "집중", "운동"), // #운동#명상 포함
-            authorId = MY_USER_ID,
-            authorName = "MORU (나)",
-            authorProfileUrl = null,
-            likes = 42,
-            isLiked = true, isBookmarked = true, isRunning = false,
-            scheduledDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
-            steps = listOf(RoutineStep("편안하게 앉기", "00:30"), RoutineStep("호흡에 집중하기", "03:00"))
-        ),
-        Routine(
-            routineId = 502,
-            title = "MORU의 주말 대청소",
-            description = "개운하게 주말을 맞이하는 청소 루틴!",
-            imageUrl = "https://images.unsplash.com/photo-1585421943279-25f1712ba7a8",
-            category = "생활",
-            tags = listOf("청소", "주말", "정리"),
-            authorId = MY_USER_ID,
-            authorName = "MORU (나)",
-            authorProfileUrl = null,
-            likes = 15,
-            isLiked = false, isBookmarked = true, isRunning = true,
-            scheduledDays = setOf(DayOfWeek.SATURDAY),
-            steps = listOf(RoutineStep("환기하기", "05:00"), RoutineStep("먼지 털기", "15:00"))
         )
     )
 }
 
 /**
  * 전체 루틴 목록에서 주어진 루틴과 비슷한 태그를 가진 다른 루틴들을 찾아 반환합니다.
- * @param targetRoutine 기준이 되는 루틴
- * @param allRoutines 전체 루틴 목록
- * @param limit 반환할 최대 루틴 개수
- * @return SimilarRoutine 객체 리스트
  */
 fun findSimilarRoutinesByTags(
     targetRoutine: Routine,
@@ -223,9 +261,9 @@ fun findSimilarRoutinesByTags(
     val targetTags = targetRoutine.tags.toSet()
 
     return allRoutines
-        .filter { it.routineId != targetRoutine.routineId } // 자기 자신은 제외
-        .filter { routine -> routine.tags.any { tag -> tag in targetTags } } // 태그를 공유하는 루틴 필터링
-        .take(limit) // 최대 5개로 제한
+        .filter { it.routineId != targetRoutine.routineId }
+        .filter { routine -> routine.tags.any { tag -> tag in targetTags } }
+        .take(limit)
         .map {
             SimilarRoutine(
                 imageUrl = it.imageUrl,

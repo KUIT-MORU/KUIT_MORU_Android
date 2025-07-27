@@ -34,7 +34,15 @@ data class Routine(
 
     // 상세 화면용 정보
     val steps: List<RoutineStep> = emptyList(),
-    val similarRoutines: List<SimilarRoutine> = emptyList()
+    val similarRoutines: List<SimilarRoutine> = emptyList(),
+
+    // 사용앱 관련 정보
+    val usedApps: List<AppInfo> = emptyList()
+)
+
+data class AppInfo(
+    val name: String,
+    val iconUrl: String?
 )
 
 /**
