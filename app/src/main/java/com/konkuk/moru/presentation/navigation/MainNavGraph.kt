@@ -22,6 +22,7 @@ import com.konkuk.moru.presentation.myactivity.screen.ActRecordDetailScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActRecordScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActScrabScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActSettingScreen
+import com.konkuk.moru.presentation.myroutines.screen.MyRoutineDetailScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesViewModel
 import com.konkuk.moru.presentation.routinefeed.screen.NotificationScreen
@@ -67,8 +68,8 @@ fun MainNavGraph(
             )
         }
 
-        composable(route=Route.RoutineSearch.route){
-            RoutineSearchHost(navController=navController)
+        composable(route = Route.RoutineSearch.route) {
+            RoutineSearchHost(navController = navController)
         }
 
         composable(
@@ -76,13 +77,15 @@ fun MainNavGraph(
             arguments = listOf(navArgument("routineId") { type = NavType.IntType })
         ) { backStackEntry ->
             val routineId = backStackEntry.arguments?.getInt("routineId")
-            feedRoutines.find { it.routineId == routineId }?.let { routine ->
+            if (routineId != null) {
                 RoutineDetailScreen(
-                    routine = routine,
+                    routineId = routineId,
                     onBackClick = { navController.popBackStack() },
                     navController = navController
                 )
-            } ?: navController.popBackStack()
+            } else {
+                navController.popBackStack()
+            }
         }
 
         composable(
@@ -149,10 +152,26 @@ fun MainNavGraph(
                     navController.navigate(Route.RoutineFeed.route)
                 },
                 onNavigateToDetail = { routineId ->
-                    navController.navigate(Route.RoutineFeedDetail.createRoute(routineId))
+                    navController.navigate(Route.MyRoutineDetail.createRoute(routineId))
                 },
                 onDismissDeleteSuccessDialog = viewModel::dismissDeleteSuccessDialog
             )
+        }
+
+        composable(
+            route = Route.MyRoutineDetail.route,
+            arguments = listOf(navArgument("routineId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val routineId = backStackEntry.arguments?.getInt("routineId")
+            if (routineId != null) {
+                MyRoutineDetailScreen(
+                    routineId = routineId,
+                    onBackClick = { navController.popBackStack() },
+                    navController = navController
+                )
+            } else {
+                navController.popBackStack()
+            }
         }
 
 
@@ -243,7 +262,11 @@ fun MainNavGraph(
             val encodedTitle = backStackEntry.arguments?.getString("routineTitle") ?: ""
             val decodedTitle = URLDecoder.decode(encodedTitle, StandardCharsets.UTF_8.toString())
 
-            ActRecordDetailScreen(title = decodedTitle, navController = navController, modifier.padding(innerPadding))
+            ActRecordDetailScreen(
+                title = decodedTitle,
+                navController = navController,
+                modifier.padding(innerPadding)
+            )
         }
     }
 }
