@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.routinefeed.screen.main
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -61,8 +62,9 @@ fun HotRoutineListScreen(
         LazyColumn(
             modifier = Modifier
                 .padding(inner)
+                .background(Color.White)
                 .fillMaxSize(),
-            contentPadding = PaddingValues( top=18.dp,bottom = 80.dp)
+            contentPadding = PaddingValues(top = 18.dp, bottom = 80.dp)
         ) {
             items(routines) { r ->
                 val liked = likeStates[r.routineId] ?: false
@@ -77,7 +79,8 @@ fun HotRoutineListScreen(
                     showCheckbox = false,
                     onLikeClick = {
                         val newState = !liked
-                        likeStates = likeStates.toMutableMap().apply { this[r.routineId] = newState }
+                        likeStates =
+                            likeStates.toMutableMap().apply { this[r.routineId] = newState }
                         likeCounts = likeCounts.toMutableMap().apply {
                             this[r.routineId] = currentLikeCount + if (newState) 1 else -1
                         }
