@@ -185,6 +185,7 @@ fun ActProfileScreen(
     }
 
     AnimatedVisibility(
+        modifier = Modifier.fillMaxSize(),
         visible = showToast.value,
         enter = fadeIn(),
         exit = fadeOut()
@@ -198,6 +199,8 @@ fun ActProfileScreen(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 48.dp)
                     .background(colors.black, shape = RoundedCornerShape(10.dp))
                     .height(80.dp)
             ) {
