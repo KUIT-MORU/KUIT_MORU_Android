@@ -16,6 +16,7 @@ import androidx.navigation.navArgument
 import com.konkuk.moru.data.model.DummyData.feedRoutines
 import com.konkuk.moru.presentation.home.screen.HomeScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActFabTagScreen
+import com.konkuk.moru.presentation.myactivity.screen.ActInsightInfoClickScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActMainScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActProfileScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActRecordDetailScreen
@@ -266,6 +267,13 @@ fun MainNavGraph(
                 title = decodedTitle,
                 navController = navController,
                 modifier.padding(innerPadding)
+            )
+        }
+
+        composable(route = Route.ActInsightInfo.route) {
+            ActInsightInfoClickScreen(
+                modifier = modifier.padding(innerPadding),
+                navController = navController
             )
         }
     }

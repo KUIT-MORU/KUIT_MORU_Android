@@ -59,7 +59,7 @@ fun ActMyInfo(
                 .fillMaxWidth()
                 .height(126.dp)
         ) {
-            RoutinePaceCard(userName, routinePace, progress, modifier = Modifier.weight(1f))
+            RoutinePaceCard(userName, routinePace, progress, modifier = Modifier.weight(1f), navController = navController)
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
