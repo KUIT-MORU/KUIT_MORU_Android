@@ -1,12 +1,12 @@
 package com.konkuk.moru.data.model
 
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
+import com.konkuk.moru.presentation.routinefeed.data.User
 import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowRelation
 import java.time.DayOfWeek
 import java.time.LocalTime
-
 object DummyData {
-    const val MY_USER_ID = 252 // 내 유저 아이디를 3으로 가정
+    const val MY_USER_ID = 252 // 내 유저 아이디를 252으로 가정
 
     val dummyFollowRelations = listOf(
         // 1번 유저(제니)가 다른 사람들을 팔로우
@@ -23,6 +23,48 @@ object DummyData {
         FollowRelation(followerId = 3, followingId = 101), // 모루 -> 요가마스터
         FollowRelation(followerId = 4, followingId = 101), // 준 -> 요가마스터
     )
+
+    val dummyUsers = listOf(
+        User(
+            1,
+            "운동하는 제니",
+            " 꾸준함이 답이다! 매일 아침 운동 기록",
+            "https://images.unsplash.com/photo-1580489944761-15a19d654956"
+        ),
+        User(
+            2,
+            "책읽는 라이언",
+            "마음의 양식을 쌓는 중. 한 달에 2권 읽기 목표",
+            "https://images.unsplash.com/photo-1548142813-c348350df52b"
+        ),
+        User(3, "개발자 모루", "코드로 세상을 이롭게 하고 싶은 개발자입니다.", null),
+        User(
+            4,
+            "요리왕 준",
+            "오늘은 내가 요리사! #집밥 #레시피",
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
+        ),
+        User(
+            101,
+            "요가마스터",
+            "몸과 마음의 연결, 요가로 찾으세요.",
+            "https://images.unsplash.com/photo-1552058544-f2b08422138a"
+        ),
+        User(
+            102,
+            "개발왕",
+            "1일 1커밋. #TIL #오픈소스",
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
+        ),
+        User(
+            201,
+            "지하철독서왕",
+            "이동 시간을 황금으로 만드는 법",
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
+        ),
+        User(MY_USER_ID, "MORU (나)", "이 앱의 주인공입니다. 루틴을 만들어봐요!", null)
+    )
+
     val dummyLiveUsers = listOf(
         LiveUserInfo(
             1,
@@ -36,39 +78,13 @@ object DummyData {
             "#북스타그램",
             "https://images.unsplash.com/photo-1548142813-c348350df52b"
         ),
-        LiveUserInfo(3, "개발자 모루", "#TIL", null), // MORU는 프로필 이미지가 없는 것으로 설정
+        LiveUserInfo(3, "개발자 모루", "#TIL", null),
         LiveUserInfo(
             4,
             "요리왕 준",
             "#집밥",
             "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
         ),
-        LiveUserInfo(
-            5,
-            "여행가 에밀리",
-            "#여행에미치다",
-            "https://images.unsplash.com/photo-1438761681033-6461ffad8d80"
-        ),
-        LiveUserInfo(
-            6,
-            "명상하는 소피아",
-            "#마음챙김",
-            "https://images.unsplash.com/photo-1552058544-f2b08422138a"
-        ),
-        LiveUserInfo(
-            7,
-            "기상인증 챌린저",
-            "#미라클모닝",
-            "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c"
-        ),
-        LiveUserInfo(
-            8,
-            "기타치는 브라운",
-            "#음악",
-            "https://images.unsplash.com/photo-1541533267753-bab141444692"
-        ),
-
-        // --- 루틴 작성자들도 동일하게 수정 ---
         LiveUserInfo(
             101,
             "요가마스터",
@@ -80,296 +96,178 @@ object DummyData {
             "개발왕",
             "#코딩",
             "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
-        ),
-        LiveUserInfo(
-            103,
-            "산책러",
-            "#산책",
-            "https://images.unsplash.com/photo-1548142813-c348350df52b"
-        ),
-        LiveUserInfo(
-            104,
-            "북웜",
-            "#독서",
-            "https://images.unsplash.com/photo-1580489944761-15a19d654956"
-        ),
-        LiveUserInfo(105, "꿀잠요정", "#숙면", null),
-        LiveUserInfo(
-            201,
-            "지하철독서왕",
-            "#지하철",
-            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
-        ),
-        LiveUserInfo(202, "웹소설매니아", "#웹소설", null),
-        LiveUserInfo(301, "헬창", "#오운완", "https://images.unsplash.com/photo-1548142813-c348350df52b")
-    )
-
-    val myRoutines = listOf(
-        Routine(
-            routineId = 10,
-            title = "MORU 맞춤 루틴 1: 독서",
-            description = "당신을 위한 맞춤 루틴입니다.",
-            imageUrl = "https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=1887&auto=format&fit=crop",
-            category = "독서",
-            tags = listOf("독서"),
-            authorId = MY_USER_ID, // 작성자는 "나"
-            authorName = "MORU",
-            authorProfileUrl = null,
-            likes = 25,
-            isLiked = false,
-            isBookmarked = true,
-            isRunning = false,
-            scheduledTime = LocalTime.of(9, 0),
-            scheduledDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY)
-        ),
-        Routine(
-            routineId = 11,
-            title = "MORU 맞춤 루틴 2: 운동",
-            description = "당신을 위한 맞춤 루틴입니다.",
-            imageUrl = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop",
-            category = "운동",
-            tags = listOf("운동"),
-            authorId = MY_USER_ID, // 작성자는 "나"
-            authorName = "MORU",
-            authorProfileUrl = null,
-            likes = 33,
-            isLiked = true,
-            isBookmarked = false,
-            isRunning = true,
-            scheduledTime = LocalTime.of(19, 30),
-            scheduledDays = setOf(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY)
-        ),
-        // "내 루틴"에 다른 사람이 만든 루틴을 가져온 경우 (북마크)
-        Routine(
-            routineId = 1,
-            title = "아침 10분 요가 (스크랩)",
-            description = "간단한 요가로 하루를 시작해요. 몸과 마음을 깨우는 시간을 가져보세요.",
-            imageUrl = "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2120&auto=format&fit=crop",
-            category = "건강",
-            tags = listOf("건강", "요가"),
-            authorId = 101, // 원작자는 "요가마스터"
-            authorName = "요가마스터",
-            authorProfileUrl = "https://images.unsplash.com/photo-1552058544-f2b08422138a",
-            likes = 112,
-            isLiked = true,
-            isBookmarked = true,
-            isRunning = false,
-            scheduledTime = LocalTime.of(7, 0),
-            scheduledDays = setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
         )
     )
 
-    val feedRoutines = listOf(
+
+    // 앱 전체의 루틴을 관리하는 단일 소스. 수정 가능하도록 var와 MutableList 사용
+    var feedRoutines: MutableList<Routine> = mutableListOf(
+        // --- '나'의 루틴 (MY_USER_ID) ---
+        Routine(
+            routineId = 501,
+            title = "MORU의 아침 명상",
+            description = "상쾌한 아침을 여는 5분 명상 루틴입니다.",
+            imageUrl = "https://images.unsplash.com/photo-1506126613408-4e0e0f7c50e1",
+            category = "간편", // ✨ 수정
+            tags = listOf("명상", "아침루틴", "집중", "운동"),
+            authorId = MY_USER_ID,
+            authorName = "MORU (나)",
+            authorProfileUrl = null,
+            likes = 42,
+            isLiked = true, isBookmarked = true, isRunning = false,
+            scheduledDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
+            steps = listOf(RoutineStep("편안하게 앉기", "00:30"), RoutineStep("호흡에 집중하기", "03:00")),
+            usedApps = listOf(
+                // ✨ 수정: R.drawable -> 실제 이미지 URL
+                AppInfo("kakao", "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/kakaotalk-icon.png"),
+                AppInfo("Youtube", "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/youtube-logotype-icon.png")
+            )
+        ),
+        Routine(
+            routineId = 502,
+            title = "MORU의 주말 대청소",
+            description = "개운하게 주말을 맞이하는 청소 루틴!",
+            imageUrl = "https://images.unsplash.com/photo-1585421943279-25f1712ba7a8",
+            category = "집중", // ✨ 수정
+            tags = listOf("청소", "주말", "정리"),
+            authorId = MY_USER_ID,
+            authorName = "MORU (나)",
+            authorProfileUrl = null,
+            likes = 15,
+            isLiked = false, isBookmarked = true, isRunning = true,
+            scheduledDays = setOf(DayOfWeek.SATURDAY),
+            steps = listOf(RoutineStep("환기하기", "05:00"), RoutineStep("먼지 털기", "15:00")),
+            usedApps = listOf(
+                // ✨ 수정: R.drawable -> 실제 이미지 URL
+                AppInfo("정리 앱", "https://uxwing.com/wp-content/themes/uxwing/download/house-and-home/dustpan-icon.png")
+            )
+        ),
+        // ✨ [추가] '나'의 루틴 2개 추가
+        Routine(
+            routineId = 503,
+            title = "MORU의 저녁 스트레칭",
+            description = "하루의 피로를 푸는 간단한 스트레칭.",
+            imageUrl = "https://images.unsplash.com/photo-1599901860904-17e6ed7083a0",
+            category = "간편",
+            tags = listOf("스트레칭", "저녁루틴", "건강"),
+            authorId = MY_USER_ID,
+            authorName = "MORU (나)",
+            authorProfileUrl = null,
+            likes = 28,
+            isLiked = true, isBookmarked = false, isRunning = false,
+            scheduledDays = setOf(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY),
+            steps = listOf(RoutineStep("목 스트레칭", "02:00"), RoutineStep("어깨 돌리기", "02:00"))
+        ),
+        Routine(
+            routineId = 504,
+            title = "MORU의 집중 코딩 타임",
+            description = "방해 없이 2시간 동안 코딩에 집중하는 시간.",
+            imageUrl = "https://images.unsplash.com/photo-1517694712202-14dd9538aa97",
+            category = "집중",
+            tags = listOf("코딩", "개발", "집중"),
+            authorId = MY_USER_ID,
+            authorName = "MORU (나)",
+            authorProfileUrl = null,
+            likes = 55,
+            isLiked = false, isBookmarked = true, isRunning = false,
+            scheduledTime = LocalTime.of(20, 0),
+            steps = listOf(RoutineStep("작업 환경 설정", "05:00"), RoutineStep("집중 코딩", "120:00")),
+            usedApps = listOf(
+                // ✨ 수정: R.drawable -> 실제 이미지 URL
+                AppInfo("Github", "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/github-icon.png")
+            )
+        ),
+
+        // --- 다른 사용자의 루틴 ---
         Routine(
             routineId = 1,
             title = "아침 10분 요가",
             description = "간단한 요가로 하루를 시작해요. 몸과 마음을 깨우는 시간을 가져보세요.",
             imageUrl = "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2120&auto=format&fit=crop",
-            category = "건강",
-            tags = listOf("건강", "요가"),
+            category = "간편", // ✨ 수정
+            tags = listOf("건강", "요가", "아침루틴", "운동", "명상"),
             authorId = 101,
             authorName = "요가마스터",
             authorProfileUrl = "https://images.unsplash.com/photo-1552058544-f2b08422138a",
             likes = 112,
-            isLiked = true,
-            isBookmarked = false,
-            isRunning = false,
-            scheduledDays = setOf(DayOfWeek.MONDAY),
-            steps = listOf(
-                RoutineStep("매트 준비", "00:30"),
-                RoutineStep("고양이 자세", "02:00"),
-                RoutineStep("다운독 자세", "02:00"),
-                RoutineStep("전사 자세", "03:00"),
-                RoutineStep("사바사나 (휴식)", "02:30")
-            ),
-            similarRoutines = listOf(
-                SimilarRoutine(
-                    "https://images.unsplash.com/photo-1506126613408-4e0e0f7c50e1",
-                    "저녁 명상",
-                    "#명상"
-                ),
-                SimilarRoutine(
-                    "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
-                    "코어 운동",
-                    "#운동"
-                )
-            )
+            isLiked = true, isBookmarked = false, isRunning = false,
+            steps = listOf(RoutineStep("매트 준비", "00:30"), RoutineStep("고양이 자세", "02:00"))
         ),
         Routine(
             routineId = 2,
             title = "매일 TIL 작성하기",
             description = "개발 지식을 매일 기록합니다. 꾸준함이 실력!",
             imageUrl = "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=2072&auto=format&fit=crop",
-            category = "개발",
+            category = "집중", // ✨ 수정
             tags = listOf("개발", "TIL"),
             authorId = 102,
             authorName = "개발왕",
             authorProfileUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
             likes = 98,
-            isLiked = false,
-            isBookmarked = true,
-            isRunning = false,
-            scheduledDays = setOf(DayOfWeek.TUESDAY),
-            steps = listOf(
-                RoutineStep("어제 배운 내용 복습", "10:00"),
-                RoutineStep("오늘의 학습 목표 설정", "05:00"),
-                RoutineStep("블로그에 TIL 작성", "45:00")
-            ),
-            similarRoutines = listOf(
-                SimilarRoutine(null, "사이드 프로젝트", "#개발"),
-                SimilarRoutine(null, "알고리즘 문제 풀기", "#코딩테스트")
-            )
-        ),
-        Routine(
-            routineId = 3,
-            title = "점심시간 산책",
-            description = "식사 후 가벼운 산책으로 오후를 상쾌하게!",
-            imageUrl = "https://images.unsplash.com/photo-1508672019048-805c876b67e2?q=80&w=2070&auto=format&fit=crop",
-            category = "운동",
-            tags = listOf("운동", "산책"),
-            authorId = 103,
-            authorName = "산책러",
-            authorProfileUrl = "https://images.unsplash.com/photo-1548142813-c348350df52b",
-            likes = 76,
-            isLiked = true,
-            isBookmarked = false,
-            isRunning = true,
-            scheduledDays = setOf(DayOfWeek.WEDNESDAY),
-            steps = listOf(
-                RoutineStep("스트레칭", "02:00"),
-                RoutineStep("공원 걷기", "15:00"),
-                RoutineStep("가볍게 뛰기", "05:00")
-            ),
-            similarRoutines = emptyList()
-        ),
-        Routine(
-            routineId = 4,
-            title = "하루 30분 책읽기",
-            description = "마음의 양식을 쌓는 시간",
-            imageUrl = "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=2070&auto=format&fit=crop",
-            category = "독서",
-            tags = listOf("독서", "습관"),
-            authorId = 104,
-            authorName = "북웜",
-            authorProfileUrl = "https://images.unsplash.com/photo-1580489944761-15a19d654956",
-            likes = 85,
-            isLiked = false,
-            isBookmarked = true,
-            isRunning = false,
-            scheduledDays = setOf(DayOfWeek.THURSDAY)
-        ),
-        Routine(
-            routineId = 35,
-            title = "자기 전 스트레칭과 수면 명상",
-            description = "숙면을 위한 최고의 조합",
-            imageUrl = "https://images.unsplash.com/photo-1512433445585-72243d372138?q=80&w=1887&auto=format&fit=crop",
-            category = "운동",
-            tags = listOf("운동", "명상", "수면", "스트레칭"),
-            authorId = 105,
-            authorName = "꿀잠요정",
-            authorProfileUrl = null,
-            likes = 95,
-            isLiked = false,
-            isBookmarked = true,
-            isRunning = false,
-            scheduledDays = setOf(DayOfWeek.FRIDAY)
-        ),
-        // [수정] 아래 모든 Routine 생성자를 Named Arguments 방식으로 변경
-        Routine(
-            routineId = 10,
-            title = "MORU 맞춤 루틴 1: 독서",
-            description = "당신을 위한 맞춤 루틴입니다.",
-            imageUrl = "https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=1887&auto=format&fit=crop",
-            category = "독서",
-            tags = listOf("독서"),
-            authorId = 3,
-            authorName = "MORU",
-            authorProfileUrl = null,
-            likes = 25,
-            isLiked = false,
-            isBookmarked = true,
-            isRunning = false,
-            scheduledDays = setOf(DayOfWeek.SATURDAY)
-        ),
-        Routine(
-            routineId = 11,
-            title = "MORU 맞춤 루틴 2: 운동",
-            description = "당신을 위한 맞춤 루틴입니다.",
-            imageUrl = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop",
-            category = "운동",
-            tags = listOf("운동"),
-            authorId = 3,
-            authorName = "MORU",
-            authorProfileUrl = null,
-            likes = 33,
-            isLiked = true,
-            isBookmarked = false,
-            isRunning = false,
-            scheduledDays = setOf(DayOfWeek.MONDAY)
+            isLiked = false, isBookmarked = false, isRunning = false,
+            steps = listOf(RoutineStep("어제 배운 내용 복습", "10:00"), RoutineStep("블로그에 TIL 작성", "45:00"))
         ),
         Routine(
             routineId = 20,
             title = "출근길 지하철 독서",
             description = "이동 시간을 활용한 독서",
-            imageUrl = null,
-            category = "독서",
+            imageUrl = "https://images.unsplash.com/photo-1481627834876-b7833e8f5570",
+            category = "간편", // ✨ 수정
             tags = listOf("독서", "지하철", "자기계발"),
             authorId = 201,
             authorName = "지하철독서왕",
             authorProfileUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
             likes = 68,
-            isLiked = true,
-            isBookmarked = false,
-            isRunning = false,
-            scheduledDays = setOf(DayOfWeek.SATURDAY)
-        ),
-        Routine(
-            routineId = 21,
-            title = "퇴근길 웹소설 읽기",
-            description = "하루의 마무리는 웹소설",
-            imageUrl = null,
-            category = "독서",
-            tags = listOf("독서", "지하철", "취미"),
-            authorId = 202,
-            authorName = "웹소설매니아",
-            authorProfileUrl = null,
-            likes = 55,
-            isLiked = false,
-            isBookmarked = true,
-            isRunning = false,
-            scheduledDays = setOf(DayOfWeek.MONDAY)
-        ),
-        Routine(
-            routineId = 30,
-            title = "운동 후 5분 명상",
-            description = "몸과 마음을 함께 단련",
-            imageUrl = null,
-            category = "운동",
-            tags = listOf("운동", "명상", "건강"),
-            authorId = 301,
-            authorName = "헬창",
-            authorProfileUrl = "https://images.unsplash.com/photo-1548142813-c348350df52b",
-            likes = 91,
-            isLiked = true,
-            isBookmarked = false,
-            isRunning = false,
-            scheduledDays = setOf(DayOfWeek.MONDAY)
+            isLiked = true, isBookmarked = false, isRunning = false
         ),
         Routine(
             routineId = 31,
             title = "요가와 명상의 조화",
             description = "정적인 움직임 속의 평화",
-            imageUrl = null,
-            category = "운동",
+            imageUrl = "https://images.unsplash.com/photo-1506126613408-4e0e0f7c50e1",
+            category = "집중", // ✨ 수정
             tags = listOf("운동", "명상", "요가"),
             authorId = 101,
             authorName = "요가마스터",
             authorProfileUrl = null,
             likes = 88,
-            isLiked = false,
-            isBookmarked = true,
-            isRunning = false,
-            scheduledDays = setOf(DayOfWeek.TUESDAY)
+            isLiked = false, isBookmarked = true, isRunning = false
+        ),
+        Routine(
+            routineId = 10,
+            title = "MORU 맞춤 루틴 1: 독서",
+            description = "당신을 위한 맞춤 루틴입니다.",
+            imageUrl = "https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=1887&auto=format&fit=crop",
+            category = "간편", // ✨ 수정
+            tags = listOf("독서", "MORU"),
+            authorId = 3,
+            authorName = "MORU",
+            authorProfileUrl = null,
+            likes = 25,
+            isLiked = false, isBookmarked = true, isRunning = false
         )
     )
+}
+
+/**
+ * 전체 루틴 목록에서 주어진 루틴과 비슷한 태그를 가진 다른 루틴들을 찾아 반환합니다.
+ */
+fun findSimilarRoutinesByTags(
+    targetRoutine: Routine,
+    allRoutines: List<Routine>,
+    limit: Int = 5
+): List<SimilarRoutine> {
+    val targetTags = targetRoutine.tags.toSet()
+
+    return allRoutines
+        .filter { it.routineId != targetRoutine.routineId }
+        .filter { routine -> routine.tags.any { tag -> tag in targetTags } }
+        .take(limit)
+        .map {
+            SimilarRoutine(
+                imageUrl = it.imageUrl,
+                name = it.title,
+                tag = "#${it.tags.firstOrNull() ?: "루틴"}"
+            )
+        }
 }

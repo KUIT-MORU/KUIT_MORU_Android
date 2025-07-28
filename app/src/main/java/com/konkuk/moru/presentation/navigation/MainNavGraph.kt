@@ -8,7 +8,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -17,12 +16,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.konkuk.moru.data.model.DummyData.feedRoutines
-import com.konkuk.moru.presentation.home.FocusType
 import com.konkuk.moru.presentation.home.screen.HomeScreen
-import com.konkuk.moru.presentation.home.screen.RoutineFocusIntroScreen
-import com.konkuk.moru.presentation.home.screen.RoutineSimpleRunScreen
-import com.konkuk.moru.presentation.home.screen.sampleSteps
-import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.myactivity.screen.ActFabTagScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActMainScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActProfileScreen
@@ -30,6 +24,7 @@ import com.konkuk.moru.presentation.myactivity.screen.ActRecordDetailScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActRecordScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActScrabScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActSettingScreen
+import com.konkuk.moru.presentation.myroutines.screen.MyRoutineDetailScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesViewModel
 import com.konkuk.moru.presentation.routinefeed.screen.NotificationScreen
@@ -61,7 +56,6 @@ fun MainNavGraph(
         startDestination = Route.Home.route
     ) {
         composable(route = Route.Home.route) {
-            val sharedViewModel: SharedRoutineViewModel = viewModel()
             HomeScreen(
                 navController = navController,
                 sharedViewModel = sharedViewModel,
@@ -159,13 +153,15 @@ fun MainNavGraph(
             arguments = listOf(navArgument("routineId") { type = NavType.IntType })
         ) { backStackEntry ->
             val routineId = backStackEntry.arguments?.getInt("routineId")
-            feedRoutines.find { it.routineId == routineId }?.let { routine ->
+            if (routineId != null) {
                 RoutineDetailScreen(
-                    routine = routine,
+                    routineId = routineId,
                     onBackClick = { navController.popBackStack() },
                     navController = navController
                 )
-            } ?: navController.popBackStack()
+            } else {
+                navController.popBackStack()
+            }
         }
 
         composable(
@@ -232,10 +228,26 @@ fun MainNavGraph(
                     navController.navigate(Route.RoutineFeed.route)
                 },
                 onNavigateToDetail = { routineId ->
-                    navController.navigate(Route.RoutineFeedDetail.createRoute(routineId))
+                    navController.navigate(Route.MyRoutineDetail.createRoute(routineId))
                 },
                 onDismissDeleteSuccessDialog = viewModel::dismissDeleteSuccessDialog
             )
+        }
+
+        composable(
+            route = Route.MyRoutineDetail.route,
+            arguments = listOf(navArgument("routineId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val routineId = backStackEntry.arguments?.getInt("routineId")
+            if (routineId != null) {
+                MyRoutineDetailScreen(
+                    routineId = routineId,
+                    onBackClick = { navController.popBackStack() },
+                    navController = navController
+                )
+            } else {
+                navController.popBackStack()
+            }
         }
 
 
@@ -259,7 +271,10 @@ fun MainNavGraph(
             val selectedTab = backStackEntry.arguments?.getString("selectedTab")
             FollowScreen(
                 onBackClick = { navController.popBackStack() },
-                selectedTab = selectedTab
+                selectedTab = selectedTab,
+                onUserClick = { userId ->
+                    navController.navigate(Route.UserProfile.createRoute(userId))
+                },
             )
         }
 

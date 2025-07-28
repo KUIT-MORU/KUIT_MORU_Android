@@ -10,14 +10,16 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+
 import androidx.compose.ui.zIndex
 import com.konkuk.moru.presentation.home.FabConstants
+
 import com.konkuk.moru.presentation.home.screen.HomeTutorialOverlayView
 import com.konkuk.moru.presentation.home.screen.TutorialOverlayView
 
 @Composable
 fun HomeTutorialOverlayContainer(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     onDismiss: () -> Unit,
     onFabClick: () -> Unit,
     fabOffsetY: Float,
@@ -37,17 +39,17 @@ fun HomeTutorialOverlayContainer(
         }
     }
 
-    val circleHole = remember(fabOffsetY, config.screenWidthDp, config.screenHeightDp) {
+    val circleHole = remember {
         with(density) {
-            val fabSize = FabConstants.FabSize
-            val fabSizePx = fabSize.toPx()
-            val fabPaddingEndPx = FabConstants.FabPaddingEnd.toPx()
+            val fabSizePx = 63.dp.toPx()
+            val fabPaddingEndPx = 16.dp.toPx()
+            val fabPaddingBottomPx = 96.dp.toPx()
+
             val screenWidthPx = config.screenWidthDp.dp.toPx()
             val screenHeightPx = config.screenHeightDp.dp.toPx()
 
-            // FAB의 X 좌표 (오른쪽에서 padding + FAB 크기의 절반만큼 떨어진 위치)
             val fabCenterX = screenWidthPx - fabPaddingEndPx - fabSizePx / 2f
-
+          
             // AndroidView와 Compose 간의 좌표계 차이 보정
             val fabCenterY = fabOffsetY
 
@@ -59,23 +61,29 @@ fun HomeTutorialOverlayContainer(
             Log.d("TutorialOverlay", "Final FAB center: ($fabCenterX, $fabCenterY)")
             Log.d("TutorialOverlay", "Hole radius: $holeRadius")
 
+
             TutorialOverlayView.HolePx(
-                left = fabCenterX - holeRadius,
-                top = fabCenterY - holeRadius,
-                right = fabCenterX + holeRadius,
-                bottom = fabCenterY + holeRadius,
+                left = fabCenterX - fabSizePx / 2f,
+                top = fabCenterY - fabSizePx / 2f,
+                right = fabCenterX + fabSizePx / 2f,
+                bottom = fabCenterY + fabSizePx / 2f,
                 isCircle = true
             )
         }
     }
 
-    val holes = remember(rectHole, circleHole) {
-        listOf(rectHole, circleHole)
-    }
+    val holes = remember { listOf(rectHole, circleHole) }
 
     Box(modifier = modifier.fillMaxSize()) {
-        HomeTutorialOverlayView(holes = holes)
-        HomeTutorialDecoration(onDismiss = onDismiss, onFabClick = onFabClick)
+        HomeTutorialOverlayView(
+            holes = holes,
+            onDismiss = onDismiss
+        )
+
+        HomeTutorialDecoration(
+            onDismiss = onDismiss,
+            onFabClick = onFabClick
+        )
     }
 }
 

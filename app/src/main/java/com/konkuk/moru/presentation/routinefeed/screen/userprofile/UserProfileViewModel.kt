@@ -40,11 +40,15 @@ class UserProfileViewModel @Inject constructor(
     private fun loadUserProfile(userId: Int) {
         viewModelScope.launch {
             // 더미 데이터에서 userId와 일치하는 사용자 정보를 찾습니다.
-            val user = DummyData.dummyLiveUsers.find { it.userId == userId }
+            val user = DummyData.dummyUsers.find { it.userId == userId }
             // 더미 데이터에서 authorId가 일치하는 루틴 목록을 찾습니다.
             val userRoutines = DummyData.feedRoutines.filter { it.authorId == userId }
             val followerCount = DummyData.dummyFollowRelations.count { it.followingId == userId }
             val followingCount = DummyData.dummyFollowRelations.count { it.followerId == userId }
+
+            val isFollowing = DummyData.dummyFollowRelations.any {
+                it.followerId == DummyData.MY_USER_ID && it.followingId == userId
+            }
 
             if (user != null) {
                 // 찾은 사용자 정보로 UI 상태를 업데이트합니다.
@@ -52,12 +56,12 @@ class UserProfileViewModel @Inject constructor(
                     it.copy(
                         userId = userId,
                         profileImageUrl = user.profileImageUrl,
-                        nickname = user.name,
-                        bio = "자기소개입니다. (ID: ${user.userId})", // 실제 앱에서는 user 모델에 bio 필드가 있어야 합니다.
+                        nickname = user.nickname,
+                        bio = user.bio + " (ID: ${user.userId})", // 실제 앱에서는 user 모델에 bio 필드가 있어야 합니다.
                         routineCount = userRoutines.size,
                         followerCount = followerCount,
                         followingCount = followingCount,
-                        isFollowing = false, // 기본 상태는 false로 설정
+                        isFollowing = isFollowing, // 기본 상태는 false로 설정
                         runningRoutines = userRoutines.filter { routine -> routine.isRunning },
                         userRoutines = userRoutines.filter { routine -> !routine.isRunning }
                     )

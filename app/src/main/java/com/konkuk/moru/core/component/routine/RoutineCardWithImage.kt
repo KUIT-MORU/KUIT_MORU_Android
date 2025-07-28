@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextOverflow
 import com.konkuk.moru.R // 실제 프로젝트의 R 클래스를 임포트하세요.
+import com.konkuk.moru.ui.theme.MORUTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,18 +86,19 @@ fun RoutineCardWithImage(
 
         Text(
             text = routineName,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight(500),
             fontSize = 12.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = tags.joinToString(" ") { "#$it" },
-            fontSize = 14.sp,
+            fontSize = 10.sp,
+            fontWeight = FontWeight(400),
             color = Color.Gray
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(3.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.clickable { onLikeClick() }
@@ -105,13 +107,13 @@ fun RoutineCardWithImage(
                 imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                 contentDescription = "좋아요",
                 tint = if (isLiked) Color.Red else Color.Gray,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = likeCount.toString(),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontSize = 12.sp,
+                fontWeight = FontWeight(400),
                 color = if (isLiked) Color.Black else Color.Gray
             )
         }

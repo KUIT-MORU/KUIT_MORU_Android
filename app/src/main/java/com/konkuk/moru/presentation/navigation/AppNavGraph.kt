@@ -2,11 +2,15 @@ package com.konkuk.moru.presentation.navigation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -14,6 +18,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
@@ -22,10 +28,15 @@ import androidx.navigation.compose.rememberNavController
 import com.konkuk.moru.core.component.MoruBottomBar
 import com.konkuk.moru.presentation.home.component.HomeTutorialOverlayContainer
 import com.konkuk.moru.presentation.home.screen.OnboardingScreen
+import com.konkuk.moru.R
+import com.konkuk.moru.presentation.auth.AuthCheckScreen
+import com.konkuk.moru.presentation.login.LoginScreen
+import com.konkuk.moru.presentation.onboarding.OnboardingScreen
+import com.konkuk.moru.presentation.signup.SignUpScreen
 
 @Composable
 fun AppNavGraph(
-    navController: NavHostController
+    navController: NavHostController,
 ) {
     // FAB 위치
     val fabOffsetY = remember { mutableStateOf(0f) }

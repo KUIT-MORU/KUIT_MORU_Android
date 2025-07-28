@@ -10,9 +10,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.konkuk.moru.ui.theme.LocalMoruColorsProvider
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -44,73 +42,47 @@ fun RoutineStepItem(
 ) {
     Box(
         modifier = modifier
-            .fillMaxWidth()
             .height(36.dp)
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                .padding(start = 7.dp, end = 16.dp), // 인덱스 왼쪽, 스위치 오른쪽 여백
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
         ) {
-            Box(
-                modifier = Modifier
-                    .width(50.dp)
-                    .fillMaxHeight()
-                    .padding(start = 18.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
+            Text(
+                text = "${index + 1}",
+                style = typography.desc_M_14,
+                color = colors.black
+            )
+            Spacer(modifier = modifier.size(29.dp))
+            Text(
+                text = title,
+                style = typography.desc_M_16,
+                color = colors.black,
+                modifier = Modifier.weight(1f)
+            )
+            if(showDuration) {
                 Text(
-                    text = "${index + 1}",
+                    text = "${duration}m",
                     style = typography.desc_M_14,
                     color = colors.black
                 )
+                Spacer(modifier = modifier.size(20.dp))
             }
-            Box(
-                modifier = Modifier
-                    .width(179.dp)
-                    .fillMaxHeight()
-                    .padding(start = 10.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Text(
-                    text = title,
-                    style = typography.desc_M_16,
-                    color = colors.black,
+            if(showSwitch) {
+                Switch(
+                    checked = isChecked,
+                    onCheckedChange = onCheckedChange,
+                    modifier = Modifier.scale(0.8f),
+                    colors = SwitchDefaults.colors(
+                        uncheckedThumbColor = colors.mediumGray,   // OFF 상태 버튼 색 (회색)
+                        uncheckedTrackColor = colors.lightGray,   // OFF 상태 배경 색 (연회색)
+                        checkedThumbColor = colors.lightGray,           // ON 상태 버튼 색
+                        checkedTrackColor = colors.darkGray         // ON 상태 배경 색
+                    )
                 )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            if (showDuration) {
-                Box(
-                    modifier = Modifier
-                        .width(59.dp)
-                        .fillMaxHeight()
-                        .padding(start = 2.dp, end = 18.dp),
-                    contentAlignment = Alignment.CenterEnd
-                ) {
-                    Text(
-                        text = "${duration}m",
-                        style = typography.desc_M_14,
-                        color = colors.black
-                    )
-                }
-            }
-            if (showSwitch) {
-                Box(
-                    modifier = Modifier
-                        .padding(end = 16.dp)
-                ) {
-                    Switch(
-                        checked = isChecked,
-                        onCheckedChange = onCheckedChange,
-                        modifier = Modifier.scale(0.8f),
-                        colors = SwitchDefaults.colors(
-                            uncheckedThumbColor = colors.mediumGray,   // OFF 상태 버튼 색 (회색)
-                            uncheckedTrackColor = colors.lightGray,   // OFF 상태 배경 색 (연회색)
-                            checkedThumbColor = colors.lightGray,           // ON 상태 버튼 색
-                            checkedTrackColor = colors.darkGray         // ON 상태 배경 색
-                        )
-                    )
-                }
             }
         }
     }

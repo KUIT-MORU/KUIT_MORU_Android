@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.chip.MoruChip
@@ -45,7 +46,7 @@ import com.konkuk.moru.presentation.routinefeed.component.modale.CenteredInfoDia
 import com.konkuk.moru.presentation.routinefeed.component.modale.CustomDialog
 import com.konkuk.moru.presentation.routinefeed.component.tooltip.TooltipBubble
 import com.konkuk.moru.presentation.routinefeed.component.tooltip.TooltipShape
-import com.konkuk.moru.presentation.routinefeed.component.topAppBar.MyRoutineTopAppBar
+import com.konkuk.moru.presentation.myroutines.component.MyRoutineTopAppBar
 import com.konkuk.moru.ui.theme.MORUTheme
 import com.konkuk.moru.ui.theme.moruFontLight
 import kotlinx.coroutines.delay
@@ -93,6 +94,11 @@ fun MyRoutinesScreen(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
     val checkedRoutinesCount = routinesToDisplay.count { it.isChecked }
+    val viewModel: MyRoutinesViewModel = viewModel()
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshRoutines()
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         Scaffold(
@@ -282,33 +288,33 @@ private fun EmptyMyRoutineView(
         Icon(
             painter = painterResource(id = R.drawable.ic_empty_routine_box),
             contentDescription = "루틴 없음",
-            modifier = Modifier.size(81.dp),
+            modifier = Modifier.size(103.dp),
             tint = Color.Unspecified
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(44.dp))
         Text(
             text = "아직 내 루틴이 비어있어요.",
             style = MORUTheme.typography.desc_M_20,
             color = Color.Black
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(9.dp))
         Text(
             text = "당신만의 루틴을 직접 만들거나,\n다른 사람의 루틴을 참고해보세요!",
             style = MORUTheme.typography.desc_M_16,
-            color = MORUTheme.colors.mediumGray,
+            color = MORUTheme.colors.darkGray,
             textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(34.dp))
         Text(
             text = "루틴 만들기",
-            style = MORUTheme.typography.body_SB_16,
+            style = MORUTheme.typography.desc_M_16,
             color = Color(0xFF407196),
             modifier = Modifier.clickable { onNavigateToCreateRoutine() }
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(11.dp))
         Text(
             text = "루틴피드 보기",
-            style = MORUTheme.typography.body_SB_14,
+            style = MORUTheme.typography.desc_M_16,
             color = Color(0xFF407196),
             modifier = Modifier.clickable { onNavigateToRoutineFeed() }
         )

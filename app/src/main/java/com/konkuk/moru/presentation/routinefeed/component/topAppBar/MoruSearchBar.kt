@@ -39,7 +39,8 @@ fun MoruSearchBar(
 
     // 공통 스타일 정의
     val searchBarModifier = Modifier
-        .width(201.dp)
+        .fillMaxWidth()
+        //.width(201.dp)
         .height(32.dp)
         .background(
             color = Color(0xFF595959),

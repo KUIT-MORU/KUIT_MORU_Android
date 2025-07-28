@@ -30,19 +30,19 @@ fun EmptyRoutineView(modifier: Modifier = Modifier) {
             painter = painterResource(id = R.drawable.ic_empty_routine_box), // ic_empty_routine_box.xml 아이콘 리소스가 필요합니다.
             contentDescription = "루틴 없음",
             modifier = Modifier.size(81.dp),
-            //tint = MORUTheme.colors.
+            tint = MORUTheme.colors.darkGray
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(37.dp))
         Text(
             text = "아직 내 루틴이 비어있어요.",
             style = MORUTheme.typography.desc_M_20 ,
             color = Color.Black
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(9.dp))
         Text(
             text = "당신만의 루틴을 직접 만들거나,\n다른 사람의 루틴을 참고해보세요!",
             style = MORUTheme.typography.desc_M_16 ,
-            color = MORUTheme.colors.mediumGray,
+            color = MORUTheme.colors.darkGray,
             textAlign = TextAlign.Center
         )
     }
