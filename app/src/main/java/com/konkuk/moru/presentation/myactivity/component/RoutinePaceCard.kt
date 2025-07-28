@@ -24,8 +24,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.konkuk.moru.R
 import com.konkuk.moru.core.util.modifier.noRippleClickable
+import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
@@ -35,6 +37,7 @@ fun RoutinePaceCard(
     userName: String = "사용자명",
     routinePace: String = "미정",
     progress: Float = 0.1f,
+    navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -104,7 +107,7 @@ fun RoutinePaceCard(
             RoutinePaceInfo(
                 onDismissRequest = { isSheetOpen = false },
                 sheetState = sheetState,
-                onDetailClick = { isSheetOpen = false }, //세부 사항 버튼 이벤트 추가 예정
+                onDetailClick = { navController.navigate(Route.ActInsightInfo.route) }, //세부 사항 버튼 이벤트 추가 예정
                 renewalDate = "2025.07.06",
                 progress = progress
             )

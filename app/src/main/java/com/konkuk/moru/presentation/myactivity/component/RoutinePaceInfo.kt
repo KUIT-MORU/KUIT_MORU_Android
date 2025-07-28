@@ -31,6 +31,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.konkuk.moru.R
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
@@ -45,10 +46,10 @@ fun RoutinePaceInfo(
     progress: Float = 0.1f,
     modifier: Modifier = Modifier
 ) {
-    val (badgeRes, titleText) = when (progress) {
-        in 0f..0.3f -> Pair(R.drawable.ic_third_badge, "잠시 걷는 중")
-        in 0.3f..0.7f -> Pair(R.drawable.ic_second_badge, "간헐적 루틴러")
-        else -> Pair(R.drawable.ic_first_badge, "루틴 페이스 메이커")
+    val (badgeRes, titleText, desText) = when (progress) {
+        in 0f..0.3f -> Triple(R.drawable.ic_third_badge, "잠시 걷는 중", "모든 루틴을 지키는건 쉽지않아요.\n괜찮아요. 모두에게는 숨을 고르는\n순간이 필요하니까요.")
+        in 0.3f..0.7f -> Triple(R.drawable.ic_second_badge, "간헐적 루틴러", "완벽하지 않아도,\n끊기지 않는 실천이 중요해요.\n천천히 페이스를 올려봐요!")
+        else -> Triple(R.drawable.ic_first_badge, "루틴 페이스 메이커", "꾸준한 실천으로 다른 사용자들에게\n흐름을 만들어주고 있어요!\n당신 덕분에 누군가는 루틴을 시작했을지도 몰라요.")
     }
 
     ModalBottomSheet(
@@ -131,8 +132,8 @@ fun RoutinePaceInfo(
                         Spacer(modifier = Modifier.height(14.dp))
 
                         Text(
-                            text = "꾸준한 실천으로 다른 사용자들에게\n흐름을 만들어주고 있어요!\n당신 덕분에 누군가는 루틴을 시작했을지도 몰라요.",
-                            style = typography.desc_M_12,
+                            text = desText,
+                            style = typography.desc_M_12.copy(lineHeight = 14.sp),
                             color = Color.White,
                             textAlign = TextAlign.Center
                         )
