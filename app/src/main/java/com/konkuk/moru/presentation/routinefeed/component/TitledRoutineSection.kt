@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.konkuk.moru.core.component.routine.RoutineCardWithImage
+import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.ui.theme.MORUTheme
 
@@ -63,10 +64,10 @@ fun TitledRoutineSection(
                     isRunning = routine.isRunning,
                     routineName = routine.title,
                     tags = routine.tags,
-                    likeCount = likeCounts[routine.id] ?: routine.likes,
+                    likeCount = likeCounts[routine.routineId] ?: routine.likes,
                     isLiked = routine.isLiked,
-                    onLikeClick = { onLikeClick(routine.id, !routine.isLiked) },
-                    onClick = { onRoutineClick(routine.id) }
+                    onLikeClick = { onLikeClick(routine.routineId, !routine.isLiked) },
+                    onClick = { onRoutineClick(routine.routineId) }
                 )
             }
         }
@@ -80,8 +81,8 @@ fun TitledRoutineSectionPreview() {
         TitledRoutineSection(
             modifier = Modifier.fillMaxWidth(),
             title = "요즘 인기있는 루틴 🔥",
-            routines = DummyData.dummyRoutines.take(5),
-            likeCounts = DummyData.dummyRoutines.associate { it.id to it.likes },
+            routines = DummyData.feedRoutines.take(5),
+            likeCounts = DummyData.feedRoutines.associate { it.routineId to it.likes },
             onRoutineClick = { },
             onLikeClick = { _, _ -> },
             onMoreClick = { _ -> }
