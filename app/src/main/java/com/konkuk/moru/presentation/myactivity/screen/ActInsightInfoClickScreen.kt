@@ -32,21 +32,24 @@ fun ActInsightInfoClickScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
-    val progress by remember { mutableStateOf(0.65f) }
+    val progress by remember { mutableStateOf(0.15f) }
     val badgeRes = when (progress) {
         in 0f..0.3f -> R.drawable.ic_third_badge
         in 0.3f..0.7f -> R.drawable.ic_second_badge
         else -> R.drawable.ic_first_badge
     }
 
-    val highlightColor = Color(0xFFBAF463)
+    val highlightColor = colors.paleLime
     val mainText = if (progress >= 0.7f) {
         buildAnnotatedString {
             withStyle(style = SpanStyle(color = highlightColor)) {
                 append("루틴 페이스 메이커 ")
             }
             withStyle(style = SpanStyle(color = Color.White)) {
-                append("달성 완료")
+                append("달성 ")
+            }
+            withStyle(style = SpanStyle(color = highlightColor)) {
+                append("완료")
             }
         }
     } else {
@@ -55,7 +58,10 @@ fun ActInsightInfoClickScreen(
                 append("루틴 페이스 메이커 ")
             }
             withStyle(style = SpanStyle(color = Color.White)) {
-                append("달성까지 ${(100 * (1 - progress)).toInt()}%")
+                append("달성까지 ")
+            }
+            withStyle(style = SpanStyle(color = highlightColor)){
+                append("${(100 * (1 - progress)).toInt()}%")
             }
         }
     }

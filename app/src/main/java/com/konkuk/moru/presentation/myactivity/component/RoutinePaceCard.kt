@@ -107,7 +107,10 @@ fun RoutinePaceCard(
             RoutinePaceInfo(
                 onDismissRequest = { isSheetOpen = false },
                 sheetState = sheetState,
-                onDetailClick = { navController.navigate(Route.ActInsightInfo.route) }, //세부 사항 버튼 이벤트 추가 예정
+                onDetailClick = {
+                    isSheetOpen = false
+                    navController.navigate(Route.ActInsightInfo.route)
+                                },
                 renewalDate = "2025.07.06",
                 progress = progress
             )
