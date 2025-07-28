@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.home.component
 
+import android.R.attr.onClick
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,20 +23,23 @@ data class RoutineData(
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun TodayRoutinePager(
-    modifier: Modifier = Modifier,
-    routines: List<RoutineData>
+    routines: List<RoutineData>,
+    onRoutineClick:(RoutineData) -> Unit
 ) {
     //현재 페이지가 몇 페이지인지 기억하기
     val pagerState = rememberPagerState(initialPage = 0)
 
     Column(
-        modifier = modifier,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(184.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(modifier = Modifier.height(18.dp))
         HorizontalPager(
             count = routines.size,
             state = pagerState,
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp)
         ) { page ->
@@ -45,19 +49,21 @@ fun TodayRoutinePager(
                 hashtag = routine.hashtag,
                 heartCount = routine.heartCount,
                 day = routine.day,
-                time = routine.time
+                time = routine.time,
+                onClick = {onRoutineClick(routine)}
             )
         }
 
-        Spacer(modifier = Modifier.height(19.dp))
+        Spacer(modifier = Modifier.height(22.dp))
 
         HorizontalPagerIndicator(
             pagerState = pagerState,
-            modifier = modifier
+            modifier = Modifier
                 .padding(4.dp),
             activeColor = colors.black,
             inactiveColor = colors.lightGray
         )
+        Spacer(modifier = Modifier.height(18.dp))
     }
 
 }
@@ -65,7 +71,6 @@ fun TodayRoutinePager(
 @Preview(
     showBackground = true,
     widthDp = 360,
-    heightDp = 800
 )
 @Composable
 private fun TodayRoutinePagerPreview() {
@@ -75,5 +80,8 @@ private fun TodayRoutinePagerPreview() {
         RoutineData("운동 루틴", "#건강", 12, "수", "pm 06:00 ~ pm 07:00")
     )
 
-    TodayRoutinePager(routines = sampleRoutines)
+    TodayRoutinePager(
+        routines = sampleRoutines,
+        onRoutineClick = {}
+    )
 }
