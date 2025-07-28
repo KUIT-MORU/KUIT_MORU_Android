@@ -23,6 +23,8 @@ sealed class Route(
     data object RoutineSimpleRun : Route("routine_simple_run")
 
     data object RoutineFeed : Route(route = "routine_feed")
+
+    data object RoutineSearch : Route("routine_search")
     data object RoutineFeedDetail : Route(route = "routine_feed_detail/{routineId}") {
         fun createRoute(routineId: Int) = "routine_feed_detail/$routineId"
     }
@@ -60,4 +62,5 @@ sealed class Route(
             return "act_record_detail/$encoded"
         }
     }
+    data object ActInsightInfo : Route(route = "act_insight")
 }

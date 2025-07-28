@@ -23,6 +23,7 @@ import com.konkuk.moru.presentation.home.screen.RoutineSimpleRunScreen
 import com.konkuk.moru.presentation.home.screen.sampleSteps
 import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.myactivity.screen.ActFabTagScreen
+import com.konkuk.moru.presentation.myactivity.screen.ActInsightInfoClickScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActMainScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActProfileScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActRecordDetailScreen
@@ -36,6 +37,7 @@ import com.konkuk.moru.presentation.routinefeed.screen.main.HotRoutineListScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetailScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedViewModel
+import com.konkuk.moru.presentation.routinefeed.screen.search.RoutineSearchHost
 import com.konkuk.moru.presentation.routinefeed.screen.userprofile.UserProfileScreen
 import com.konkuk.moru.presentation.routinefocus.screen.RoutineFocusScreen
 import java.net.URLDecoder
@@ -136,6 +138,10 @@ fun MainNavGraph(
                     navController.navigate(Route.Notification.route)
                 }
             )
+        }
+
+        composable(route = Route.RoutineSearch.route) {
+            RoutineSearchHost(navController = navController)
         }
 
         composable(
@@ -307,7 +313,18 @@ fun MainNavGraph(
             val encodedTitle = backStackEntry.arguments?.getString("routineTitle") ?: ""
             val decodedTitle = URLDecoder.decode(encodedTitle, StandardCharsets.UTF_8.toString())
 
-            ActRecordDetailScreen(title = decodedTitle, navController = navController)
+            ActRecordDetailScreen(
+                title = decodedTitle,
+                navController = navController,
+                modifier.padding(innerPadding)
+            )
+        }
+
+        composable(route = Route.ActInsightInfo.route) {
+            ActInsightInfoClickScreen(
+                modifier = modifier.padding(innerPadding),
+                navController = navController
+            )
         }
     }
 }

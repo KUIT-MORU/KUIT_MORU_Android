@@ -48,6 +48,9 @@ fun AppNavGraph(
                             Route.RoutineFocusIntro.route,
                             Route.RoutineFocus.route,
                             Route.RoutineSimpleRun.route
+                            Route.ActInsightInfo.route,
+                            Route.RoutineSearch.route
+
                         )
                     ) {
                         MoruBottomBar(

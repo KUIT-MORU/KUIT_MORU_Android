@@ -143,9 +143,13 @@ fun LoginScreen(
                         }
                     }
                 } else { // 테스트용으로 임시로 해둠. 삭제 예정
-                    viewModel.login(email, password, context) {
-                        navController.navigate(Route.AuthCheck.route) {
-                            popUpTo(Route.Login.route) { inclusive = true }
+                    if (true) {
+                        errorMessage = "이메일 또는 비밀번호가 일치하지 않습니다."
+                    } else {
+                        viewModel.login(email, password, context) {
+                            navController.navigate(Route.AuthCheck.route) {
+                                popUpTo(Route.Login.route) { inclusive = true }
+                            }
                         }
                     }
                 }

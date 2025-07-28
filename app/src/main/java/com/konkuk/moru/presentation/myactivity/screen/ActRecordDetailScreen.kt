@@ -27,7 +27,8 @@ data class RoutineStep(
     val name: String,
     val startTime: LocalTime,
     val endTime: LocalTime?,
-    val duration: Duration
+    val duration: Duration,
+    val memo: String? = null
 )
 
 data class RoutineDetail(
