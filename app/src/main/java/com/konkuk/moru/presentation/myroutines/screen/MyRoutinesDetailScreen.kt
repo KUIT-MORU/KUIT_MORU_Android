@@ -348,9 +348,10 @@ fun RoutineItemCard(
         modifier = modifier
             .fillMaxWidth()
             .height(IntrinsicSize.Min) // 아이템의 전체 높이를 고정
-            .background(Color.White, shape = RoundedCornerShape(12.dp))
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .background(Color.White, shape = RoundedCornerShape(12.dp)),
+        //.padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
     ) {
         // 1. 왼쪽 이미지 (AsyncImage)
         AsyncImage(
@@ -419,7 +420,7 @@ fun RoutineItemCard(
                         modifier = Modifier
                             .size(16.dp)
                             .clickable { isUserChecked = !isUserChecked },
-                        painter = painterResource(if (isUserChecked) R.drawable.ic_checkbox_gray_uncheck else R.drawable.ic_checkbox_gray),
+                        painter = painterResource(if (isUserChecked) R.drawable.ic_checkbox_uncheck else R.drawable.ic_checkbox_gray),
                         contentDescription = "체크",
                         tint = Color.Unspecified
                     )
@@ -509,10 +510,10 @@ fun RoutineItemCard(
 private fun RoutineInfo(routine: Routine) {
 
     Column(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(start = 17.dp, top = 25.dp, bottom = 30.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.height(8.dp))
 
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(routine.tags) { tag ->
@@ -598,21 +599,24 @@ private fun LocalRoutineStepItem(stepNumber: Int, step: RoutineStep) {
 
 @Composable
 private fun UsedAppsSection(apps: List<AppInfo>) {
-    Column(Modifier.padding(16.dp)) {
+    Column(
+        Modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+    ) {
         Text("사용 앱", style = MORUTheme.typography.title_B_20, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             items(apps) { app ->
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     AsyncImage(
-                        model = app.iconUrl, // ✨ painterResource 대신 model에 URL을 전달합니다.
+                        model = app.iconUrl,
                         contentDescription = app.name,
                         modifier = Modifier
                             .size(56.dp)
                             .clip(CircleShape)
                             .background(MORUTheme.colors.veryLightGray)
                             .padding(8.dp),
-                        // ✨ 이미지를 불러오는 동안이나 실패했을 때 보여줄 기본 이미지를 추가하면 좋습니다.
                         placeholder = painterResource(id = R.drawable.ic_reset), // 예시: 로딩 중 아이콘
                         error = painterResource(id = R.drawable.ic_info)       // 예시: 에러 아이콘
                     )
