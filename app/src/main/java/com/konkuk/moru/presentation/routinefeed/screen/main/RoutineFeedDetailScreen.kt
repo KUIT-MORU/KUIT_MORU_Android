@@ -25,6 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
@@ -41,13 +43,35 @@ import com.konkuk.moru.ui.theme.MORUTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoutineDetailScreen(
-    routine: Routine,
+    routineId: Int,
     onBackClick: () -> Unit,
-    navController: NavController
+    navController: NavController,
+    viewModel: RoutineDetailViewModel = viewModel()
 ) {
-    var isLiked by remember { mutableStateOf(routine.isLiked) }
-    var likeCount by remember { mutableIntStateOf(routine.likes) }
-    var isBookmarked by remember { mutableStateOf(routine.isBookmarked) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(key1 = routineId) {
+        viewModel.loadRoutine(routineId)
+    }
+
+    if (uiState.isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    val routine = uiState.routine
+    if (routine == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("루틴 정보를 불러오지 못했습니다.")
+        }
+        return
+    }
+
+    var isLiked by remember(routine.routineId) { mutableStateOf(routine.isLiked) }
+    var likeCount by remember(routine.routineId) { mutableIntStateOf(routine.likes) }
+    var isBookmarked by remember(routine.routineId) { mutableStateOf(routine.isBookmarked) }
 
     Scaffold(
         containerColor = Color.White,
@@ -71,7 +95,9 @@ fun RoutineDetailScreen(
                 item {
                     RoutineStepSection(
                         modifier = Modifier.padding(16.dp),
-                        steps = routine.steps
+                        routine = routine,
+                        showAddButton = uiState.canBeAddedToMyRoutines,
+                        onAddToMyRoutineClick = { viewModel.copyRoutineToMyList() }
                     )
                 }
 
@@ -85,7 +111,7 @@ fun RoutineDetailScreen(
                 item {
                     SimilarRoutinesSection(
                         modifier = Modifier.padding(bottom = 16.dp),
-                        routines = routine.similarRoutines
+                        routines = uiState.similarRoutines
                     )
                 }
             }
@@ -171,11 +197,11 @@ private fun RoutineInfoOverlay(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.Top
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable {
-                // Routine 모델에 authorId가 있다는 가정 하에 작성
-                // 만약 없다면 userId를 전달할 방법을 찾아야 합니다.
-                navController.navigate(Route.UserProfile.createRoute(routine.authorId))
-            }) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.clickable {
+                    navController.navigate(Route.UserProfile.createRoute(routine.authorId))
+                }) {
                 AsyncImage(
                     model = routine.authorProfileUrl,
                     contentDescription = "작성자 프로필",
@@ -233,7 +259,10 @@ private fun RoutineInfoOverlay(
                                 selectedContentColor = MORUTheme.colors.limeGreen,
                                 unselectedBackgroundColor = Color.Transparent,
                                 unselectedContentColor = Color.Transparent,
-                                contentPadding = PaddingValues(horizontal = 5.dp, vertical = 1.4.dp)
+                                contentPadding = PaddingValues(
+                                    horizontal = 5.dp,
+                                    vertical = 1.4.dp
+                                )
                             )
                         }
                     }
@@ -251,7 +280,12 @@ private fun RoutineInfoOverlay(
 }
 
 @Composable
-fun RoutineStepSection(modifier: Modifier = Modifier, steps: List<RoutineStep>) {
+fun RoutineStepSection(
+    modifier: Modifier = Modifier,
+    routine: Routine,
+    showAddButton: Boolean,
+    onAddToMyRoutineClick: () -> Unit
+) {
     Column(modifier = modifier) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -259,14 +293,16 @@ fun RoutineStepSection(modifier: Modifier = Modifier, steps: List<RoutineStep>) 
         ) {
             Text("STEP", style = MORUTheme.typography.title_B_20, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.width(16.dp))
-            MoruButton(
-                text = ("내 루틴에 추가"),
-                onClick = { /* ... */ },
-                backgroundColor = MORUTheme.colors.limeGreen,
-                contentColor = Color.White,
-                textStyle = MORUTheme.typography.body_SB_14,
-                iconContent = { Icon(Icons.Default.CalendarToday, "캘린더", Modifier.size(16.dp)) }
-            )
+            if (showAddButton) {
+                MoruButton(
+                    text = ("내 루틴에 추가"),
+                    onClick = onAddToMyRoutineClick,
+                    backgroundColor = MORUTheme.colors.limeGreen,
+                    contentColor = Color.White,
+                    textStyle = MORUTheme.typography.body_SB_14,
+                    iconContent = { Icon(Icons.Default.CalendarToday, "캘린더", Modifier.size(16.dp)) }
+                )
+            }
         }
         Spacer(Modifier.height(16.dp))
 
@@ -275,36 +311,28 @@ fun RoutineStepSection(modifier: Modifier = Modifier, steps: List<RoutineStep>) 
                 thickness = 1.dp,
                 color = Color.Black.copy(alpha = 0.5f)
             )
-            steps.forEachIndexed { index, step ->
+            routine.steps.forEachIndexed { index, step ->
                 RoutineStepItem(
-                    stepNumber = steps.indexOf(step) + 1,
+                    stepNumber = index + 1,
                     step = step,
                     modifier = Modifier.padding(vertical = 16.dp)
                 )
 
-                if (index < steps.lastIndex) {
+                if (index < routine.steps.lastIndex) {
                     Column {
-                        HorizontalDivider(
-                            thickness = 1.dp,
-                            color = Color.Black.copy(alpha = 0.5f)
-                        )
+                        HorizontalDivider(thickness = 1.dp, color = Color.Black.copy(alpha = 0.5f))
                         Spacer(modifier = Modifier.height(6.dp))
-                        HorizontalDivider(
-                            thickness = 1.dp,
-                            color = Color.Black.copy(alpha = 0.5f)
-                        )
+                        HorizontalDivider(thickness = 1.dp, color = Color.Black.copy(alpha = 0.5f))
                     }
                 } else {
-                    HorizontalDivider(
-                        thickness = 1.dp,
-                        color = Color.Black.copy(alpha = 0.5f)
-                    )
+                    HorizontalDivider(thickness = 1.dp, color = Color.Black.copy(alpha = 0.5f))
                 }
             }
         }
     }
 }
 
+// 👇 --- [수정] 아래 함수들을 RoutineStepSection 바깥으로 이동 --- 👇
 @Composable
 fun RoutineStepItem(stepNumber: Int, step: RoutineStep, modifier: Modifier = Modifier) {
     Row(
@@ -321,10 +349,8 @@ fun RoutineStepItem(stepNumber: Int, step: RoutineStep, modifier: Modifier = Mod
         )
         Text(text = step.duration, style = MORUTheme.typography.body_SB_14)
         Spacer(Modifier.width(12.dp))
-
     }
 }
-
 
 @Composable
 fun SimilarRoutinesSection(modifier: Modifier = Modifier, routines: List<SimilarRoutine>) {
@@ -355,10 +381,14 @@ fun SimilarRoutinesSection(modifier: Modifier = Modifier, routines: List<Similar
         }
         Spacer(Modifier.height(24.dp))
         LazyRow(
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp, top = 0.dp),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                bottom = 80.dp,
+                top = 0.dp
+            ),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-
-            ) {
+        ) {
             items(routines) { routine ->
                 SimilarRoutineCard(routine = routine)
             }
@@ -397,10 +427,11 @@ fun SimilarRoutineCard(routine: SimilarRoutine) {
 @Composable
 fun RoutineDetailScreenPreview() {
     MORUTheme {
+        // [수정] routineId를 전달하도록 Preview 수정
         RoutineDetailScreen(
-            routine = DummyData.feedRoutines.first(),
+            routineId = DummyData.feedRoutines.first().routineId,
             onBackClick = {},
-            navController = rememberNavController()
+            navController = rememberNavController(),
         )
     }
 }

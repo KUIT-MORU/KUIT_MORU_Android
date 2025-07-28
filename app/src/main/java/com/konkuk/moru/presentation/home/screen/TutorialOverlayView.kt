@@ -5,7 +5,6 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
-import com.konkuk.moru.ui.theme.MORUTheme.colors
 
 class TutorialOverlayView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
@@ -18,8 +17,7 @@ class TutorialOverlayView @JvmOverloads constructor(
         }
 
     private val overlayPaint = Paint().apply {
-        // Android View 클래스(TutorialOverlayView)에서는 Compose Color를 쓸 수 없기 때문에 직접 색 명시
-        color = Color.parseColor("#80000000")
+        color = Color.parseColor("#CC000000")
     }
 
     private val clearPaint = Paint().apply {

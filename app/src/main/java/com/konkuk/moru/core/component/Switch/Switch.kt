@@ -139,8 +139,8 @@ fun CustomToggleSwitchPreview() {
             leftText = "간편",
             rightText = "집중",
             containerColor = Color(0xFFE8E8E8),
-            thumbColor = Color(0xFFD4F6B4),
-            checkedTextColor = Color.Black,
+            thumbColor = Color(0xFFEBFFC0),
+            checkedTextColor = Color(0xFF8CCD00),
             uncheckedTextColor = Color.Gray,
             fontSize = 14.sp,
             modifier=Modifier.width(95.dp).height(26.dp)

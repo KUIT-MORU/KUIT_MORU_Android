@@ -47,7 +47,7 @@ fun TitledRoutineSection(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = title, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+            Text(text = title, fontWeight = FontWeight.Bold, fontSize = 24.sp)
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = "더보기",

@@ -41,7 +41,7 @@ class FollowViewModel @Inject constructor(
                 .filter { it.followingId == currentUserId }
                 .map { it.followerId }
 
-            val followers = DummyData.dummyLiveUsers
+            val followers = DummyData.dummyUsers
                 .filter { myFollowerIds.contains(it.userId) }
                 .map { user ->
                     val isFollowingBack = DummyData.dummyFollowRelations
@@ -50,8 +50,8 @@ class FollowViewModel @Inject constructor(
                     FollowUser(
                         id = user.userId,
                         profileImageUrl = user.profileImageUrl ?: "", // 프로필 이미지가 null일 경우 빈 문자열 전달
-                        username = user.name,
-                        bio = user.tag, // 임시로 bio에 tag를 사용
+                        username = user.nickname,
+                        bio = user.bio, 
                         isFollowing = isFollowingBack
                     )
                 }
@@ -61,14 +61,14 @@ class FollowViewModel @Inject constructor(
                 .filter { it.followerId == currentUserId }
                 .map { it.followingId }
 
-            val followings = DummyData.dummyLiveUsers
+            val followings = DummyData.dummyUsers
                 .filter { myFollowingIds.contains(it.userId) }
                 .map { user ->
                     FollowUser(
                         id = user.userId,
                         profileImageUrl = user.profileImageUrl ?: "",
-                        username = user.name,
-                        bio = user.tag,
+                        username = user.nickname,
+                        bio = user.bio,
                         isFollowing = true // 내가 팔로우하는 사람이므로 항상 true
                     )
                 }
