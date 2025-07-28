@@ -152,10 +152,17 @@ class MyRoutinesViewModel : ViewModel() {
         }
     }
 
-    private fun loadRoutines() {
+    fun loadRoutines() {
         viewModelScope.launch {
             // [수정] 샘플 데이터를 새로운 통합 Routine 클래스로 변경
-            _sourceRoutines.value = DummyData.myRoutines
+            _sourceRoutines.value = DummyData.feedRoutines.filter { it.authorId == DummyData.MY_USER_ID }
         }
     }
+
+
+    fun refreshRoutines() {
+        loadRoutines()
+    }
+
+
 }

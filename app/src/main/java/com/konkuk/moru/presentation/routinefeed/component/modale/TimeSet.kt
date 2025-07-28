@@ -198,7 +198,7 @@ fun TimePickerSheetContent(
                     onConfirm(LocalTime.of(hour24, selectedMinute), selectedDays, isAlarmOn)
                 },
                 backgroundColor = MORUTheme.colors.limeGreen,
-                contentColor = Color.Black,
+                contentColor = Color.White,
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier
                     .weight(1f)

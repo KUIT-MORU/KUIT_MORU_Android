@@ -57,7 +57,7 @@ fun RecentSearchItem(
         Spacer(modifier = Modifier.width(4.dp))
         Text(
             text = searchText,
-            style = MORUTheme.typography.body_SB_14,
+            style = MORUTheme.typography.desc_M_16,
             color = MORUTheme.colors.black
         )
 
@@ -68,7 +68,7 @@ fun RecentSearchItem(
         Text(
             text = date,
             style = MORUTheme.typography.desc_M_16,
-            //color = MORUTheme.colors.medium
+            color= Color(0xFF595959)
         )
         Spacer(modifier = Modifier.width(8.dp))
         // IconButton을 사용해 클릭 영역을 확보합니다.
