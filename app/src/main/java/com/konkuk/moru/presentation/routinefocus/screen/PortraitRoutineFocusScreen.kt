@@ -27,7 +27,6 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,14 +44,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.Switch.StatusBarMock
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
 import com.konkuk.moru.presentation.routinefocus.component.RoutineTimelineItem
 import com.konkuk.moru.presentation.routinefocus.component.SettingSwitchGroup
+import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
-import kotlinx.coroutines.delay
 
 
 fun formatTotalTime(seconds: Int): String {
@@ -151,8 +151,8 @@ fun formatTime(seconds: Int): String {
 }
 
 @Composable
-fun RoutineFocusScreen(
-    modifier: Modifier = Modifier,
+fun PortraitRoutineFocusScreen(
+    viewModel: RoutineFocusViewModel = viewModel(),
     onDismiss: () -> Unit,
     routineItems: List<Pair<String, String>>, //(루틴명,소요시간)
     currentStep: Int,
@@ -161,34 +161,31 @@ fun RoutineFocusScreen(
     forceShowResultPopup: Boolean = false
 ) {
     // 스톱워치 정지 유무
-    var isTimerRunning by remember { mutableStateOf(true) }
+    var isTimerRunning = viewModel.isTimerRunning
 
     // 정지/재생 아이콘 상태
-    var isUserPaused by remember { mutableStateOf(false) }
+    val isUserPaused = viewModel.isUserPaused
 
     // 전체 누적 시간
-    var totalElapsedSeconds by remember { mutableIntStateOf(0) }
+    val totalElapsedSeconds = viewModel.totalElapsedSeconds
 
     // step 별 경과 시간 저장
-    var elapsedSeconds by remember { mutableIntStateOf(0) }
-
-    // 시간초과 유무에 따른 오버레이의 표시 상태 저장
-    var showOverlay by remember { mutableStateOf(false) }
+    val elapsedSeconds = viewModel.elapsedSeconds
 
     // 현재 step 저장
-    var step by remember { mutableIntStateOf(currentStep) }
+    var currentstep = viewModel.currentStep
 
     // 현재 스텝의 목표 시간 문자열 추출 ("15m" 등)
-    val currentTimeStr = routineItems.getOrNull(step - 1)?.second ?: "0m"
+    val currentTimeStr = routineItems.getOrNull(currentstep - 1)?.second ?: "0m"
 
     // 현재 루틴의 세부 루틴 문자열 추출 ("샤워하기" 등)
-    val currentTitle = routineItems.getOrNull(step - 1)?.first ?: ""
+    val currentTitle = routineItems.getOrNull(currentstep - 1)?.first ?: ""
 
     // 문자열을 초 단위로 변환 (예: "15m" → 900초)
     val maxSeconds = parseTimeToSeconds(currentTimeStr)
 
     // 초과 여부 판별
-    val isTimeout = elapsedSeconds > maxSeconds
+    var isTimeout = viewModel.isTimeout
 
     // 종료 팝업 상태 저장 (강제 상태 반영)
     var showFinishPopup by remember { mutableStateOf(forceShowFinishPopup) }
@@ -197,10 +194,10 @@ fun RoutineFocusScreen(
     var showResultPopup by remember { mutableStateOf(forceShowResultPopup) }
 
     // 설정 팝업 상태 저장
-    var showSettingsPopup by remember { mutableStateOf(false) }
+    val showSettingsPopup = viewModel.isSettingsPopupVisible
 
     // 다크 모드 on/off 상태 저장
-    var isDarkMode by remember { mutableStateOf(false) }
+    val isDarkMode = viewModel.isDarkMode
 
     // 방해 금지 모드 on/off 상태 저장
     var isDoNotDisturb by remember { mutableStateOf(false) }
@@ -218,20 +215,15 @@ fun RoutineFocusScreen(
     var memoText by remember { mutableStateOf("") }
 
     // 앱 아이콘 팝업 상태 저장
-    var showAppIcons by remember { mutableStateOf(false) }
+    val showAppIcons = viewModel.isAppIconsVisible
 
     //1초마다 시간 증가,시간 초과 판단
-    LaunchedEffect(isTimerRunning, step, showSettingsPopup) {
-        while (isTimerRunning && !showSettingsPopup) {
-            delay(1000)
-            elapsedSeconds++
-            val currentTimeStr = routineItems.getOrNull(step - 1)?.second ?: "0m"
-            val stepMax = parseTimeToSeconds(currentTimeStr)
-            if (elapsedSeconds > stepMax) {
-                showOverlay = true
-            }
-        }
+    LaunchedEffect(currentstep) {
+        val stepLimit = parseTimeToSeconds(routineItems.getOrNull(currentstep - 1)?.second ?: "0m")
+        viewModel.setStepLimitFromTimeString(stepLimit)
+        viewModel.startTimer()
     }
+
 
     // 메인 컨텐츠를 Box로 감싸기
     Box(
@@ -242,11 +234,11 @@ fun RoutineFocusScreen(
             )
     ) {
         // ✅ 1. 시간 초과 시 배경 오버레이 (하단 제외)
-        if (showOverlay) {
+        if (isTimeout) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top=24.dp,bottom = 133.dp) // 하단 영역 제외
+                    .padding(top = 24.dp, bottom = 133.dp) // 하단 영역 제외
                     .background(colors.limeGreen.copy(alpha = 0.5f))
                     .zIndex(1f)
             )
@@ -290,8 +282,7 @@ fun RoutineFocusScreen(
                         modifier = Modifier
                             .size(24.dp)
                             .clickable {
-                                showSettingsPopup = !showSettingsPopup
-                                isTimerRunning = true
+                                viewModel.toggleSettingsPopup()
                             }
                     )
                 }
@@ -307,7 +298,7 @@ fun RoutineFocusScreen(
                 Text(
                     text = currentTitle,
                     style = typography.title_B_20,
-                    color = if (isDarkMode) colors.limeGreen else colors.black,
+                    color = if (isDarkMode && !isTimeout) colors.limeGreen else if (isDarkMode && isTimeout) Color.White else colors.black,
                     modifier = Modifier.padding(start = 16.dp)
                 )
                 Spacer(modifier = Modifier.height(9.dp))
@@ -317,7 +308,7 @@ fun RoutineFocusScreen(
                     text = formatTime(elapsedSeconds),
                     fontSize = 64.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (isTimeout) colors.oliveGreen else if (isDarkMode) Color.White else Color.Black,
+                    color = if (!isDarkMode && isTimeout) colors.oliveGreen else if (isDarkMode) Color.White else Color.Black,
                     modifier = Modifier
                         .fillMaxWidth()
                         .wrapContentSize(Alignment.Center)
@@ -333,8 +324,7 @@ fun RoutineFocusScreen(
                         .wrapContentSize(Alignment.Center)
                         .size(45.dp)
                         .clickable {
-                            isUserPaused = !isUserPaused
-                            isTimerRunning = !isTimerRunning
+                            viewModel.togglePause()
                         }
                 )
 
@@ -353,8 +343,8 @@ fun RoutineFocusScreen(
                                 time = time,
                                 title = title,
                                 index = index, // 1,2,3,4,...
-                                currentStep = step,
-                                isTimeout = showOverlay,
+                                currentStep = currentstep,
+                                isTimeout = isTimeout,
                                 isDarkMode = isDarkMode
                             )
                         }
@@ -367,7 +357,7 @@ fun RoutineFocusScreen(
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             // 마지막 step 도달 조건
-                            val isFinalStep = step == routineItems.size
+                            val isFinalStep = currentstep == routineItems.size
 
                             //다음 버튼
                             Box(
@@ -379,22 +369,21 @@ fun RoutineFocusScreen(
                                     painter = painterResource(id = if (isFinalStep) R.drawable.enable_check_icon else R.drawable.ic_next_in_circle),
                                     contentDescription = if (isFinalStep) "완료됨" else "다음 루틴으로",
                                     modifier = Modifier
+                                        .size(74.dp)
                                         .clickable {
                                             // 다음 step으로 가는 기능
-                                            if (step < routineItems.size) {
-                                                step++
-                                                showOverlay = false
-                                                isTimerRunning = true
-                                                isUserPaused = false
-                                                totalElapsedSeconds += elapsedSeconds
-                                                elapsedSeconds = 0
+                                            if (!isFinalStep) {
+                                                val nextStepTimeString =
+                                                    routineItems.getOrNull(currentstep)?.second
+                                                        ?: "0m"
+                                                viewModel.nextStep(nextStepTimeString)
+                                                viewModel.resumeTimer()
                                             } else {
-                                                // 마지막 step이면 체크 버튼 클릭 시 타이머 정지하고 종료 팝업 표시
-                                                isTimerRunning = false
+                                                viewModel.pauseTimer()
                                                 showFinishPopup = true
                                             }
                                         },
-                                    tint = if (showOverlay) colors.oliveGreen else colors.limeGreen
+                                    tint = if (!isDarkMode && isTimeout) colors.oliveGreen else if (!isDarkMode && !isTimeout) colors.limeGreen else Color.White
                                 )
                             }
 
@@ -408,19 +397,19 @@ fun RoutineFocusScreen(
                                     isFinalStep -> {
                                         Text(
                                             text = "FINISH !",
-                                            style = typography.body_SB_16,
+                                            style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
                                             color = when {
                                                 isDarkMode -> Color.White
-                                                isFinalStep && showOverlay -> colors.oliveGreen
+                                                isFinalStep && isTimeout -> colors.oliveGreen
                                                 else -> colors.black
                                             }
                                         )
                                     }
 
-                                    showOverlay -> {
+                                    isTimeout -> {
                                         Text(
                                             text = "NEXT STEP",
-                                            style = typography.body_SB_16,
+                                            style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
                                             color = if (isDarkMode) Color.White else colors.oliveGreen
                                         )
                                     }
@@ -457,7 +446,10 @@ fun RoutineFocusScreen(
                             Image(
                                 painter = painterResource(id = R.drawable.ic_default),
                                 contentDescription = "사용앱 ${it + 1}",
-                                modifier = Modifier.size(48.dp)
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(RoundedCornerShape(6.dp))
+
                             )
                         }
                     }
@@ -521,7 +513,7 @@ fun RoutineFocusScreen(
                     modifier = Modifier
                         .size(24.dp)
                         .clickable {
-                            showAppIcons = !showAppIcons
+                            viewModel.toggleAppIcons()
                         },
                     colorFilter = ColorFilter.tint(if (isDarkMode) colors.mediumGray else colors.black)
                 )
@@ -588,7 +580,7 @@ fun RoutineFocusScreen(
                     Spacer(modifier = Modifier.size(6.dp))
                     Text(
                         text = "종료한 루틴은 내활동에 저장됩니다.",
-                        style = typography.title_B_12,
+                        style = typography.title_B_12.copy(fontWeight = FontWeight.Normal),
                         color = colors.darkGray
                     )
                     Spacer(modifier = Modifier.size(20.dp))
@@ -660,19 +652,19 @@ fun RoutineFocusScreen(
                 ) {
                     Text(
                         text = "루틴 종료!",
-                        style = typography.title_B_20,
+                        style = typography.title_B_20.copy(fontWeight = FontWeight.SemiBold),
                         color = colors.black
                     )
                     //진행도(spacer도 줘야함)
                     Spacer(modifier = Modifier.height(12.04.dp))
                     RoutineProgressBar(
-                        stepCount = 4, //스탭 개수
+                        stepCount = currentstep, //스탭 개수
                         color = colors.limeGreen
                     )
                     Spacer(modifier = Modifier.height(12.04.dp))
                     //루틴 갯수
                     Text(
-                        text = "4/4",
+                        text = "$currentstep/${routineItems.size}",
                         style = typography.desc_M_14,
                         color = colors.black
                     )
@@ -733,7 +725,7 @@ fun RoutineFocusScreen(
                             .background(colors.limeGreen)
                             .clickable {
                                 showResultPopup = false
-                                //확인 버튼 누르면 어디로 가는지 구현해야함
+                                onDismiss()
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -756,7 +748,7 @@ fun RoutineFocusScreen(
                     .padding(bottom = 133.dp) // 하단 메뉴(53dp) + TOTAL(80dp) = 133dp 제외
                     .background(Color(0x33000000)) // 반투명 검정 배경
                     .zIndex(10f) // 다른 UI 위에 오도록 zIndex 조정 (가장 위에)
-                    .clickable { showSettingsPopup = false }, // 오버레이 바깥 클릭 시 팝업 닫기
+                    .clickable { viewModel.closeSettingsPopup() }, // 오버레이 바깥 클릭 시 팝업 닫기
                 contentAlignment = Alignment.TopEnd // 내용을 우측 상단에 정렬
             ) {
                 // 설정 스위치 그룹 컨테이너
@@ -773,12 +765,16 @@ fun RoutineFocusScreen(
                 ) {
                     SettingSwitchGroup(
                         settings = listOf(
-                            Triple("다크 모드", isDarkMode) { isDarkMode = it },
-                            Triple("방해 금지 모드", isDoNotDisturb) { isDoNotDisturb = it },
-                            Triple("스텝 완료 진동", isStepVibration) {
-                                isStepVibration = it
-                            },
-                            Triple("가로 모드", isLandscapeMode) { isLandscapeMode = it }
+                            Triple(
+                                "다크 모드",
+                                { viewModel.isDarkMode },
+                                { viewModel.toggleDarkMode() }),
+                            Triple("방해 금지 모드", { isDoNotDisturb }, { isDoNotDisturb = it }),
+                            Triple("스텝 완료 진동", { isStepVibration }, { isStepVibration = it }),
+                            Triple(
+                                "가로 모드",
+                                { viewModel.isLandscapeMode },
+                                { viewModel.toggleLandscapeMode() })
                         )
                     )
                 }
@@ -793,7 +789,7 @@ fun RoutineFocusScreen(
     heightDp = 800
 )
 @Composable
-private fun RoutineFocusScreenPreview() {
+private fun PortraitRoutineFocusScreenPreview() {
     val dummyItems = listOf(
         "샤워하기" to "3s",
         "청소하기" to "10s",
@@ -801,7 +797,7 @@ private fun RoutineFocusScreenPreview() {
         "옷갈아입기" to "5s"
     )
 
-    RoutineFocusScreen(
+    PortraitRoutineFocusScreen(
         onDismiss = {},
         routineItems = dummyItems,
         currentStep = 1,

@@ -59,7 +59,7 @@ fun RoutineFocusIntroScreen(
     hashTag: String = "#태그 #태그",
     focusType: FocusType = FocusType.FOCUS,
     steps: List<RoutineStepData> = sampleSteps,
-    onStartClick:()->Unit,
+    onStartClick:(selectedSteps: List<RoutineStepData>)->Unit,
     onBackClick: () -> Unit,
 ) {
     // 각 루틴의 상태를 기억할 수 있또록 상태로 복사해서 관리
@@ -75,7 +75,7 @@ fun RoutineFocusIntroScreen(
         bottomBar = {
             Button(
                 onClick = {
-                    onStartClick()
+                    onStartClick(stepStates.filter { it.isChecked })
                 },
                 enabled = isStartEnabled,
                 modifier = Modifier
@@ -97,8 +97,8 @@ fun RoutineFocusIntroScreen(
     { innerPadding ->
         LazyColumn(
             modifier = modifier
-                .padding(innerPadding)
                 .fillMaxSize()
+                .padding(innerPadding)
                 .background(Color.White)
         ) {
             item {
