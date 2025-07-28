@@ -35,6 +35,7 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
 fun OnboardingScreen(
+    modifier: Modifier,
     onNextClick: () -> Unit,
     onCloseClick: () -> Unit
 ) {
@@ -43,7 +44,7 @@ fun OnboardingScreen(
 
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(colors.black50Oopacity),
     ) {
@@ -117,6 +118,7 @@ fun OnboardingScreen(
 @Composable
 private fun OnboardingScreenPreview() {
     OnboardingScreen(
+        modifier = Modifier,
         onNextClick = {},
         onCloseClick = {}
     )
