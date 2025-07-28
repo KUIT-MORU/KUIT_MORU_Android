@@ -23,7 +23,7 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
 fun SettingSwitchGroup(
-    settings: List<Triple<String, Boolean, (Boolean) -> Unit>>
+    settings: List<Triple<String, () -> Boolean, (Boolean) -> Unit>>
 ) {
     Column(
         modifier = Modifier
@@ -44,7 +44,7 @@ fun SettingSwitchGroup(
                     color = colors.black
                 )
                 ConstantSizeSwitch(
-                    checked = checked,
+                    checked = checked(),
                     onCheckedChange = onCheckedChange
                 )
             }
@@ -58,7 +58,7 @@ fun SettingSwitchGroup(
 
 @Preview(showBackground = true, widthDp = 300)
 @Composable
-private fun SettingSwitchGroupWithCustomSwitchPreview() {
+private fun SettingSwitchGroupPreview() {
     val isDarkMode = remember { mutableStateOf(false) }
     val isDoNotDisturb = remember { mutableStateOf(true) }
     val isStepVibration = remember { mutableStateOf(false) }
@@ -67,10 +67,10 @@ private fun SettingSwitchGroupWithCustomSwitchPreview() {
     MORUTheme { // 꼭 MORUTheme 안에서 preview해야 색상 정상 적용
         SettingSwitchGroup(
             settings = listOf(
-                Triple("다크 모드", isDarkMode.value) { isDarkMode.value = it },
-                Triple("방해 금지 모드", isDoNotDisturb.value) { isDoNotDisturb.value = it },
-                Triple("스텝 완료 진동", isStepVibration.value) { isStepVibration.value = it },
-                Triple("가로 모드", isLandscapeMode.value) { isLandscapeMode.value = it }
+                Triple("다크 모드", { isDarkMode.value }) { isDarkMode.value = it },
+                Triple("방해 금지 모드", { isDoNotDisturb.value }) { isDoNotDisturb.value = it },
+                Triple("스텝 완료 진동", { isStepVibration.value }) { isStepVibration.value = it },
+                Triple("가로 모드", { isLandscapeMode.value }) { isLandscapeMode.value = it }
             )
         )
     }
