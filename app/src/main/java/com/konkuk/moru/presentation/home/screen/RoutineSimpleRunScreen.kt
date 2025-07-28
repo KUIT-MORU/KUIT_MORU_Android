@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -187,7 +188,7 @@ fun RoutineSimpleRunScreen(
                 ) {
                     Text(
                         text = "FINISH!",
-                        style = typography.body_SB_16,
+                        style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
                         color = colors.black
                     )
                 }
@@ -214,7 +215,7 @@ fun RoutineSimpleRunScreen(
                     Spacer(modifier = Modifier.size(21.25.dp))
                     Text(
                         text = "루틴을 종료하시겠습니까?",
-                        style = typography.title_B_20,
+                        style = typography.title_B_20.copy(fontWeight = FontWeight.SemiBold),
                         color = colors.black
                     )
                     Spacer(modifier = Modifier.size(5.79.dp))
@@ -243,7 +244,7 @@ fun RoutineSimpleRunScreen(
                         ) {
                             Text(
                                 text = "돌아가기",
-                                style = typography.body_SB_16,
+                                style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
                                 color = colors.mediumGray
                             )
                         }
@@ -267,7 +268,7 @@ fun RoutineSimpleRunScreen(
                         ) {
                             Text(
                                 text = "종료",
-                                style = typography.body_SB_16,
+                                style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
                                 color = Color.White
                             )
                         }
@@ -297,7 +298,7 @@ fun RoutineSimpleRunScreen(
                     Spacer(modifier = Modifier.size(14.09.dp))
                     Text(
                         text = "루틴 종료!",
-                        style = typography.title_B_20,
+                        style = typography.title_B_20.copy(fontWeight = FontWeight.SemiBold),
                         color = colors.black
                     )
                     Spacer(modifier = Modifier.size(20.07.dp))
