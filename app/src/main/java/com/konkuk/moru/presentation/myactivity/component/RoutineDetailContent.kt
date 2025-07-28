@@ -245,7 +245,11 @@ fun RoutineDetailContent(
                             )
                         }
 
-                        Column(horizontalAlignment = Alignment.End) {
+                        Column(
+                            horizontalAlignment = Alignment.End,
+                            modifier = Modifier
+                                .padding(end = 13.dp)
+                        ) {
                             Text(
                                 text = step.startTime.format(DateTimeFormatter.ofPattern("HH:mm")),
                                 style = typography.body_SB_14,

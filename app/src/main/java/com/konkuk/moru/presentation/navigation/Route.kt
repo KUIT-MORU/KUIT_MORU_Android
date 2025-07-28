@@ -54,4 +54,5 @@ sealed class Route(
             return "act_record_detail/$encoded"
         }
     }
+    data object ActInsightInfo : Route(route = "act_insight")
 }
