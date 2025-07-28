@@ -1,5 +1,8 @@
 package com.konkuk.moru.presentation.home.component
 
+import android.R.attr.bottom
+import android.R.attr.right
+import android.R.attr.top
 import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,10 +13,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-
 import androidx.compose.ui.zIndex
-import com.konkuk.moru.presentation.home.FabConstants
-
 import com.konkuk.moru.presentation.home.screen.HomeTutorialOverlayView
 import com.konkuk.moru.presentation.home.screen.TutorialOverlayView
 
@@ -32,9 +32,9 @@ fun HomeTutorialOverlayContainer(
         with(density) {
             TutorialOverlayView.HolePx(
                 left = 36.dp.toPx(),
-                top = todayTabOffsetY- 18.dp.toPx(),
+                top = todayTabOffsetY - 18.dp.toPx(),
                 right = (36 + 288).dp.toPx(),
-                bottom = todayTabOffsetY + 18.dp.toPx()
+                bottom = todayTabOffsetY + 18.dp.toPx(),
             )
         }
     }
@@ -49,7 +49,7 @@ fun HomeTutorialOverlayContainer(
             val screenHeightPx = config.screenHeightDp.dp.toPx()
 
             val fabCenterX = screenWidthPx - fabPaddingEndPx - fabSizePx / 2f
-          
+
             // AndroidView와 Compose 간의 좌표계 차이 보정
             val fabCenterY = fabOffsetY
 

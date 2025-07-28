@@ -59,6 +59,7 @@ import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
+import kotlinx.coroutines.delay
 
 // 홈 메인 페이지
 @Composable
@@ -72,6 +73,7 @@ fun HomeScreen(
     onShowOverlay: () -> Unit = {},
     onDismissOverlay: () -> Unit = {}
 ) {
+
     //탭 선택 상태(오늘,이번주)
     var selectedTab by remember { mutableStateOf(0) }
 
