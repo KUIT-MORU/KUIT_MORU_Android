@@ -34,6 +34,15 @@ sealed class Route(
         }
     }
 
+    object Follow : Route("follow/{userId}/{selectedTab}") { // [수정] userId 추가
+        fun createRoute(userId: Int, selectedTab: String) = "follow/$userId/$selectedTab"
+    }
+
+    // [추가] UserProfileScreen 경로 정의 (어떤 유저의 프로필인지 'userId' 파라미터 추가)
+    object UserProfile : Route("user_profile/{userId}") {
+        fun createRoute(userId: Int) = "user_profile/$userId"
+    }
+
     data object MyRoutine : Route(route = "my_routine")
 
     data object MyActivity : Route(route = "my_activity")
@@ -45,4 +54,10 @@ sealed class Route(
     data object ActFabTag : Route(route = "act_fab_tag")
     data object ActProfile : Route(route = "act_profile")
     data object ActRecord : Route(route = "act_record")
+    data object ActRecordDetail : Route(route = "act_record_detail/{routineTitle}") {
+        fun createRoute(routineTitle: String): String {
+            val encoded = URLEncoder.encode(routineTitle, StandardCharsets.UTF_8.toString())
+            return "act_record_detail/$encoded"
+        }
+    }
 }
