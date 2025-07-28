@@ -106,6 +106,7 @@ fun RoutinePaceCard(
                 sheetState = sheetState,
                 onDetailClick = { isSheetOpen = false }, //세부 사항 버튼 이벤트 추가 예정
                 renewalDate = "2025.07.06",
+                progress = progress
             )
         }
     }

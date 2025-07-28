@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.myactivity.component
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,8 +27,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.konkuk.moru.R
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
@@ -37,8 +42,15 @@ fun RoutinePaceInfo(
     sheetState: SheetState,
     onDetailClick: () -> Unit,
     renewalDate: String = "2025.01.01",
+    progress: Float = 0.1f,
     modifier: Modifier = Modifier
 ) {
+    val (badgeRes, titleText) = when (progress) {
+        in 0f..0.3f -> Pair(R.drawable.ic_third_badge, "잠시 걷는 중")
+        in 0.3f..0.7f -> Pair(R.drawable.ic_second_badge, "간헐적 루틴러")
+        else -> Pair(R.drawable.ic_first_badge, "루틴 페이스 메이커")
+    }
+
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
@@ -92,38 +104,69 @@ fun RoutinePaceInfo(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(208.dp)
-                        .background(color = colors.veryLightGray, RoundedCornerShape(12.dp))
+                        .height(279.dp)
+                        .background(color = colors.black, RoundedCornerShape(12.dp))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Top
+                    ) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Image(
+                            painter = painterResource(id = badgeRes),
+                            contentDescription = titleText,
+                            modifier = Modifier.size(160.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(2.dp))
+
+                        Text(
+                            text = titleText,
+                            color = colors.limeGreen,
+                            style = typography.body_SB_16,
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        Text(
+                            text = "꾸준한 실천으로 다른 사용자들에게\n흐름을 만들어주고 있어요!\n당신 덕분에 누군가는 루틴을 시작했을지도 몰라요.",
+                            style = typography.desc_M_12,
+                            color = Color.White,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("최근 갱신 일자: ", style = typography.time_R_12, color = colors.mediumGray)
+                Text(
+                    text = renewalDate,
+                    style = typography.time_R_12,
+                    color = colors.mediumGray
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("최근 갱신 일자: ", style = typography.time_R_12, color = colors.mediumGray)
-                    Text(
-                        text = renewalDate,
-                        style = typography.time_R_12,
-                        color = colors.mediumGray
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = onDetailClick,
-                    colors = ButtonDefaults.buttonColors(containerColor = colors.limeGreen),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .padding(bottom = 10.dp)
-                ) {
-                    Text(
-                        text = "자세히 보기",
-                        color = colors.black,
-                        style = typography.body_SB_16,
-                    )
-                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = onDetailClick,
+                colors = ButtonDefaults.buttonColors(containerColor = colors.limeGreen),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp)
+                    .padding(bottom = 10.dp)
+            ) {
+                Text(
+                    text = "자세히 보기",
+                    color = colors.black,
+                    style = typography.body_SB_16,
+                )
             }
         }
     }
