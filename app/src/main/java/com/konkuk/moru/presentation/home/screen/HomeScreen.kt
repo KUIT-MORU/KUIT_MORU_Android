@@ -1,14 +1,22 @@
 package com.konkuk.moru.presentation.home.screen
 
+import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Divider
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,24 +27,40 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.konkuk.moru.core.component.MoruBottomBar
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.konkuk.moru.R
+import com.konkuk.moru.core.component.Switch.StatusBarMock
+import com.konkuk.moru.presentation.home.FabConstants
+import com.konkuk.moru.presentation.home.FocusType
 import com.konkuk.moru.presentation.home.component.HomeFloatingActionButton
 import com.konkuk.moru.presentation.home.component.HomeTopAppBar
+import com.konkuk.moru.presentation.home.component.HomeTutorialOverlayContainer
 import com.konkuk.moru.presentation.home.component.RoutineCardList
 import com.konkuk.moru.presentation.home.component.RoutineData
 import com.konkuk.moru.presentation.home.component.TodayRoutinePager
 import com.konkuk.moru.presentation.home.component.TodayWeekTab
 import com.konkuk.moru.presentation.home.component.WeeklyCalendarView
+import com.konkuk.moru.presentation.home.screen.OnboardingScreen
+import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
-
 // 홈 메인 페이지
 @Composable
 fun HomeScreen(
+    navController: NavHostController,
+    sharedViewModel: SharedRoutineViewModel,
     modifier: Modifier = Modifier
 ) {
     //탭 선택 상태(오늘,이번주)
@@ -58,173 +82,259 @@ fun HomeScreen(
         14 to listOf("주말아침루틴")
     )
 
+    val fabOffsetY = remember { mutableStateOf(0f) }
+
     Scaffold(
         containerColor = Color.White,
+        //FAB
+        // HomeScreen의 FAB 부분을 다음과 같이 수정해주세요:
+
+        floatingActionButton = {
+            HomeFloatingActionButton(
+                modifier = Modifier
+                    .offset(y = -FabConstants.FabTotalBottomPadding)
+                    .onGloballyPositioned { layoutCoordinates ->
+                        val position = layoutCoordinates.positionInRoot()
+                        val size = layoutCoordinates.size
+                        val bounds = layoutCoordinates.boundsInWindow()
+
+                        // 다양한 좌표 정보 로그
+                        Log.d("FAB_DEBUG", "=== FAB Position Debug ===")
+                        Log.d("FAB_DEBUG", "positionInRoot: (${position.x}, ${position.y})")
+                        Log.d("FAB_DEBUG", "size: ${size.width} x ${size.height}")
+                        Log.d("FAB_DEBUG", "boundsInWindow: ${bounds}")
+                        Log.d(
+                            "FAB_DEBUG",
+                            "center in root: (${position.x + size.width / 2f}, ${position.y + size.height / 2f})"
+                        )
+                        Log.d(
+                            "FAB_DEBUG",
+                            "center in window: (${bounds.left + bounds.width / 2f}, ${bounds.top + bounds.height / 2f})"
+                        )
+
+                        fabOffsetY.value = position.y + size.height / 2f // 중심 Y좌표로 저장
+                        Log.d("FAB_DEBUG", "fabOffsetY.value set to: ${fabOffsetY.value}")
+                        Log.d("FAB_DEBUG", "========================")
+                    },
+                onClick = { /* 클릭 처리 */ }
+            )
+        },
+        floatingActionButtonPosition = FabPosition.End, // ← 이걸 추가
     ) { innerPadding ->
-
-        Box(modifier=modifier.fillMaxSize()) {
-            Column(
-                modifier = modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-            ) {
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            item {
+                // 상단 상태 바
+                StatusBarMock(isDarkMode = true)
+            }
+            item {
+                //로고와 MORU
                 HomeTopAppBar()
-                Column() {
-                    Box(
+            }
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(111.dp)
+                ) {
+                    // 1.인삿말
+                    Text(
+                        text = "XX님,\n오늘은 어떤 루틴을 시작할까요?",
+                        style = typography.title_B_20.copy(
+                            lineHeight = 30.sp
+                        ),
+                        color = colors.black,
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(111.dp)
-                    ) {
-                        // 1.인삿말
-                        Text(
-                            text = "XX님,\n오늘은 어떤 루틴을 시작할까요?",
-                            style = typography.title_B_20,
-                            color = colors.black,
-                            modifier = Modifier
-                                .align(Alignment.TopStart)                  // Box 안의 좌상단
-                                .padding(                                   // ← 내용 여백
-                                    start = 16.dp,
-                                    top = 26.dp,
-                                    bottom = 25.dp
-                                )
-                        )
-                    }
-                    Divider(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        color = colors.lightGray,
-                        thickness = 1.dp
+                            .align(Alignment.TopStart)                  // Box 안의 좌상단
+                            .padding(                                   // ← 내용 여백
+                                start = 16.dp,
+                                top = 26.dp,
+                                bottom = 25.dp
+                            )
                     )
-
-                    Spacer(Modifier.height(8.dp))
-
-                    Column(
-                        modifier = modifier
-                            .padding(horizontal = 16.dp)
-                    ) {
-                        // 2. Today
+                }
+            }
+            item {
+                Divider(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    color = colors.lightGray,
+                    thickness = 1.dp
+                )
+            }
+            item {
+                Spacer(Modifier.height(8.dp))
+            }
+            item {
+                Column() {
+                    // 2. Today
+                    Text(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp),
+                        text = "TODAY",
+                        style = typography.desc_M_16.copy(
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 24.sp
+                        ),
+                        color = colors.black,
+                    )
+                    // 3. 월 일 요일
+                    Text(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp),
+                        text = "5월 10일 토",
+                        style = typography.head_EB_24.copy(
+                            lineHeight = 24.sp
+                        ),
+                        color = colors.black
+                    )
+                    // 후에 실제 데이터로 오늘 루틴이 있는지 확인
+                    if (sampleRoutines.isNotEmpty()) {
                         Text(
-                            text = "TODAY",
-                            style = typography.desc_M_16,
-                            color = colors.black,
-                        )
-                        // 3. 월 일 요일
-                        Text(
-                            text = "5월 10일 토",
-                            style = typography.head_EB_24,
-                            color = colors.black
-                        )
-                        Text(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp),
                             text = "정기 루틴이 있는 날이에요",
-                            style = typography.desc_M_16,
+                            style = typography.desc_M_16.copy(
+                                fontWeight = FontWeight.Bold,
+                                lineHeight = 24.sp
+                            ),
                             color = colors.black
                         )
-                        Spacer(Modifier.height(12.dp))
+                    } else {
+                        Text(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp),
+                            text = "정기 루틴이 없는 날이에요",
+                            style = typography.desc_M_16.copy(
+                                fontWeight = FontWeight.Bold,
+                                lineHeight = 24.sp
+                            ),
+                            color = colors.black
+                        )
                     }
-
+                    Spacer(modifier = Modifier.height(12.dp))
                     // 4. 탭 선택
+                    // 후에 실제 데이터로 오늘 루틴이 있는지 확인
                     TodayWeekTab(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp),
                         selectedTabIndex = selectedTab,
                         onTabSelected = { selectedTab = it }
                     )
                     // 선택된 탭에 따라 콘텐츠 분기
-                    Spacer(modifier = modifier.size(10.dp))
                     when (selectedTab) {
-                        //오늘 탭 선택 시
-                        0 -> TodayRoutinePager(routines = sampleRoutines)
+                        // 오늘 탭 선택 시
+                        0 -> if (sampleRoutines.isNotEmpty()) {
+                            TodayRoutinePager(
+                                routines = sampleRoutines,
+                                onRoutineClick = {
+                                    //Focus 타입에 따라 뜨는 intro화면이 다름
+                                    sharedViewModel.setFocusType(FocusType.FOCUS)
+                                    navController.navigate(Route.RoutineFocusIntro.route)
+                                }
+                            )
+                        }
 
-                        //이번주 탭 선택 시
-                        1 -> WeeklyCalendarView(
-                            routinesPerDate = sampleRoutineTags,
-                            today = 13
-                        )
+                        // 이번주 탭 선택 시
+                        1 -> {
+                            WeeklyCalendarView(
+                                routinesPerDate = sampleRoutineTags,
+                                today = 13
+                            )
+                        }
                     }
-                    Spacer(modifier = modifier.size(15.dp))
-                    Divider(
+
+                    HorizontalDivider(
                         modifier = Modifier
                             .fillMaxWidth(),
-                        color = colors.lightGray,
-                        thickness = 7.dp
+                        thickness = 7.dp,
+                        color = colors.lightGray
                     )
-                    Spacer(modifier = modifier.size(3.dp))
                     //루틴 목록
-                    Text(
-                        text = "루틴 목록 >",
-                        style = typography.desc_M_16,
-                        color = colors.black,
-                        modifier = modifier.padding(horizontal = 16.dp)
-                    )
-                    Spacer(modifier = modifier.size(8.dp))
-                    RoutineCardList()
+                    Row(
+                        modifier = Modifier.padding(top = 3.dp, start = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "루틴 목록",
+                            style = typography.desc_M_16.copy(fontWeight = FontWeight.Bold),
+                            color = colors.black
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_arrow_c),
+                            contentDescription = "오른쪽 화살표",
+                            modifier = Modifier
+                                .size(width = 8.dp, height = 12.dp)
+                        )
+                    }
+                    // 후에 실제 데이터로 오늘 루틴이 있는지 확인
+                    if (sampleRoutines.isNotEmpty()) {
+                        RoutineCardList()
+                    }
                 }
             }
-            //FAB
-            HomeFloatingActionButton(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = 96.dp),
-                onClick = { /* 클릭 처리 */ }
-            )
         }
 
         var showOnboarding by remember { mutableStateOf(true) }
         var showOverlay by remember { mutableStateOf(false) }
 
-        Box(modifier = Modifier.fillMaxSize()) {
+        when {
+            showOnboarding -> {
+                // 온보딩 화면 1
+                OnboardingScreen(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .zIndex(2f),
+                    onNextClick = {
+                        showOnboarding = false
+                        showOverlay = true
+                    },
+                    onCloseClick = {
+                        // 온보딩 건너뛰기 시 모든 튜토리얼 종료
+                        showOnboarding = false
+                        showOverlay = false
+                    }
+                )
+            }
 
-            //BottomBar
-            MoruBottomBar(
-                selectedRoute = Route.Home.route,
-                onItemSelected = { route ->
-                    //현재는 HomeScreen에서만 보여줄 것이라 실제 route 변경은 구현 X
-                },
-                modifier = Modifier
-                    .height(80.dp)
-                    .align(Alignment.BottomCenter)
-            )
-
-//            when {
-//                showOnboarding -> {
-//                    // 온보딩 화면 1
-//                    OnboardingScreen(
-//                        onNextClick = {
-//                            showOnboarding = false
-//                            showOverlay = true
-//                        },
-//                        onCloseClick = {
-//                            // 온보딩 건너뛰기 시 모든 튜토리얼 종료
-//                            showOnboarding = false
-//                            showOverlay = false
-//                        }
-//                    )
-//                }
-//
-//                showOverlay -> {
-//                    // 온보딩 화면 2 (튜토리얼 오버레이)
-//                    HomeTutorialOverlayContainer(
-//                        onDismiss = {
-//                            showOverlay = false
-//                        },
-//                        onFabClick = {
-//                            // FAB 클릭 시 튜토리얼 종료 (또는 다음 단계)
-//                            showOverlay = false
-//                        }
-//                    )
-//                }
-//            }
+            showOverlay -> {
+                // 온보딩 화면 2 (튜토리얼 오버레이)
+                HomeTutorialOverlayContainer(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .zIndex(2f),
+                    onDismiss = {
+                        showOverlay = false
+                    },
+                    onFabClick = {
+                        // FAB 클릭 시 튜토리얼 종료 (또는 다음 단계)
+                        showOverlay = false
+                    },
+                    fabOffsetY = fabOffsetY.value
+                )
+            }
         }
-
-
-
     }
+
+
 }
 
 @Preview(
     showBackground = true,
     widthDp = 360,
-    heightDp = 800
+    heightDp = 800,
 )
 @Composable
 private fun HomeScreenPreview() {
-    HomeScreen()
+    val fakeNavController = rememberNavController()
+    val previewSharedViewModel = SharedRoutineViewModel()
+
+    HomeScreen(
+        navController = fakeNavController,
+        sharedViewModel = previewSharedViewModel
+    )
 }
