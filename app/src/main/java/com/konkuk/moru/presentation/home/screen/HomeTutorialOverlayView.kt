@@ -10,14 +10,12 @@ import androidx.compose.ui.viewinterop.AndroidView
 @Composable
 fun HomeTutorialOverlayView(
     modifier: Modifier = Modifier,
-    holes: List<TutorialOverlayView.HolePx>,
-    onDismiss: () -> Unit
+    holes: List<TutorialOverlayView.HolePx>
 ) {
     AndroidView(
         modifier = modifier.fillMaxSize(),
         factory = { context ->
             TutorialOverlayView(context).apply {
-                setOnClickListener { onDismiss() }
                 this.holes = holes
             }
         },
@@ -51,7 +49,6 @@ fun HomeTutorialOverlayViewPreview() {
     Box(modifier = Modifier.fillMaxSize()) {
         HomeTutorialOverlayView(
             holes = sampleHoles,
-            onDismiss = {}
         )
     }
 }

@@ -14,6 +14,14 @@ sealed class Route(
 
     data object Home : Route(route = "home")
 
+    // 루틴 시작 전 소개 화면
+    data object RoutineFocusIntro : Route("routine_focus_intro")
+
+    // 실제 루틴 실행 화면 (집중 루틴 시-몰입화면)
+    data object RoutineFocus : Route("routine_focus")
+    // 실제 루틴 실행 화면 (간편 루틴 화면)
+    data object RoutineSimpleRun : Route("routine_simple_run")
+
     data object RoutineFeed : Route(route = "routine_feed")
 
     data object RoutineSearch : Route("routine_search")
@@ -42,10 +50,6 @@ sealed class Route(
     data object MyActivity : Route(route = "my_activity")
 
     data object Notification : Route("notification")
-
-    data object MyRoutineDetail : Route("my_routine_detail/{routineId}") {
-        fun createRoute(routineId: Int) = "my_routine_detail/$routineId"
-    }
 
     data object ActSetting : Route(route = "act_setting")
     data object ActScrab : Route(route = "act_scrab")
