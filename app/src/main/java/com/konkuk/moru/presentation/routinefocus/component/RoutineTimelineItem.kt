@@ -31,16 +31,39 @@ fun RoutineTimelineItem(
     val isActive = index <= currentStep
 
     // 진행상태에 따른 텍스트
-    val textColor =
-        if (isActive && !isDarkMode) colors.black else if (isActive && isDarkMode) Color.White else colors.darkGray
+    val textColor = when {
+        // 화이트 모드
+        !isDarkMode && isActive && !isTimeout -> colors.black
+        !isDarkMode && !isActive && !isTimeout -> colors.darkGray
+        !isDarkMode && isActive && isTimeout -> colors.black
+        !isDarkMode && !isActive && isTimeout -> colors.darkGray
+
+        // 다크 모드
+        isDarkMode && isActive && !isTimeout -> colors.veryLightGray
+        isDarkMode && !isActive && !isTimeout -> colors.darkGray
+        isDarkMode && isActive && isTimeout -> Color.White
+        isDarkMode && !isActive && isTimeout -> colors.darkGray
+
+        else -> colors.black // fallback
+    }
     val lineColor = when {
-        isTimeout && isActive -> colors.black
-        !isTimeout && isActive -> colors.limeGreen
-        else -> colors.lightGray
+        // 화이트 모드
+        !isDarkMode && isActive && !isTimeout -> colors.limeGreen
+        !isDarkMode && !isActive && !isTimeout -> colors.lightGray
+        !isDarkMode && isActive && isTimeout -> colors.black
+        !isDarkMode && !isActive && isTimeout -> colors.lightGray
+
+        // 다크 모드
+        isDarkMode && isActive && !isTimeout -> colors.limeGreen
+        isDarkMode && !isActive && !isTimeout -> colors.mediumGray
+        isDarkMode && isActive && isTimeout -> Color.White
+        isDarkMode && !isActive && isTimeout -> colors.mediumGray
+
+        else -> colors.lightGray  // fallback (혹시 몰라서)
     }
 
     // 점선의 촘촘한 정도
-    val pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f))
+    val pathEffect = PathEffect.dashPathEffect(floatArrayOf(7f, 7f))
 
     Row(
         verticalAlignment = Alignment.CenterVertically
@@ -229,7 +252,7 @@ fun RoutineTimelineItemPreview4() {
                 title = title,
                 index = index,
                 currentStep = 2, // limeGreen 스타일은 1, 2번만 적용됨
-                isTimeout = false,
+                isTimeout = true,
                 isDarkMode = true
             )
         }
