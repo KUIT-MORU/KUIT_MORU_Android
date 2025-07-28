@@ -53,7 +53,7 @@ fun RoutineStepItem(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
-                modifier=Modifier
+                modifier = Modifier
                     .width(50.dp)
                     .fillMaxHeight()
                     .padding(start = 18.dp),
@@ -66,10 +66,10 @@ fun RoutineStepItem(
                 )
             }
             Box(
-                modifier= Modifier
+                modifier = Modifier
                     .width(179.dp)
                     .fillMaxHeight()
-                    .padding(start=10.dp),
+                    .padding(start = 10.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
                 Text(
@@ -78,13 +78,13 @@ fun RoutineStepItem(
                     color = colors.black,
                 )
             }
-            Spacer(modifier= Modifier.width(8.dp))
-            if(showDuration) {
+            Spacer(modifier = Modifier.width(8.dp))
+            if (showDuration) {
                 Box(
-                    modifier= Modifier
+                    modifier = Modifier
                         .width(59.dp)
                         .fillMaxHeight()
-                        .padding(start=2.dp,end=4.dp),
+                        .padding(start = 2.dp, end = 18.dp),
                     contentAlignment = Alignment.CenterEnd
                 ) {
                     Text(
@@ -93,20 +93,24 @@ fun RoutineStepItem(
                         color = colors.black
                     )
                 }
-                Spacer(modifier = modifier.size(14.dp))
             }
-            if(showSwitch) {
-                Switch(
-                    checked = isChecked,
-                    onCheckedChange = onCheckedChange,
-                    modifier = Modifier.scale(0.8f),
-                    colors = SwitchDefaults.colors(
-                        uncheckedThumbColor = colors.mediumGray,   // OFF 상태 버튼 색 (회색)
-                        uncheckedTrackColor = colors.lightGray,   // OFF 상태 배경 색 (연회색)
-                        checkedThumbColor = colors.lightGray,           // ON 상태 버튼 색
-                        checkedTrackColor = colors.darkGray         // ON 상태 배경 색
+            if (showSwitch) {
+                Box(
+                    modifier = Modifier
+                        .padding(end = 16.dp)
+                ) {
+                    Switch(
+                        checked = isChecked,
+                        onCheckedChange = onCheckedChange,
+                        modifier = Modifier.scale(0.8f),
+                        colors = SwitchDefaults.colors(
+                            uncheckedThumbColor = colors.mediumGray,   // OFF 상태 버튼 색 (회색)
+                            uncheckedTrackColor = colors.lightGray,   // OFF 상태 배경 색 (연회색)
+                            checkedThumbColor = colors.lightGray,           // ON 상태 버튼 색
+                            checkedTrackColor = colors.darkGray         // ON 상태 배경 색
+                        )
                     )
-                )
+                }
             }
         }
     }
