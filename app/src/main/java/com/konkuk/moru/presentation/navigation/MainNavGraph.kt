@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -23,7 +24,6 @@ import com.konkuk.moru.presentation.home.screen.RoutineSimpleRunScreen
 import com.konkuk.moru.presentation.home.screen.sampleSteps
 import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.myactivity.screen.ActFabTagScreen
-import com.konkuk.moru.presentation.myactivity.screen.ActInsightInfoClickScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActMainScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActProfileScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActRecordDetailScreen
@@ -37,9 +37,9 @@ import com.konkuk.moru.presentation.routinefeed.screen.main.HotRoutineListScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetailScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedViewModel
-import com.konkuk.moru.presentation.routinefeed.screen.search.RoutineSearchHost
 import com.konkuk.moru.presentation.routinefeed.screen.userprofile.UserProfileScreen
-import com.konkuk.moru.presentation.routinefocus.screen.RoutineFocusScreen
+import com.konkuk.moru.presentation.routinefocus.screen.RoutineFocusScreenContainer
+import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 import java.time.DayOfWeek
@@ -48,7 +48,12 @@ import java.time.DayOfWeek
 fun MainNavGraph(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    innerPadding: PaddingValues = PaddingValues()
+    innerPadding: PaddingValues = PaddingValues(),
+    onShowOnboarding: () -> Unit,
+    onShowOverlay: () -> Unit,
+    onDismissOverlay: () -> Unit,
+    fabOffsetY: MutableState<Float>,
+    todayTabOffsetY: MutableState<Float>
 ) {
 
     NavHost(
@@ -60,7 +65,9 @@ fun MainNavGraph(
             HomeScreen(
                 navController = navController,
                 sharedViewModel = sharedViewModel,
-                modifier = modifier.padding(innerPadding)
+                modifier = modifier.padding(innerPadding),
+                fabOffsetY = fabOffsetY,
+                todayTabOffsetY = todayTabOffsetY,
             )
         }
 
@@ -76,8 +83,9 @@ fun MainNavGraph(
 
             RoutineFocusIntroScreen(
                 focusType = focusType,
-                onStartClick = {
-                    sharedViewModel.onStartClick()
+                onStartClick = { selectedSteps ->
+                    sharedViewModel.setSelectedSteps(selectedSteps) // ⭐ ViewModel에 저장
+                    navController.navigate(Route.RoutineFocus.route) // 그냥 라우트만 넘김
                 },
                 onBackClick = {
                     navController.popBackStack()
@@ -107,21 +115,27 @@ fun MainNavGraph(
                 steps = sampleSteps, // 실제로는 전달받은 데이터로
                 onFinishClick = { /* 팝업 열기용 */ },
                 onFinishConfirm = { /* 종료 로직 */ },
-                onDismiss = { navController.popBackStack() }
+                onDismiss = { navController.popBackStack(Route.Home.route, inclusive = false) }
             )
         }
 
         // 집중 루틴 실행 화면 (몰입화면)
         composable(route = Route.RoutineFocus.route) {
-            RoutineFocusScreen(
-                onDismiss = { navController.popBackStack() },
-                routineItems = listOf(
-                    "샤워하기" to "15m",
-                    "청소하기" to "10m",
-                    "밥먹기" to "30m",
-                    "옷갈아입기" to "8m"
-                ),
-                currentStep = 1
+            val parentEntry = remember(navController) {
+                navController.getBackStackEntry(Route.Home.route)
+            }
+            val sharedViewModel = viewModel<SharedRoutineViewModel>(parentEntry)
+            val selectedSteps by sharedViewModel.selectedSteps.collectAsState()
+
+            val focusViewModel: RoutineFocusViewModel = viewModel()
+
+
+            RoutineFocusScreenContainer(
+                viewModel = focusViewModel,
+                onDismiss = {
+                    navController.popBackStack(Route.Home.route, inclusive = false)
+                },
+                routineItems = selectedSteps.map { it.name to "${it.duration}m" },
             )
         }
 
@@ -138,10 +152,6 @@ fun MainNavGraph(
                     navController.navigate(Route.Notification.route)
                 }
             )
-        }
-
-        composable(route = Route.RoutineSearch.route) {
-            RoutineSearchHost(navController = navController)
         }
 
         composable(
@@ -313,18 +323,7 @@ fun MainNavGraph(
             val encodedTitle = backStackEntry.arguments?.getString("routineTitle") ?: ""
             val decodedTitle = URLDecoder.decode(encodedTitle, StandardCharsets.UTF_8.toString())
 
-            ActRecordDetailScreen(
-                title = decodedTitle,
-                navController = navController,
-                modifier.padding(innerPadding)
-            )
-        }
-
-        composable(route = Route.ActInsightInfo.route) {
-            ActInsightInfoClickScreen(
-                modifier = modifier.padding(innerPadding),
-                navController = navController
-            )
+            ActRecordDetailScreen(title = decodedTitle, navController = navController)
         }
     }
 }

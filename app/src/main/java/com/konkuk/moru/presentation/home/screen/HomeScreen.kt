@@ -1,5 +1,7 @@
 package com.konkuk.moru.presentation.home.screen
 
+import android.R.attr.centerY
+import android.R.attr.y
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -20,6 +22,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,7 +65,12 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 fun HomeScreen(
     navController: NavHostController,
     sharedViewModel: SharedRoutineViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    fabOffsetY: MutableState<Float>,
+    todayTabOffsetY: MutableState<Float>,
+    onShowOnboarding: () -> Unit = {},
+    onShowOverlay: () -> Unit = {},
+    onDismissOverlay: () -> Unit = {}
 ) {
     //탭 선택 상태(오늘,이번주)
     var selectedTab by remember { mutableStateOf(0) }
@@ -82,12 +91,12 @@ fun HomeScreen(
         14 to listOf("주말아침루틴")
     )
 
-    val fabOffsetY = remember { mutableStateOf(0f) }
-
+    LaunchedEffect(Unit) {
+        onShowOnboarding()
+    }
     Scaffold(
         containerColor = Color.White,
         //FAB
-        // HomeScreen의 FAB 부분을 다음과 같이 수정해주세요:
 
         floatingActionButton = {
             HomeFloatingActionButton(
@@ -96,25 +105,9 @@ fun HomeScreen(
                     .onGloballyPositioned { layoutCoordinates ->
                         val position = layoutCoordinates.positionInRoot()
                         val size = layoutCoordinates.size
-                        val bounds = layoutCoordinates.boundsInWindow()
-
-                        // 다양한 좌표 정보 로그
-                        Log.d("FAB_DEBUG", "=== FAB Position Debug ===")
-                        Log.d("FAB_DEBUG", "positionInRoot: (${position.x}, ${position.y})")
-                        Log.d("FAB_DEBUG", "size: ${size.width} x ${size.height}")
-                        Log.d("FAB_DEBUG", "boundsInWindow: ${bounds}")
-                        Log.d(
-                            "FAB_DEBUG",
-                            "center in root: (${position.x + size.width / 2f}, ${position.y + size.height / 2f})"
-                        )
-                        Log.d(
-                            "FAB_DEBUG",
-                            "center in window: (${bounds.left + bounds.width / 2f}, ${bounds.top + bounds.height / 2f})"
-                        )
-
-                        fabOffsetY.value = position.y + size.height / 2f // 중심 Y좌표로 저장
-                        Log.d("FAB_DEBUG", "fabOffsetY.value set to: ${fabOffsetY.value}")
-                        Log.d("FAB_DEBUG", "========================")
+                        val centerY = position.y + size.height / 2f
+                        fabOffsetY.value = centerY
+                        Log.d("FAB_POSITION", "FAB Y Offset: $centerY")
                     },
                 onClick = { /* 클릭 처리 */ }
             )
@@ -126,10 +119,10 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            item {
-                // 상단 상태 바
-                StatusBarMock(isDarkMode = true)
-            }
+//            item {
+//                // 상단 상태 바
+//                StatusBarMock(isDarkMode = true)
+//            }
             item {
                 //로고와 MORU
                 HomeTopAppBar()
@@ -220,7 +213,16 @@ fun HomeScreen(
                     // 후에 실제 데이터로 오늘 루틴이 있는지 확인
                     TodayWeekTab(
                         modifier = Modifier
-                            .padding(horizontal = 16.dp),
+                            .padding(horizontal = 16.dp)
+                            .onGloballyPositioned { coordinates ->
+                                val position = coordinates.positionInRoot()
+                                val size = coordinates.size
+                                val centerY = position.y + size.height / 2f
+
+                                Log.d("TODAY_TAB_POSITION", "TodayTab CenterY: $centerY")
+
+                                todayTabOffsetY.value = centerY
+                            },
                         selectedTabIndex = selectedTab,
                         onTabSelected = { selectedTab = it }
                     )
@@ -279,45 +281,45 @@ fun HomeScreen(
             }
         }
 
-        var showOnboarding by remember { mutableStateOf(true) }
-        var showOverlay by remember { mutableStateOf(false) }
-
-        when {
-            showOnboarding -> {
-                // 온보딩 화면 1
-                OnboardingScreen(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .zIndex(2f),
-                    onNextClick = {
-                        showOnboarding = false
-                        showOverlay = true
-                    },
-                    onCloseClick = {
-                        // 온보딩 건너뛰기 시 모든 튜토리얼 종료
-                        showOnboarding = false
-                        showOverlay = false
-                    }
-                )
-            }
-
-            showOverlay -> {
-                // 온보딩 화면 2 (튜토리얼 오버레이)
-                HomeTutorialOverlayContainer(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .zIndex(2f),
-                    onDismiss = {
-                        showOverlay = false
-                    },
-                    onFabClick = {
-                        // FAB 클릭 시 튜토리얼 종료 (또는 다음 단계)
-                        showOverlay = false
-                    },
-                    fabOffsetY = fabOffsetY.value
-                )
-            }
-        }
+//        var showOnboarding by remember { mutableStateOf(true) }
+//        var showOverlay by remember { mutableStateOf(false) }
+//
+//        when {
+//            showOnboarding -> {
+//                // 온보딩 화면 1
+//                OnboardingScreen(
+//                    modifier = Modifier
+//                        .fillMaxSize()
+//                        .zIndex(2f),
+//                    onNextClick = {
+//                        showOnboarding = false
+//                        showOverlay = true
+//                    },
+//                    onCloseClick = {
+//                        // 온보딩 건너뛰기 시 모든 튜토리얼 종료
+//                        showOnboarding = false
+//                        showOverlay = false
+//                    }
+//                )
+//            }
+//
+//            showOverlay -> {
+//                // 온보딩 화면 2 (튜토리얼 오버레이)
+//                HomeTutorialOverlayContainer(
+//                    modifier = Modifier
+//                        .fillMaxSize()
+//                        .zIndex(2f),
+//                    onDismiss = {
+//                        showOverlay = false
+//                    },
+//                    onFabClick = {
+//                        // FAB 클릭 시 튜토리얼 종료 (또는 다음 단계)
+//                        showOverlay = false
+//                    },
+//                    fabOffsetY = fabOffsetY.value
+//                )
+//            }
+//        }
     }
 
 
@@ -332,9 +334,13 @@ fun HomeScreen(
 private fun HomeScreenPreview() {
     val fakeNavController = rememberNavController()
     val previewSharedViewModel = SharedRoutineViewModel()
+    val previewFabOffsetY = remember { mutableStateOf(0f) } // 🔹 추가
+    val todayTabOffsetY = remember { mutableStateOf(0f) } // 🔹 추가
 
     HomeScreen(
         navController = fakeNavController,
-        sharedViewModel = previewSharedViewModel
+        sharedViewModel = previewSharedViewModel,
+        fabOffsetY = previewFabOffsetY,
+        todayTabOffsetY = todayTabOffsetY
     )
 }
