@@ -77,7 +77,6 @@ fun HomeTutorialOverlayContainer(
     Box(modifier = modifier.fillMaxSize()) {
         HomeTutorialOverlayView(
             holes = holes,
-            onDismiss = onDismiss
         )
 
         HomeTutorialDecoration(
