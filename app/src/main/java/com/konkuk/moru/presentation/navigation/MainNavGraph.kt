@@ -56,8 +56,6 @@ fun MainNavGraph(
     fabOffsetY: MutableState<Float>,
     todayTabOffsetY: MutableState<Float>,
     onShowOnboarding: () -> Unit,
-    onShowOverlay: () -> Unit,
-    onDismissOverlay: () -> Unit,
     bottomIconCenters: SnapshotStateList<Offset>
 ) {
 
@@ -174,7 +172,7 @@ fun MainNavGraph(
                 navController = navController,
                 uiState = uiState,
                 onNotificationClick = {
-                    viewModel.onNotificationViewed()
+                    viewModel.onNotificationViewed() // ViewModel의 함수 호출
                     navController.navigate(Route.Notification.route)
                 }
             )
@@ -189,14 +187,17 @@ fun MainNavGraph(
             arguments = listOf(navArgument("routineId") { type = NavType.IntType })
         ) { backStackEntry ->
             val routineId = backStackEntry.arguments?.getInt("routineId")
-            feedRoutines.find { it.routineId == routineId }?.let { routine ->
+            if (routineId != null) {
                 RoutineDetailScreen(
-                    routine = routine,
+                    routineId = routineId,
                     onBackClick = { navController.popBackStack() },
                     navController = navController
                 )
-            } ?: navController.popBackStack()
+            } else {
+                navController.popBackStack()
+            }
         }
+
 
         composable(
             route = Route.RoutineFeedRec.route,
@@ -265,25 +266,32 @@ fun MainNavGraph(
             )
         }
 
+        // [추가] UserProfileScreen 내비게이션 설정
         composable(
             route = Route.UserProfile.route,
             arguments = listOf(navArgument("userId") { type = NavType.IntType })
         ) { backStackEntry ->
+            // userId는 현재 더미 데이터로만 사용되므로 ViewModel에서 직접 로드합니다.
+            // 실제 앱에서는 hiltViewModel에 userId를 전달하여 해당 유저 데이터를 불러옵니다.
             UserProfileScreen(navController = navController)
         }
 
-//        composable(
-//            route = Route.Follow.route,
-//            arguments = listOf(
-//                navArgument("userId") { type = NavType.IntType },
-//                navArgument("selectedTab") { type = NavType.StringType })
-//        ) { backStackEntry ->
-//            val selectedTab = backStackEntry.arguments?.getString("selectedTab")
-//            FollowScreen(
-//                onBackClick = { navController.popBackStack() },
-//                selectedTab = selectedTab
-//            )
-//        }
+        // [추가] FollowScreen 내비게이션 설정
+        composable(
+            route = Route.Follow.route,
+            arguments = listOf(
+                navArgument("userId") { type = NavType.IntType },
+                navArgument("selectedTab") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val selectedTab = backStackEntry.arguments?.getString("selectedTab")
+            FollowScreen(
+                onBackClick = { navController.popBackStack() },
+                selectedTab = selectedTab,
+                onUserClick = { userId ->
+                    navController.navigate(Route.UserProfile.createRoute(userId))
+                },
+            )
+        }
 
         composable(route = Route.MyActivity.route) {
             ActMainScreen(
@@ -313,6 +321,7 @@ fun MainNavGraph(
                 navController = navController
             )
         }
+
 
         composable(route = Route.ActFabTag.route) {
             ActFabTagScreen(
