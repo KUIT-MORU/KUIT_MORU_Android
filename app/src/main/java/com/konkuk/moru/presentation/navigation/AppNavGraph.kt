@@ -47,7 +47,7 @@ fun AppNavGraph(
     val todayTabOffsetY = remember { mutableStateOf(0f) }
     val bottomIconCenters = remember { mutableStateListOf<Offset>() }
 
-    // 세션별 홈 온보딩 상태 관리
+    // 홈 온보딩 상태 관리
     var hasShownHomeOnboardingThisSession by remember { mutableStateOf(false) }
     var showHomeOnboarding by remember { mutableStateOf(false) }
     var hasInitializedHomeOnboarding by remember { mutableStateOf(false) }
@@ -86,16 +86,18 @@ fun AppNavGraph(
             // Route.Main.route 최초 진입 시에만 온보딩 체크
             LaunchedEffect(Unit) {
                 if (!hasInitializedHomeOnboarding) {
+                    // SharedPreferences에서 홈 온보딩을 본 적이 있는지 확인
+                    val hasSeenHomeOnboarding = sharedPreferences.getBoolean("hasSeenHomeOnboarding", false)
 
-                    // 기존 hasSeenHomeOnboarding 키는 무시하고 새로운 로직 사용
-                    val permanentlyDisabled =
-                        sharedPreferences.getBoolean("homeOnboardingPermanentlyDisabled", false)
+                    println("DEBUG: hasSeenHomeOnboarding = $hasSeenHomeOnboarding")
+                    println("DEBUG: hasShownHomeOnboardingThisSession = $hasShownHomeOnboardingThisSession")
 
-
-                    // 영구적으로 비활성화되지 않았고, 이번 세션에서 아직 보여주지 않았다면 표시
-                    if (!permanentlyDisabled && !hasShownHomeOnboardingThisSession) {
+                    // 한 번도 본 적이 없고, 이번 세션에서도 아직 보여주지 않았다면 표시
+                    if (!hasSeenHomeOnboarding && !hasShownHomeOnboardingThisSession) {
+                        println("DEBUG: Setting showHomeOnboarding = true")
                         showHomeOnboarding = true
                     } else {
+                        println("DEBUG: Not showing onboarding")
                     }
                     hasInitializedHomeOnboarding = true
                 }
@@ -168,12 +170,10 @@ fun AppNavGraph(
                     onShowOnboarding = { /* 불필요하므로 호출 안 함 */ },
                     fabOffsetY = fabOffsetY,
                     todayTabOffsetY = todayTabOffsetY,
-                    bottomIconCenters = bottomIconCenters
                 )
             }
         }
     }
-
 
     // 홈 온보딩 화면 표시
     if (showHomeOnboarding) {
@@ -182,15 +182,15 @@ fun AppNavGraph(
                 .fillMaxSize()
                 .zIndex(10f),
             onNextClick = {
-                // 세션에서 보여줬다고 표시 (앱 재실행시 다시 보여줌)
+                // 홈 온보딩을 봤다고 영구적으로 저장
+                sharedPreferences.edit().putBoolean("hasSeenHomeOnboarding", true).apply()
                 hasShownHomeOnboardingThisSession = true
                 showHomeOnboarding = false
                 showOverlay = true
             },
             onCloseClick = {
-                // 닫기를 누르면 영구적으로 비활성화
-                sharedPreferences.edit().putBoolean("homeOnboardingPermanentlyDisabled", true)
-                    .apply()
+                // 홈 온보딩을 봤다고 영구적으로 저장
+                sharedPreferences.edit().putBoolean("hasSeenHomeOnboarding", true).apply()
                 hasShownHomeOnboardingThisSession = true
                 showHomeOnboarding = false
                 showOverlay = false
@@ -207,6 +207,5 @@ fun AppNavGraph(
             todayTabOffsetY = todayTabOffsetY.value,
             bottomIconCenters = bottomIconCenters
         )
-    } else {
     }
 }

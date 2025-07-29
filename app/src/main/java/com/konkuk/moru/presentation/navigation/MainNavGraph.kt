@@ -1,17 +1,14 @@
 package com.konkuk.moru.presentation.navigation
 
-import FollowScreen
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState // MutableState 임포트 추가
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -36,6 +33,7 @@ import com.konkuk.moru.presentation.myactivity.screen.ActSettingScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesViewModel
 import com.konkuk.moru.presentation.routinefeed.screen.NotificationScreen
+import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.HotRoutineListScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetailScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedScreen
@@ -56,7 +54,6 @@ fun MainNavGraph(
     fabOffsetY: MutableState<Float>,
     todayTabOffsetY: MutableState<Float>,
     onShowOnboarding: () -> Unit,
-    bottomIconCenters: SnapshotStateList<Offset>
 ) {
 
     NavHost(
@@ -72,7 +69,6 @@ fun MainNavGraph(
                 fabOffsetY = fabOffsetY, // MainNavGraph가 받은 인자를 HomeScreen으로 전달
                 todayTabOffsetY = todayTabOffsetY, // MainNavGraph가 받은 인자를 HomeScreen으로 전달
                 onShowOnboarding = onShowOnboarding, // MainNavGraph가 받은 인자를 HomeScreen으로 전달
-                bottomIconCenters = bottomIconCenters
             )
         }
 
@@ -117,8 +113,6 @@ fun MainNavGraph(
                 routineTitle = "주말 아침 루틴",
                 hashTag = "#태그 #태그",
                 steps = sampleSteps,
-                onFinishClick = { /* 팝업 열기용 */ },
-                onFinishConfirm = { /* 종료 로직 */ },
                 onDismiss = {
                     navController.popBackStack(
                         Route.Home.route,
