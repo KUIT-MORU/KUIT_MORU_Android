@@ -1,7 +1,13 @@
 package com.konkuk.moru.presentation.routinefocus.component
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -110,7 +116,7 @@ fun RoutineTimelineItem(
                 if (isActive) {
                     //원 내부 칠하기
                     drawCircle(
-                        color = if(isDarkMode) colors.black else Color.White,
+                        color = if (isDarkMode) colors.black else Color.White,
                         center = Offset(centerX, centerY),
                         radius = 6.dp.toPx(),
                         style = Fill

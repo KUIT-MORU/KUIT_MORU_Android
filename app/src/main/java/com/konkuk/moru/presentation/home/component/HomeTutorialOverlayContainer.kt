@@ -1,6 +1,5 @@
 package com.konkuk.moru.presentation.home.component
 
-import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -23,13 +22,10 @@ fun HomeTutorialOverlayContainer(
     onFabClick: () -> Unit,
     fabOffsetY: Float,
     todayTabOffsetY: Float,
-    bottomIconCenters : List<Offset>
+    bottomIconCenters: List<Offset>
 ) {
-    Log.d("TutorialOverlay", "HomeTutorialOverlayContainer - Received todayTabOffsetY: $todayTabOffsetY")
-
     LaunchedEffect(bottomIconCenters) {
         bottomIconCenters.forEachIndexed { idx, offset ->
-            Log.d("StepCheck", "🔵 OverlayContainer center[$idx]: $offset")
         }
     }
 
@@ -53,16 +49,6 @@ fun HomeTutorialOverlayContainer(
             val holeRight = screenWidthPx - horizontalPaddingPx  // 344.0 (360 - 16)
             val holeTop = todayTabOffsetY - (tabHeightPx / 2f)  // 297.0 - 18.0 = 279.0
             val holeBottom = todayTabOffsetY + (tabHeightPx / 2f)  // 297.0 + 18.0 = 315.0
-
-            // 디버깅 로그 - 로그에서 확인된 값과 비교
-            Log.d("TutorialOverlay", "=== Tab Hole Calculation ===")
-            Log.d("TutorialOverlay", "- todayTabOffsetY (center): $todayTabOffsetY")
-            Log.d("TutorialOverlay", "- tabHeightPx: $tabHeightPx")
-            Log.d("TutorialOverlay", "- horizontalPaddingPx: $horizontalPaddingPx")
-            Log.d("TutorialOverlay", "- screenWidthPx: $screenWidthPx")
-            Log.d("TutorialOverlay", "- Calculated hole: left=$holeLeft, top=$holeTop, right=$holeRight, bottom=$holeBottom")
-            Log.d("TutorialOverlay", "- Expected bounds: left=16.0, top=279.0, right=344.0, bottom=315.0")
-            Log.d("TutorialOverlay", "- Match check: left=${holeLeft == 16f}, top=${holeTop == 279f}, right=${holeRight == 344f}, bottom=${holeBottom == 315f}")
 
             TutorialOverlayView.HolePx(
                 left = holeLeft,
@@ -90,13 +76,6 @@ fun HomeTutorialOverlayContainer(
             val holeTop = fabCenterY - fabSizePx / 2f
             val holeRight = fabCenterX + fabSizePx / 2f
             val holeBottom = fabCenterY + fabSizePx / 2f
-
-            // 디버깅 로그
-            Log.d("TutorialOverlay", "FAB hole calculation:")
-            Log.d("TutorialOverlay", "- fabOffsetY: $fabOffsetY")
-            Log.d("TutorialOverlay", "- fabSizePx: $fabSizePx")
-            Log.d("TutorialOverlay", "- FAB center: ($fabCenterX, $fabCenterY)")
-            Log.d("TutorialOverlay", "- Final hole: left=$holeLeft, top=$holeTop, right=$holeRight, bottom=$holeBottom")
 
             TutorialOverlayView.HolePx(
                 left = holeLeft,

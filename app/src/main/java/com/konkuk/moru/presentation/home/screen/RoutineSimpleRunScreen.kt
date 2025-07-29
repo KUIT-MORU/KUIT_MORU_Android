@@ -39,8 +39,6 @@ import com.konkuk.moru.presentation.home.component.RoutineResultRow
 import com.konkuk.moru.presentation.home.component.RoutineSelectItem
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
-import kotlin.collections.forEachIndexed
-import kotlin.collections.map
 
 // 소요시간 포맷 함수
 fun formatElapsedTime(ms: Long): String {
@@ -58,8 +56,6 @@ fun RoutineSimpleRunScreen(
     routineTitle: String = "주말 아침 루틴",
     hashTag: String = "#태그 #태그",
     steps: List<RoutineStepData>,
-    onFinishClick: () -> Unit, //둥근 finish버튼 눌렀을 시
-    onFinishConfirm: () -> Unit, //1번째 팝업의 finish 버튼 이후 종료 버튼
     onDismiss: () -> Unit //x버튼 눌렀을 시
 ) {
     /*---------------- 상태 ----------------*/
@@ -371,8 +367,6 @@ private fun RoutineSimpleRunScreenPreview() {
         routineTitle = "주말 아침 루틴",
         hashTag = "#태그 #태그",
         steps = sampleSteps,
-        onFinishClick = {},
-        onFinishConfirm = {},
         onDismiss = {}
     )
 }

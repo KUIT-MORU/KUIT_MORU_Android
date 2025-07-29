@@ -19,6 +19,7 @@ sealed class Route(
 
     // 실제 루틴 실행 화면 (집중 루틴 시-몰입화면)
     data object RoutineFocus : Route("routine_focus")
+
     // 실제 루틴 실행 화면 (간편 루틴 화면)
     data object RoutineSimpleRun : Route("routine_simple_run")
 
@@ -62,5 +63,6 @@ sealed class Route(
             return "act_record_detail/$encoded"
         }
     }
+
     data object ActInsightInfo : Route(route = "act_insight")
 }

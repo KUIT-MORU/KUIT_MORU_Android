@@ -27,7 +27,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
-import com.konkuk.moru.presentation.onboarding.OnboardingScreen
 import com.konkuk.moru.ui.theme.LocalMoruColorsProvider
 import com.konkuk.moru.ui.theme.LocalMoruTypographyProvider
 import com.konkuk.moru.ui.theme.MORUTheme.typography

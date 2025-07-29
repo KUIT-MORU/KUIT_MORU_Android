@@ -1,21 +1,31 @@
 package com.konkuk.moru.presentation.navigation
 
 import android.content.Context
-import android.util.Log
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.*
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.konkuk.moru.core.component.MoruBottomBar
 import com.konkuk.moru.presentation.auth.AuthCheckScreen
 import com.konkuk.moru.presentation.home.component.HomeTutorialOverlayContainer
@@ -76,20 +86,16 @@ fun AppNavGraph(
             // Route.Main.route 최초 진입 시에만 온보딩 체크
             LaunchedEffect(Unit) {
                 if (!hasInitializedHomeOnboarding) {
-                    Log.d("HomeOnboarding", "Initializing home onboarding")
 
                     // 기존 hasSeenHomeOnboarding 키는 무시하고 새로운 로직 사용
-                    val permanentlyDisabled = sharedPreferences.getBoolean("homeOnboardingPermanentlyDisabled", false)
+                    val permanentlyDisabled =
+                        sharedPreferences.getBoolean("homeOnboardingPermanentlyDisabled", false)
 
-                    Log.d("HomeOnboarding", "permanentlyDisabled = $permanentlyDisabled")
-                    Log.d("HomeOnboarding", "hasShownHomeOnboardingThisSession = $hasShownHomeOnboardingThisSession")
 
                     // 영구적으로 비활성화되지 않았고, 이번 세션에서 아직 보여주지 않았다면 표시
                     if (!permanentlyDisabled && !hasShownHomeOnboardingThisSession) {
-                        Log.d("HomeOnboarding", "Setting showHomeOnboarding = true")
                         showHomeOnboarding = true
                     } else {
-                        Log.d("HomeOnboarding", "Not showing onboarding")
                     }
                     hasInitializedHomeOnboarding = true
                 }
@@ -97,21 +103,19 @@ fun AppNavGraph(
 
             // 홈 탭으로 돌아왔을 때의 처리
             LaunchedEffect(currentRoute) {
-                Log.d("HomeOnboarding", "currentRoute changed to: $currentRoute")
                 when (currentRoute) {
                     Route.Home.route -> {
-                        Log.d("HomeOnboarding", "Entered Home route, showHomeOnboarding = $showHomeOnboarding")
                         // 홈 탭 진입 시에는 이미 세션에서 보여준 경우가 아니라면 온보딩 표시 안함
                         // (최초 진입 시에만 위의 LaunchedEffect(Unit)에서 처리)
                     }
+
                     null -> {
                         // currentRoute가 null일 때는 아무것도 하지 않음 (초기화 중)
-                        Log.d("HomeOnboarding", "currentRoute is null (initializing)")
                     }
+
                     else -> {
                         // 다른 탭으로 이동 시 온보딩 숨김
                         if (showHomeOnboarding) {
-                            Log.d("HomeOnboarding", "Hiding onboarding due to route change to: $currentRoute")
                             showHomeOnboarding = false
                         }
                     }
@@ -170,33 +174,29 @@ fun AppNavGraph(
         }
     }
 
-    Log.d("HomeOnboarding", "Composing AppNavGraph, showHomeOnboarding = $showHomeOnboarding, showOverlay = $showOverlay")
 
     // 홈 온보딩 화면 표시
     if (showHomeOnboarding) {
-        Log.d("HomeOnboarding", "Showing HomeOnboardingScreen")
         HomeOnboardingScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .zIndex(10f),
             onNextClick = {
-                Log.d("HomeOnboarding", "onNextClick - hiding onboarding, showing overlay")
                 // 세션에서 보여줬다고 표시 (앱 재실행시 다시 보여줌)
                 hasShownHomeOnboardingThisSession = true
                 showHomeOnboarding = false
                 showOverlay = true
             },
             onCloseClick = {
-                Log.d("HomeOnboarding", "onCloseClick - permanently disabling onboarding")
                 // 닫기를 누르면 영구적으로 비활성화
-                sharedPreferences.edit().putBoolean("homeOnboardingPermanentlyDisabled", true).apply()
+                sharedPreferences.edit().putBoolean("homeOnboardingPermanentlyDisabled", true)
+                    .apply()
                 hasShownHomeOnboardingThisSession = true
                 showHomeOnboarding = false
                 showOverlay = false
             }
         )
     } else if (showOverlay) {
-        Log.d("HomeOnboarding", "Showing HomeTutorialOverlayContainer")
         HomeTutorialOverlayContainer(
             modifier = Modifier
                 .fillMaxSize()
@@ -208,6 +208,5 @@ fun AppNavGraph(
             bottomIconCenters = bottomIconCenters
         )
     } else {
-        Log.d("HomeOnboarding", "Not showing any overlay (showHomeOnboarding=$showHomeOnboarding, showOverlay=$showOverlay)")
     }
 }

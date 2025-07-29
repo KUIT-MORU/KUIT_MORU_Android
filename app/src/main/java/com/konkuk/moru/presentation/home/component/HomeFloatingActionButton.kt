@@ -29,7 +29,7 @@ fun HomeFloatingActionButton(
             onClick = onClick,
             backgroundColor = colors.limeGreen,
             contentColor = Color.White,
-            modifier = Modifier.size(63.dp) // ✅ 고정 Modifier 사용
+            modifier = Modifier.size(63.dp)
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.baseline_add_24),
