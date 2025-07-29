@@ -57,7 +57,8 @@ fun AppNavGraph(navController: NavHostController) {
                                 Route.ActScrab.route,
                                 Route.RoutineFocusIntro.route,
                                 Route.RoutineFocus.route,
-                                Route.RoutineSimpleRun.route
+                                Route.RoutineSimpleRun.route,
+                                Route.MyRoutineDetail.route
                             )
                         ) {
                             MoruBottomBar(
