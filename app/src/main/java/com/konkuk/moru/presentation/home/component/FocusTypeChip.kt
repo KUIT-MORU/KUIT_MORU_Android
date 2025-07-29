@@ -1,4 +1,3 @@
-
 package com.konkuk.moru.presentation.home.component
 
 import androidx.compose.foundation.background

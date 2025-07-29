@@ -1,9 +1,7 @@
 package com.konkuk.moru.presentation.home.component
 
-import android.R.attr.centerX
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,14 +9,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,11 +35,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.konkuk.moru.R
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
-import java.nio.file.WatchEvent
 
 @Composable
 fun HomeTutorialDecoration(
@@ -70,7 +64,6 @@ fun HomeTutorialDecoration(
             lineLengthRatio = 0.060f,
             isUpward = false
         )
-
 
         // 루틴 둘러보기
         TutorialHintWithLineByRatio(
@@ -111,16 +104,13 @@ fun HomeTutorialDecoration(
                 )
         )
 
-
-
-        // Balloon
+        // 말풍선
         SimpleBottomTailBalloonByRatio(
             image = R.drawable.right_arrow_green,
             text = "바로 생성하기!",
             offsetRatioX = 213f / 360f,
             offsetRatioY = 440f / 800f
         )
-
 
         // FAB 터치 클릭 영역
         Box(

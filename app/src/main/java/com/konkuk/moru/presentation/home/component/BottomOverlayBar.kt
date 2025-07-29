@@ -1,4 +1,3 @@
-
 package com.konkuk.moru.presentation.home.component
 
 import androidx.compose.foundation.layout.Box
@@ -43,22 +42,15 @@ fun BottomOverlayBar(
                     val itemWidth = screenWidthPx / 4f // 4개 탭으로 균등 분할
                     val itemHeight = 80.dp.toPx() // 바텀바 높이
 
-                    // 디버깅용 로그 추가
-                    android.util.Log.d("BottomOverlay", "=== 기기별 차이 디버깅 ===")
-                    android.util.Log.d("BottomOverlay", "Screen: ${configuration.screenWidthDp}dp x ${configuration.screenHeightDp}dp")
-                    android.util.Log.d("BottomOverlay", "Density: ${density.density}")
-                    android.util.Log.d("BottomOverlay", "Center[$index]: $center")
-                    android.util.Log.d("BottomOverlay", "ItemWidth: ${itemWidth.toDp()}, ItemHeight: ${itemHeight.toDp()}")
-
                     // 오버레이 아이템의 중심을 바텀바 아이템의 중심과 정확히 맞춤
                     val offsetX = (center.x - itemWidth / 2f).toDp()
                     val offsetY = (center.y - itemHeight / 2f).toDp()
 
-                    android.util.Log.d("BottomOverlay", "Final offset[$index]: x=$offsetX, y=$offsetY")
-
                     // 기기별 보정값 (필요시 조정)
-                    val iconYCorrection = if (density.density >= 3.0f) (-2).dp else (-1).dp // 고밀도 기기는 더 많이 보정
-                    val textXCorrection = if (density.density >= 3.0f) (-1).dp else (-2).dp // 가상기기(저밀도)에서 텍스트를 왼쪽으로
+                    val iconYCorrection =
+                        if (density.density >= 3.0f) (-2).dp else (-1).dp // 고밀도 기기는 더 많이 보정
+                    val textXCorrection =
+                        if (density.density >= 3.0f) (-1).dp else (-2).dp // 가상기기(저밀도)에서 텍스트를 왼쪽으로
 
                     BottomBarIconWithLabelOverlay(
                         iconResId = iconResId,

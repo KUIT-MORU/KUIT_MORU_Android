@@ -36,7 +36,7 @@ fun TutorialHintWithLineByRatio(
     }
 
     val lineLengthDp = with(density) {
-        (screenHeightPx * lineLengthRatio).toDp() // ✅ 점선 길이를 화면 높이에 따라 결정
+        (screenHeightPx * lineLengthRatio).toDp()
     }
 
     // 실제 점선과 텍스트를 그림
