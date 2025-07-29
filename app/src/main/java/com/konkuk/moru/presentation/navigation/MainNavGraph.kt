@@ -131,7 +131,19 @@ fun MainNavGraph(
 
             RoutineFocusScreenContainer(
                 viewModel = routineFocusViewModel, // ViewModel 전달
-                onDismiss = { navController.popBackStack() },
+                onDismiss = {
+                    navController.popBackStack(
+                        Route.Home.route,
+                        inclusive = false
+                    )
+                    if (navController.currentDestination?.route != Route.Home.route) {
+                        // 스택에 없으면 새로 넣고 나머지는 모두 제거
+                        navController.navigate(Route.Home.route) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                },
                 routineItems = listOf( // 기존과 동일하게 routineItems 전달
                     "샤워하기" to "15m",
                     "청소하기" to "10m",

@@ -5,6 +5,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 
+
+// 비율에 따른 도움말 텍스트 위치를 위한 함수
 @Composable
 fun TutorialHintWithLineByRatio(
     text: String,
@@ -34,9 +36,10 @@ fun TutorialHintWithLineByRatio(
     }
 
     val lineLengthDp = with(density) {
-        (screenHeightPx * lineLengthRatio).toDp()
+        (screenHeightPx * lineLengthRatio).toDp() // ✅ 점선 길이를 화면 높이에 따라 결정
     }
 
+    // 실제 점선과 텍스트를 그림
     TutorialHintWithLine(
         text = text,
         textOffsetDp = textOffsetDp,
@@ -45,3 +48,4 @@ fun TutorialHintWithLineByRatio(
         isUpward = isUpward
     )
 }
+

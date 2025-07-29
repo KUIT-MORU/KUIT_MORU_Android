@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -53,61 +54,73 @@ fun HomeTutorialDecoration(
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         // 정기 루틴 확인하기
-        TutorialHintWithLine(
+        TutorialHintWithLineByRatio(
             text = "정기 루틴 확인하기",
-            textOffsetDp = 63.dp to 368.dp,
-            lineOffsetDp = 53.dp to 319.dp,
-            lineLength = 61.dp,
+            textOffsetRatio = 63f / 360f to 368f / 800f,
+            lineOffsetRatio = 53f / 360f to 319f / 800f,
+            lineLengthRatio = 61f / 800f,
             isUpward = true
         )
 
         // 루틴 생성하기
-        TutorialHintWithLine(
+        TutorialHintWithLineByRatio(
             text = "루틴 생성하기",
-            textOffsetDp = 274.dp to 507.dp,
-            lineOffsetDp = 313.dp to 532.dp,
-            lineLength = 109.dp,
+            textOffsetRatio = 274f / 360f to 507f / 800f,
+            lineOffsetRatio = 313f / 360f to 532f / 800f,
+            lineLengthRatio = 0.060f,
             isUpward = false
         )
 
+
         // 루틴 둘러보기
-        TutorialHintWithLine(
+        TutorialHintWithLineByRatio(
             text = "루틴 둘러보기",
-            textOffsetDp = 50.dp to 672.dp,
-            lineOffsetDp = 137.dp to 681.dp,
-            lineLength = 61.dp,
+            textOffsetRatio = 50f / 360f to 672f / 800f,
+            lineOffsetRatio = 132f / 360f to 681f / 800f,
+            lineLengthRatio = 0.050f,
             isUpward = false
         )
 
         // 루틴 관리하기
-        TutorialHintWithLine(
+        TutorialHintWithLineByRatio(
             text = "루틴 관리하기",
-            textOffsetDp = 183.dp to 656.dp,
-            lineOffsetDp = 223.dp to 681.dp,
-            lineLength = 64.dp,
+            textOffsetRatio = 183f / 360f to 656f / 800f,
+            lineOffsetRatio = 223f / 360f to 681f / 800f,
+            lineLengthRatio = 0.050f,
             isUpward = false
         )
 
         // 루틴 인사이트 보기 (꺾인 화살표)
-        DotWithBentArrow(
-            startX = 273.dp,
-            startY = 591.dp,
-            verticalLength = 166.dp,
-            horizontalLength = 28.dp
+        DotWithBentArrowByRatio(
+            startOffsetRatio = 273f / 360f to 591f / 800f,
+            verticalLengthRatio = 0.19f,
+            horizontalLengthRatio = 0.1f
         )
+
+        val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+        val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+
         Text(
             text = "루틴 인사이트 보기",
             style = typography.time_R_14.copy(fontWeight = FontWeight.Bold),
             color = Color.White,
-            modifier = modifier.offset(x = 159.dp, y = 582.dp)
+            modifier = Modifier
+                .offset(
+                    x = screenWidth * (159f / 360f),
+                    y = screenHeight * (582f / 800f)
+                )
         )
 
+
+
         // Balloon
-        SimpleBottomTailBalloon(
+        SimpleBottomTailBalloonByRatio(
             image = R.drawable.right_arrow_green,
-            text = "바로 생성하기!", offsetX = 213.dp,
-            offsetY = 451.dp
+            text = "바로 생성하기!",
+            offsetRatioX = 213f / 360f,
+            offsetRatioY = 440f / 800f
         )
+
 
         // FAB 터치 클릭 영역
         Box(
