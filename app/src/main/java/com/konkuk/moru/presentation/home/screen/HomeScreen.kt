@@ -310,6 +310,7 @@ fun HomeScreen(
                                 .size(width = 8.dp, height = 12.dp)
                         )
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
                     // 후에 실제 데이터로 오늘 루틴이 있는지 확인
                     if (sampleRoutines.isNotEmpty()) {
                         RoutineCardList()
