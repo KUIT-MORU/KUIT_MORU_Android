@@ -113,6 +113,7 @@ fun AppNavGraph(
                         if (showHomeOnboarding) {
                             Log.d("HomeOnboarding", "Hiding onboarding due to route change to: $currentRoute")
                             showHomeOnboarding = false
+
                         }
                     }
                 }

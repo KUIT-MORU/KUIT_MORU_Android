@@ -1,11 +1,10 @@
 package com.konkuk.moru.presentation.navigation
 
-import FollowScreen
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState // MutableState 임포트 추가
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -33,6 +32,7 @@ import com.konkuk.moru.presentation.myactivity.screen.ActRecordDetailScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActRecordScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActScrabScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActSettingScreen
+import com.konkuk.moru.presentation.myroutines.screen.MyRoutineDetailScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesViewModel
 import com.konkuk.moru.presentation.routinefeed.screen.NotificationScreen
@@ -77,6 +77,7 @@ fun MainNavGraph(
         }
 
         composable(route = Route.RoutineFocusIntro.route) {
+
             val parentEntry = remember(navController) {
                 navController.getBackStackEntry(Route.Home.route)
             }
@@ -260,13 +261,30 @@ fun MainNavGraph(
                     navController.navigate(Route.RoutineFeed.route)
                 },
                 onNavigateToDetail = { routineId ->
-                    navController.navigate(Route.RoutineFeedDetail.createRoute(routineId))
+                    navController.navigate(Route.MyRoutineDetail.createRoute(routineId))
                 },
                 onDismissDeleteSuccessDialog = viewModel::dismissDeleteSuccessDialog
             )
         }
 
         // [추가] UserProfileScreen 내비게이션 설정
+        composable(
+            route = Route.MyRoutineDetail.route,
+            arguments = listOf(navArgument("routineId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val routineId = backStackEntry.arguments?.getInt("routineId")
+            if (routineId != null) {
+                MyRoutineDetailScreen(
+                    routineId = routineId,
+                    navController = navController,
+                    onBackClick = { navController.popBackStack() },
+                )
+            } else {
+                navController.popBackStack()
+            }
+        }
+
+
         composable(
             route = Route.UserProfile.route,
             arguments = listOf(navArgument("userId") { type = NavType.IntType })
