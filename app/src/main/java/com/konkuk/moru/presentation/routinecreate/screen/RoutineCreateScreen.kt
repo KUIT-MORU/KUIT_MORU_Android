@@ -17,11 +17,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,15 +38,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.Switch.CustomToggleSwitch
+import com.konkuk.moru.core.component.Switch.RoutineSimpleFocusSwitch
+import com.konkuk.moru.core.component.routinedetail.RoutineDescriptionField
+import com.konkuk.moru.core.component.routinedetail.ShowUserCheckbox
+import com.konkuk.moru.data.model.Step
+import com.konkuk.moru.presentation.routinecreate.component.StepItem
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
-fun RoutineCreateScreen(modifier: Modifier = Modifier) {
+fun RoutineCreateScreen() {
     val focusManager = LocalFocusManager.current
     var isFocusingRoutine by remember { mutableStateOf(false) }
     var showUser by remember { mutableStateOf(false) }
-    val steps = remember { mutableStateOf(listOf<String>()) }
+    var routineDescription by remember { mutableStateOf("") }
+    val stepList = remember { mutableStateListOf(Step("", "00:00:00")) } // 초기 step 1개
 
     Box(
         modifier = Modifier
@@ -118,52 +126,24 @@ fun RoutineCreateScreen(modifier: Modifier = Modifier) {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .clickable(
-                                        indication = null,
-                                        interactionSource = null
-                                    ) { showUser = !showUser },
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = if (showUser) R.drawable.ic_checkbox_checked else R.drawable.ic_checkbox),
-                                    contentDescription = "사용자 표시 아이콘",
-                                    modifier = Modifier.size(16.dp),
-                                    tint = Color.Unspecified
-                                )
-                                Spacer(modifier = Modifier.width(3.5.dp))
-                                Text("사용자 표시", style = typography.desc_M_14)
-                            }
-                            CustomToggleSwitch(
+                            ShowUserCheckbox(
+                                showUser = showUser,
+                                onClick = { showUser = !showUser }
+                            )
+                            RoutineSimpleFocusSwitch(
                                 checked = isFocusingRoutine,
-                                onCheckedChange = { isFocusingRoutine = it },
-                                leftText = "간편",
-                                rightText = "집중",
-                                containerColor = colors.lightGray,
-                                thumbColor = colors.paleLime,
-                                checkedTextColor = Color.Black,
-                                uncheckedTextColor = Color.Gray,
-                                fontSize = 16.sp,
-                                modifier = Modifier
-                                    .width(89.dp)
-                                    .height(26.dp)
+                                onClick = { isFocusingRoutine = it }
                             )
                         }
                         Spacer(modifier = Modifier.height(3.dp))
-                        Box(
+                        // 루틴 설명 입력 필드
+                        RoutineDescriptionField(
+                            value = routineDescription,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .weight(1f)
-                                .background(colors.veryLightGray, RoundedCornerShape(6.dp))
-                                .padding(vertical = 10.dp, horizontal = 5.dp),
-                        ) {
-                            Text(
-                                "루틴 설명을 입력해 주세요.",
-                                color = Color(0xFFB7B7B7),
-                                style = typography.time_R_14
-                            )
-                        }
+                                .weight(1f),
+                            onValueChange = { routineDescription = it }
+                        )
                     }
                 }
 
@@ -193,43 +173,45 @@ fun RoutineCreateScreen(modifier: Modifier = Modifier) {
 
                 // STEP 영역
                 Text("STEP", style = typography.title_B_20)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("활동명", style = typography.body_SB_14)
-                    Text("소요 시간", style = typography.body_SB_14)
+                Spacer(modifier = Modifier.height(8.dp))
+                stepList.forEachIndexed { index, step ->
+                    StepItem(
+                        step = step,
+                        onTitleChange = { newTitle -> stepList[index] = step.copy(title = newTitle) },
+                        onTimeChange = { newTime -> stepList[index] = step.copy(time = newTime) }
+                    )
                 }
-                Box(
+                Spacer(modifier = Modifier.height(15.dp))
+                Box( //circle 버튼
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(40.dp)
-                        .border(1.dp, colors.lightGray, RoundedCornerShape(6.dp)),
+                        .size(29.dp)
+                        .background(color = colors.lightGray, shape = CircleShape)
+                        .clickable { stepList.add(Step("", "00:00:00")) },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.baseline_add_24),
-                        contentDescription = "추가",
-                        modifier = Modifier.size(18.dp)
+                        painter = painterResource(id = R.drawable.ic_routinecreate_addstep),
+                        contentDescription = "스텝 추가",
+                        tint = Color.Unspecified
                     )
                 }
 
                 // 사용앱
-                Text("사용앱", style = typography.title_B_20)
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .border(1.dp, colors.lightGray, RoundedCornerShape(6.dp))
-                        .clickable { },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_add_24),
-                        contentDescription = "앱 추가",
-                        modifier = Modifier.size(20.dp)
-                    )
+                if (isFocusingRoutine) {
+                    Text("사용앱", style = typography.title_B_20)
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .border(1.dp, colors.lightGray, RoundedCornerShape(6.dp))
+                            .clickable { },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_add_24),
+                            contentDescription = "앱 추가",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
             // complete button
