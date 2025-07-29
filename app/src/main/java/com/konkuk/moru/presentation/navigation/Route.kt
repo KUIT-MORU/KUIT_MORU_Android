@@ -48,6 +48,9 @@ sealed class Route(
 
     data object MyRoutine : Route(route = "my_routine")
 
+    data object MyRoutineDetail : Route("my_routine_detail/{routineId}") {
+        fun createRoute(routineId: Int) = "my_routine_detail/$routineId"
+    }
     data object MyActivity : Route(route = "my_activity")
 
     data object Notification : Route("notification")

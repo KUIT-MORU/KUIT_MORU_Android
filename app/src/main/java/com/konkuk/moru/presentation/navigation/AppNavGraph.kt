@@ -119,6 +119,7 @@ fun AppNavGraph(
                         // 다른 탭으로 이동 시 온보딩 숨김
                         if (showHomeOnboarding) {
                             showHomeOnboarding = false
+
                         }
                     }
                 }
