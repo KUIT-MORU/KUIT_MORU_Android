@@ -9,7 +9,9 @@ import androidx.compose.runtime.MutableState // MutableState 임포트 추가
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -51,12 +53,12 @@ fun MainNavGraph(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     innerPadding: PaddingValues = PaddingValues(),
-    // AppNavGraph로부터 전달받을 인자들 추가
     fabOffsetY: MutableState<Float>,
     todayTabOffsetY: MutableState<Float>,
     onShowOnboarding: () -> Unit,
     onShowOverlay: () -> Unit,
-    onDismissOverlay: () -> Unit
+    onDismissOverlay: () -> Unit,
+    bottomIconCenters: SnapshotStateList<Offset>
 ) {
 
     NavHost(
@@ -72,8 +74,7 @@ fun MainNavGraph(
                 fabOffsetY = fabOffsetY, // MainNavGraph가 받은 인자를 HomeScreen으로 전달
                 todayTabOffsetY = todayTabOffsetY, // MainNavGraph가 받은 인자를 HomeScreen으로 전달
                 onShowOnboarding = onShowOnboarding, // MainNavGraph가 받은 인자를 HomeScreen으로 전달
-                onShowOverlay = onShowOverlay, // MainNavGraph가 받은 인자를 HomeScreen으로 전달
-                onDismissOverlay = onDismissOverlay // MainNavGraph가 받은 인자를 HomeScreen으로 전달
+                bottomIconCenters = bottomIconCenters
             )
         }
 
@@ -102,10 +103,12 @@ fun MainNavGraph(
                         navController.navigate(Route.RoutineFocus.route)
                         sharedViewModel.onNavigationHandled()
                     }
+
                     FocusType.SIMPLE -> {
                         navController.navigate(Route.RoutineSimpleRun.route)
                         sharedViewModel.onNavigationHandled()
                     }
+
                     else -> Unit
                 }
             }
@@ -128,7 +131,19 @@ fun MainNavGraph(
 
             RoutineFocusScreenContainer(
                 viewModel = routineFocusViewModel, // ViewModel 전달
-                onDismiss = { navController.popBackStack() },
+                onDismiss = {
+                    navController.popBackStack(
+                        Route.Home.route,
+                        inclusive = false
+                    )
+                    if (navController.currentDestination?.route != Route.Home.route) {
+                        // 스택에 없으면 새로 넣고 나머지는 모두 제거
+                        navController.navigate(Route.Home.route) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                },
                 routineItems = listOf( // 기존과 동일하게 routineItems 전달
                     "샤워하기" to "15m",
                     "청소하기" to "10m",

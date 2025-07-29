@@ -1,7 +1,5 @@
 package com.konkuk.moru.presentation.home.screen
 
-import android.R.attr.centerY
-import android.R.attr.y
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -25,13 +23,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.res.painterResource
@@ -39,27 +40,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.konkuk.moru.R
-import com.konkuk.moru.core.component.Switch.StatusBarMock
 import com.konkuk.moru.presentation.home.FabConstants
 import com.konkuk.moru.presentation.home.FocusType
 import com.konkuk.moru.presentation.home.component.HomeFloatingActionButton
 import com.konkuk.moru.presentation.home.component.HomeTopAppBar
-import com.konkuk.moru.presentation.home.component.HomeTutorialOverlayContainer
 import com.konkuk.moru.presentation.home.component.RoutineCardList
 import com.konkuk.moru.presentation.home.component.RoutineData
 import com.konkuk.moru.presentation.home.component.TodayRoutinePager
 import com.konkuk.moru.presentation.home.component.TodayWeekTab
 import com.konkuk.moru.presentation.home.component.WeeklyCalendarView
-import com.konkuk.moru.presentation.home.screen.OnboardingScreen
 import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
-import kotlinx.coroutines.delay
 
 // 홈 메인 페이지
 @Composable
@@ -70,10 +66,8 @@ fun HomeScreen(
     fabOffsetY: MutableState<Float>,
     todayTabOffsetY: MutableState<Float>,
     onShowOnboarding: () -> Unit = {},
-    onShowOverlay: () -> Unit = {},
-    onDismissOverlay: () -> Unit = {}
+    bottomIconCenters: SnapshotStateList<Offset>
 ) {
-
     //탭 선택 상태(오늘,이번주)
     var selectedTab by remember { mutableStateOf(0) }
 
@@ -92,14 +86,9 @@ fun HomeScreen(
         13 to listOf("주말아침루틴"),
         14 to listOf("주말아침루틴")
     )
-
-    LaunchedEffect(Unit) {
-        onShowOnboarding()
-    }
     Scaffold(
         containerColor = Color.White,
         //FAB
-
         floatingActionButton = {
             HomeFloatingActionButton(
                 modifier = Modifier
@@ -116,6 +105,25 @@ fun HomeScreen(
         },
         floatingActionButtonPosition = FabPosition.End, // ← 이걸 추가
     ) { innerPadding ->
+
+        val isTodayTabMeasured = remember { mutableStateOf(false) }
+
+        LaunchedEffect(todayTabOffsetY.value, fabOffsetY.value) {
+            Log.d("ONBOARDING_TRIGGER", "=== Onboarding Trigger Check ===")
+            Log.d("ONBOARDING_TRIGGER", "- todayTabOffsetY: ${todayTabOffsetY.value}")
+            Log.d("ONBOARDING_TRIGGER", "- fabOffsetY: ${fabOffsetY.value}")
+
+            // 두 값이 모두 측정되었을 때만 온보딩 시작
+            if (todayTabOffsetY.value > 0f && fabOffsetY.value > 0f) {
+                Log.d("ONBOARDING_TRIGGER", "✅ Both positions ready. Triggering onboarding.")
+                onShowOnboarding()
+            } else {
+                Log.d("ONBOARDING_TRIGGER", "❌ Waiting for positions...")
+            }
+        }
+
+
+
         LazyColumn(
             modifier = modifier
                 .fillMaxSize()
@@ -164,11 +172,27 @@ fun HomeScreen(
                 Spacer(Modifier.height(8.dp))
             }
             item {
-                Column() {
-                    // 2. Today
+                Log.d("LAYOUT_DEBUG", "🔹 LazyColumn item is being composed")
+
+                Column(
+                    modifier = Modifier
+                        .onGloballyPositioned { coordinates ->
+                            Log.d("LAYOUT_DEBUG", "🔹 Column onGloballyPositioned called")
+                            val boundsInRoot = coordinates.boundsInRoot()
+                            Log.d("LAYOUT_DEBUG", "Column bounds: $boundsInRoot")
+                        }
+                ) {
+                    Log.d("LAYOUT_DEBUG", "🔹 Inside Column composition")
+
+                    // 2. TODAY 텍스트
                     Text(
                         modifier = Modifier
-                            .padding(horizontal = 16.dp),
+                            .padding(horizontal = 16.dp)
+                            .onGloballyPositioned { coordinates ->
+                                Log.d("LAYOUT_DEBUG", "🔹 TODAY Text positioned")
+                                val boundsInRoot = coordinates.boundsInRoot()
+                                Log.d("LAYOUT_DEBUG", "TODAY text bounds: $boundsInRoot")
+                            },
                         text = "TODAY",
                         style = typography.desc_M_16.copy(
                             fontWeight = FontWeight.Bold,
@@ -176,58 +200,69 @@ fun HomeScreen(
                         ),
                         color = colors.black,
                     )
+
                     // 3. 월 일 요일
                     Text(
                         modifier = Modifier
-                            .padding(horizontal = 16.dp),
+                            .padding(horizontal = 16.dp)
+                            .onGloballyPositioned { coordinates ->
+                                Log.d("LAYOUT_DEBUG", "🔹 Date Text positioned")
+                                val boundsInRoot = coordinates.boundsInRoot()
+                                Log.d("LAYOUT_DEBUG", "Date text bounds: $boundsInRoot")
+                            },
                         text = "5월 10일 토",
                         style = typography.head_EB_24.copy(
                             lineHeight = 24.sp
                         ),
                         color = colors.black
                     )
-                    // 후에 실제 데이터로 오늘 루틴이 있는지 확인
-                    if (sampleRoutines.isNotEmpty()) {
-                        Text(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp),
-                            text = "정기 루틴이 있는 날이에요",
-                            style = typography.desc_M_16.copy(
-                                fontWeight = FontWeight.Bold,
-                                lineHeight = 24.sp
-                            ),
-                            color = colors.black
-                        )
-                    } else {
-                        Text(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp),
-                            text = "정기 루틴이 없는 날이에요",
-                            style = typography.desc_M_16.copy(
-                                fontWeight = FontWeight.Bold,
-                                lineHeight = 24.sp
-                            ),
-                            color = colors.black
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    // 4. 탭 선택
-                    // 후에 실제 데이터로 오늘 루틴이 있는지 확인
-                    TodayWeekTab(
+
+                    // 4. 상태 텍스트
+                    Text(
                         modifier = Modifier
                             .padding(horizontal = 16.dp)
                             .onGloballyPositioned { coordinates ->
-                                val position = coordinates.positionInRoot()
-                                val size = coordinates.size
-                                val centerY = position.y + size.height / 2f
-
-                                Log.d("TODAY_TAB_POSITION", "TodayTab CenterY: $centerY")
-
-                                todayTabOffsetY.value = centerY
+                                Log.d("LAYOUT_DEBUG", "🔹 Status Text positioned")
+                                val boundsInRoot = coordinates.boundsInRoot()
+                                Log.d("LAYOUT_DEBUG", "Status text bounds: $boundsInRoot")
                             },
-                        selectedTabIndex = selectedTab,
-                        onTabSelected = { selectedTab = it }
+                        text = if (sampleRoutines.isNotEmpty()) "정기 루틴이 있는 날이에요" else "정기 루틴이 없는 날이에요",
+                        style = typography.desc_M_16.copy(
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 24.sp
+                        ),
+                        color = colors.black
                     )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // 5. TodayWeekTab 래퍼 Box
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .onGloballyPositioned { coordinates ->
+                                val boundsInRoot = coordinates.boundsInRoot()
+                                val centerY = boundsInRoot.center.y
+
+                                Log.d("TAB_FINAL", "=== Final Tab Position ===")
+                                Log.d("TAB_FINAL", "Tab Box bounds: $boundsInRoot")
+                                Log.d("TAB_FINAL", "Tab centerY: $centerY")
+
+                                if (centerY > 0f) {
+                                    todayTabOffsetY.value = centerY
+                                    Log.d("TAB_FINAL", "✅ Final todayTabOffsetY set to: $centerY")
+                                }
+                            }
+                    ) {
+                        // 원래 TodayWeekTab 사용
+                        TodayWeekTab(
+                            selectedTabIndex = selectedTab,
+                            onTabSelected = { selectedTab = it }
+                        )
+                    }
+
+
                     // 선택된 탭에 따라 콘텐츠 분기
                     when (selectedTab) {
                         // 오늘 탭 선택 시
@@ -275,6 +310,7 @@ fun HomeScreen(
                                 .size(width = 8.dp, height = 12.dp)
                         )
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
                     // 후에 실제 데이터로 오늘 루틴이 있는지 확인
                     if (sampleRoutines.isNotEmpty()) {
                         RoutineCardList()
@@ -282,49 +318,7 @@ fun HomeScreen(
                 }
             }
         }
-
-//        var showOnboarding by remember { mutableStateOf(true) }
-//        var showOverlay by remember { mutableStateOf(false) }
-//
-//        when {
-//            showOnboarding -> {
-//                // 온보딩 화면 1
-//                OnboardingScreen(
-//                    modifier = Modifier
-//                        .fillMaxSize()
-//                        .zIndex(2f),
-//                    onNextClick = {
-//                        showOnboarding = false
-//                        showOverlay = true
-//                    },
-//                    onCloseClick = {
-//                        // 온보딩 건너뛰기 시 모든 튜토리얼 종료
-//                        showOnboarding = false
-//                        showOverlay = false
-//                    }
-//                )
-//            }
-//
-//            showOverlay -> {
-//                // 온보딩 화면 2 (튜토리얼 오버레이)
-//                HomeTutorialOverlayContainer(
-//                    modifier = Modifier
-//                        .fillMaxSize()
-//                        .zIndex(2f),
-//                    onDismiss = {
-//                        showOverlay = false
-//                    },
-//                    onFabClick = {
-//                        // FAB 클릭 시 튜토리얼 종료 (또는 다음 단계)
-//                        showOverlay = false
-//                    },
-//                    fabOffsetY = fabOffsetY.value
-//                )
-//            }
-//        }
     }
-
-
 }
 
 @Preview(
@@ -338,11 +332,13 @@ private fun HomeScreenPreview() {
     val previewSharedViewModel = SharedRoutineViewModel()
     val previewFabOffsetY = remember { mutableStateOf(0f) } // 🔹 추가
     val todayTabOffsetY = remember { mutableStateOf(0f) } // 🔹 추가
+    val previewBottomIconCenters = remember { mutableStateListOf<Offset>() }
 
     HomeScreen(
         navController = fakeNavController,
         sharedViewModel = previewSharedViewModel,
         fabOffsetY = previewFabOffsetY,
-        todayTabOffsetY = todayTabOffsetY
+        todayTabOffsetY = todayTabOffsetY,
+        bottomIconCenters = previewBottomIconCenters
     )
 }

@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -48,65 +49,78 @@ import java.nio.file.WatchEvent
 fun HomeTutorialDecoration(
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit,
-    onFabClick: () -> Unit
+    onFabClick: () -> Unit,
+    bottomIconCenters:List<Offset>
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         // 정기 루틴 확인하기
-        TutorialHintWithLine(
+        TutorialHintWithLineByRatio(
             text = "정기 루틴 확인하기",
-            textOffsetDp = 63.dp to 368.dp,
-            lineOffsetDp = 53.dp to 319.dp,
-            lineLength = 61.dp,
+            textOffsetRatio = 63f / 360f to 368f / 800f,
+            lineOffsetRatio = 53f / 360f to 319f / 800f,
+            lineLengthRatio = 61f / 800f,
             isUpward = true
         )
 
         // 루틴 생성하기
-        TutorialHintWithLine(
+        TutorialHintWithLineByRatio(
             text = "루틴 생성하기",
-            textOffsetDp = 274.dp to 507.dp,
-            lineOffsetDp = 313.dp to 532.dp,
-            lineLength = 109.dp,
+            textOffsetRatio = 274f / 360f to 507f / 800f,
+            lineOffsetRatio = 313f / 360f to 532f / 800f,
+            lineLengthRatio = 0.060f,
             isUpward = false
         )
 
+
         // 루틴 둘러보기
-        TutorialHintWithLine(
+        TutorialHintWithLineByRatio(
             text = "루틴 둘러보기",
-            textOffsetDp = 50.dp to 672.dp,
-            lineOffsetDp = 137.dp to 681.dp,
-            lineLength = 61.dp,
+            textOffsetRatio = 50f / 360f to 672f / 800f,
+            lineOffsetRatio = 132f / 360f to 681f / 800f,
+            lineLengthRatio = 0.050f,
             isUpward = false
         )
 
         // 루틴 관리하기
-        TutorialHintWithLine(
+        TutorialHintWithLineByRatio(
             text = "루틴 관리하기",
-            textOffsetDp = 183.dp to 656.dp,
-            lineOffsetDp = 223.dp to 681.dp,
-            lineLength = 64.dp,
+            textOffsetRatio = 183f / 360f to 656f / 800f,
+            lineOffsetRatio = 223f / 360f to 681f / 800f,
+            lineLengthRatio = 0.050f,
             isUpward = false
         )
 
         // 루틴 인사이트 보기 (꺾인 화살표)
-        DotWithBentArrow(
-            startX = 273.dp,
-            startY = 591.dp,
-            verticalLength = 166.dp,
-            horizontalLength = 28.dp
+        DotWithBentArrowByRatio(
+            startOffsetRatio = 273f / 360f to 591f / 800f,
+            verticalLengthRatio = 0.19f,
+            horizontalLengthRatio = 0.1f
         )
+
+        val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+        val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+
         Text(
             text = "루틴 인사이트 보기",
             style = typography.time_R_14.copy(fontWeight = FontWeight.Bold),
             color = Color.White,
-            modifier = modifier.offset(x = 159.dp, y = 582.dp)
+            modifier = Modifier
+                .offset(
+                    x = screenWidth * (159f / 360f),
+                    y = screenHeight * (582f / 800f)
+                )
         )
 
+
+
         // Balloon
-        SimpleBottomTailBalloon(
+        SimpleBottomTailBalloonByRatio(
             image = R.drawable.right_arrow_green,
-            text = "바로 생성하기!", offsetX = 213.dp,
-            offsetY = 451.dp
+            text = "바로 생성하기!",
+            offsetRatioX = 213f / 360f,
+            offsetRatioY = 440f / 800f
         )
+
 
         // FAB 터치 클릭 영역
         Box(
@@ -117,7 +131,8 @@ fun HomeTutorialDecoration(
         )
         // BottomBar 아이콘 오버레이 (2,3,4번째)
         BottomOverlayBar(
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier.align(Alignment.BottomCenter),
+            iconCenters = bottomIconCenters
         )
 
 
@@ -341,52 +356,47 @@ fun BottomBarIconWithLabelOverlay(
     label: String,
     offsetX: Dp,
     offsetY: Dp,
-    iconWidth: Dp = 18.dp,
-    iconHeight: Dp = 18.dp
+    itemWidth: Dp,
+    itemHeight: Dp,
+    iconWidth: Dp = 16.dp,
+    iconHeight: Dp = 17.5.dp,
+    // 기기별 보정값 추가
+    iconOffsetY: Dp = (-2).dp, // 기본값으로 2dp 위로
+    textOffsetY: Dp = 0.dp, // 텍스트 Y 보정값
+    textOffsetX: Dp = 0.dp // 텍스트 X 보정값 추가
 ) {
+    // 바텀바 NavigationBarItem과 동일한 레이아웃 구조로 완전히 겹치도록 구성
     Column(
         modifier = Modifier
             .offset(x = offsetX, y = offsetY)
-            .width(70.dp)
-            .height(52.dp),
+            .width(itemWidth) // 동적으로 계산된 실제 아이템 너비
+            .height(itemHeight), // 바텀바 높이와 동일
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
+        // 아이콘 - 보정값 적용
+        Icon(
+            painter = painterResource(id = iconResId),
+            contentDescription = label,
+            tint = Color.White,
             modifier = Modifier
-                .width(70.dp)
-                .height(32.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(id = iconResId),
-                contentDescription = label,
-                tint = Color.White,
-                modifier = Modifier
-                    .width(iconWidth)
-                    .height(iconHeight)
-            )
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-        Box(
-            modifier = Modifier
-                .width(70.dp)
-                .height(16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = label,
-                style = typography.time_R_12.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp
-                ),
-                color = Color.White
-            )
-        }
+                .width(iconWidth)
+                .height(iconHeight)
+                .offset(y = iconOffsetY) // 보정값 적용
+        )
+
+        // 아이콘과 텍스트 사이 간격 (NavigationBarItem 기본값)
+        Spacer(modifier = Modifier.height(7.dp))
+
+        // 텍스트 - NavigationBarItem의 기본 스타일과 맞춤, 보정값 적용
+        Text(
+            text = label,
+            style = typography.title_B_12,
+            color = Color.White,
+            modifier = Modifier.offset(x = textOffsetX, y = textOffsetY) // X, Y 보정값 둘 다 적용
+        )
     }
 }
-
-
 
 @Preview(
     showBackground = true,
@@ -396,8 +406,16 @@ fun BottomBarIconWithLabelOverlay(
 )
 @Composable
 private fun HomeTutorialDecorationPreview() {
+    val fakeCenters = listOf(
+        Offset(0f, 0f),        // 홈 아이콘 (사용 안함)
+        Offset(90f, 700f),     // 루틴 피드
+        Offset(180f, 700f),    // 내 루틴
+        Offset(270f, 700f)     // 내 활동
+    )
+
     HomeTutorialDecoration(
         onDismiss = {},
-        onFabClick = {}
+        onFabClick = {},
+        bottomIconCenters = fakeCenters
     )
 }
