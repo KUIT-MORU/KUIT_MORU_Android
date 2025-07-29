@@ -46,7 +46,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.konkuk.moru.R
-import com.konkuk.moru.core.component.Switch.StatusBarMock
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
 import com.konkuk.moru.presentation.routinefocus.component.RoutineTimelineItem
 import com.konkuk.moru.presentation.routinefocus.component.SettingSwitchGroup

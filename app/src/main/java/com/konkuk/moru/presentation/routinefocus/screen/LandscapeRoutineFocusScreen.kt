@@ -259,7 +259,8 @@ fun LandscapeRoutineFocusScreen(
                             modifier = Modifier.clickable {
                                 // 다음 step으로 가는 기능
                                 if (!isFinalStep) {
-                                    val nextStepTimeString = routineItems.getOrNull(currentstep)?.second ?: "0m"
+                                    val nextStepTimeString =
+                                        routineItems.getOrNull(currentstep)?.second ?: "0m"
                                     viewModel.nextStep(nextStepTimeString)
                                 } else {
                                     viewModel.pauseTimer()
@@ -280,6 +281,7 @@ fun LandscapeRoutineFocusScreen(
                                 style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
                                 color = if (isDarkMode) Color.White else if (isTimeout) colors.oliveGreen else colors.black
                             )
+
                             isTimeout -> Text(
                                 text = "NEXT STEP",
                                 style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
@@ -341,7 +343,10 @@ fun LandscapeRoutineFocusScreen(
                         Triple("다크 모드", { viewModel.isDarkMode }, { viewModel.toggleDarkMode() }),
                         Triple("방해 금지 모드", { isDoNotDisturb }, { isDoNotDisturb = it }),
                         Triple("스텝 완료 진동", { isStepVibration }, { isStepVibration = it }),
-                        Triple("가로 모드", { viewModel.isLandscapeMode }, { viewModel.toggleLandscapeMode() })
+                        Triple(
+                            "가로 모드",
+                            { viewModel.isLandscapeMode },
+                            { viewModel.toggleLandscapeMode() })
                     )
                 )
             }

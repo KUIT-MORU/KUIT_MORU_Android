@@ -11,8 +11,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class RoutineFocusViewModel : ViewModel() {
-
-
     // 시간이 흐르고 있는지 유무
     var isTimerRunning by mutableStateOf(false)
         private set
@@ -96,6 +94,7 @@ class RoutineFocusViewModel : ViewModel() {
     fun closeSettingsPopup() {
         isSettingsPopupVisible = false
     }
+
     // 사용 앱 팝업 상태 저장
     var isAppIconsVisible by mutableStateOf(false)
         private set
