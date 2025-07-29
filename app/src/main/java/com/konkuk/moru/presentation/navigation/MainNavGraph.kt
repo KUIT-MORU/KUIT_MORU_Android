@@ -1,11 +1,10 @@
 package com.konkuk.moru.presentation.navigation
 
-import FollowScreen
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState // MutableState 임포트 추가
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -17,7 +16,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.konkuk.moru.data.model.DummyData.feedRoutines
 import com.konkuk.moru.presentation.home.FocusType
