@@ -598,12 +598,12 @@ fun PortraitRoutineFocusScreen(
                                     isTimerRunning = true
                                 }
                                 .width(123.dp)
-                                .height(40.dp),
+                                .height(40.55.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = "돌아가기",
-                                style = typography.body_SB_16,
+                                style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
                                 color = colors.mediumGray
                             )
                         }
