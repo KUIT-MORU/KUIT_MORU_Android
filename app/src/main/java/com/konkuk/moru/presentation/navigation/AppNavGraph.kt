@@ -10,10 +10,12 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
@@ -32,6 +34,9 @@ fun AppNavGraph(navController: NavHostController) {
 
     var showOverlay by remember { mutableStateOf(false) }
     var showOnboarding by remember { mutableStateOf(true) }
+
+    // 바텀바에서 받은 좌표
+    val bottomIconCenters = remember { mutableStateListOf<Offset>() }
 
     Box(modifier = Modifier.fillMaxSize()) {
         NavHost(navController = navController, startDestination = Route.Main.route) {
@@ -67,6 +72,12 @@ fun AppNavGraph(navController: NavHostController) {
                                             restoreState = true
                                         }
                                     }
+                                },
+                                onIconMeasured = { idx, _,center ->
+                                    if(bottomIconCenters.size <= idx){
+                                        repeat(idx - bottomIconCenters.size + 1){ bottomIconCenters.add(Offset.Zero) }
+                                    }
+                                    bottomIconCenters[idx] = center
                                 }
                             )
                         }
@@ -79,7 +90,8 @@ fun AppNavGraph(navController: NavHostController) {
                         onShowOverlay = { showOverlay = true },
                         onDismissOverlay = { showOverlay = false },
                         fabOffsetY = fabOffsetY,
-                        todayTabOffsetY = todayTabOffsetY // 🔹 추가
+                        todayTabOffsetY = todayTabOffsetY,
+                        bottomIconCenters = bottomIconCenters
                     )
                 }
             }
@@ -108,7 +120,8 @@ fun AppNavGraph(navController: NavHostController) {
                 onDismiss = { showOverlay = false },
                 onFabClick = { showOverlay = false },
                 fabOffsetY = fabOffsetY.value,
-                todayTabOffsetY = todayTabOffsetY.value
+                todayTabOffsetY = todayTabOffsetY.value,
+                bottomIconCenters = bottomIconCenters
             )
         }
     }

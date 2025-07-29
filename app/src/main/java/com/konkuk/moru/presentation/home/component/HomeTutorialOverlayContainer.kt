@@ -4,8 +4,10 @@ import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,9 +22,16 @@ fun HomeTutorialOverlayContainer(
     onDismiss: () -> Unit,
     onFabClick: () -> Unit,
     fabOffsetY: Float,
-    todayTabOffsetY: Float
+    todayTabOffsetY: Float,
+    bottomIconCenters : List<Offset>
 ) {
     Log.d("TutorialOverlay", "HomeTutorialOverlayContainer - Received todayTabOffsetY: $todayTabOffsetY")
+
+    LaunchedEffect(bottomIconCenters) {
+        bottomIconCenters.forEachIndexed { idx, offset ->
+            Log.d("StepCheck", "🔵 OverlayContainer center[$idx]: $offset")
+        }
+    }
 
     val density = LocalDensity.current
     val config = LocalConfiguration.current
@@ -108,7 +117,13 @@ fun HomeTutorialOverlayContainer(
 
         HomeTutorialDecoration(
             onDismiss = onDismiss,
-            onFabClick = onFabClick
+            onFabClick = onFabClick,
+            bottomIconCenters = bottomIconCenters
+        )
+
+        BottomOverlayBar(
+            iconCenters = bottomIconCenters,
+            modifier = Modifier.zIndex(3f) // 오버레이 요소 위에 표시
         )
     }
 }
@@ -126,7 +141,13 @@ private fun HomeTutorialOverlayContainerPreview() {
             .zIndex(2f),
         onDismiss = {},
         onFabClick = {},
-        fabOffsetY = 632.5f,
-        todayTabOffsetY = 283f
+        fabOffsetY = 632.5f,   // 실제 측정값 기반
+        todayTabOffsetY = 283f,
+        bottomIconCenters = listOf(
+            Offset.Zero,              // 홈 (highlight 안함)
+            Offset(134f, 748f),       // 루틴 피드
+            Offset(226f, 748f),       // 내 루틴
+            Offset(318f, 748f)        // 내 활동
+        )
     )
 }
