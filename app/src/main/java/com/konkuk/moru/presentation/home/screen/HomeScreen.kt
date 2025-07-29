@@ -271,7 +271,7 @@ fun HomeScreen(
                                 routines = sampleRoutines,
                                 onRoutineClick = {
                                     //Focus 타입에 따라 뜨는 intro화면이 다름
-                                    sharedViewModel.setFocusType(FocusType.FOCUS)
+                                    sharedViewModel.setFocusType(FocusType.SIMPLE)
                                     navController.navigate(Route.RoutineFocusIntro.route)
                                 }
                             )

@@ -121,7 +121,19 @@ fun MainNavGraph(
                 steps = sampleSteps,
                 onFinishClick = { /* 팝업 열기용 */ },
                 onFinishConfirm = { /* 종료 로직 */ },
-                onDismiss = { navController.popBackStack() }
+                onDismiss = {
+                    navController.popBackStack(
+                        Route.Home.route,
+                        inclusive = false
+                    )
+                    if (navController.currentDestination?.route != Route.Home.route) {
+                        // 스택에 없으면 새로 넣고 나머지는 모두 제거
+                        navController.navigate(Route.Home.route) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                }
             )
         }
 
