@@ -1,4 +1,4 @@
-
+package com.konkuk.moru.presentation.routinefeed.screen.follow
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
