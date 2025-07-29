@@ -246,11 +246,11 @@ fun PortraitRoutineFocusScreen(
 
         // 상단 StatusBar, 루틴 타이틀, 타이머, 메모장
         Column() {
-            // 상단 상태 바
-            if (isDarkMode)
-                StatusBarMock(isDarkMode = true)
-            else
-                StatusBarMock(isDarkMode = false)
+//            // 상단 상태 바
+//            if (isDarkMode)
+//                StatusBarMock(isDarkMode = true)
+//            else
+//                StatusBarMock(isDarkMode = false)
 
             //시간초과시의 영역만 칠하기 위해 또 Column에
             Column(
@@ -598,12 +598,12 @@ fun PortraitRoutineFocusScreen(
                                     isTimerRunning = true
                                 }
                                 .width(123.dp)
-                                .height(40.dp),
+                                .height(40.55.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = "돌아가기",
-                                style = typography.body_SB_16,
+                                style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
                                 color = colors.mediumGray
                             )
                         }

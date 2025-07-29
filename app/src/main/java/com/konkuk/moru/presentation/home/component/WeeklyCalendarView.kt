@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.home.component
 
+import android.R.attr.height
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -15,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 import androidx.compose.material3.Text
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 
 @Composable
@@ -105,21 +108,28 @@ fun WeeklyCalendarView(
 
 //루틴 태그 컴포넌트
 @Composable
-fun RoutineTag(text: String) {
-    Box(
+fun RoutineTag(
+    text: String,
+    minWidth: Dp = 48.dp          // ← 폭만 고정(높이는 Text + 패딩만큼)
+) {
+    Text(
+        text = text,
+        fontSize = 8.sp,
+        fontWeight = FontWeight.Bold,
+        color = Color.White,
+        textAlign = TextAlign.Center,
+        maxLines = 1,
         modifier = Modifier
-            .clip(RoundedCornerShape(2.dp))
-            .background(colors.darkGray)
-            .padding(horizontal = 1.dp, vertical = 2.dp)
-    ) {
-        Text(
-            text = text,
-            fontSize = 8.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-    }
+            .background(
+                color = colors.darkGray,
+                shape = RoundedCornerShape(2.dp)
+            )
+            .defaultMinSize(                // 최소 폭 유지는 여기서
+                minWidth = minWidth
+            )
+    )
 }
+
 
 @Preview(
     showBackground = true,

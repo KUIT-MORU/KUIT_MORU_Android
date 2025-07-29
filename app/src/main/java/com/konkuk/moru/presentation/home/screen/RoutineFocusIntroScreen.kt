@@ -101,10 +101,10 @@ fun RoutineFocusIntroScreen(
                 .padding(innerPadding)
                 .background(Color.White)
         ) {
-            item {
-                // 상단 상태 바
-                StatusBarMock(isDarkMode = false)
-            }
+//            item {
+//                // 상단 상태 바
+//                StatusBarMock(isDarkMode = false)
+//            }
             item {
                 //상단 바
                 Box(

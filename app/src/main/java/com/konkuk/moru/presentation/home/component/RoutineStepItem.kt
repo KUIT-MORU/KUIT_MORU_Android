@@ -47,7 +47,7 @@ fun RoutineStepItem(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 7.dp, end = 16.dp), // 인덱스 왼쪽, 스위치 오른쪽 여백
+                .padding(start = 18.dp, end = 16.dp), // 인덱스 왼쪽, 스위치 오른쪽 여백
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {

@@ -1,15 +1,16 @@
 package com.konkuk.moru.presentation.navigation
 
-import FollowScreen
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState // MutableState 임포트 추가
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -31,6 +32,7 @@ import com.konkuk.moru.presentation.myactivity.screen.ActRecordDetailScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActRecordScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActScrabScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActSettingScreen
+import com.konkuk.moru.presentation.myroutines.screen.MyRoutineDetailScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesViewModel
 import com.konkuk.moru.presentation.routinefeed.screen.NotificationScreen
@@ -51,12 +53,12 @@ fun MainNavGraph(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     innerPadding: PaddingValues = PaddingValues(),
-    // AppNavGraph로부터 전달받을 인자들 추가
     fabOffsetY: MutableState<Float>,
     todayTabOffsetY: MutableState<Float>,
     onShowOnboarding: () -> Unit,
     onShowOverlay: () -> Unit,
-    onDismissOverlay: () -> Unit
+    onDismissOverlay: () -> Unit,
+    bottomIconCenters: SnapshotStateList<Offset>
 ) {
 
     NavHost(
@@ -72,12 +74,12 @@ fun MainNavGraph(
                 fabOffsetY = fabOffsetY, // MainNavGraph가 받은 인자를 HomeScreen으로 전달
                 todayTabOffsetY = todayTabOffsetY, // MainNavGraph가 받은 인자를 HomeScreen으로 전달
                 onShowOnboarding = onShowOnboarding, // MainNavGraph가 받은 인자를 HomeScreen으로 전달
-                onShowOverlay = onShowOverlay, // MainNavGraph가 받은 인자를 HomeScreen으로 전달
-                onDismissOverlay = onDismissOverlay // MainNavGraph가 받은 인자를 HomeScreen으로 전달
+                bottomIconCenters = bottomIconCenters
             )
         }
 
         composable(route = Route.RoutineFocusIntro.route) {
+
             val parentEntry = remember(navController) {
                 navController.getBackStackEntry(Route.Home.route)
             }
@@ -102,10 +104,12 @@ fun MainNavGraph(
                         navController.navigate(Route.RoutineFocus.route)
                         sharedViewModel.onNavigationHandled()
                     }
+
                     FocusType.SIMPLE -> {
                         navController.navigate(Route.RoutineSimpleRun.route)
                         sharedViewModel.onNavigationHandled()
                     }
+
                     else -> Unit
                 }
             }
@@ -118,7 +122,19 @@ fun MainNavGraph(
                 steps = sampleSteps,
                 onFinishClick = { /* 팝업 열기용 */ },
                 onFinishConfirm = { /* 종료 로직 */ },
-                onDismiss = { navController.popBackStack() }
+                onDismiss = {
+                    navController.popBackStack(
+                        Route.Home.route,
+                        inclusive = false
+                    )
+                    if (navController.currentDestination?.route != Route.Home.route) {
+                        // 스택에 없으면 새로 넣고 나머지는 모두 제거
+                        navController.navigate(Route.Home.route) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                }
             )
         }
 
@@ -128,7 +144,19 @@ fun MainNavGraph(
 
             RoutineFocusScreenContainer(
                 viewModel = routineFocusViewModel, // ViewModel 전달
-                onDismiss = { navController.popBackStack() },
+                onDismiss = {
+                    navController.popBackStack(
+                        Route.Home.route,
+                        inclusive = false
+                    )
+                    if (navController.currentDestination?.route != Route.Home.route) {
+                        // 스택에 없으면 새로 넣고 나머지는 모두 제거
+                        navController.navigate(Route.Home.route) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                },
                 routineItems = listOf( // 기존과 동일하게 routineItems 전달
                     "샤워하기" to "15m",
                     "청소하기" to "10m",
@@ -232,11 +260,28 @@ fun MainNavGraph(
                     navController.navigate(Route.RoutineFeed.route)
                 },
                 onNavigateToDetail = { routineId ->
-                    navController.navigate(Route.RoutineFeedDetail.createRoute(routineId))
+                    navController.navigate(Route.MyRoutineDetail.createRoute(routineId))
                 },
                 onDismissDeleteSuccessDialog = viewModel::dismissDeleteSuccessDialog
             )
         }
+
+        composable(
+            route = Route.MyRoutineDetail.route,
+            arguments = listOf(navArgument("routineId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val routineId = backStackEntry.arguments?.getInt("routineId")
+            if (routineId != null) {
+                MyRoutineDetailScreen(
+                    routineId = routineId,
+                    navController = navController,
+                    onBackClick = { navController.popBackStack() },
+                )
+            } else {
+                navController.popBackStack()
+            }
+        }
+
 
         composable(
             route = Route.UserProfile.route,

@@ -238,8 +238,7 @@ fun RoutineSimpleRunScreen(
                                     showFinishPopup = false
                                 }
                                 .width(123.dp)
-                                .height(40.55.dp)
-                                .padding(horizontal = 33.85.dp, vertical = 10.78.dp),
+                                .height(40.55.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(

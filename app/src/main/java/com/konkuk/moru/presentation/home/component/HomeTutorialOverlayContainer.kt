@@ -1,14 +1,13 @@
 package com.konkuk.moru.presentation.home.component
 
-import android.R.attr.bottom
-import android.R.attr.right
-import android.R.attr.top
 import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,56 +22,93 @@ fun HomeTutorialOverlayContainer(
     onDismiss: () -> Unit,
     onFabClick: () -> Unit,
     fabOffsetY: Float,
-    todayTabOffsetY: Float
+    todayTabOffsetY: Float,
+    bottomIconCenters : List<Offset>
 ) {
+    Log.d("TutorialOverlay", "HomeTutorialOverlayContainer - Received todayTabOffsetY: $todayTabOffsetY")
+
+    LaunchedEffect(bottomIconCenters) {
+        bottomIconCenters.forEachIndexed { idx, offset ->
+            Log.d("StepCheck", "🔵 OverlayContainer center[$idx]: $offset")
+        }
+    }
+
     val density = LocalDensity.current
     val config = LocalConfiguration.current
 
-    val rectHole = remember {
+    val rectHole = remember(todayTabOffsetY) { // todayTabOffsetY 값이 변경될 때마다 재계산
         with(density) {
+            // 로그에서 확인된 실제 탭 bounds: Rect.fromLTRB(16.0, 279.0, 344.0, 315.0)
+            // 탭의 실제 높이: 315.0 - 279.0 = 36.0px
+            val tabHeightPx = 36.dp.toPx() // 36dp를 픽셀로 변환
+
+            // 로그에서 확인된 실제 패딩값 사용
+            val horizontalPaddingPx = 16.dp.toPx() // 16dp를 픽셀로 변환
+
+            // 화면 너비
+            val screenWidthPx = config.screenWidthDp.dp.toPx()
+
+            // 구멍의 위치 계산 - 로그에서 확인된 bounds와 일치하도록
+            val holeLeft = horizontalPaddingPx  // 16.0
+            val holeRight = screenWidthPx - horizontalPaddingPx  // 344.0 (360 - 16)
+            val holeTop = todayTabOffsetY - (tabHeightPx / 2f)  // 297.0 - 18.0 = 279.0
+            val holeBottom = todayTabOffsetY + (tabHeightPx / 2f)  // 297.0 + 18.0 = 315.0
+
+            // 디버깅 로그 - 로그에서 확인된 값과 비교
+            Log.d("TutorialOverlay", "=== Tab Hole Calculation ===")
+            Log.d("TutorialOverlay", "- todayTabOffsetY (center): $todayTabOffsetY")
+            Log.d("TutorialOverlay", "- tabHeightPx: $tabHeightPx")
+            Log.d("TutorialOverlay", "- horizontalPaddingPx: $horizontalPaddingPx")
+            Log.d("TutorialOverlay", "- screenWidthPx: $screenWidthPx")
+            Log.d("TutorialOverlay", "- Calculated hole: left=$holeLeft, top=$holeTop, right=$holeRight, bottom=$holeBottom")
+            Log.d("TutorialOverlay", "- Expected bounds: left=16.0, top=279.0, right=344.0, bottom=315.0")
+            Log.d("TutorialOverlay", "- Match check: left=${holeLeft == 16f}, top=${holeTop == 279f}, right=${holeRight == 344f}, bottom=${holeBottom == 315f}")
+
             TutorialOverlayView.HolePx(
-                left = 36.dp.toPx(),
-                top = todayTabOffsetY - 18.dp.toPx(),
-                right = (36 + 288).dp.toPx(),
-                bottom = todayTabOffsetY + 18.dp.toPx(),
+                left = holeLeft,
+                top = holeTop,
+                right = holeRight,
+                bottom = holeBottom,
+                isCircle = false
             )
         }
     }
 
-    val circleHole = remember {
+    val circleHole = remember(fabOffsetY) { // fabOffsetY 값이 변경될 때마다 재계산
         with(density) {
             val fabSizePx = 63.dp.toPx()
             val fabPaddingEndPx = 16.dp.toPx()
-            val fabPaddingBottomPx = 96.dp.toPx()
 
             val screenWidthPx = config.screenWidthDp.dp.toPx()
-            val screenHeightPx = config.screenHeightDp.dp.toPx()
 
+            // FAB의 중심 좌표 계산
             val fabCenterX = screenWidthPx - fabPaddingEndPx - fabSizePx / 2f
-
-            // AndroidView와 Compose 간의 좌표계 차이 보정
             val fabCenterY = fabOffsetY
 
-            val holeRadius = fabSizePx / 2f
+            // 구멍의 위치 계산
+            val holeLeft = fabCenterX - fabSizePx / 2f
+            val holeTop = fabCenterY - fabSizePx / 2f
+            val holeRight = fabCenterX + fabSizePx / 2f
+            val holeBottom = fabCenterY + fabSizePx / 2f
 
-            // 디버깅: 계산된 좌표 로그
-            Log.d("TutorialOverlay", "FAB offsetY (original): $fabOffsetY")
-            Log.d("TutorialOverlay", "FAB offsetY (adjusted): $fabCenterY")
-            Log.d("TutorialOverlay", "Final FAB center: ($fabCenterX, $fabCenterY)")
-            Log.d("TutorialOverlay", "Hole radius: $holeRadius")
-
+            // 디버깅 로그
+            Log.d("TutorialOverlay", "FAB hole calculation:")
+            Log.d("TutorialOverlay", "- fabOffsetY: $fabOffsetY")
+            Log.d("TutorialOverlay", "- fabSizePx: $fabSizePx")
+            Log.d("TutorialOverlay", "- FAB center: ($fabCenterX, $fabCenterY)")
+            Log.d("TutorialOverlay", "- Final hole: left=$holeLeft, top=$holeTop, right=$holeRight, bottom=$holeBottom")
 
             TutorialOverlayView.HolePx(
-                left = fabCenterX - fabSizePx / 2f,
-                top = fabCenterY - fabSizePx / 2f,
-                right = fabCenterX + fabSizePx / 2f,
-                bottom = fabCenterY + fabSizePx / 2f,
+                left = holeLeft,
+                top = holeTop,
+                right = holeRight,
+                bottom = holeBottom,
                 isCircle = true
             )
         }
     }
 
-    val holes = remember { listOf(rectHole, circleHole) }
+    val holes = remember(rectHole, circleHole) { listOf(rectHole, circleHole) }
 
     Box(modifier = modifier.fillMaxSize()) {
         HomeTutorialOverlayView(
@@ -81,7 +117,13 @@ fun HomeTutorialOverlayContainer(
 
         HomeTutorialDecoration(
             onDismiss = onDismiss,
-            onFabClick = onFabClick
+            onFabClick = onFabClick,
+            bottomIconCenters = bottomIconCenters
+        )
+
+        BottomOverlayBar(
+            iconCenters = bottomIconCenters,
+            modifier = Modifier.zIndex(3f) // 오버레이 요소 위에 표시
         )
     }
 }
@@ -99,7 +141,13 @@ private fun HomeTutorialOverlayContainerPreview() {
             .zIndex(2f),
         onDismiss = {},
         onFabClick = {},
-        fabOffsetY = 632.5f, // 이 값이 실제와 다를 수 있음
-        todayTabOffsetY = 283f // 샘플값 넣기
+        fabOffsetY = 632.5f,   // 실제 측정값 기반
+        todayTabOffsetY = 283f,
+        bottomIconCenters = listOf(
+            Offset.Zero,              // 홈 (highlight 안함)
+            Offset(134f, 748f),       // 루틴 피드
+            Offset(226f, 748f),       // 내 루틴
+            Offset(318f, 748f)        // 내 활동
+        )
     )
 }

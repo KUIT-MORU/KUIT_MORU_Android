@@ -1,81 +1,79 @@
+
 package com.konkuk.moru.presentation.home.component
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
 
 @Composable
 fun BottomOverlayBar(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    iconCenters: List<Offset> // ← 위치값을 받음
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(80.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(modifier = Modifier.weight(1f)) // 첫 번째 칸 비우기
+    val density = LocalDensity.current
+    val configuration = LocalConfiguration.current
 
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            BottomOverlayBarItem(
-                iconResId = R.drawable.ic_routine_feed_white,
-                label = "루틴 피드",
-                iconWidth = 16.dp,
-                iconHeight = 17.5.dp
-            )
+    Box(modifier = modifier) {
+        iconCenters.forEachIndexed { index, center ->
+            if (center != Offset.Zero && index in 1..3) {
+                val label = with(density) {
+                    when (index) {
+                        1 -> if (density.density >= 3.0f) "루틴\u200A 피드" else "루틴\u2004 피드"
+                        2 -> if (density.density >= 3.0f) "내\u200A 루틴" else "내\u2004 루틴"
+                        3 -> if (density.density >= 3.0f) "내\u200A 활동" else "내\u2004 활동"
+                        else -> ""
+                    }
+                }
+
+                val iconResId = when (index) {
+                    1 -> R.drawable.ic_routine_feed_white
+                    2 -> R.drawable.ic_my_routine_white
+                    3 -> R.drawable.ic_my_activity_white
+                    else -> return@forEachIndexed
+                }
+
+                with(density) {
+                    // 실제 화면 너비를 가져와서 정확히 계산
+                    val screenWidthPx = configuration.screenWidthDp.dp.toPx()
+                    val itemWidth = screenWidthPx / 4f // 4개 탭으로 균등 분할
+                    val itemHeight = 80.dp.toPx() // 바텀바 높이
+
+                    // 디버깅용 로그 추가
+                    android.util.Log.d("BottomOverlay", "=== 기기별 차이 디버깅 ===")
+                    android.util.Log.d("BottomOverlay", "Screen: ${configuration.screenWidthDp}dp x ${configuration.screenHeightDp}dp")
+                    android.util.Log.d("BottomOverlay", "Density: ${density.density}")
+                    android.util.Log.d("BottomOverlay", "Center[$index]: $center")
+                    android.util.Log.d("BottomOverlay", "ItemWidth: ${itemWidth.toDp()}, ItemHeight: ${itemHeight.toDp()}")
+
+                    // 오버레이 아이템의 중심을 바텀바 아이템의 중심과 정확히 맞춤
+                    val offsetX = (center.x - itemWidth / 2f).toDp()
+                    val offsetY = (center.y - itemHeight / 2f).toDp()
+
+                    android.util.Log.d("BottomOverlay", "Final offset[$index]: x=$offsetX, y=$offsetY")
+
+                    // 기기별 보정값 (필요시 조정)
+                    val iconYCorrection = if (density.density >= 3.0f) (-2).dp else (-1).dp // 고밀도 기기는 더 많이 보정
+                    val textXCorrection = if (density.density >= 3.0f) (-1).dp else (-2).dp // 가상기기(저밀도)에서 텍스트를 왼쪽으로
+
+                    BottomBarIconWithLabelOverlay(
+                        iconResId = iconResId,
+                        label = label,
+                        offsetX = offsetX,
+                        offsetY = offsetY,
+                        itemWidth = itemWidth.toDp(),
+                        itemHeight = itemHeight.toDp(),
+                        iconWidth = 16.dp,
+                        iconHeight = 17.5.dp,
+                        iconOffsetY = iconYCorrection, // 밀도에 따른 보정값 적용
+                        textOffsetX = textXCorrection // 텍스트 X 보정값 적용
+                    )
+                }
+            }
         }
-
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            BottomOverlayBarItem(
-                iconResId = R.drawable.ic_my_routine_white,
-                label = "내 루틴",
-                iconWidth = 16.dp,
-                iconHeight = 17.5.dp
-            )
-        }
-
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            BottomOverlayBarItem(
-                iconResId = R.drawable.ic_my_activity_white,
-                label = "내 활동",
-                iconWidth = 16.dp,
-                iconHeight = 17.5.dp
-            )
-        }
-    }
-
-}
-
-
-@Preview(
-    showBackground = true,
-    backgroundColor = 0x80000000,
-    widthDp = 360,
-    heightDp = 100
-)
-@Composable
-private fun BottomOverlayBarPreview() {
-    Box(modifier = Modifier.fillMaxWidth()) {
-        BottomOverlayBar(
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
     }
 }
