@@ -46,6 +46,11 @@ import com.konkuk.moru.presentation.routinecreate.component.StepItem
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
+// 지피티에 이거 말하던 중임
+//*
+//아직 미완성이긴 하지만 에뮬레이터에서 화면을 보고싶어서 일단 네비게이션 업데이트를 통해 루틴 생성 스크린도 이제 앱에서 이동할 수 있도록 하고싶어. 이동하는 방법은 홈 화면에서 FAB 버튼을 누르면 루틴 생성 화면으로 이동하도록 할거야.
+//
+// *//
 @Composable
 fun RoutineCreateScreen() {
     val focusManager = LocalFocusManager.current
