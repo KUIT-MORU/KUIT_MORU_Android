@@ -1,7 +1,5 @@
 package com.konkuk.moru.presentation.home.screen
 
-import android.R.attr.end
-import android.R.attr.fontWeight
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,12 +27,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
+import com.konkuk.moru.presentation.onboarding.OnboardingScreen
 import com.konkuk.moru.ui.theme.LocalMoruColorsProvider
 import com.konkuk.moru.ui.theme.LocalMoruTypographyProvider
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
-fun OnboardingScreen(
+fun HomeOnboardingScreen(
     modifier: Modifier,
     onNextClick: () -> Unit,
     onCloseClick: () -> Unit
@@ -116,8 +115,8 @@ fun OnboardingScreen(
     heightDp = 800
 )
 @Composable
-private fun OnboardingScreenPreview() {
-    OnboardingScreen(
+private fun HomeOnboardingScreenPreview() {
+    HomeOnboardingScreen(
         modifier = Modifier,
         onNextClick = {},
         onCloseClick = {}
