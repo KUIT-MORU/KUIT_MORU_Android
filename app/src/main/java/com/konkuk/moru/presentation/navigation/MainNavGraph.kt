@@ -75,7 +75,7 @@ fun MainNavGraph(
 
         composable(route = Route.RoutineFocusIntro.route) {
 
-            val parentEntry = remember(navController) {
+            val parentEntry = remember(navController.currentBackStackEntry) {
                 navController.getBackStackEntry(Route.Home.route)
             }
             val sharedViewModel = viewModel<SharedRoutineViewModel>(parentEntry)
