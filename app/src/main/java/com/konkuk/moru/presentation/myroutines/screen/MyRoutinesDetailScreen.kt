@@ -1,5 +1,9 @@
 package com.konkuk.moru.presentation.myroutines.screen
 
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress // [추가]
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.ui.graphics.graphicsLayer
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,13 +21,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListItemInfo
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -36,11 +47,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -49,6 +63,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -67,8 +82,10 @@ import com.konkuk.moru.presentation.routinefeed.component.modale.CustomDialog
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppBar
 import com.konkuk.moru.ui.theme.MORUTheme
 import com.konkuk.moru.ui.theme.moruFontBold
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-
+import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 data class MyRoutineDetailUiState(
     val routine: Routine? = null,
@@ -79,12 +96,10 @@ data class MyRoutineDetailUiState(
 @Composable
 fun MyRoutineDetailScreen(
     routineId: Int,
-    navController: NavController,
     onBackClick: () -> Unit,
     viewModel: MyRoutineDetailViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
     var isEditMode by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = routineId) {
@@ -102,18 +117,18 @@ fun MyRoutineDetailScreen(
         topBar = {
             if (routine != null) {
                 BasicTopAppBar(
-                    title = if (isEditMode) "루틴 생성" else "내 루틴",
+                    title = if (isEditMode) "루틴 수정" else "내 루틴",
                     navigationIcon = {
                         IconButton(onClick = {
                             if (isEditMode) {
-                                isEditMode = false // 수정 모드일 때 X 버튼을 누르면 모드가 꺼짐
+                                viewModel.restoreRoutine() // 필요시 주석 해제
+                                isEditMode = false
                             } else {
-                                onBackClick() // 평소에는 뒤로가기
+                                onBackClick()
                             }
                         }) {
                             Icon(
-                                modifier = Modifier.size(14.dp),
-                                // 수정 모드일 때는 'X' 아이콘, 아닐 때는 뒤로가기 아이콘 표시
+                                modifier = Modifier.size(24.dp),
                                 painter = if (isEditMode) painterResource(id = R.drawable.ic_x) else painterResource(
                                     id = R.drawable.left_arrow
                                 ),
@@ -141,16 +156,22 @@ fun MyRoutineDetailScreen(
                 }
 
                 else -> {
-                    // [수정] ViewModel의 데이터를 실제 UI를 그리는 Composable에 전달
                     MyRoutineDetailContent(
                         routine = routine,
-                        navController = navController,
                         isEditMode = isEditMode,
                         onEditModeChange = { isEditMode = it },
                         onDelete = { viewModel.deleteRoutine(routineId) },
-                        onSave = { newDescription, newCategory ->
-                            viewModel.updateRoutine(routine.routineId, newDescription, newCategory)
-                        }
+                        onSave = { viewModel.saveChanges() },
+                        onDescriptionChange = viewModel::updateDescription,
+                        onCategoryChange = viewModel::updateCategory,
+                        onAddTag = { viewModel.addTag() }, // TODO: 태그 입력 UI 필요
+                        onDeleteTag = viewModel::deleteTag,
+                        onAddStep = viewModel::addStep, // TODO: 스텝 입력 UI 필요
+                        onDeleteStep = viewModel::deleteStep,
+                        onAddApp = viewModel::addApp, // TODO: 앱 선택 UI 필요
+                        onDeleteApp = viewModel::deleteApp,
+                        onMoveStep = viewModel::moveStep,
+                        onStepNameChange = viewModel::updateStepName
                     )
                 }
             }
@@ -158,126 +179,205 @@ fun MyRoutineDetailScreen(
     }
 }
 
-// [수정] 실제 UI를 그리는 부분을 별도의 Composable로 분리
+
 @Composable
 private fun MyRoutineDetailContent(
     routine: Routine,
-    navController: NavController,
-    isEditMode: Boolean, // ✨ 부모로부터 상태를 전달 받음
-    onEditModeChange: (Boolean) -> Unit, // ✨ 부모의 상태를 변경하는 함수를 전달 받음
+    isEditMode: Boolean,
+    onEditModeChange: (Boolean) -> Unit,
     onDelete: () -> Unit,
-    onSave: (String, String) -> Unit
+    onSave: () -> Unit,
+    onDescriptionChange: (String) -> Unit,
+    onCategoryChange: (String) -> Unit,
+    onAddTag: () -> Unit,
+    onDeleteTag: (String) -> Unit,
+    onAddStep: () -> Unit,
+    onDeleteStep: (Int) -> Unit,
+    onMoveStep: (from: Int, to: Int) -> Unit,
+    onAddApp: () -> Unit,
+    onDeleteApp: (AppInfo) -> Unit,
+    onStepNameChange: (index: Int, newName: String) -> Unit,
 ) {
-    var description by remember(routine.description) {
-        mutableStateOf(routine.description.ifEmpty { "설명을 입력해주세요." })
-    }
-    var category by remember(routine.category) { mutableStateOf(routine.category) }
-    var showEditConfirmDialog by remember { mutableStateOf(false) }
-    var showEditCompleteDialog by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val listState = rememberLazyListState()
 
-// ✨ 2. "수정 완료하시겠습니까?" 확인 모달을 추가합니다.
-    if (showEditConfirmDialog) {
-        CustomDialog(
-            onDismissRequest = { showEditConfirmDialog = false },
-            onConfirmation = {
-                showEditConfirmDialog = false // 확인 모달 닫기
-                onSave(description, category)           // 데이터 저장
-                showEditCompleteDialog = true // "수정되었습니다!" 모달 띄우기
-                onEditModeChange(false)     // 수정 모드 종료
-            },
-            confirmButtonText = "확인", // 버튼 텍스트
-            content = {
-                Text(
-                    text = "수정 완료하시겠습니까?",
-                    style = MORUTheme.typography.title_B_20,
-                    textAlign = TextAlign.Center
-                )
-            }
-        )
-    }
+    var draggedItemIndex by remember { mutableStateOf<Int?>(null) }
+    var verticalDragOffset by remember { mutableStateOf(0f) }
+    var dragJob by remember { mutableStateOf<Job?>(null) }
 
-    if (showEditCompleteDialog) {
-        CenteredInfoDialog(
-            onDismissRequest = { showEditCompleteDialog = false },
-            content = {
-                Text(
-                    text = "수정되었습니다!",
-                    color = Color(0xFFE0E0E0),
-                    style = MORUTheme.typography.desc_M_14
-                )
-            }
-        )
-        LaunchedEffect(Unit) {
-            delay(1500)
-            showEditCompleteDialog = false
-        }
-    }
-
+    // LazyColumn에서 헤더 아이템의 개수. 이 값은 인덱스 보정에 사용됩니다.
+    val headerItemCount = 3
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // [수정] 스크롤이 필요한 모든 컨텐츠를 LazyColumn으로 감쌉니다.
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .background(Color.White)
-                .weight(1f) // LazyColumn이 버튼을 제외한 모든 공간을 차지하도록 합니다.
+                .weight(1f)
+            // LazyColumn 전체에 적용했던 gestureModifier 제거
         ) {
-            // 1. 이미지 (오버레이 없는 단순 이미지)
             item {
                 RoutineItemCard(
-                    // 카드 스타일에 맞게 좌우 패딩을 추가합니다.
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    // 현재 상세 페이지의 routine 객체에서 데이터를 가져와 사용합니다.
                     imageUrl = routine.imageUrl,
                     title = routine.title,
-                    routine = routine,
                     isEditMode = isEditMode,
                     onDelete = onDelete,
-                    description = description,
-                    category = category,
-                    onDescriptionChange = { newDescription ->
-                        description = newDescription
-                    },
-                    onCategoryChange = { newCategory ->
-                        category = newCategory
-                    }
+                    description = routine.description,
+                    category = routine.category,
+                    onDescriptionChange = onDescriptionChange,
+                    onCategoryChange = onCategoryChange,
                 )
             }
 
-            // 2. 루틴 정보 (이미지 바로 아래)
             item {
-                RoutineInfo(routine = routine)
+                RoutineInfo(
+                    tags = routine.tags,
+                    isEditMode = isEditMode,
+                    onAddTag = onAddTag,
+                    onDeleteTag = onDeleteTag
+                )
             }
 
-            // 3. STEP 목록
             item {
-                RoutineSteps(steps = routine.steps) // 스텝 제목 부분을 분리
-            }
-
-            // [수정] "사용앱" 섹션을 LazyColumn의 아이템으로 추가합니다.
-            if (routine.usedApps.isNotEmpty()) {
-                item {
-                    Spacer(modifier = Modifier.height(20.dp))
-                    UsedAppsSection(apps = routine.usedApps)
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    Text(
+                        modifier = Modifier.padding(start = 10.dp),
+                        text = "STEP",
+                        style = MORUTheme.typography.title_B_20,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+                    //HorizontalDivider(thickness = 1.dp, color = Color.Black.copy(alpha = 0.5f))
                 }
             }
 
-            // 맨 아래 여백
-            item {
-                Spacer(modifier = Modifier.height(20.dp))
+            itemsIndexed(items = routine.steps, key = { _, step -> step.id }) { index, item ->
+                val isDragging = draggedItemIndex == index
+                val offset = if (isDragging) verticalDragOffset else 0f
+
+                val dragHandleModifier = if (isEditMode) {
+                    Modifier.pointerInput(Unit) {
+                        detectDragGesturesAfterLongPress(
+                            onDragStart = {
+                                draggedItemIndex = index
+                            },
+                            onDrag = { change, dragAmount ->
+                                change.consume()
+                                verticalDragOffset += dragAmount.y
+                            },
+                            onDragEnd = {
+                                val currentDraggedIndex = draggedItemIndex
+                                if (currentDraggedIndex != null) {
+                                    // 드롭된 위치의 새로운 인덱스를 찾음
+                                    val newIndex = findNewIndex(
+                                        draggedItemIndex = currentDraggedIndex,
+                                        verticalDragOffset = verticalDragOffset,
+                                        listState = listState,
+                                        headerItemCount = headerItemCount
+                                    )
+                                    // 유효한 인덱스를 찾았고, 위치가 변경되었으면 onMoveStep 호출
+                                    if (newIndex != null && newIndex != currentDraggedIndex) {
+                                        onMoveStep(currentDraggedIndex, newIndex)
+                                    }
+                                }
+                                // 드래그 상태 초기화
+                                draggedItemIndex = null
+                                verticalDragOffset = 0f
+                            },
+                            onDragCancel = {
+                                draggedItemIndex = null
+                                verticalDragOffset = 0f
+                            }
+                        )
+                    }
+                } else Modifier
+
+                Column(
+                    modifier = Modifier
+                        .zIndex(if (isDragging) 1f else 0f)
+                        .graphicsLayer {
+                            translationY = offset
+                            shadowElevation = if (isDragging) 8f else 0f
+                        }
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        thickness = 1.dp, color = Color.Black.copy(alpha = 0.5f)
+                    )
+
+                    LocalRoutineStepItem(
+                        stepNumber = index + 1,
+                        step = item,
+                        isEditMode = isEditMode,
+                        onDeleteClick = { onDeleteStep(index) },
+                        onNameChange = { newName -> onStepNameChange(index, newName) },
+                        dragHandleModifier = dragHandleModifier
+                    )
+
+                    // 🎨 2. 아이템 아래쪽 구분선 (항상 표시)
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        thickness = 1.dp, color = Color.Black.copy(alpha = 0.5f)
+                    )
+
+                    Spacer(modifier=Modifier.height(6.dp))
+                }
             }
+
+            if (isEditMode) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        IconButton(onClick = onAddStep) {
+                            Box(
+                                modifier = Modifier
+                                    .size(29.dp)
+                                    .background(
+                                        color = MORUTheme.colors.lightGray,
+                                        shape = CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Add,
+                                    contentDescription = "STEP 추가",
+                                    tint = MORUTheme.colors.mediumGray,
+                                    modifier = Modifier.size(21.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // UsedApps 섹션
+            if (routine.usedApps.isNotEmpty() || isEditMode) {
+                item {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    UsedAppsSection(
+                        apps = routine.usedApps,
+                        isEditMode = isEditMode,
+                        onAddApp = onAddApp,
+                        onDeleteApp = onDeleteApp
+                    )
+                }
+            }
+            item { Spacer(modifier = Modifier.height(20.dp)) }
         }
 
-        // [유지] "수정하기" 버튼은 LazyColumn 밖에 위치하여 하단에 고정됩니다.
         MoruButton(
-            text = if (isEditMode) "수정 완료" else "수정하기", // ✨ 버튼 텍스트 변경
+            text = if (isEditMode) "완료하기" else "수정하기",
             onClick = {
-                // ✨ [수정 3] "수정 완료" 버튼 클릭 시 모달을 띄우는 로직 추가
                 if (isEditMode) {
-                    showEditConfirmDialog = true
-                } else {
-                    onEditModeChange(true)
-                } // 부모의 isEditMode 상태를 토글
-            }, // ✨ 클릭 시 수정 모드 토글
+                    onSave() // 저장 함수 호출
+                }
+                onEditModeChange(!isEditMode) // 모드 전환
+            },
             modifier = Modifier
                 .height(80.dp)
                 .fillMaxWidth(),
@@ -289,25 +389,133 @@ private fun MyRoutineDetailContent(
 }
 
 
+private fun findNewIndex(
+    draggedItemIndex: Int,
+    verticalDragOffset: Float,
+    listState: LazyListState,
+    headerItemCount: Int
+): Int? {
+    val layoutInfo = listState.layoutInfo
+    // 실제 LazyColumn에서의 아이템 인덱스 (헤더 개수 더하기)
+    val absoluteDraggedItemIndex = draggedItemIndex + headerItemCount
+
+    val draggedItem = layoutInfo.visibleItemsInfo.find { it.index == absoluteDraggedItemIndex } ?: return null
+    val draggedItemCenter = draggedItem.offset + draggedItem.size / 2 + verticalDragOffset
+
+    return layoutInfo.visibleItemsInfo
+        .filter {
+            // STEP 리스트 범위 내에 있고, 자기 자신이 아닌 아이템만 필터링
+            it.index >= headerItemCount && it.index < layoutInfo.totalItemsCount && it.index != absoluteDraggedItemIndex
+        }
+        .minByOrNull {
+            val itemCenter = it.offset + it.size / 2
+            abs(itemCenter - draggedItemCenter)
+        }
+        // 찾은 아이템의 인덱스에서 헤더 개수를 빼서 실제 데이터 리스트의 인덱스로 변환
+        ?.index?.minus(headerItemCount)
+}
+
+@Composable
+private fun LocalRoutineStepItem(
+    stepNumber: Int,
+    step: RoutineStep,
+    isEditMode: Boolean,
+    onDeleteClick: () -> Unit,
+    onNameChange: (String) -> Unit,
+    dragHandleModifier: Modifier = Modifier // 드래그 핸들 Modifier를 파라미터로 받음
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(vertical = 16.dp, horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (isEditMode) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_menu),
+                contentDescription = "Drag Handle",
+                // 부모로부터 전달받은 Modifier를 여기에 적용
+                modifier = Modifier
+                    .size(24.dp)
+                    .then(dragHandleModifier),
+                tint = MORUTheme.colors.darkGray
+            )
+        } else {
+            Text(
+                text = "%02d".format(stepNumber),
+                style = MORUTheme.typography.title_B_12,
+                color = MORUTheme.colors.darkGray,
+                modifier = Modifier.width(24.dp),
+                textAlign = TextAlign.Center
+            )
+        }
+
+        Spacer(Modifier.width(24.dp))
+
+        if (isEditMode) {
+            // 수정 모드일 때: BasicTextField를 보여줌
+            BasicTextField(
+                value = step.name,
+                onValueChange = onNameChange, // 타이핑할 때마다 onNameChange 콜백 호출
+                modifier = Modifier.weight(1f),
+                textStyle = MORUTheme.typography.body_SB_14.copy(color = MORUTheme.colors.black),
+                singleLine = true // 한 줄 입력 필드로 설정
+            )
+        } else {
+            // 보기 모드일 때: 기존처럼 Text를 보여줌
+            Text(
+                text = step.name,
+                style = MORUTheme.typography.body_SB_14,
+                color = MORUTheme.colors.black,
+                modifier = Modifier.weight(1f),
+            )
+        }
+
+        /*Text(
+            text = step.name,
+            style = MORUTheme.typography.body_SB_14,
+            color = MORUTheme.colors.black,
+            modifier = Modifier.weight(1f),
+        )*/
+
+        Text(
+            text = step.duration,
+            style = MORUTheme.typography.body_SB_14,
+            color = MORUTheme.colors.darkGray,
+        )
+
+        if (isEditMode) {
+            Spacer(Modifier.width(16.dp))
+            Icon(
+                painter = painterResource(id = R.drawable.ic_delete_gray),
+                contentDescription = "Delete Step",
+                modifier = Modifier
+                    .size(14.dp)
+                    .clickable(onClick = onDeleteClick),
+                tint = MORUTheme.colors.mediumGray
+            )
+        }
+    }
+}
+
+// ------------------- 주요 변경 부분 끝 -------------------
+
+
 @Composable
 fun RoutineItemCard(
     modifier: Modifier = Modifier,
     imageUrl: String? = null,
     title: String,
     isEditMode: Boolean,
-    routine: Routine,
     onDelete: () -> Unit,
     description: String,
     category: String,
     onDescriptionChange: (String) -> Unit,
-    onCategoryChange: (String) -> Unit
+    onCategoryChange: (String) -> Unit,
 ) {
-// 1. 설명 텍스트와 수정 모드 상태
-
-    // 2. 삭제 확인 및 완료 모달 표시 상태
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var showDeleteCompleteDialog by remember { mutableStateOf(false) }
-    // 체크박스의 클릭 상태를 기억하는 변수
     var isUserChecked by remember { mutableStateOf(false) }
 
     if (showDeleteConfirmDialog) {
@@ -333,12 +541,11 @@ fun RoutineItemCard(
             content = {
                 Text(
                     text = "삭제되었습니다!",
-                    color = Color(0xFFE0E0E0),
+                    color = Color.LightGray,
                     style = MORUTheme.typography.desc_M_14
                 )
             }
         )
-        // 1.5초 후에 자동으로 닫히도록 설정
         LaunchedEffect(Unit) {
             delay(1500)
             showDeleteCompleteDialog = false
@@ -347,13 +554,10 @@ fun RoutineItemCard(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Min) // 아이템의 전체 높이를 고정
-            .background(Color.White, shape = RoundedCornerShape(12.dp)),
-        //.padding(10.dp),
+            .height(IntrinsicSize.Min),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        // 1. 왼쪽 이미지 (AsyncImage)
         AsyncImage(
             model = imageUrl,
             contentDescription = "루틴 대표 이미지",
@@ -368,16 +572,15 @@ fun RoutineItemCard(
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        // 2. 오른쪽 정보 섹션 (Column)
         Column(
             modifier = Modifier
                 .fillMaxHeight()
-                .weight(1f) // 남은 공간을 모두 차지
+                .weight(1f)
         ) {
-            // 2-1. 루틴 제목
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = title,
@@ -399,27 +602,23 @@ fun RoutineItemCard(
                         contentDescription = " 쓰레기통"
                     )
                 }
-
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 2-2. 카테고리 칩
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = Color.White
-                    ),
-                horizontalArrangement = Arrangement.Absolute.SpaceBetween,
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
 
             ) {
-                Row(modifier = Modifier) {
+                Row(
+                    modifier = Modifier.clickable { isUserChecked = !isUserChecked },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
-                        modifier = Modifier
-                            .size(16.dp)
-                            .clickable { isUserChecked = !isUserChecked },
+                        modifier = Modifier.size(16.dp),
                         painter = painterResource(if (isUserChecked) R.drawable.ic_checkbox_uncheck else R.drawable.ic_checkbox_gray),
                         contentDescription = "체크",
                         tint = Color.Unspecified
@@ -444,7 +643,6 @@ fun RoutineItemCard(
                     )
 
                 } else {
-                    var checked1 by remember { mutableStateOf(false) }
                     CustomToggleSwitch(
                         checked = category == "집중",
                         onCheckedChange = { isChecked ->
@@ -461,13 +659,8 @@ fun RoutineItemCard(
                             .width(95.dp)
                             .height(26.dp)
                     )
-
                 }
-
             }
-
-            // 2-3. 하단 사용자 정보로 밀어내기 위한 Spacer
-            //Spacer(modifier = Modifier.weight(1f))
 
             Spacer(modifier = Modifier.height(8.dp))
             Box(
@@ -478,26 +671,24 @@ fun RoutineItemCard(
                         color = MORUTheme.colors.veryLightGray,
                         shape = RoundedCornerShape(4.dp)
                     )
-                    .padding(10.dp) // ✨ [수정 1] Box에 전체적으로 10.dp 패딩 적용
+                    .padding(10.dp)
             ) {
                 if (isEditMode) {
-                    // --- 수정 모드일 때: BasicTextField ---
                     BasicTextField(
-                        value = description, // ✨ 파라미터로 받은 description 사용
-                        onValueChange = onDescriptionChange, // ✨ 파라미터로 받은 onDescriptionChange 사용
+                        value = description,
+                        onValueChange = onDescriptionChange,
                         modifier = Modifier.fillMaxWidth(),
                         textStyle = MORUTheme.typography.time_R_14.copy(color = Color.Black)
                     )
                 } else {
-                    // --- 평소 상태일 때: Text (읽기 전용) ---
                     Text(
-                        text = description,
+                        text = if (description.isNotBlank()) description else "설명을 입력해주세요.",
                         modifier = Modifier.fillMaxWidth(),
                         style = MORUTheme.typography.time_R_14.copy(
-                            color = if (description == "설명을 입력해주세요.") Color.Gray else Color.Black
+                            color = if (description.isNotBlank()) Color.Black else Color.Gray
                         ),
-                        maxLines = 3, // ✨ 3줄까지만 보이도록 제한
-                        overflow = TextOverflow.Ellipsis // ✨ 범위 넘어가면 '...' 처리
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -507,98 +698,83 @@ fun RoutineItemCard(
 
 
 @Composable
-private fun RoutineInfo(routine: Routine) {
-
+private fun RoutineInfo(
+    tags: List<String>,
+    isEditMode: Boolean,
+    onAddTag: () -> Unit,
+    onDeleteTag: (String) -> Unit
+) {
     Column(
-        modifier = Modifier.padding(start = 17.dp, top = 25.dp, bottom = 30.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 17.dp, end = 17.dp, top = 25.dp, bottom = 30.dp),
     ) {
-
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(routine.tags) { tag ->
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            items(tags) { tag ->
                 MoruChip(
                     text = "#$tag",
-                    onClick = {},
                     isSelected = true,
-                    selectedBackgroundColor = MORUTheme.colors.charcoalBlack,
-                    selectedContentColor = Color(0xFFB8EE44),
-                    unselectedBackgroundColor = Color.Transparent,
-                    unselectedContentColor = Color.Transparent,
+                    onClick = {
+                        if (isEditMode) {
+                            onDeleteTag(tag)
+                        }
+                    },
+                    selectedBackgroundColor = Color.Black,
+                    selectedContentColor = MORUTheme.colors.limeGreen,
+                    unselectedBackgroundColor = Color.White,
+                    unselectedContentColor = Color.Black,
+                    endIconContent = if (isEditMode) {
+                        {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Remove Tag",
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+                    } else null
                 )
             }
-        }
 
-        Spacer(Modifier.height(8.dp))
-
-    }
-}
-
-
-@Composable
-private fun RoutineSteps(steps: List<RoutineStep>) {
-    Column(
-        modifier = Modifier.padding(horizontal = 16.dp),
-    ) {
-        Text(
-            modifier = Modifier.padding(start = 10.dp),
-            text = "STEP",
-            style = MORUTheme.typography.title_B_20,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        Column {
-            HorizontalDivider(thickness = 1.dp, color = Color.Black.copy(alpha = 0.5f))
-
-            steps.forEachIndexed { index, step ->
-                LocalRoutineStepItem(stepNumber = index + 1, step = step)
-
-                if (index < steps.lastIndex) {
-                    Column {
-                        HorizontalDivider(thickness = 1.dp, color = Color.Black.copy(alpha = 0.5f))
-                        Spacer(modifier = Modifier.height(6.dp))
-                        HorizontalDivider(thickness = 1.dp, color = Color.Black.copy(alpha = 0.5f))
+            if (isEditMode) {
+                item {
+                    IconButton(
+                        onClick = onAddTag,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(14.dp)
+                                .background(
+                                    color = MORUTheme.colors.lightGray,
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = "태그 추가",
+                                tint = Color.Black,
+                                modifier = Modifier.size(10.dp)
+                            )
+                        }
                     }
-                } else {
-                    HorizontalDivider(thickness = 1.dp, color = Color.Black.copy(alpha = 0.5f))
                 }
             }
         }
+        Spacer(Modifier.height(8.dp))
     }
 }
 
-@Composable
-private fun LocalRoutineStepItem(stepNumber: Int, step: RoutineStep) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp, horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = "%2d".format(stepNumber),
-            style = MORUTheme.typography.title_B_12,
-            color = MORUTheme.colors.darkGray,
-        )
-        Spacer(Modifier.width(36.dp))
-        Text(
-            text = step.name,
-            style = MORUTheme.typography.body_SB_14,
-            color = MORUTheme.colors.black,
-            modifier = Modifier.weight(1f),
-        )
-        Text(
-            text = step.duration,
-            style = MORUTheme.typography.body_SB_14,
-            color = MORUTheme.colors.darkGray,
-        )
-    }
-}
 
 @Composable
-private fun UsedAppsSection(apps: List<AppInfo>) {
+private fun UsedAppsSection(
+    apps: List<AppInfo>,
+    isEditMode: Boolean,
+    onAddApp: () -> Unit,
+    onDeleteApp: (AppInfo) -> Unit
+) {
     Column(
         Modifier
             .padding(16.dp)
@@ -606,30 +782,70 @@ private fun UsedAppsSection(apps: List<AppInfo>) {
     ) {
         Text("사용 앱", style = MORUTheme.typography.title_B_20, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             items(apps) { app ->
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    AsyncImage(
-                        model = app.iconUrl,
-                        contentDescription = app.name,
+                Box {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        AsyncImage(
+                            model = app.iconUrl,
+                            contentDescription = app.name,
+                            modifier = Modifier
+                                .size(48.dp)
+                                .background(
+                                    MORUTheme.colors.veryLightGray,
+                                    shape = RoundedCornerShape(size = 6.dp)
+                                )
+                                .padding(8.dp),
+                            placeholder = painterResource(id = R.drawable.ic_reset),
+                            error = painterResource(id = R.drawable.ic_info)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(app.name, style = MORUTheme.typography.time_R_12)
+                    }
+                    if (isEditMode) {
+                        Icon(
+                            imageVector = Icons.Default.Remove,
+                            contentDescription = "Delete App",
+                            modifier = Modifier
+                                .size(16.dp)
+                                .align(Alignment.TopStart)
+                                .clip(CircleShape)
+                                .background(MORUTheme.colors.lightGray)
+                                .clickable { onDeleteApp(app) },
+                            tint = MORUTheme.colors.darkGray
+                        )
+                    }
+                }
+            }
+
+            if (isEditMode) {
+                item {
+                    Box(
                         modifier = Modifier
-                            .size(56.dp)
-                            .clip(CircleShape)
-                            .background(MORUTheme.colors.veryLightGray)
-                            .padding(8.dp),
-                        placeholder = painterResource(id = R.drawable.ic_reset), // 예시: 로딩 중 아이콘
-                        error = painterResource(id = R.drawable.ic_info)       // 예시: 에러 아이콘
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(app.name, style = MORUTheme.typography.time_R_12)
+                            .size(48.dp)
+                            .background(
+                                color = MORUTheme.colors.veryLightGray,
+                                shape = RoundedCornerShape(size = 6.dp)
+                            )
+                            .clickable(onClick = onAddApp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(24.dp),
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add App",
+                            tint = MORUTheme.colors.darkGray
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-
-// [수정] 프리뷰는 ViewModel 없이 동작하도록 수정
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
@@ -638,16 +854,20 @@ private fun MyRoutineDetailScreenPreview() {
     val navController = rememberNavController()
     MORUTheme {
         if (sampleRoutine != null) {
+            // [수정] Preview 전용 isEditMode 상태 추가
+            var isEditMode by remember { mutableStateOf(false) }
             Scaffold(
                 topBar = {
                     BasicTopAppBar(
-                        title = sampleRoutine.title,
+                        title = if (isEditMode) "루틴 수정" else "내 루틴",
                         navigationIcon = {
                             IconButton(onClick = {}) {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                                    painter = if (isEditMode) painterResource(R.drawable.ic_x) else painterResource(
+                                        R.drawable.left_arrow
+                                    ),
                                     contentDescription = "Back",
-                                    modifier = Modifier.size(32.dp)
+                                    modifier = Modifier.size(24.dp)
                                 )
                             }
                         }
@@ -655,14 +875,79 @@ private fun MyRoutineDetailScreenPreview() {
                 }
             ) { paddingValues ->
                 Box(modifier = Modifier.padding(paddingValues)) {
-                    // [수정] 프리뷰에서는 UI Content Composable을 직접 호출
                     MyRoutineDetailContent(
                         routine = sampleRoutine,
-                        navController = navController,
-                        isEditMode = false,
-                        onEditModeChange = {},
+                        isEditMode = isEditMode,
+                        onEditModeChange = { isEditMode = it },
                         onDelete = {},
-                        onSave = { _, _ -> }
+                        onSave = {},
+                        onDescriptionChange = {},
+                        onCategoryChange = {},
+                        onAddTag = {},
+                        onDeleteTag = {},
+                        onAddStep = {},
+                        onDeleteStep = {},
+                        onAddApp = {},
+                        onDeleteApp = {},
+                        onMoveStep = { _, _ -> },
+                        onStepNameChange = { _, _ -> }
+                    )
+                }
+            }
+        } else {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                Text("프리뷰용 데이터를 찾을 수 없습니다.")
+            }
+        }
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true)
+@Composable
+private fun MyRoutineDetailScreenPreviewwithedit() {
+    val sampleRoutine = DummyData.feedRoutines.find { it.routineId == 501 }
+    val navController = rememberNavController()
+    MORUTheme {
+        if (sampleRoutine != null) {
+            // [수정] Preview 전용 isEditMode 상태 추가
+            var isEditMode by remember { mutableStateOf(true) }
+            Scaffold(
+                topBar = {
+                    BasicTopAppBar(
+                        title = if (isEditMode) "루틴 수정" else "내 루틴",
+                        navigationIcon = {
+                            IconButton(onClick = {}) {
+                                Icon(
+                                    painter = if (isEditMode) painterResource(R.drawable.ic_x) else painterResource(
+                                        R.drawable.left_arrow
+                                    ),
+                                    contentDescription = "Back",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                    )
+                }
+            ) { paddingValues ->
+                Box(modifier = Modifier.padding(paddingValues)) {
+                    MyRoutineDetailContent(
+                        routine = sampleRoutine,
+                        isEditMode = isEditMode,
+                        onEditModeChange = { isEditMode = it },
+                        onDelete = {},
+                        onSave = {},
+                        onDescriptionChange = {},
+                        onCategoryChange = {},
+                        onAddTag = {},
+                        onDeleteTag = {},
+                        onAddStep = {},
+                        onDeleteStep = {},
+                        onAddApp = {},
+                        onDeleteApp = {},
+                        onMoveStep = { _, _ -> },
+                        onStepNameChange = { _, _ -> }
                     )
                 }
             }

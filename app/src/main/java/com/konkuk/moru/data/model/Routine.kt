@@ -2,6 +2,7 @@ package com.konkuk.moru.data.model
 
 import java.time.DayOfWeek
 import java.time.LocalTime
+import java.util.UUID
 
 /**
  * 앱 전체에서 사용될 통합 루틴 데이터 클래스
@@ -49,6 +50,7 @@ data class AppInfo(
  * 루틴의 각 단계를 나타내는 클래스
  */
 data class RoutineStep(
+    val id: UUID = UUID.randomUUID(),
     val name: String,
     val duration: String // "00:00" 형식
 )
@@ -57,6 +59,7 @@ data class RoutineStep(
  * 비슷한 루틴 정보를 나타내는 클래스
  */
 data class SimilarRoutine(
+    val id: Int,
     val imageUrl: String?,
     val name: String,
     val tag: String

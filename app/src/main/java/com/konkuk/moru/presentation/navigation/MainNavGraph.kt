@@ -76,7 +76,7 @@ fun MainNavGraph(
 
         composable(route = Route.RoutineFocusIntro.route) {
 
-            val parentEntry = remember(navController) {
+            val parentEntry = remember(navController.currentBackStackEntry) {
                 navController.getBackStackEntry(Route.Home.route)
             }
             val sharedViewModel = viewModel<SharedRoutineViewModel>(parentEntry)
@@ -217,6 +217,12 @@ fun MainNavGraph(
 
                 title == "지금 가장 핫한 루틴은?" -> feedRoutines.filter { it.likes > 70 }
                 title == "MORU님과 딱 맞는 루틴" -> feedRoutines.filter { it.authorName == "MORU" }
+                title == "이 루틴과 비슷한 루틴" -> {
+                    // 여기서는 어떤 루틴 기준인지 알 수 없으므로,
+                    // 예시로 '운동' 또는 '명상' 태그를 가진 루틴들을 보여줍니다.
+                    feedRoutines.filter { it.tags.contains("운동") || it.tags.contains("명상") }
+                }
+
                 else -> emptyList()
             }
 
@@ -272,7 +278,7 @@ fun MainNavGraph(
             if (routineId != null) {
                 MyRoutineDetailScreen(
                     routineId = routineId,
-                    navController = navController,
+                    // navController = navController,
                     onBackClick = { navController.popBackStack() },
                 )
             } else {
