@@ -33,6 +33,7 @@ import com.konkuk.moru.presentation.myactivity.screen.ActSettingScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutineDetailScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesViewModel
+import com.konkuk.moru.presentation.routinecreate.screen.RoutineCreateScreen
 import com.konkuk.moru.presentation.routinefeed.screen.NotificationScreen
 import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.HotRoutineListScreen
@@ -384,6 +385,11 @@ fun MainNavGraph(
                 modifier = modifier.padding(innerPadding),
                 navController = navController
             )
+        }
+
+        // 루틴 생성 화면
+        composable(route = Route.RoutineCreate.route) {
+            RoutineCreateScreen(navController)
         }
     }
 }

@@ -1,7 +1,5 @@
-package com.konkuk.moru.presentation.onboarding.component
+package com.konkuk.moru.core.component
 
-import android.R.attr.onClick
-import android.R.attr.textColor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -23,13 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.konkuk.moru.core.component.button.MoruButtonTypeA
-import com.konkuk.moru.ui.theme.MORUTheme
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
-fun ImageOptionButtonScreen(
+fun ImageChoiceOptionButtonScreen(
     onImageSelected: () -> Unit,
     onCameraSelected: () -> Unit,
     onCancel: () -> Unit
@@ -55,7 +50,7 @@ fun ImageOptionButtonScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(110.dp)
-                    .background(color = colors.lightGray, shape = RoundedCornerShape(12.dp)),
+                    .background(color = colors.lightGray.copy(alpha = 0.7f), shape = RoundedCornerShape(12.dp)),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -63,7 +58,7 @@ fun ImageOptionButtonScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .background(Color.White, shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
+                        .background(Color.White.copy(alpha = 0.8f), shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
                         .clickable{
                             onImageSelected()
                         },
@@ -81,7 +76,7 @@ fun ImageOptionButtonScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .background(Color.White, shape = RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp))
+                        .background(Color.White.copy(alpha = 0.8f), shape = RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp))
                         .clickable{
                             onCameraSelected()
                         },
@@ -118,7 +113,7 @@ fun ImageOptionButtonScreen(
 @Preview(showBackground = true)
 @Composable
 fun PreviewCompleteSignupPopup() {
-    ImageOptionButtonScreen(
+    ImageChoiceOptionButtonScreen(
         onImageSelected = {},
         onCameraSelected = {},
         onCancel = {}

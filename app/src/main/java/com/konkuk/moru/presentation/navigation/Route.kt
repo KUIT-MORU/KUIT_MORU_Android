@@ -68,4 +68,7 @@ sealed class Route(
     }
 
     data object ActInsightInfo : Route(route = "act_insight")
+
+    // 루틴 생성 화면
+    data object RoutineCreate : Route(route = "routine_create")
 }
