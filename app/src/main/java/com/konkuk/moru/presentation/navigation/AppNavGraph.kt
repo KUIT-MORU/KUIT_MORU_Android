@@ -87,7 +87,8 @@ fun AppNavGraph(
             LaunchedEffect(Unit) {
                 if (!hasInitializedHomeOnboarding) {
                     // SharedPreferences에서 홈 온보딩을 본 적이 있는지 확인
-                    val hasSeenHomeOnboarding = sharedPreferences.getBoolean("hasSeenHomeOnboarding", false)
+                    val hasSeenHomeOnboarding =
+                        sharedPreferences.getBoolean("hasSeenHomeOnboarding", false)
 
                     println("DEBUG: hasSeenHomeOnboarding = $hasSeenHomeOnboarding")
                     println("DEBUG: hasShownHomeOnboardingThisSession = $hasShownHomeOnboardingThisSession")
@@ -139,7 +140,8 @@ fun AppNavGraph(
                             Route.ActScrab.route,
                             Route.RoutineFocusIntro.route,
                             Route.RoutineFocus.route,
-                            Route.RoutineSimpleRun.route
+                            Route.RoutineSimpleRun.route,
+                            Route.MyRoutineDetail.route
                         )
                     ) {
                         MoruBottomBar(
