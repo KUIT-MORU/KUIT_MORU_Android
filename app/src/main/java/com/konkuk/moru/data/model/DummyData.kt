@@ -259,15 +259,32 @@ fun findSimilarRoutinesByTags(
 ): List<SimilarRoutine> {
     val targetTags = targetRoutine.tags.toSet()
 
-    return allRoutines
-        .filter { it.routineId != targetRoutine.routineId }
-        .filter { routine -> routine.tags.any { tag -> tag in targetTags } }
+    // 1. 각 루틴과 겹치는 태그 수를 계산하여 '관련도 점수'를 매깁니다.
+    val routinesWithScores = allRoutines
+        .filter { it.routineId != targetRoutine.routineId } // 자기 자신은 제외
+        .mapNotNull { routine ->
+            val matchingTags = routine.tags.intersect(targetTags)
+            if (matchingTags.isNotEmpty()) {
+                // (루틴, 점수, 실제 겹치는 태그) 튜플로 만듭니다.
+                Triple(routine, matchingTags.size, matchingTags.first())
+            } else {
+                null
+            }
+        }
+
+    // 2. 관련도 점수(겹치는 태그 수)가 높은 순으로 정렬합니다.
+    val sortedRoutines = routinesWithScores.sortedByDescending { it.second }
+
+    // 3. 주어진 limit만큼 잘라냅니다.
+    return sortedRoutines
         .take(limit)
-        .map {
+        .map { (routine, _, firstMatchingTag) ->
+            // 4. SimilarRoutine 객체로 변환할 때, 실제 겹치는 태그를 표시합니다.
             SimilarRoutine(
-                imageUrl = it.imageUrl,
-                name = it.title,
-                tag = "#${it.tags.firstOrNull() ?: "루틴"}"
+                id = routine.routineId,
+                imageUrl = routine.imageUrl,
+                name = routine.title,
+                tag = "#$firstMatchingTag"
             )
         }
 }
