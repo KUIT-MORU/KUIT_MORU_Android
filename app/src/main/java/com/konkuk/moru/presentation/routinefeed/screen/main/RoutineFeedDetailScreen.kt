@@ -149,10 +149,6 @@ fun RoutineDetailScreen(
                                 )
                             )
                         },
-                        onMoreClick = {
-                            val title = "이 루틴과 비슷한 루틴"
-                            navController.navigate(Route.RoutineFeedRec.createRoute(title))
-                        }
                     )
                 }
             }
@@ -415,7 +411,6 @@ fun SimilarRoutinesSection(
     modifier: Modifier = Modifier,
     routines: List<SimilarRoutine>,
     onRoutineClick: (Int) -> Unit,
-    onMoreClick: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -426,8 +421,7 @@ fun SimilarRoutinesSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .clickable(onClick = onMoreClick),
+                .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -435,7 +429,7 @@ fun SimilarRoutinesSection(
                 style = MORUTheme.typography.title_B_20,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.width(10.dp))
             Icon(
                 Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = "더보기",

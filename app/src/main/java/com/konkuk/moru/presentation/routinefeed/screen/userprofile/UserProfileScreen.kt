@@ -99,6 +99,9 @@ fun UserProfileScreen(
                         "following"
                     )
                 )
+            },
+            onRoutineClick = { routineId ->
+                navController.navigate(Route.RoutineFeedDetail.createRoute(routineId))
             }
         )
     }
@@ -112,7 +115,8 @@ private fun UserProfileContent(
     onToggleExpansion: () -> Unit,
     onLikeClick: (Int) -> Unit,
     onFollowerClick: () -> Unit,
-    onFollowingClick: () -> Unit
+    onFollowingClick: () -> Unit,
+    onRoutineClick: (Int) -> Unit
 ) {
     LazyColumn(modifier = modifier.fillMaxWidth()) {
         item {
@@ -129,7 +133,8 @@ private fun UserProfileContent(
                 routines = state.runningRoutines,
                 nickname = state.nickname,
                 onToggle = onToggleExpansion,
-                onLikeClick = onLikeClick
+                onLikeClick = onLikeClick,
+                onRoutineClick = onRoutineClick
             )
         }
         item {
@@ -154,7 +159,7 @@ private fun UserProfileContent(
                     likeCount = routine.likes,
                     isLiked = routine.isLiked,
                     onLikeClick = { onLikeClick(routine.routineId) },
-                    onItemClick = {}
+                    onItemClick = { onRoutineClick(routine.routineId)}
                 )
             }
         }
@@ -287,7 +292,8 @@ private fun ExpandableRoutineSection(
     routines: List<Routine>,
     nickname: String,
     onToggle: () -> Unit,
-    onLikeClick: (Int) -> Unit
+    onLikeClick: (Int) -> Unit,
+    onRoutineClick: (Int) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -344,7 +350,7 @@ private fun ExpandableRoutineSection(
                             likeCount = routine.likes,
                             isLiked = routine.isLiked,
                             onLikeClick = { onLikeClick(routine.routineId) },
-                            onItemClick = {}
+                            onItemClick = { onRoutineClick(routine.routineId) }
                         )
                     }
                 }
@@ -467,7 +473,8 @@ private fun UserProfileScreenPreview(isDataEmpty: Boolean = false) {
                     likeCounts[id] = if (!currentStatus) currentCount + 1 else currentCount - 1
                 },
                 onFollowerClick = {},
-                onFollowingClick = {}
+                onFollowingClick = {},
+                onRoutineClick = {}
             )
         }
     }
