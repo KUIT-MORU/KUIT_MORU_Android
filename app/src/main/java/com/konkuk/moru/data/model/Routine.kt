@@ -57,6 +57,7 @@ data class RoutineStep(
  * 비슷한 루틴 정보를 나타내는 클래스
  */
 data class SimilarRoutine(
+    val id: Int,
     val imageUrl: String?,
     val name: String,
     val tag: String
