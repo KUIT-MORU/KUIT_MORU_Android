@@ -4,7 +4,22 @@ import RoutineDetailTopAppBar
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -12,8 +27,21 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -88,7 +116,9 @@ fun RoutineDetailScreen(
                 item {
                     RoutineHeader(
                         routine = routine,
-                        navController = navController
+                        onProfileClick = { authorId ->
+                            navController.navigate(Route.UserProfile.createRoute(authorId))
+                        }
                     )
                 }
 
@@ -111,10 +141,33 @@ fun RoutineDetailScreen(
                 item {
                     SimilarRoutinesSection(
                         modifier = Modifier.padding(bottom = 16.dp),
-                        routines = uiState.similarRoutines
+                        routines = uiState.similarRoutines,
+                        onRoutineClick = { clickedRoutineId ->
+                            navController.navigate(
+                                Route.RoutineFeedDetail.createRoute(
+                                    clickedRoutineId
+                                )
+                            )
+                        },
+                        onMoreClick = {
+                            val title = "이 루틴과 비슷한 루틴"
+                            navController.navigate(Route.RoutineFeedRec.createRoute(title))
+                        }
                     )
                 }
             }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp) // TopAppBar 높이보다 약간 넉넉하게 설정
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.White.copy(alpha = 0.3f), Color.Transparent)
+                        )
+                    )
+            )
+
 
             RoutineDetailTopAppBar(
                 likeCount = likeCount,
@@ -140,7 +193,7 @@ fun RoutineDetailScreen(
 @Composable
 fun RoutineHeader(
     routine: Routine,
-    navController: NavController
+    onProfileClick: (authorId: Int) -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -156,20 +209,25 @@ fun RoutineHeader(
             placeholder = painterResource(id = R.drawable.ic_profile_with_background),
             error = painterResource(id = R.drawable.ic_launcher_background)
         )
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)),
-                        startY = 400f
+                        colorStops = arrayOf(
+                            0.3f to Color.Transparent,
+                            1f to Color.White.copy(alpha = 0.7f) // alpha 값 조정
+                        )
                     )
                 )
         )
+
+
         RoutineInfoOverlay(
             modifier = Modifier.padding(16.dp),
             routine = routine,
-            navController = navController
+            onProfileClick = onProfileClick
         )
     }
 }
@@ -178,8 +236,9 @@ fun RoutineHeader(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun RoutineInfoOverlay(
-    modifier: Modifier = Modifier, routine: Routine,
-    navController: NavController
+    modifier: Modifier = Modifier,
+    routine: Routine,
+    onProfileClick: (authorId: Int) -> Unit
 ) {
     val contentColor = Color.White
 
@@ -199,9 +258,8 @@ private fun RoutineInfoOverlay(
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.clickable {
-                    navController.navigate(Route.UserProfile.createRoute(routine.authorId))
-                }) {
+                modifier = Modifier.clickable { onProfileClick(routine.authorId) }
+            ) {
                 AsyncImage(
                     model = routine.authorProfileUrl,
                     contentDescription = "작성자 프로필",
@@ -214,7 +272,7 @@ private fun RoutineInfoOverlay(
                 Text(
                     text = routine.authorName,
                     color = Color(0xFF1A1A1A),
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp
                 )
             }
@@ -225,7 +283,7 @@ private fun RoutineInfoOverlay(
                     Text(
                         text = displayTitle,
                         color = Color(0xFF595959),
-                        style = MORUTheme.typography.head_EB_24,
+                        style = MORUTheme.typography.title_B_24,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -272,8 +330,8 @@ private fun RoutineInfoOverlay(
 
         Text(
             text = routine.description,
-            color = contentColor,
-            style = MaterialTheme.typography.bodyMedium,
+            color = Color(0xFF000000),
+            style = MORUTheme.typography.time_R_14,
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -353,7 +411,12 @@ fun RoutineStepItem(stepNumber: Int, step: RoutineStep, modifier: Modifier = Mod
 }
 
 @Composable
-fun SimilarRoutinesSection(modifier: Modifier = Modifier, routines: List<SimilarRoutine>) {
+fun SimilarRoutinesSection(
+    modifier: Modifier = Modifier,
+    routines: List<SimilarRoutine>,
+    onRoutineClick: (Int) -> Unit,
+    onMoreClick: () -> Unit
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -364,7 +427,7 @@ fun SimilarRoutinesSection(modifier: Modifier = Modifier, routines: List<Similar
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-                .clickable { /* TODO: 비슷한 루틴 더보기 화면으로 이동 */ },
+                .clickable(onClick = onMoreClick),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -390,15 +453,21 @@ fun SimilarRoutinesSection(modifier: Modifier = Modifier, routines: List<Similar
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             items(routines) { routine ->
-                SimilarRoutineCard(routine = routine)
+                SimilarRoutineCard(
+                    routine = routine,
+                    onClick = { onRoutineClick(routine.id) })
             }
         }
     }
 }
 
 @Composable
-fun SimilarRoutineCard(routine: SimilarRoutine) {
-    Column(modifier = Modifier.width(72.dp)) {
+fun SimilarRoutineCard(
+    routine: SimilarRoutine, onClick: () -> Unit
+) {
+    Column(modifier = Modifier
+        .width(72.dp)
+        .clickable(onClick = onClick)) {
         Image(
             painter = painterResource(id = R.drawable.ic_routine_square_stop),
             contentDescription = routine.name,
