@@ -248,7 +248,7 @@ private fun MyRoutineDetailContent(
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(14.dp))
-                    HorizontalDivider(thickness = 1.dp, color = Color.Black.copy(alpha = 0.5f))
+                    //HorizontalDivider(thickness = 1.dp, color = Color.Black.copy(alpha = 0.5f))
                 }
             }
 
@@ -301,6 +301,11 @@ private fun MyRoutineDetailContent(
                             shadowElevation = if (isDragging) 8f else 0f
                         }
                 ) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        thickness = 1.dp, color = Color.Black.copy(alpha = 0.5f)
+                    )
+
                     LocalRoutineStepItem(
                         stepNumber = index + 1,
                         step = item,
@@ -309,19 +314,14 @@ private fun MyRoutineDetailContent(
                         onNameChange = { newName -> onStepNameChange(index, newName) },
                         dragHandleModifier = dragHandleModifier
                     )
-                }
 
-                // 구분선 로직 (기존과 동일)
-                if (index < routine.steps.lastIndex) {
-                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        HorizontalDivider(thickness = 1.dp, color = Color.Black.copy(alpha = 0.5f))
-                    }
-                } else {
+                    // 🎨 2. 아이템 아래쪽 구분선 (항상 표시)
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 16.dp),
-                        thickness = 1.dp,
-                        color = Color.Black.copy(alpha = 0.5f)
+                        thickness = 1.dp, color = Color.Black.copy(alpha = 0.5f)
                     )
+
+                    Spacer(modifier=Modifier.height(6.dp))
                 }
             }
 
