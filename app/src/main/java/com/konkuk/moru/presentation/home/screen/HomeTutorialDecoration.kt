@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.home.component
 
+import android.R.attr.top
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -133,7 +134,7 @@ fun HomeTutorialDecoration(
             tint = Color.White,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = 16.dp, end = 16.dp)
+                .padding(top = 45.dp, end = 17.dp)
                 .size(14.dp)
                 .clickable { onDismiss() }
         )
