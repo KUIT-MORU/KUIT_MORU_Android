@@ -1,6 +1,5 @@
 package com.konkuk.moru.presentation.routinecreate.component
 
-import android.app.TimePickerDialog
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,12 +15,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
 import com.konkuk.moru.data.model.Step
@@ -105,4 +106,18 @@ fun StepItem(
             )
         }
     }
+}
+
+@Preview
+@Composable
+private fun StepItemPreview() {
+    val stepList = remember { mutableStateListOf(
+        Step("", "00:00:00"),
+        Step("", "00:00:00"),
+    ) } // 초기 step 1개
+    StepItem(
+        step = stepList[0],
+        onTitleChange = { stepList[0] = stepList[0].copy(title = it) },
+        onTimeChange = { stepList[0] = stepList[0].copy(time = it) }
+    )
 }

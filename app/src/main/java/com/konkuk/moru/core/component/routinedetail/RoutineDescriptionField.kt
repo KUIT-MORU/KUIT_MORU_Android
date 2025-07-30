@@ -40,7 +40,7 @@ fun RoutineDescriptionField(
         value = value,
         onValueChange = onValueChange,
         textStyle = typography.desc_M_14,
-        cursorBrush = SolidColor(colors.limeGreen),
+        cursorBrush = SolidColor(colors.lightGray),
         interactionSource = interactionSource,
         modifier = modifier
             .fillMaxWidth()

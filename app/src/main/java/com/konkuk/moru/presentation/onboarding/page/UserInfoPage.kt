@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,11 +40,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.konkuk.moru.core.component.ImageChoiceOptionButtonScreen
 import com.konkuk.moru.core.component.button.MoruButtonTypeA
 import com.konkuk.moru.presentation.onboarding.OnboardingViewModel
-import com.konkuk.moru.presentation.onboarding.component.ImageOptionButtonScreen
 import java.util.Calendar
 
 @Composable
@@ -209,7 +206,7 @@ fun UserInfoPage(
             }
         }
         if (isImageOptionVisible){
-            ImageOptionButtonScreen(
+            ImageChoiceOptionButtonScreen(
                 onImageSelected = {
                     //Todo 앨범에서 이미지 선택 로직 구현
                 },

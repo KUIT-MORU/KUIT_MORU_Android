@@ -31,12 +31,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.konkuk.moru.R
+import com.konkuk.moru.core.component.ImageChoiceOptionButtonScreen
 import com.konkuk.moru.core.component.Switch.CustomToggleSwitch
 import com.konkuk.moru.core.component.Switch.RoutineSimpleFocusSwitch
 import com.konkuk.moru.core.component.routinedetail.RoutineDescriptionField
@@ -46,18 +49,19 @@ import com.konkuk.moru.presentation.routinecreate.component.StepItem
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
-// 지피티에 이거 말하던 중임
-//*
-//아직 미완성이긴 하지만 에뮬레이터에서 화면을 보고싶어서 일단 네비게이션 업데이트를 통해 루틴 생성 스크린도 이제 앱에서 이동할 수 있도록 하고싶어. 이동하는 방법은 홈 화면에서 FAB 버튼을 누르면 루틴 생성 화면으로 이동하도록 할거야.
-//
-// *//
 @Composable
-fun RoutineCreateScreen() {
+fun RoutineCreateScreen(
+    navController: NavHostController
+) {
     val focusManager = LocalFocusManager.current
+    var isImageOptionVisible by remember { mutableStateOf(false) }
     var isFocusingRoutine by remember { mutableStateOf(false) }
     var showUser by remember { mutableStateOf(false) }
     var routineDescription by remember { mutableStateOf("") }
-    val stepList = remember { mutableStateListOf(Step("", "00:00:00")) } // 초기 step 1개
+    val stepList = remember { mutableStateListOf(
+        Step("", "00:00:00"),
+        Step("", "00:00:00"),
+    ) } // 초기 step 1개
 
     Box(
         modifier = Modifier
@@ -85,6 +89,10 @@ fun RoutineCreateScreen() {
                     modifier = Modifier
                         .padding(start = 16.dp, end = 22.dp)
                         .size(18.dp)
+                        .clickable(
+                            indication = null,
+                            interactionSource = null
+                        ) { navController.popBackStack() }
                 )
                 Text(
                     text = "루틴 생성",
@@ -112,6 +120,13 @@ fun RoutineCreateScreen() {
                             .width(105.dp)
                             .fillMaxHeight()
                             .background(colors.veryLightGray, RoundedCornerShape(4.dp))
+                            .clickable(
+                                indication = null,
+                                interactionSource = null
+                            ) {
+                                isImageOptionVisible = true // 이미지 선택 옵션 표시
+                                focusManager.clearFocus() // 포커스 해제
+                            },
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_routine_image_default),
@@ -182,11 +197,14 @@ fun RoutineCreateScreen() {
                 stepList.forEachIndexed { index, step ->
                     StepItem(
                         step = step,
-                        onTitleChange = { newTitle -> stepList[index] = step.copy(title = newTitle) },
+                        onTitleChange = { newTitle ->
+                            stepList[index] = step.copy(title = newTitle)
+                        },
                         onTimeChange = { newTime -> stepList[index] = step.copy(time = newTime) }
                     )
+                    Spacer(modifier = Modifier.height(6.dp))
                 }
-                Spacer(modifier = Modifier.height(15.dp))
+                Spacer(modifier = Modifier.height(9.dp))
                 Box( //circle 버튼
                     modifier = Modifier
                         .size(29.dp)
@@ -239,11 +257,25 @@ fun RoutineCreateScreen() {
                 )
             }
         }
+        if (isImageOptionVisible){
+            ImageChoiceOptionButtonScreen(
+                onImageSelected = {
+                    //Todo 앨범에서 이미지 선택 로직 구현
+                },
+                onCameraSelected = {
+                    //Todo 카메라로 사진 찍는 로직 구현
+                },
+                onCancel = { isImageOptionVisible = false }
+            )
+        }
     }
 }
 
 @Preview
 @Composable
 private fun RoutineCreateScreenPreview() {
-    RoutineCreateScreen()
+    val navController = NavHostController(LocalContext.current)
+    RoutineCreateScreen(
+        navController = navController
+    )
 }
