@@ -29,6 +29,7 @@ import com.konkuk.moru.presentation.routinefeed.component.MoruLiveSection
 import com.konkuk.moru.presentation.routinefeed.component.TitledRoutineSection
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.HomeTopAppBar
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
+import com.konkuk.moru.presentation.routinefeed.viewmodel.RoutineFeedUiState
 
 data class RoutineFeedSectionModel(
     val title: String,
@@ -127,7 +128,7 @@ private fun RoutineFeedContent(
     likeCounts: Map<Int, Int>,
     onLikeClick: (Int, Boolean) -> Unit
 ) {
-    Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    Surface(modifier = modifier.fillMaxSize(), color = Color.White) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()

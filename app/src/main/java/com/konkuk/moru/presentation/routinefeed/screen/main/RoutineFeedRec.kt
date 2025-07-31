@@ -23,7 +23,7 @@ import com.konkuk.moru.ui.theme.MORUTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HotRoutineListScreen(
+fun RoutineFeedRec(
     title: String,
     routines: List<Routine>,
     onBack: () -> Unit,
@@ -96,7 +96,7 @@ fun HotRoutineListScreen(
 @Composable
 private fun HotPreview() {
     MORUTheme {
-        HotRoutineListScreen(
+        RoutineFeedRec(
             title = "지금 가장 핫한 루틴은?",
             routines = DummyData.feedRoutines,
             onBack = {},

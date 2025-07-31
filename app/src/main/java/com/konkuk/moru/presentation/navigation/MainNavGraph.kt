@@ -36,17 +36,16 @@ import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesViewModel
 import com.konkuk.moru.presentation.routinecreate.screen.RoutineCreateScreen
 import com.konkuk.moru.presentation.routinefeed.screen.NotificationScreen
 import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowScreen
-import com.konkuk.moru.presentation.routinefeed.screen.main.HotRoutineListScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetailScreen
+import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedRec
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedScreen
-import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedViewModel
+import com.konkuk.moru.presentation.routinefeed.viewmodel.RoutineFeedViewModel
 import com.konkuk.moru.presentation.routinefeed.screen.search.RoutineSearchHost
 import com.konkuk.moru.presentation.routinefeed.screen.userprofile.UserProfileScreen
 import com.konkuk.moru.presentation.routinefocus.screen.RoutineFocusScreenContainer
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
-import java.time.DayOfWeek
 
 @Composable
 fun MainNavGraph(
@@ -226,7 +225,7 @@ fun MainNavGraph(
                 else -> emptyList()
             }
 
-            HotRoutineListScreen(
+            RoutineFeedRec(
                 title = title,
                 routines = routinesToShow,
                 onBack = { navController.popBackStack() },
@@ -243,29 +242,16 @@ fun MainNavGraph(
 
             MyRoutinesScreen(
                 modifier = modifier.padding(innerPadding),
-                uiState = uiState,
-                routinesToDisplay = routinesToDisplay,
-                onSortOptionSelected = viewModel::onSortOptionSelected,
-                onDaySelected = { day: DayOfWeek? -> viewModel.onDaySelected(day) },
-                onTrashClick = viewModel::onTrashClick,
-                onCheckRoutine = viewModel::onCheckRoutine,
-                onDeleteClick = viewModel::showDeleteDialog,
-                onDismissDeleteDialog = viewModel::dismissDeleteDialog,
-                onConfirmDelete = viewModel::deleteCheckedRoutines,
-                onOpenTimePicker = viewModel::openTimePicker,
-                onCloseTimePicker = viewModel::closeTimePicker,
-                onConfirmTimeSet = viewModel::onConfirmTimeSet,
-                onLikeClick = viewModel::onLikeClick,
-                onShowInfoTooltip = viewModel::onShowInfoTooltip,
-                onDismissInfoTooltip = viewModel::onDismissInfoTooltip,
-                onNavigateToCreateRoutine = { /* TODO: 루틴 생성 화면으로 이동 */ },
+                viewModel = viewModel, // ViewModel 인스턴스만 전달
                 onNavigateToRoutineFeed = {
                     navController.navigate(Route.RoutineFeed.route)
                 },
                 onNavigateToDetail = { routineId ->
                     navController.navigate(Route.MyRoutineDetail.createRoute(routineId))
                 },
-                onDismissDeleteSuccessDialog = viewModel::dismissDeleteSuccessDialog
+                onNavigateToCreateRoutine = {
+                    navController.navigate(Route.RoutineCreate.route) // 루틴 생성 화면으로 이동
+                }
             )
         }
 
