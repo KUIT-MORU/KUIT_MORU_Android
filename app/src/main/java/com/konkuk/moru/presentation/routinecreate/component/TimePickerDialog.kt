@@ -32,7 +32,7 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 @Composable
 fun TimePickerDialog(
     onConfirm: (Int, Int, Int) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     val hours = (0..23).toList()
     val minutes = (0..59).toList()
@@ -45,7 +45,7 @@ fun TimePickerDialog(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0x80000000)), // 반투명 배경
+            .background(Color.Black.copy(alpha = 0.5f)),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -127,6 +127,6 @@ fun TimePickerDialog(
 private fun TimePickerDialogPreview() {
     TimePickerDialog(
         onConfirm = { h, m, s -> /* Do something with the selected time */ },
-        onDismiss = { /* Dismiss the dialog */ }
+        onDismiss = { /* Dismiss the dialog */ },
     )
 }

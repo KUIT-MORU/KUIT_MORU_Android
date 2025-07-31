@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -36,16 +35,16 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.ImageChoiceOptionButtonScreen
-import com.konkuk.moru.core.component.Switch.CustomToggleSwitch
 import com.konkuk.moru.core.component.Switch.RoutineSimpleFocusSwitch
+import com.konkuk.moru.core.component.routinedetail.AddStepButton
 import com.konkuk.moru.core.component.routinedetail.RoutineDescriptionField
 import com.konkuk.moru.core.component.routinedetail.ShowUserCheckbox
 import com.konkuk.moru.data.model.Step
 import com.konkuk.moru.presentation.routinecreate.component.StepItem
+import com.konkuk.moru.presentation.routinecreate.component.TimePickerDialog
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
@@ -58,10 +57,11 @@ fun RoutineCreateScreen(
     var isFocusingRoutine by remember { mutableStateOf(false) }
     var showUser by remember { mutableStateOf(false) }
     var routineDescription by remember { mutableStateOf("") }
-    val stepList = remember { mutableStateListOf(
-        Step("", "00:00:00"),
-        Step("", "00:00:00"),
-    ) } // 초기 step 1개
+    var editingStepIndex by remember { mutableStateOf(-1) }
+    var isTimePickerVisible by remember { mutableStateOf(false) }
+    val stepList = remember {
+        mutableStateListOf(Step("", ""))
+    } // 초기 step 1개
 
     Box(
         modifier = Modifier
@@ -197,26 +197,22 @@ fun RoutineCreateScreen(
                 stepList.forEachIndexed { index, step ->
                     StepItem(
                         step = step,
+                        stepCount = stepList.size,
                         onTitleChange = { newTitle ->
                             stepList[index] = step.copy(title = newTitle)
                         },
-                        onTimeChange = { newTime -> stepList[index] = step.copy(time = newTime) }
+                        onTimeChange = { newTime -> stepList[index] = step.copy(time = newTime) },
+                        onShowTimePicker = {
+                            editingStepIndex = index
+                            isTimePickerVisible = true
+                        },
+                        onDelete = { stepList.removeAt(index) }
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                 }
                 Spacer(modifier = Modifier.height(9.dp))
-                Box( //circle 버튼
-                    modifier = Modifier
-                        .size(29.dp)
-                        .background(color = colors.lightGray, shape = CircleShape)
-                        .clickable { stepList.add(Step("", "00:00:00")) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_routinecreate_addstep),
-                        contentDescription = "스텝 추가",
-                        tint = Color.Unspecified
-                    )
+                AddStepButton {
+                    stepList.add(Step("", "00:00:00"))
                 }
 
                 // 사용앱
@@ -257,7 +253,7 @@ fun RoutineCreateScreen(
                 )
             }
         }
-        if (isImageOptionVisible){
+        if (isImageOptionVisible) {
             ImageChoiceOptionButtonScreen(
                 onImageSelected = {
                     //Todo 앨범에서 이미지 선택 로직 구현
@@ -266,6 +262,19 @@ fun RoutineCreateScreen(
                     //Todo 카메라로 사진 찍는 로직 구현
                 },
                 onCancel = { isImageOptionVisible = false }
+            )
+        }
+        if (isTimePickerVisible) {
+            TimePickerDialog(
+                onConfirm = { hour, minute, second ->
+                    val formatted = String.format("%02d:%02d:%02d", hour, minute, second)
+                    if (editingStepIndex in stepList.indices) {
+                        stepList[editingStepIndex] =
+                            stepList[editingStepIndex].copy(time = formatted)
+                    }
+                    isTimePickerVisible = false
+                },
+                onDismiss = { isTimePickerVisible = false }
             )
         }
     }

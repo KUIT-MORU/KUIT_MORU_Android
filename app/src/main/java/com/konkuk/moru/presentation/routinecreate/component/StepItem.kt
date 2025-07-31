@@ -34,9 +34,12 @@ fun StepItem(
     step: Step,
     onTitleChange: (String) -> Unit,
     onTimeChange: (String) -> Unit,
+    onShowTimePicker: () -> Unit,
+    stepCount: Int,
+    onDelete: () -> Unit
 ) {
     var isEditingTitle by remember { mutableStateOf(false) } // 👈 활동명 편집 상태
-    var showTimePicker by remember { mutableStateOf(false) } // 👈 시간 선택 다이얼 상태
+    //var showTimePicker by remember { mutableStateOf(false) } // 👈 시간 선택 다이얼 상태
     var titleInput by remember { mutableStateOf(step.title) }
 
     Column(
@@ -86,38 +89,45 @@ fun StepItem(
 
             // 소요 시간 (기본 텍스트, 클릭 시 다이얼 팝업)
             Text(
-                text = if (step.time == "00:00:00") "소요 시간" else step.time,
+                text = if (step.time == "") "소요 시간" else step.time,
                 style = typography.body_SB_14.copy(color = colors.darkGray),
                 modifier = Modifier
                     .weight(0.32f)
-                    .clickable { showTimePicker = true }
+                    .clickable { onShowTimePicker() }
             )
+            if (stepCount > 1) {
+                Spacer(modifier = Modifier.width(10.dp))
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_x), // 적절한 x 아이콘 리소스
+                    contentDescription = "Step 삭제",
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable { onDelete() },
+                    tint = colors.mediumGray
+                )
+            }else{
+                Spacer(modifier = Modifier.width(26.dp))
+            }
         }
 
         HorizontalDivider(thickness = 1.dp, color = colors.mediumGray)
-
-        if (showTimePicker) {
-            TimePickerDialog(
-                onConfirm = { h, m, s ->
-                    onTimeChange(String.format("%02d:%02d:%02d", h, m, s))
-                    showTimePicker = false
-                },
-                onDismiss = { showTimePicker = false }
-            )
-        }
     }
 }
 
 @Preview
 @Composable
 private fun StepItemPreview() {
-    val stepList = remember { mutableStateListOf(
-        Step("", "00:00:00"),
-        Step("", "00:00:00"),
-    ) } // 초기 step 1개
+    val stepList = remember {
+        mutableStateListOf(
+            Step("", "")
+        )
+    } // 초기 step 1개
     StepItem(
         step = stepList[0],
         onTitleChange = { stepList[0] = stepList[0].copy(title = it) },
-        onTimeChange = { stepList[0] = stepList[0].copy(time = it) }
+        onTimeChange = { stepList[0] = stepList[0].copy(time = it) },
+        onShowTimePicker = { },
+        stepCount = 2,
+        onDelete = { stepList.removeAt(0) }
     )
 }
