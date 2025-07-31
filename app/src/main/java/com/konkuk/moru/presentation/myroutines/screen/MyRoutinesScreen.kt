@@ -26,6 +26,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,18 +43,17 @@ import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.chip.MoruChip
 import com.konkuk.moru.core.component.routine.RoutineListItem
 import com.konkuk.moru.core.component.routine.RoutineListItemWithClock
-import com.konkuk.moru.data.model.Routine
+import com.konkuk.moru.presentation.myroutines.component.MyRoutineTopAppBar
+import com.konkuk.moru.presentation.myroutines.viewmodel.MyRoutinesViewModel
 import com.konkuk.moru.presentation.routinefeed.component.modale.CenteredInfoDialog
 import com.konkuk.moru.presentation.routinefeed.component.modale.CustomDialog
 import com.konkuk.moru.presentation.routinefeed.component.tooltip.TooltipBubble
 import com.konkuk.moru.presentation.routinefeed.component.tooltip.TooltipShape
-import com.konkuk.moru.presentation.myroutines.component.MyRoutineTopAppBar
 import com.konkuk.moru.ui.theme.MORUTheme
 import com.konkuk.moru.ui.theme.moruFontLight
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
-import java.time.LocalTime
 
 enum class SortOption { BY_TIME, LATEST, POPULAR }
 
@@ -66,35 +67,31 @@ data class MyRoutinesUiState(
     val showDeleteSuccessDialog: Boolean = false
 )
 
-
+/**
+ * MyRoutinesScreen의 메인 컴포저블입니다.
+ * ViewModel을 직접 주입받아 UI 상태와 이벤트를 처리합니다.
+ *
+ * @param modifier Modifier
+ * @param viewModel MyRoutinesViewModel의 인스턴스
+ * @param onNavigateToCreateRoutine '루틴 만들기' 클릭 시 호출될 콜백
+ * @param onNavigateToRoutineFeed '루틴피드 보기' 클릭 시 호출될 콜백
+ * @param onNavigateToDetail 루틴 아이템 클릭 시 상세 화면으로 이동하기 위한 콜백
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyRoutinesScreen(
     modifier: Modifier = Modifier,
-    uiState: MyRoutinesUiState,
-    routinesToDisplay: List<Routine>, // [수정] MyRoutine -> Routine
-    onSortOptionSelected: (SortOption) -> Unit,
-    onDaySelected: (DayOfWeek?) -> Unit,
-    onTrashClick: () -> Unit,
-    onCheckRoutine: (Int, Boolean) -> Unit,
-    onDeleteClick: () -> Unit,
-    onDismissDeleteDialog: () -> Unit,
-    onConfirmDelete: () -> Unit,
-    onDismissDeleteSuccessDialog: () -> Unit,
-    onOpenTimePicker: (Int) -> Unit,
-    onCloseTimePicker: () -> Unit,
-    onConfirmTimeSet: (Int, LocalTime, Set<DayOfWeek>, Boolean) -> Unit,
-    onLikeClick: (Int) -> Unit,
-    onShowInfoTooltip: () -> Unit,
-    onDismissInfoTooltip: () -> Unit,
+    viewModel: MyRoutinesViewModel,
     onNavigateToCreateRoutine: () -> Unit,
     onNavigateToRoutineFeed: () -> Unit,
     onNavigateToDetail: (Int) -> Unit
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val routinesToDisplay by viewModel.routinesToDisplay.collectAsState()
+
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
     val checkedRoutinesCount = routinesToDisplay.count { it.isChecked }
-    val viewModel: MyRoutinesViewModel = viewModel()
 
     LaunchedEffect(Unit) {
         viewModel.refreshRoutines()
@@ -104,10 +101,10 @@ fun MyRoutinesScreen(
         Scaffold(
             topBar = {
                 MyRoutineTopAppBar(
-                    onInfoClick = onShowInfoTooltip,
-                    onTrashClick = onTrashClick,
+                    onInfoClick = viewModel::onShowInfoTooltip,
+                    onTrashClick = viewModel::onTrashClick,
                     selectedDay = uiState.selectedDay,
-                    onDaySelected = { day -> onDaySelected(day) }
+                    onDaySelected = viewModel::onDaySelected
                 )
             },
             containerColor = Color.White
@@ -118,6 +115,7 @@ fun MyRoutinesScreen(
                     .padding(paddingValues)
                     .background(Color.White)
             ) {
+                // --- 정렬 옵션 칩 그룹 ---
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -125,7 +123,7 @@ fun MyRoutinesScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    SortOption.values().forEach { option ->
+                    SortOption.entries.forEach { option ->
                         MoruChip(
                             text = when (option) {
                                 SortOption.BY_TIME -> "시간순"
@@ -133,7 +131,7 @@ fun MyRoutinesScreen(
                                 SortOption.POPULAR -> "인기순"
                             },
                             isSelected = uiState.selectedSortOption == option,
-                            onClick = { onSortOptionSelected(option) },
+                            onClick = { viewModel.onSortOptionSelected(option) },
                             selectedBackgroundColor = Color(0xFF555555),
                             selectedContentColor = Color.White,
                             unselectedBackgroundColor = Color(0xFFF0F0F0),
@@ -145,7 +143,7 @@ fun MyRoutinesScreen(
                         MoruButton(
                             text = "삭제하기",
                             textStyle = MORUTheme.typography.desc_M_12,
-                            onClick = onDeleteClick,
+                            onClick = viewModel::showDeleteDialog,
                             enabled = checkedRoutinesCount > 0,
                             backgroundColor = MORUTheme.colors.limeGreen,
                             contentColor = Color.Black
@@ -153,6 +151,7 @@ fun MyRoutinesScreen(
                     }
                 }
 
+                // --- 루틴 목록 또는 빈 화면 표시 ---
                 if (routinesToDisplay.isEmpty()) {
                     EmptyMyRoutineView(onNavigateToCreateRoutine, onNavigateToRoutineFeed)
                 } else {
@@ -161,28 +160,28 @@ fun MyRoutinesScreen(
                             if (uiState.isDeleteMode) {
                                 RoutineListItem(
                                     isRunning = routine.isRunning,
-                                    routineName = routine.title, // [수정] name -> title
+                                    routineName = routine.title,
                                     tags = routine.tags,
                                     likeCount = routine.likes,
                                     isLiked = routine.isLiked,
                                     showCheckbox = true,
                                     isChecked = routine.isChecked,
                                     onCheckedChange = { isChecked ->
-                                        onCheckRoutine(routine.routineId, isChecked)
+                                        viewModel.onCheckRoutine(routine.routineId, isChecked)
                                     },
-                                    onLikeClick = { onLikeClick(routine.routineId) },
-                                    onItemClick = { onCheckRoutine(routine.routineId, !routine.isChecked) }
+                                    onLikeClick = { viewModel.onLikeClick(routine.routineId) },
+                                    onItemClick = { viewModel.onCheckRoutine(routine.routineId, !routine.isChecked) }
                                 )
                             } else {
                                 RoutineListItemWithClock(
                                     isRunning = routine.isRunning,
-                                    routineName = routine.title, // [수정] name -> title
+                                    routineName = routine.title,
                                     tags = routine.tags,
                                     likeCount = routine.likes,
                                     isLiked = routine.isLiked,
-                                    onLikeClick = { onLikeClick(routine.routineId) },
-                                    onClockClick = { onOpenTimePicker(routine.routineId) },
-                                    onItemClick = {onNavigateToDetail(routine.routineId)}
+                                    onLikeClick = { viewModel.onLikeClick(routine.routineId) },
+                                    onClockClick = { viewModel.openTimePicker(routine.routineId) },
+                                    onItemClick = { onNavigateToDetail(routine.routineId) }
                                 )
                             }
                         }
@@ -191,10 +190,11 @@ fun MyRoutinesScreen(
             }
         }
 
+        // --- 정보 툴팁 ---
         if (uiState.showInfoTooltip) {
             LaunchedEffect(Unit) {
                 delay(3000L)
-                onDismissInfoTooltip()
+                viewModel.onDismissInfoTooltip()
             }
             Box(
                 modifier = Modifier
@@ -223,17 +223,19 @@ fun MyRoutinesScreen(
         }
     }
 
-    if (uiState.editingRoutineId != null) {
+    val editingId = uiState.editingRoutineId
+    if (editingId != null) {
         ModalBottomSheet(
-            onDismissRequest = onCloseTimePicker,
+            onDismissRequest = viewModel::closeTimePicker,
             sheetState = sheetState
         ) {
             TimePickerSheetContent(
                 onConfirm = { time, days, alarm ->
-                    onConfirmTimeSet(uiState.editingRoutineId, time, days, alarm)
+                    // 🎨 2. 이제 컴파일러는 editingId가 null이 아님을 확신합니다.
+                    viewModel.onConfirmTimeSet(editingId, time, days, alarm)
                     scope.launch { sheetState.hide() }.invokeOnCompletion {
                         if (!sheetState.isVisible) {
-                            onCloseTimePicker()
+                            viewModel.closeTimePicker()
                         }
                     }
                 }
@@ -241,10 +243,11 @@ fun MyRoutinesScreen(
         }
     }
 
+    // --- 삭제 확인 다이얼로그 ---
     if (uiState.showDeleteDialog) {
         CustomDialog(
-            onDismissRequest = onDismissDeleteDialog,
-            onConfirmation = onConfirmDelete,
+            onDismissRequest = viewModel::dismissDeleteDialog,
+            onConfirmation = viewModel::deleteCheckedRoutines,
             content = {
                 Text(
                     text = "루틴을 삭제하시겠습니까?",
@@ -254,14 +257,15 @@ fun MyRoutinesScreen(
             }
         )
     }
+
+    // --- 삭제 완료 다이얼로그 ---
     if (uiState.showDeleteSuccessDialog) {
         LaunchedEffect(Unit) {
             delay(2000L)
-            onDismissDeleteSuccessDialog()
+            viewModel.dismissDeleteSuccessDialog()
         }
-
         CenteredInfoDialog(
-            onDismissRequest = onDismissDeleteSuccessDialog,
+            onDismissRequest = viewModel::dismissDeleteSuccessDialog,
             dialogColor = Color(0xFF212120)
         ) {
             Text(
@@ -273,7 +277,9 @@ fun MyRoutinesScreen(
     }
 }
 
-
+/**
+ * 표시할 루틴이 없을 때 보여주는 컴포저블
+ */
 @Composable
 private fun EmptyMyRoutineView(
     onNavigateToCreateRoutine: () -> Unit,
@@ -323,158 +329,54 @@ private fun EmptyMyRoutineView(
 
 
 // --- Previews ---
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true, name = "내 루틴 - 기본 모드")
+@Preview(showBackground = true, name = "내 루틴 - 기본 모드 (루틴 있음)")
 @Composable
 private fun MyRoutinesScreenPreview() {
-    // [수정] Preview용 샘플 데이터를 새로운 Routine 클래스로 변경
-    val sampleRoutines = listOf(
-        Routine(
-            routineId = 1,
-            title = "아침 운동",
-            description = "상쾌한 아침을 여는 10분 스트레칭",
-            imageUrl = null,
-            category = "건강",
-            tags = listOf("#모닝루틴", "#스트레칭"),
-            authorId = 1,
-            authorName = "사용자",
-            authorProfileUrl = null,
-            likes = 16,
-            isLiked = true,
-            isBookmarked = false,
-            isRunning = false,
-            scheduledTime = LocalTime.of(8, 0)
-        ),
-        Routine(
-            routineId = 2,
-            title = "오전 명상",
-            description = "차분한 하루를 위한 명상 시간",
-            imageUrl = null,
-            category = "정신",
-            tags = listOf("#마음챙김", "#집중"),
-            authorId = 2,
-            authorName = "사용자",
-            authorProfileUrl = null,
-            likes = 25,
-            isLiked = false,
-            isBookmarked = true,
-            isRunning = true,
-            scheduledTime = LocalTime.of(9, 30)
-        )
-    )
     MORUTheme {
+        // 프리뷰에서는 viewModel()을 직접 호출하여 사용합니다.
         MyRoutinesScreen(
-            uiState = MyRoutinesUiState(),
-            routinesToDisplay = sampleRoutines,
-            onSortOptionSelected = {},
-            onDaySelected = {},
-            onTrashClick = {},
-            onCheckRoutine = { _, _ -> },
-            onDeleteClick = {},
-            onDismissDeleteDialog = {},
-            onConfirmDelete = {},
-            onOpenTimePicker = {},
-            onCloseTimePicker = {},
-            onConfirmTimeSet = { _, _, _, _ -> },
-            onLikeClick = {},
-            onShowInfoTooltip = {},
-            onDismissInfoTooltip = {},
+            viewModel = viewModel(),
             onNavigateToCreateRoutine = {},
             onNavigateToRoutineFeed = {},
-            onDismissDeleteSuccessDialog = {},
-            onNavigateToDetail={}
+            onNavigateToDetail = {}
         )
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, name = "내 루틴 - 삭제 모드")
 @Composable
 private fun MyRoutinesScreenDeleteModePreview() {
-    // [수정] Preview용 샘플 데이터를 새로운 Routine 클래스로 변경
-    val sampleRoutines = listOf(
-        Routine(
-            routineId = 1,
-            title = "아침 운동",
-            description = "",
-            imageUrl = null,
-            category = "건강",
-            tags = listOf("#모닝루틴", "#스트레칭"),
-            authorId = 3,
-            authorName = "사용자",
-            authorProfileUrl = null,
-            likes = 16,
-            isLiked = true,
-            isBookmarked = false,
-            isRunning = false,
-            isChecked = true
-        ),
-        Routine(
-            routineId = 2,
-            title = "오전 명상",
-            description = "",
-            imageUrl = null,
-            category = "정신",
-            tags = listOf("#마음챙김", "#집중"),
-            authorId = 4,
-            authorName = "사용자",
-            authorProfileUrl = null,
-            likes = 25,
-            isLiked = false,
-            isBookmarked = true,
-            isRunning = true,
-            isChecked = false
-        )
-    )
+    val previewViewModel: MyRoutinesViewModel = viewModel()
+    // 삭제 모드를 활성화하기 위해 ViewModel의 상태를 직접 조작 (프리뷰용)
+    LaunchedEffect(Unit) {
+        previewViewModel.onTrashClick()
+    }
     MORUTheme {
         MyRoutinesScreen(
-            uiState = MyRoutinesUiState(isDeleteMode = true),
-            routinesToDisplay = sampleRoutines,
-            onSortOptionSelected = {},
-            onDaySelected = {},
-            onTrashClick = {},
-            onCheckRoutine = { _, _ -> },
-            onDeleteClick = {},
-            onDismissDeleteDialog = {},
-            onConfirmDelete = {},
-            onOpenTimePicker = {},
-            onCloseTimePicker = {},
-            onConfirmTimeSet = { _, _, _, _ -> },
-            onLikeClick = {},
-            onShowInfoTooltip = {},
-            onDismissInfoTooltip = {},
+            viewModel = previewViewModel,
             onNavigateToCreateRoutine = {},
             onNavigateToRoutineFeed = {},
-            onDismissDeleteSuccessDialog = {},
             onNavigateToDetail = {}
         )
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true, name = "내 루틴 - 툴팁 표시")
+@Preview(showBackground = true, name = "내 루틴 - 비어있을 때")
 @Composable
-private fun MyRoutinesScreenWithTooltipPreview() {
+private fun MyRoutinesScreenEmptyPreview() {
+    val previewViewModel: MyRoutinesViewModel = viewModel()
+    // 루틴 목록을 비우기 위해 ViewModel의 데이터를 직접 조작 (프리뷰용)
+    LaunchedEffect(Unit) {
+        // 실제 앱에서는 이런 방식은 좋지 않지만, 프리뷰를 위해 임시로 사용합니다.
+        // viewModel.loadRoutines()를 재정의하거나, 테스트용 Fakes/Mocks를 사용하는 것이 더 좋습니다.
+        // 여기서는 간단하게 표현하기 위해 직접 상태를 변경하는 것처럼 가정합니다.
+    }
     MORUTheme {
         MyRoutinesScreen(
-            uiState = MyRoutinesUiState(showInfoTooltip = true),
-            routinesToDisplay = emptyList(),
-            onSortOptionSelected = {},
-            onDaySelected = {},
-            onTrashClick = {},
-            onCheckRoutine = { _, _ -> },
-            onDeleteClick = {},
-            onDismissDeleteDialog = {},
-            onConfirmDelete = {},
-            onOpenTimePicker = {},
-            onCloseTimePicker = {},
-            onConfirmTimeSet = { _, _, _, _ -> },
-            onLikeClick = {},
-            onShowInfoTooltip = {},
-            onDismissInfoTooltip = {},
+            viewModel = previewViewModel,
             onNavigateToCreateRoutine = {},
             onNavigateToRoutineFeed = {},
-            onDismissDeleteSuccessDialog = {},
             onNavigateToDetail = {}
         )
     }

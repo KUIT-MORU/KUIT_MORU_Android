@@ -1,4 +1,4 @@
-package com.konkuk.moru.presentation.routinefeed.screen.userprofile
+package com.konkuk.moru.presentation.routinefeed.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel

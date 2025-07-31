@@ -1,9 +1,11 @@
-package com.konkuk.moru.presentation.myroutines.screen
+package com.konkuk.moru.presentation.myroutines.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.Routine
+import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesUiState
+import com.konkuk.moru.presentation.myroutines.screen.SortOption
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +16,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalTime
-
 
 class MyRoutinesViewModel : ViewModel() {
 
@@ -41,7 +42,7 @@ class MyRoutinesViewModel : ViewModel() {
         }
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = SharingStarted.Companion.WhileSubscribed(5000),
         initialValue = emptyList()
     )
 
