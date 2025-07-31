@@ -17,7 +17,6 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
 fun TodayWeekTab(
-    modifier: Modifier = Modifier,
     selectedTabIndex: Int,
     onTabSelected: (Int) -> Unit
 ) {
