@@ -43,7 +43,6 @@ import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.chip.MoruChip
 import com.konkuk.moru.core.component.routine.RoutineListItem
 import com.konkuk.moru.core.component.routine.RoutineListItemWithClock
-import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.myroutines.component.MyRoutineTopAppBar
 import com.konkuk.moru.presentation.myroutines.viewmodel.MyRoutinesViewModel
 import com.konkuk.moru.presentation.routinefeed.component.modale.CenteredInfoDialog
@@ -55,7 +54,6 @@ import com.konkuk.moru.ui.theme.moruFontLight
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
-import java.time.LocalTime
 
 enum class SortOption { BY_TIME, LATEST, POPULAR }
 
@@ -125,7 +123,7 @@ fun MyRoutinesScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    SortOption.values().forEach { option ->
+                    SortOption.entries.forEach { option ->
                         MoruChip(
                             text = when (option) {
                                 SortOption.BY_TIME -> "시간순"

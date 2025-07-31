@@ -235,8 +235,6 @@ fun MainNavGraph(
 
         composable(route = Route.MyRoutine.route) {
             val viewModel: MyRoutinesViewModel = viewModel()
-            val uiState by viewModel.uiState.collectAsState()
-            val routinesToDisplay by viewModel.routinesToDisplay.collectAsState()
 
             MyRoutinesScreen(
                 modifier = modifier.padding(innerPadding),

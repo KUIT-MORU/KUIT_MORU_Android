@@ -1,4 +1,4 @@
-package com.konkuk.moru.presentation.myroutines.component
+package com.konkuk.moru.core.component.routinedetail
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

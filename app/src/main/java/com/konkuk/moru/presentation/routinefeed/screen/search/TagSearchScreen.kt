@@ -28,10 +28,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.konkuk.moru.presentation.myactivity.screen.TagDto
 import com.konkuk.moru.presentation.routinefeed.component.search.BackTitle
 import com.konkuk.moru.presentation.routinefeed.component.search.HashTagSearchField
 import com.konkuk.moru.presentation.routinefeed.component.search.TagChip
-import com.konkuk.moru.presentation.routinefeed.component.search.TagDto
 import com.konkuk.moru.presentation.routinefeed.component.search.TagSectionHeader
 import com.konkuk.moru.presentation.routinefeed.component.search.generateDummyTags
 import com.konkuk.moru.ui.theme.MORUTheme

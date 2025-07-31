@@ -43,7 +43,6 @@ fun RoutineFeedScreen(
     uiState: RoutineFeedUiState,
     onNotificationClick: () -> Unit,
 ) {
-    var searchQuery by remember { mutableStateOf("") }
     val liveUsers = DummyData.dummyLiveUsers
 
     val routineSections = remember {

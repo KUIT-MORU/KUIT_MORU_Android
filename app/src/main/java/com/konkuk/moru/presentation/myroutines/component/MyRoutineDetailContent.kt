@@ -21,7 +21,7 @@ import com.konkuk.moru.core.component.routinedetail.MyRoutineTag
 import com.konkuk.moru.data.model.RoutineStepActions
 import com.konkuk.moru.presentation.myroutines.component.RoutineItemCard
 import com.konkuk.moru.presentation.myroutines.component.UsedAppsSection
-import com.konkuk.moru.presentation.myroutines.component.routineStepEditableList
+import com.konkuk.moru.core.component.routinedetail.routineStepEditableList
 import com.konkuk.moru.presentation.myroutines.viewmodel.MyRoutineDetailViewModel
 import com.konkuk.moru.ui.theme.MORUTheme
 
