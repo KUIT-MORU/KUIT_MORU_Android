@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.home.component
 
+import android.R.attr.top
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -133,7 +134,7 @@ fun HomeTutorialDecoration(
             tint = Color.White,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = 16.dp, end = 16.dp)
+                .padding(top = 45.dp, end = 17.dp)
                 .size(14.dp)
                 .clickable { onDismiss() }
         )
@@ -171,11 +172,11 @@ fun TutorialHintWithLine(
 @Composable
 fun DotWithLine(
     startX: Dp,
-    startY: Dp, // 이 startY를 Canvas의 좌상단 Y로 사용
-    length: Dp, // 선의 길이
-    isUpward: Boolean, // 선이 위로 뻗어 나가는지 (true) 아래로 뻗어 나가는지 (false)
-    dotRadius: Dp = 3.dp, // 점의 반지름
-    lineStrokeWidth: Dp = 1.dp // 선의 두께
+    startY: Dp,
+    length: Dp,
+    isUpward: Boolean,
+    dotRadius: Dp = 3.dp,
+    lineStrokeWidth: Dp = 1.dp
 ) {
     val density = LocalDensity.current
 
@@ -183,39 +184,32 @@ fun DotWithLine(
     val lineStrokeWidthPx = density.run { lineStrokeWidth.toPx() }
     val dashEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 12f))
 
-    // Canvas의 총 높이: 선의 길이 + 점의 지름 (점이 선의 한쪽 끝에 있으므로)
-    // Canvas의 총 너비: 점의 지름 (가로로 점 중심을 기준으로 할 것이므로)
     val canvasWidth = dotRadius * 2
     val canvasHeight = length + (dotRadius * 2)
 
     Canvas(
         modifier = Modifier
-            .offset(x = startX, y = startY) // Figma 좌표가 Canvas의 좌상단이라고 가정
+            .offset(x = startX, y = startY)
             .width(canvasWidth)
             .height(canvasHeight)
     ) {
-        // Canvas 내에서 그리기 위한 X 좌표 (Canvas 중앙)
         val drawCenterX = size.width / 2f
 
-        val dotCenterYInCanvas: Float // Canvas 내에서 점의 중심 Y 좌표
-        val lineStartYInCanvas: Float // Canvas 내에서 선의 시작 Y 좌표
-        val lineEndYInCanvas: Float // Canvas 내에서 선의 끝 Y 좌표
+        val dotCenterYInCanvas: Float
+        val lineStartYInCanvas: Float
+        val lineEndYInCanvas: Float
 
         if (isUpward) {
-            // 선이 위로 뻗어 나갈 때 (이미지처럼 점이 아래에, 선이 위로)
-            // 점은 Canvas의 맨 아래쪽에 위치
             dotCenterYInCanvas = size.height - dotRadiusPx
-            lineStartYInCanvas = dotCenterYInCanvas - dotRadiusPx // 선은 점의 맨 위에서 시작
-            lineEndYInCanvas = 0f // 선의 끝은 Canvas 맨 위 (size.height - (length + dotRadius*2) )
+            lineStartYInCanvas = dotCenterYInCanvas - dotRadiusPx
+            lineEndYInCanvas = 0f
         } else {
-            // 선이 아래로 뻗어 나갈 때 (점이 위에, 선이 아래로)
-            // 점은 Canvas의 맨 위쪽에 위치
             dotCenterYInCanvas = dotRadiusPx
-            lineStartYInCanvas = dotCenterYInCanvas + dotRadiusPx // 선은 점의 맨 아래에서 시작
-            lineEndYInCanvas = size.height // 선의 끝은 Canvas 맨 아래
+            lineStartYInCanvas = dotCenterYInCanvas + dotRadiusPx
+            lineEndYInCanvas = size.height
         }
 
-        // 점 그리기
+        // 점(원) 그리기
         drawCircle(
             color = Color.White,
             radius = dotRadiusPx,
@@ -351,20 +345,19 @@ fun BottomBarIconWithLabelOverlay(
     iconWidth: Dp = 16.dp,
     iconHeight: Dp = 17.5.dp,
     // 기기별 보정값 추가
-    iconOffsetY: Dp = (-2).dp, // 기본값으로 2dp 위로
-    textOffsetY: Dp = 0.dp, // 텍스트 Y 보정값
-    textOffsetX: Dp = 0.dp // 텍스트 X 보정값 추가
+    iconOffsetY: Dp = (-2).dp,
+    textOffsetY: Dp = 0.dp,
+    textOffsetX: Dp = 0.dp
 ) {
     // 바텀바 NavigationBarItem과 동일한 레이아웃 구조로 완전히 겹치도록 구성
     Column(
         modifier = Modifier
             .offset(x = offsetX, y = offsetY)
-            .width(itemWidth) // 동적으로 계산된 실제 아이템 너비
-            .height(itemHeight), // 바텀바 높이와 동일
+            .width(itemWidth)
+            .height(itemHeight),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 아이콘 - 보정값 적용
         Icon(
             painter = painterResource(id = iconResId),
             contentDescription = label,
@@ -372,13 +365,12 @@ fun BottomBarIconWithLabelOverlay(
             modifier = Modifier
                 .width(iconWidth)
                 .height(iconHeight)
-                .offset(y = iconOffsetY) // 보정값 적용
+                .offset(y = iconOffsetY)
         )
 
         // 아이콘과 텍스트 사이 간격 (NavigationBarItem 기본값)
         Spacer(modifier = Modifier.height(7.dp))
 
-        // 텍스트 - NavigationBarItem의 기본 스타일과 맞춤, 보정값 적용
         Text(
             text = label,
             style = typography.title_B_12,

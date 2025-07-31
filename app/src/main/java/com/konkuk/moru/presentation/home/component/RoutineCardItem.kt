@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,13 +31,13 @@ fun RoutineCardItem(modifier: Modifier = Modifier) {
                     .width(98.dp)
                     .height(130.dp)
             )
-            Spacer(modifier = modifier.size(8.dp))
+            Spacer(modifier = modifier.height(8.dp))
             Text(
                 text = "루틴명",
                 style = typography.time_R_12,
                 color = colors.black
             )
-            Spacer(modifier = modifier.size(2.dp))
+            Spacer(modifier = modifier.height(2.dp))
             Text(
                 text = "#태그",
                 style = typography.time_R_10,

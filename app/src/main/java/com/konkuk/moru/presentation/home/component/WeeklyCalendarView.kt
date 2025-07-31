@@ -60,7 +60,7 @@ fun WeeklyCalendarView(
             }
         }
 
-        Spacer(modifier = Modifier.size(2.dp))
+        Spacer(modifier = Modifier.height(2.dp))
 
         // 날짜 행
         Row(
@@ -101,7 +101,7 @@ fun WeeklyCalendarView(
                         }
                         // 루틴 태크(요일별 할 루틴요소들)
                         routinesPerDate[date]?.forEach { routine ->
-                            Spacer(modifier = Modifier.size(2.dp))
+                            Spacer(modifier = Modifier.height(2.dp))
                             RoutineTag(routine)
                         }
                     }
@@ -115,7 +115,7 @@ fun WeeklyCalendarView(
 @Composable
 fun RoutineTag(
     text: String,
-    minWidth: Dp = 48.dp          // ← 폭만 고정(높이는 Text + 패딩만큼)
+    minWidth: Dp = 48.dp
 ) {
     Text(
         text = text,
@@ -129,7 +129,7 @@ fun RoutineTag(
                 color = colors.darkGray,
                 shape = RoundedCornerShape(2.dp)
             )
-            .defaultMinSize(                // 최소 폭 유지는 여기서
+            .defaultMinSize(
                 minWidth = minWidth
             )
     )

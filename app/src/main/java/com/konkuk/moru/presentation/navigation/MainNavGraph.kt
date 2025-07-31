@@ -67,9 +67,9 @@ fun MainNavGraph(
                 navController = navController,
                 sharedViewModel = sharedViewModel,
                 modifier = modifier.padding(innerPadding),
-                fabOffsetY = fabOffsetY, // MainNavGraph가 받은 인자를 HomeScreen으로 전달
-                todayTabOffsetY = todayTabOffsetY, // MainNavGraph가 받은 인자를 HomeScreen으로 전달
-                onShowOnboarding = onShowOnboarding, // MainNavGraph가 받은 인자를 HomeScreen으로 전달
+                fabOffsetY = fabOffsetY,
+                todayTabOffsetY = todayTabOffsetY,
+                onShowOnboarding = onShowOnboarding,
             )
         }
 
@@ -121,7 +121,6 @@ fun MainNavGraph(
                         inclusive = false
                     )
                     if (navController.currentDestination?.route != Route.Home.route) {
-                        // 스택에 없으면 새로 넣고 나머지는 모두 제거
                         navController.navigate(Route.Home.route) {
                             popUpTo(navController.graph.startDestinationId) { inclusive = true }
                             launchSingleTop = true
@@ -132,25 +131,23 @@ fun MainNavGraph(
         }
 
         composable(route = Route.RoutineFocus.route) {
-            // RoutineFocusViewModel 인스턴스 생성
             val routineFocusViewModel: RoutineFocusViewModel = viewModel()
 
             RoutineFocusScreenContainer(
-                viewModel = routineFocusViewModel, // ViewModel 전달
+                viewModel = routineFocusViewModel,
                 onDismiss = {
                     navController.popBackStack(
                         Route.Home.route,
                         inclusive = false
                     )
                     if (navController.currentDestination?.route != Route.Home.route) {
-                        // 스택에 없으면 새로 넣고 나머지는 모두 제거
                         navController.navigate(Route.Home.route) {
                             popUpTo(navController.graph.startDestinationId) { inclusive = true }
                             launchSingleTop = true
                         }
                     }
                 },
-                routineItems = listOf( // 기존과 동일하게 routineItems 전달
+                routineItems = listOf(
                     "샤워하기" to "15m",
                     "청소하기" to "10m",
                     "밥먹기" to "30m",

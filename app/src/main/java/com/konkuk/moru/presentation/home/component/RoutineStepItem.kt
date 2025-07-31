@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -38,7 +38,7 @@ fun RoutineStepItem(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 18.dp, end = 16.dp), // 인덱스 왼쪽, 스위치 오른쪽 여백
+                .padding(start = 18.dp, end = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {
@@ -47,7 +47,7 @@ fun RoutineStepItem(
                 style = typography.desc_M_14,
                 color = colors.black
             )
-            Spacer(modifier = modifier.size(29.dp))
+            Spacer(modifier = modifier.width(29.dp))
             Text(
                 text = title,
                 style = typography.desc_M_16,
@@ -60,7 +60,7 @@ fun RoutineStepItem(
                     style = typography.desc_M_14,
                     color = colors.black
                 )
-                Spacer(modifier = modifier.size(20.dp))
+                Spacer(modifier = modifier.width(20.dp))
             }
             if(showSwitch) {
                 Switch(
@@ -69,9 +69,9 @@ fun RoutineStepItem(
                     modifier = Modifier.scale(0.8f),
                     colors = SwitchDefaults.colors(
                         uncheckedThumbColor = colors.mediumGray,   // OFF 상태 버튼 색 (회색)
-                        uncheckedTrackColor = colors.lightGray,   // OFF 상태 배경 색 (연회색)
-                        checkedThumbColor = colors.lightGray,           // ON 상태 버튼 색
-                        checkedTrackColor = colors.darkGray         // ON 상태 배경 색
+                        uncheckedTrackColor = colors.lightGray,    // OFF 상태 배경 색 (연회색)
+                        checkedThumbColor = colors.lightGray,      // ON 상태 버튼 색
+                        checkedTrackColor = colors.darkGray        // ON 상태 배경 색
                     )
                 )
             }

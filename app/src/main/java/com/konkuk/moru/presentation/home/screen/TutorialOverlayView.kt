@@ -21,7 +21,7 @@ class TutorialOverlayView @JvmOverloads constructor(
         }
 
     private val overlayPaint = Paint().apply {
-        // Android View 클래스(TutorialOverlayView)에서는 Compose Color를 쓸 수 없기 때문에 직접 색 명시
+        // Android View 클래스(TutorialOverlayView)에서는 Compose Color를 쓸 수 없기 때문에 직접 색 명시함
         color = Color.parseColor("#80000000")
     }
 
@@ -33,8 +33,7 @@ class TutorialOverlayView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        val saved = canvas.saveLayer(null, null) // 중요: 레이어 생성
-        //오버레이를 검은색으로 칠하기
+        val saved = canvas.saveLayer(null, null)
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), overlayPaint)
 
         holes.forEach { hole ->

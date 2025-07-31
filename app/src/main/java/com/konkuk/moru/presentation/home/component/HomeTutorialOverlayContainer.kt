@@ -34,21 +34,18 @@ fun HomeTutorialOverlayContainer(
 
     val rectHole = remember(todayTabOffsetY) { // todayTabOffsetY 값이 변경될 때마다 재계산
         with(density) {
-            // 로그에서 확인된 실제 탭 bounds: Rect.fromLTRB(16.0, 279.0, 344.0, 315.0)
-            // 탭의 실제 높이: 315.0 - 279.0 = 36.0px
-            val tabHeightPx = 36.dp.toPx() // 36dp를 픽셀로 변환
+            val tabHeightPx = 36.dp.toPx()
 
-            // 로그에서 확인된 실제 패딩값 사용
             val horizontalPaddingPx = 16.dp.toPx() // 16dp를 픽셀로 변환
 
             // 화면 너비
             val screenWidthPx = config.screenWidthDp.dp.toPx()
 
-            // 구멍의 위치 계산 - 로그에서 확인된 bounds와 일치하도록
-            val holeLeft = horizontalPaddingPx  // 16.0
-            val holeRight = screenWidthPx - horizontalPaddingPx  // 344.0 (360 - 16)
-            val holeTop = todayTabOffsetY - (tabHeightPx / 2f)  // 297.0 - 18.0 = 279.0
-            val holeBottom = todayTabOffsetY + (tabHeightPx / 2f)  // 297.0 + 18.0 = 315.0
+            // 구멍의 위치 계산
+            val holeLeft = horizontalPaddingPx
+            val holeRight = screenWidthPx - horizontalPaddingPx
+            val holeTop = todayTabOffsetY - (tabHeightPx / 2f)
+            val holeBottom = todayTabOffsetY + (tabHeightPx / 2f)
 
             TutorialOverlayView.HolePx(
                 left = holeLeft,
@@ -60,7 +57,7 @@ fun HomeTutorialOverlayContainer(
         }
     }
 
-    val circleHole = remember(fabOffsetY) { // fabOffsetY 값이 변경될 때마다 재계산
+    val circleHole = remember(fabOffsetY) {
         with(density) {
             val fabSizePx = 63.dp.toPx()
             val fabPaddingEndPx = 16.dp.toPx()
@@ -102,7 +99,7 @@ fun HomeTutorialOverlayContainer(
 
         BottomOverlayBar(
             iconCenters = bottomIconCenters,
-            modifier = Modifier.zIndex(3f) // 오버레이 요소 위에 표시
+            modifier = Modifier.zIndex(3f)
         )
     }
 }
@@ -120,13 +117,13 @@ private fun HomeTutorialOverlayContainerPreview() {
             .zIndex(2f),
         onDismiss = {},
         onFabClick = {},
-        fabOffsetY = 632.5f,   // 실제 측정값 기반
+        fabOffsetY = 632.5f,
         todayTabOffsetY = 283f,
         bottomIconCenters = listOf(
-            Offset.Zero,              // 홈 (highlight 안함)
-            Offset(134f, 748f),       // 루틴 피드
-            Offset(226f, 748f),       // 내 루틴
-            Offset(318f, 748f)        // 내 활동
+            Offset.Zero,
+            Offset(134f, 748f),
+            Offset(226f, 748f),
+            Offset(318f, 748f)
         )
     )
 }
