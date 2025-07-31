@@ -3,6 +3,7 @@ package com.konkuk.moru.presentation.home.screen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -150,7 +151,11 @@ fun RoutineSimpleRunScreen(
                 .offset(x = 221.dp, y = 387.dp)
                 .width(139.dp)
                 .height(123.dp)
-                .clickable(enabled = isAnySelected) {
+                .clickable(
+                    enabled = isAnySelected,
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                ) {
                     showFinishPopup = true
                 },
             contentAlignment = Alignment.Center
@@ -230,7 +235,10 @@ fun RoutineSimpleRunScreen(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(colors.lightGray)
-                                .clickable {
+                                .clickable(
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) {
                                     showFinishPopup = false
                                 }
                                 .width(123.dp)
@@ -250,11 +258,13 @@ fun RoutineSimpleRunScreen(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(colors.limeGreen)
-                                .clickable {
+                                .clickable(
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) {
                                     showResultPopup = true
                                     showFinishPopup = false
-                                    finalElapsedTime =
-                                        formatElapsedTime(System.currentTimeMillis() - routineStartTime)
+                                    finalElapsedTime = formatElapsedTime(System.currentTimeMillis() - routineStartTime)
                                 }
                                 .width(123.dp)
                                 .height(40.55.dp)
@@ -331,7 +341,10 @@ fun RoutineSimpleRunScreen(
                             .height(42.15.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(colors.limeGreen)
-                            .clickable {
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) {
                                 showResultPopup = false
                                 onDismiss()
                             },

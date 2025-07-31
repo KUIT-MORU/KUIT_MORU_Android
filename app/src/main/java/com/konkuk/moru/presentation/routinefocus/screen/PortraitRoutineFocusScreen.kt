@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -269,7 +270,12 @@ fun PortraitRoutineFocusScreen(
                         tint = if (isDarkMode) Color.White else colors.black,
                         modifier = Modifier
                             .size(24.dp)
-                            .clickable { onDismiss() }
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) {
+                                onDismiss()
+                            }
                     )
                     // 설정 버튼
                     Icon(
@@ -367,7 +373,10 @@ fun PortraitRoutineFocusScreen(
                                     contentDescription = if (isFinalStep) "완료됨" else "다음 루틴으로",
                                     modifier = Modifier
                                         .size(74.dp)
-                                        .clickable {
+                                        .clickable(
+                                            indication = null,
+                                            interactionSource = remember { MutableInteractionSource() }
+                                        ){
                                             // 다음 step으로 가는 기능
                                             if (!isFinalStep) {
                                                 val nextStepTimeString =
@@ -589,9 +598,11 @@ fun PortraitRoutineFocusScreen(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(colors.lightGray)
-                                .clickable {
+                                .clickable(
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) {
                                     showFinishPopup = false
-                                    isTimerRunning = true
                                 }
                                 .width(123.dp)
                                 .height(40.55.dp),
@@ -608,9 +619,12 @@ fun PortraitRoutineFocusScreen(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(colors.limeGreen)
-                                .clickable {
-                                    showFinishPopup = false
+                                .clickable(
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) {
                                     showResultPopup = true
+                                    showFinishPopup = false
                                 }
                                 .width(123.dp)
                                 .height(40.dp),
@@ -718,7 +732,10 @@ fun PortraitRoutineFocusScreen(
                             .height(42.15.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(colors.limeGreen)
-                            .clickable {
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) {
                                 showResultPopup = false
                                 onDismiss()
                             },
