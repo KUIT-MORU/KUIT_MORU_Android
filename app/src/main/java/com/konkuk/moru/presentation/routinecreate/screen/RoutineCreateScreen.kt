@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.routinecreate.screen
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +50,7 @@ import com.konkuk.moru.presentation.routinecreate.component.TimePickerDialog
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun RoutineCreateScreen(
     navController: NavHostController
@@ -57,7 +60,7 @@ fun RoutineCreateScreen(
     var isFocusingRoutine by remember { mutableStateOf(false) }
     var showUser by remember { mutableStateOf(false) }
     var routineDescription by remember { mutableStateOf("") }
-    var editingStepIndex by remember { mutableStateOf(-1) }
+    var editingStepIndex by remember { mutableIntStateOf(-1) }
     var isTimePickerVisible by remember { mutableStateOf(false) }
     val stepList = remember {
         mutableStateListOf(Step("", ""))

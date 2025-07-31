@@ -28,10 +28,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.konkuk.moru.presentation.myactivity.screen.TagDto
 import com.konkuk.moru.presentation.routinefeed.component.search.BackTitle
 import com.konkuk.moru.presentation.routinefeed.component.search.HashTagSearchField
 import com.konkuk.moru.presentation.routinefeed.component.search.TagChip
-import com.konkuk.moru.presentation.routinefeed.component.search.TagDto
 import com.konkuk.moru.presentation.routinefeed.component.search.TagSectionHeader
 import com.konkuk.moru.presentation.routinefeed.component.search.generateDummyTags
 import com.konkuk.moru.ui.theme.MORUTheme
@@ -73,7 +73,6 @@ internal fun TagSearchScreen(
                     HorizontalDivider(color = MORUTheme.colors.lightGray)
                 }
             }
-            // 🔥 요청하신 대로 bottomBar를 제거했습니다.
         ) { innerPadding ->
             Column(
                 modifier = Modifier
@@ -105,7 +104,7 @@ internal fun TagSearchScreen(
                             text = tag.name,
                             selected = false, // 선택 상태는 사용하지 않음
                             showCloseIcon = true,
-                            // 🔥 클릭 시 즉시 태그를 전달하고 화면을 전환합니다.
+                            // 클릭 시 즉시 태그를 전달하고 화면을 전환합니다.
                             onClick = { onTagSelected(tag.name) }
                         )
                     }
@@ -122,7 +121,7 @@ internal fun TagSearchScreen(
                         TagChip(
                             text = tag.name,
                             selected = false, // 선택 상태는 사용하지 않음
-                            // 🔥 클릭 시 즉시 태그를 전달하고 화면을 전환합니다.
+                            // 클릭 시 즉시 태그를 전달하고 화면을 전환합니다.
                             onClick = { onTagSelected(tag.name) }
                         )
                     }

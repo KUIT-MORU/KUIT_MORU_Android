@@ -32,21 +32,20 @@ import com.konkuk.moru.presentation.myactivity.screen.ActScrabScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActSettingScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutineDetailScreen
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesScreen
-import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesViewModel
+import com.konkuk.moru.presentation.myroutines.viewmodel.MyRoutinesViewModel
 import com.konkuk.moru.presentation.routinecreate.screen.RoutineCreateScreen
 import com.konkuk.moru.presentation.routinefeed.screen.NotificationScreen
 import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowScreen
-import com.konkuk.moru.presentation.routinefeed.screen.main.HotRoutineListScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetailScreen
+import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedRec
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedScreen
-import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedViewModel
+import com.konkuk.moru.presentation.routinefeed.viewmodel.RoutineFeedViewModel
 import com.konkuk.moru.presentation.routinefeed.screen.search.RoutineSearchHost
 import com.konkuk.moru.presentation.routinefeed.screen.userprofile.UserProfileScreen
 import com.konkuk.moru.presentation.routinefocus.screen.RoutineFocusScreenContainer
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
-import java.time.DayOfWeek
 
 @Composable
 fun MainNavGraph(
@@ -218,15 +217,13 @@ fun MainNavGraph(
                 title == "지금 가장 핫한 루틴은?" -> feedRoutines.filter { it.likes > 70 }
                 title == "MORU님과 딱 맞는 루틴" -> feedRoutines.filter { it.authorName == "MORU" }
                 title == "이 루틴과 비슷한 루틴" -> {
-                    // 여기서는 어떤 루틴 기준인지 알 수 없으므로,
-                    // 예시로 '운동' 또는 '명상' 태그를 가진 루틴들을 보여줍니다.
                     feedRoutines.filter { it.tags.contains("운동") || it.tags.contains("명상") }
                 }
 
                 else -> emptyList()
             }
 
-            HotRoutineListScreen(
+            RoutineFeedRec(
                 title = title,
                 routines = routinesToShow,
                 onBack = { navController.popBackStack() },
@@ -238,34 +235,19 @@ fun MainNavGraph(
 
         composable(route = Route.MyRoutine.route) {
             val viewModel: MyRoutinesViewModel = viewModel()
-            val uiState by viewModel.uiState.collectAsState()
-            val routinesToDisplay by viewModel.routinesToDisplay.collectAsState()
 
             MyRoutinesScreen(
                 modifier = modifier.padding(innerPadding),
-                uiState = uiState,
-                routinesToDisplay = routinesToDisplay,
-                onSortOptionSelected = viewModel::onSortOptionSelected,
-                onDaySelected = { day: DayOfWeek? -> viewModel.onDaySelected(day) },
-                onTrashClick = viewModel::onTrashClick,
-                onCheckRoutine = viewModel::onCheckRoutine,
-                onDeleteClick = viewModel::showDeleteDialog,
-                onDismissDeleteDialog = viewModel::dismissDeleteDialog,
-                onConfirmDelete = viewModel::deleteCheckedRoutines,
-                onOpenTimePicker = viewModel::openTimePicker,
-                onCloseTimePicker = viewModel::closeTimePicker,
-                onConfirmTimeSet = viewModel::onConfirmTimeSet,
-                onLikeClick = viewModel::onLikeClick,
-                onShowInfoTooltip = viewModel::onShowInfoTooltip,
-                onDismissInfoTooltip = viewModel::onDismissInfoTooltip,
-                onNavigateToCreateRoutine = { /* TODO: 루틴 생성 화면으로 이동 */ },
+                viewModel = viewModel, // ViewModel 인스턴스만 전달
                 onNavigateToRoutineFeed = {
                     navController.navigate(Route.RoutineFeed.route)
                 },
                 onNavigateToDetail = { routineId ->
                     navController.navigate(Route.MyRoutineDetail.createRoute(routineId))
                 },
-                onDismissDeleteSuccessDialog = viewModel::dismissDeleteSuccessDialog
+                onNavigateToCreateRoutine = {
+                    navController.navigate(Route.RoutineCreate.route) // 루틴 생성 화면으로 이동
+                }
             )
         }
 
