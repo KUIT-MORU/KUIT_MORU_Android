@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import com.konkuk.moru.presentation.routinefeed.data.FollowUser
 
 @Composable
-public fun FollowListContent(
+fun FollowListContent(
     users: List<FollowUser>,
     emptyMessage: String,
     emptySubMessage: String,

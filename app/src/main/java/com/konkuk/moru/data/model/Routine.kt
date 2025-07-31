@@ -2,7 +2,6 @@ package com.konkuk.moru.data.model
 
 import java.time.DayOfWeek
 import java.time.LocalTime
-import java.util.UUID
 
 /**
  * 앱 전체에서 사용될 통합 루틴 데이터 클래스

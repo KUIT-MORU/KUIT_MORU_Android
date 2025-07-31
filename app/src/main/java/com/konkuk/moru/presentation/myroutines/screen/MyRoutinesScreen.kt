@@ -329,7 +329,6 @@ private fun EmptyMyRoutineView(
 
 
 // --- Previews ---
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, name = "내 루틴 - 기본 모드 (루틴 있음)")
 @Composable
 private fun MyRoutinesScreenPreview() {
@@ -344,7 +343,6 @@ private fun MyRoutinesScreenPreview() {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, name = "내 루틴 - 삭제 모드")
 @Composable
 private fun MyRoutinesScreenDeleteModePreview() {

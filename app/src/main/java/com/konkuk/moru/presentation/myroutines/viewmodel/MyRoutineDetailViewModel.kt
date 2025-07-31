@@ -155,34 +155,7 @@ class MyRoutineDetailViewModel : ViewModel() {
         _uiState.update { it.copy(draggedStepVerticalOffset = it.draggedStepVerticalOffset + offset) }
     }
 
-    fun onDragEnd() {
-        // 드래그가 끝나면 상태를 초기화
-        _uiState.update { currentState ->
-            currentState.copy(
-                draggedStepIndex = null,
-                draggedStepVerticalOffset = 0f
-            )
-        }
-    }
-
-
-
-
-    fun moveStep(from: Int, to: Int) {
-        _uiState.update { currentState ->
-            // 현재 리스트의 복사본을 만들어 새로운 리스트를 생성
-            val newSteps = currentState.routine?.steps?.toMutableList()?.apply {
-                add(to, removeAt(from))
-            } ?: return@update currentState
-
-            // 새로운 리스트로 교체된 UiState를 생성하여 업데이트
-            currentState.copy(
-                routine = currentState.routine.copy(
-                    steps = newSteps
-                )
-            )
-        }
-    }
+    
 
 
 
