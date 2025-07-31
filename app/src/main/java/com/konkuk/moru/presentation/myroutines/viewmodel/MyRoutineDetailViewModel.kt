@@ -4,15 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.konkuk.moru.data.model.AppInfo
 import com.konkuk.moru.data.model.DummyData
+import com.konkuk.moru.data.model.MyRoutineDetailUiState
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.model.RoutineStep
-import com.konkuk.moru.presentation.myroutines.screen.MyRoutineDetailUiState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
 
 class MyRoutineDetailViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(MyRoutineDetailUiState())
@@ -23,6 +24,7 @@ class MyRoutineDetailViewModel : ViewModel() {
     val deleteCompleted = _deleteCompleted.asSharedFlow()
 
     private var originalRoutine: Routine? = null
+
     /**
      * 특정 routineId를 가진 '내 루틴'을 불러옵니다.
      */
@@ -38,12 +40,18 @@ class MyRoutineDetailViewModel : ViewModel() {
         }
     }
 
+
+    fun setEditMode(isEdit: Boolean) {
+        _uiState.update { it.copy(isEditMode = isEdit) }
+    }
+
     /**
      * 특정 routineId를 가진 루틴을 DummyData에서 삭제합니다.
      */
     fun restoreRoutine() {
         _uiState.update { it.copy(routine = originalRoutine) }
     }
+
 
     fun deleteRoutine(routineId: Int) {
         viewModelScope.launch {
@@ -138,18 +146,73 @@ class MyRoutineDetailViewModel : ViewModel() {
     }
 
 
-    fun moveStep(from: Int, to: Int) {
-        _uiState.update { state ->
-            val currentSteps = state.routine?.steps?.toMutableList() ?: return@update state
-            val movedItem = currentSteps.removeAt(from)
-            currentSteps.add(to, movedItem)
-            state.copy(routine = state.routine?.copy(steps = currentSteps))
+    fun onDragStart(index: Int) {
+        _uiState.update { it.copy(draggedStepIndex = index) }
+    }
+
+    fun onDrag(offset: Float) {
+        // 드래그 중인 아이템의 Y축 오프셋을 업데이트
+        _uiState.update { it.copy(draggedStepVerticalOffset = it.draggedStepVerticalOffset + offset) }
+    }
+
+    fun onDragEnd() {
+        // 드래그가 끝나면 상태를 초기화
+        _uiState.update { currentState ->
+            currentState.copy(
+                draggedStepIndex = null,
+                draggedStepVerticalOffset = 0f
+            )
         }
     }
 
-    /**
-     * [추가] 사용 앱을 삭제합니다.
-     */
+
+
+
+    fun moveStep(from: Int, to: Int) {
+        _uiState.update { currentState ->
+            // 현재 리스트의 복사본을 만들어 새로운 리스트를 생성
+            val newSteps = currentState.routine?.steps?.toMutableList()?.apply {
+                add(to, removeAt(from))
+            } ?: return@update currentState
+
+            // 새로운 리스트로 교체된 UiState를 생성하여 업데이트
+            currentState.copy(
+                routine = currentState.routine.copy(
+                    steps = newSteps
+                )
+            )
+        }
+    }
+
+
+
+    fun finalizeStepReorder(from: Int, to: Int) {
+        _uiState.update { currentState ->
+            val currentSteps = currentState.routine?.steps?.toMutableList()
+                ?: return@update currentState
+
+            // 1. 리스트 순서 변경
+            val movedItem = currentSteps.removeAt(from)
+            currentSteps.add(to, movedItem)
+
+            // 2. 순서 변경된 리스트와 드래그 상태 초기화를 포함한 새 상태 반환
+            currentState.copy(
+                routine = currentState.routine.copy(steps = currentSteps),
+                draggedStepIndex = null,
+                draggedStepVerticalOffset = 0f
+            )
+        }
+    }
+
+    fun cancelDrag() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                draggedStepIndex = null,
+                draggedStepVerticalOffset = 0f
+            )
+        }
+    }
+
     fun deleteApp(appToDelete: AppInfo) {
         _uiState.update { state ->
             val updatedApps = state.routine?.usedApps?.filter { it.name != appToDelete.name }
@@ -169,9 +232,4 @@ class MyRoutineDetailViewModel : ViewModel() {
             state.copy(routine = state.routine?.copy(usedApps = updatedApps ?: listOf(newApp)))
         }
     }
-
-
-
-
-
 }

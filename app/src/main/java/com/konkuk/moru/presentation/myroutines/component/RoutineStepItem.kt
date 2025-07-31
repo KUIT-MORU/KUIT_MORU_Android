@@ -17,14 +17,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
+import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.RoutineStep
 import com.konkuk.moru.ui.theme.MORUTheme
 
 
 @Composable
-fun LocalRoutineStepItem(
+fun RoutineStepItem(
     stepNumber: Int,
     step: RoutineStep,
     isEditMode: Boolean,
@@ -97,5 +99,37 @@ fun LocalRoutineStepItem(
                 tint = MORUTheme.colors.mediumGray
             )
         }
+    }
+}
+
+@Preview(showBackground = true, name = "스텝 아이템 - 보기 모드")
+@Composable
+private fun LocalRoutineStepItemPreview_ViewMode() {
+    // DummyData에서 루틴의 첫 번째 스텝을 가져옵니다.
+    val sampleStep = DummyData.feedRoutines.first().steps.first()
+    MORUTheme {
+        RoutineStepItem(
+            stepNumber = 1,
+            step = sampleStep,
+            isEditMode = false,
+            onDeleteClick = {},
+            onNameChange = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "스텝 아이템 - 수정 모드")
+@Composable
+private fun LocalRoutineStepItemPreview_EditMode() {
+    // DummyData에서 루틴의 첫 번째 스텝을 가져옵니다.
+    val sampleStep = DummyData.feedRoutines.first().steps.first()
+    MORUTheme {
+        RoutineStepItem(
+            stepNumber = 1,
+            step = sampleStep,
+            isEditMode = true,
+            onDeleteClick = {},
+            onNameChange = {}
+        )
     }
 }

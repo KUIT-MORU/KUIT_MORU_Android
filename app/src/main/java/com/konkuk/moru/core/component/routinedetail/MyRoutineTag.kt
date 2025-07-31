@@ -1,4 +1,4 @@
-package com.konkuk.moru.presentation.myroutines.component
+package com.konkuk.moru.core.component.routinedetail
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +24,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.core.component.chip.MoruChip
-import com.konkuk.moru.presentation.home.component.RoutineTag
 import com.konkuk.moru.ui.theme.MORUTheme
 
 

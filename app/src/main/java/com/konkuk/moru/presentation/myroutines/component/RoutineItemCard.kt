@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,12 +32,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.konkuk.moru.R
-import com.konkuk.moru.core.component.Switch.CustomToggleSwitch
+import com.konkuk.moru.core.component.Switch.RoutineSimpleFocusSwitch
 import com.konkuk.moru.core.component.chip.MoruChip
+import com.konkuk.moru.core.component.routinedetail.RoutineDescriptionField
+import com.konkuk.moru.core.component.routinedetail.ShowUserCheckbox
 import com.konkuk.moru.presentation.routinefeed.component.modale.CenteredInfoDialog
 import com.konkuk.moru.presentation.routinefeed.component.modale.CustomDialog
 import com.konkuk.moru.ui.theme.MORUTheme
@@ -96,6 +98,7 @@ fun RoutineItemCard(
     }
     Row(
         modifier = modifier
+            .background(Color.White)
             .fillMaxWidth()
             .height(IntrinsicSize.Min),
         verticalAlignment = Alignment.CenterVertically,
@@ -121,7 +124,8 @@ fun RoutineItemCard(
                 .weight(1f)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -156,23 +160,15 @@ fun RoutineItemCard(
                 verticalAlignment = Alignment.CenterVertically
 
             ) {
-                Row(
-                    modifier = Modifier.clickable { isUserChecked = !isUserChecked },
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        modifier = Modifier.size(16.dp),
-                        painter = painterResource(if (isUserChecked) R.drawable.ic_checkbox_uncheck else R.drawable.ic_checkbox_gray),
-                        contentDescription = "체크",
-                        tint = Color.Unspecified
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "사용자 표시",
-                        color = MORUTheme.colors.darkGray,
-                        style = MORUTheme.typography.time_R_12
-                    )
-                }
+                ShowUserCheckbox(
+                    showUser = isUserChecked,
+                    onClick = {
+                        if (isEditMode) {
+                            isUserChecked = !isUserChecked
+                        }
+                    }
+                )
+
                 if (!isEditMode) {
                     MoruChip(
                         modifier = Modifier.height(28.dp),
@@ -186,44 +182,35 @@ fun RoutineItemCard(
                     )
 
                 } else {
-                    CustomToggleSwitch(
+                    RoutineSimpleFocusSwitch(
                         checked = category == "집중",
-                        onCheckedChange = { isChecked ->
+                        onClick = { isChecked ->
                             onCategoryChange(if (isChecked) "집중" else "간편")
-                        },
-                        leftText = "간편",
-                        rightText = "집중",
-                        containerColor = Color(0xFFE8E8E8),
-                        thumbColor = Color(0xFFEBFFC0),
-                        checkedTextColor = Color(0xFF8CCD00),
-                        uncheckedTextColor = Color.Gray,
-                        fontSize = 14.sp,
-                        modifier = Modifier
-                            .width(95.dp)
-                            .height(26.dp)
+                        }
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height((74.dp))
-                    .background(
-                        color = MORUTheme.colors.veryLightGray,
-                        shape = RoundedCornerShape(4.dp)
-                    )
-                    .padding(10.dp)
-            ) {
-                if (isEditMode) {
-                    BasicTextField(
-                        value = description,
-                        onValueChange = onDescriptionChange,
-                        modifier = Modifier.fillMaxWidth(),
-                        textStyle = MORUTheme.typography.time_R_14.copy(color = Color.Black)
-                    )
-                } else {
+
+            if (isEditMode) {
+                RoutineDescriptionField(
+                    value = description,
+                    placeholder = "설명을 입력해주세요.",
+                    onValueChange = onDescriptionChange
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height((74.dp))
+                        .background(
+                            color = MORUTheme.colors.veryLightGray,
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                        .padding(10.dp)
+                ) {
+
                     Text(
                         text = if (description.isNotBlank()) description else "설명을 입력해주세요.",
                         modifier = Modifier.fillMaxWidth(),
@@ -237,4 +224,17 @@ fun RoutineItemCard(
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun RoutineItemCardPreview() {
+    RoutineItemCard(
+        title = "PIG",
+        category = "집중",
+        description = "설명",
+        isEditMode = true,
+        onDelete = {},
+        onCategoryChange = { _ -> },
+        onDescriptionChange = { _ -> })
 }

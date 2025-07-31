@@ -73,7 +73,6 @@ internal fun TagSearchScreen(
                     HorizontalDivider(color = MORUTheme.colors.lightGray)
                 }
             }
-            // 🔥 요청하신 대로 bottomBar를 제거했습니다.
         ) { innerPadding ->
             Column(
                 modifier = Modifier
@@ -105,7 +104,7 @@ internal fun TagSearchScreen(
                             text = tag.name,
                             selected = false, // 선택 상태는 사용하지 않음
                             showCloseIcon = true,
-                            // 🔥 클릭 시 즉시 태그를 전달하고 화면을 전환합니다.
+                            // 클릭 시 즉시 태그를 전달하고 화면을 전환합니다.
                             onClick = { onTagSelected(tag.name) }
                         )
                     }
@@ -122,7 +121,7 @@ internal fun TagSearchScreen(
                         TagChip(
                             text = tag.name,
                             selected = false, // 선택 상태는 사용하지 않음
-                            // 🔥 클릭 시 즉시 태그를 전달하고 화면을 전환합니다.
+                            // 클릭 시 즉시 태그를 전달하고 화면을 전환합니다.
                             onClick = { onTagSelected(tag.name) }
                         )
                     }
