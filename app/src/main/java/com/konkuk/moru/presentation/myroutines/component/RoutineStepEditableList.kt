@@ -69,7 +69,7 @@ fun LazyListScope.routineStepEditableList(
                         actions.onDragStart(startIndex)
                     },
                     onDrag = { change, dragAmount ->
-                        change.consumeAllChanges()      // 또는 consume()
+                        change.consume()      // 또는 consume()
                         localOffset += dragAmount.y
                         actions.onDrag(dragAmount.y)     // ViewModel 갱신(선택)
                     },
