@@ -25,8 +25,8 @@ import androidx.navigation.compose.rememberNavController
 import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.navigation.Route
-import com.konkuk.moru.presentation.routinefeed.component.MoruLiveSection
-import com.konkuk.moru.presentation.routinefeed.component.TitledRoutineSection
+import com.konkuk.moru.presentation.routinefeed.component.Routine.MoruLiveSection
+import com.konkuk.moru.presentation.routinefeed.component.Routine.TitledRoutineSection
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.HomeTopAppBar
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
 import com.konkuk.moru.presentation.routinefeed.viewmodel.RoutineFeedUiState

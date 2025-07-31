@@ -1,4 +1,4 @@
-package com.konkuk.moru.presentation.myroutines.screen
+package com.konkuk.moru.presentation.myroutines.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -6,13 +6,13 @@ import com.konkuk.moru.data.model.AppInfo
 import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.model.RoutineStep
+import com.konkuk.moru.presentation.myroutines.screen.MyRoutineDetailUiState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
 
 class MyRoutineDetailViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(MyRoutineDetailUiState())
@@ -161,7 +161,10 @@ class MyRoutineDetailViewModel : ViewModel() {
     fun addApp() {
         _uiState.update { state ->
             // 예시로 새 앱 추가
-            val newApp = AppInfo(name = "새로운 앱", iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/hand-gestures/good-icon.png")
+            val newApp = AppInfo(
+                name = "새로운 앱",
+                iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/hand-gestures/good-icon.png"
+            )
             val updatedApps = state.routine?.usedApps?.plus(newApp)
             state.copy(routine = state.routine?.copy(usedApps = updatedApps ?: listOf(newApp)))
         }

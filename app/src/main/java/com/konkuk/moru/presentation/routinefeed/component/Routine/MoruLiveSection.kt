@@ -1,4 +1,4 @@
-package com.konkuk.moru.presentation.routinefeed.component
+package com.konkuk.moru.presentation.routinefeed.component.Routine
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable

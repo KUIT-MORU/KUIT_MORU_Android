@@ -31,6 +31,7 @@ import androidx.navigation.compose.rememberNavController
 import com.konkuk.moru.R
 import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.Routine
+import com.konkuk.moru.presentation.myroutines.viewmodel.MyRoutineDetailViewModel
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppBar
 import com.konkuk.moru.ui.theme.MORUTheme
 import kotlin.math.abs

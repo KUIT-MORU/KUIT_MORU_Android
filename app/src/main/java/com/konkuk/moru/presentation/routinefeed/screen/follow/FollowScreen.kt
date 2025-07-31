@@ -35,18 +35,16 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.konkuk.moru.presentation.routinefeed.component.follow.EmptyFollowContent
+import com.konkuk.moru.presentation.routinefeed.component.follow.FollowScreenContent
 import com.konkuk.moru.presentation.routinefeed.component.follow.UserItem
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppBar
 import com.konkuk.moru.presentation.routinefeed.data.FollowUser
 import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowUiState
-import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowViewModel
+import com.konkuk.moru.presentation.routinefeed.viewmodel.FollowViewModel
 import com.konkuk.moru.ui.theme.MORUTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-/**
- * ViewModel과 연결되어 탐색 그래프에서 실제 사용될 Composable
- */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FollowScreen(
@@ -57,7 +55,6 @@ fun FollowScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val tabs = listOf("팔로워", "팔로잉")
-    //val pagerState = rememberPagerState { tabs.size }
     val scope = rememberCoroutineScope()
     val initialPage = if (selectedTab == "following") 1 else 0
     val pagerState = rememberPagerState(initialPage = initialPage) { tabs.size }
@@ -74,122 +71,8 @@ fun FollowScreen(
     )
 }
 
-/**
- * UI 레이아웃을 담당하는 Stateless Composable.
- * FollowScreen과 Preview에서 재사용됩니다.
- */
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
-@Composable
-fun FollowScreenContent(
-    uiState: FollowUiState,
-    tabs: List<String>,
-    pagerState: PagerState,
-    scope: CoroutineScope,
-    onBackClick: () -> Unit,
-    onFollowClick: (FollowUser) -> Unit,
-    onUserClick: (Int) -> Unit
-) {
-    Scaffold(
-        modifier = Modifier.padding(11.dp),
-        containerColor = Color.White,
-        topBar = {
-            BasicTopAppBar(
-                title = "사용자명", // TODO: 이 부분도 ViewModel의 uiState에서 가져오도록 수정 가능
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "뒤로가기"
-                        )
-                    }
-                })
-        }) { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues)) {
-            TabRow(
-                selectedTabIndex = pagerState.currentPage,
-                containerColor = Color.White,
-                contentColor = Color.Black,
-                indicator = { tabPositions ->
-                    TabRowDefaults.Indicator(
-                        Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]),
-                        color = Color.Black
-                    )
-                }) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        modifier = Modifier.height(42.dp),
-                        selected = pagerState.currentPage == index,
-                        onClick = {
-                            scope.launch {
-                                pagerState.animateScrollToPage(index)
-                            }
-                        },
-                        text = { Text(text = title) },
-                        selectedContentColor = Color.Black,
-                        unselectedContentColor = MORUTheme.colors.mediumGray
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.padding(top = 11.dp))
-
-            HorizontalPager(
-                state = pagerState, modifier = Modifier.fillMaxSize()
-            ) { page ->
-                when (page) {
-                    0 -> FollowListContent(
-                        users = uiState.followers,
-                        emptyMessage = "내 팔로워가 없어요.",
-                        emptySubMessage = "다른 사람들을 찾아보세요!",
-                        onFollowClick = onFollowClick,
-                        onUserClick = onUserClick
-                    )
-
-                    1 -> FollowListContent(
-                        users = uiState.followings,
-                        emptyMessage = "내 팔로잉이 없어요.",
-                        emptySubMessage = "다른 사람들을 찾아보세요!",
-                        onFollowClick = onFollowClick,
-                        onUserClick = onUserClick
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
- * 팔로워/팔로잉 목록을 표시하는 Composable (수정 필요 없음)
- */
-@Composable
-private fun FollowListContent(
-    users: List<FollowUser>,
-    emptyMessage: String,
-    emptySubMessage: String,
-    onFollowClick: (FollowUser) -> Unit,
-    onUserClick: (Int) -> Unit
-) {
-    if (users.isEmpty()) {
-        EmptyFollowContent(
-            message = emptyMessage, subMessage = emptySubMessage
-        )
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(
-                items = users, key = { it.id }) { user ->
-                UserItem(user = user, onFollowClick = onFollowClick, onUserClick = onUserClick)
-                //Divider(color = Color(0xFFF1F3F5), thickness = 1.dp)
-            }
-        }
-    }
-}
 
 
-/**
- * ViewModel 없이 UI를 테스트하기 위한 Preview.
- * 실제 앱 동작에는 영향을 주지 않습니다.
- */
 @OptIn(ExperimentalFoundationApi::class)
 @Preview(showBackground = true)
 @Composable
