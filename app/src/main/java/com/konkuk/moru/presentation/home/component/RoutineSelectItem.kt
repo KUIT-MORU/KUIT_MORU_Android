@@ -64,7 +64,7 @@ fun RoutineSelectItem(
                 .padding(top = 11.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Spacer(modifier = modifier.size(12.dp))
+            Spacer(modifier = modifier.width(12.dp))
             Box(
                 modifier = Modifier.width(153.dp)
             ) {
@@ -74,7 +74,7 @@ fun RoutineSelectItem(
                     color = colors.charcoalBlack
                 )
             }
-            Spacer(modifier = Modifier.size(1f.dp))
+            Spacer(modifier = Modifier.width(1f.dp))
             Box(
                 modifier = Modifier
                     .size(18.dp)

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -38,7 +39,7 @@ fun HomeTopAppBar(
             contentDescription = "모루 아이콘 이미지",
             modifier = modifier.size(41.87.dp)
         )
-        Spacer(modifier = modifier.size(14.13.dp))
+        Spacer(modifier = modifier.width(14.13.dp))
         Text(
             text = "MORU",
             style = typography.desc_M_20.copy(fontWeight = Bold),

@@ -74,20 +74,20 @@ fun TodayRoutineListBoxItem(
                             .fillMaxWidth()
                             .padding(vertical = 7.dp)
                     ) {
-                        //제목(ex)아침 운동)
+                        // 제목(ex)아침 운동)
                         Text(
                             text = title,
                             style = typography.title_B_14,
                             color = colors.black,
                         )
-                        Spacer(modifier = modifier.size(2.dp))
+                        Spacer(modifier = modifier.height(2.dp))
                         // 해시태그(ex)#모닝 루틴,#스트레칭)
                         Text(
                             text = hashtag,
                             style = typography.time_R_10,
                             color = colors.black
                         )
-                        Spacer(modifier = modifier.size(3.dp))
+                        Spacer(modifier = modifier.height(3.dp))
                         //하트와 하트 클릭 수
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Image(
@@ -95,6 +95,7 @@ fun TodayRoutineListBoxItem(
                                 contentDescription = "empty heart Icon",
                                 modifier = Modifier.size(width = 13.33.dp, height = 11.47.dp)
                             )
+                            Spacer(modifier= Modifier.width(2.67.dp))
                             Text(
                                 text = "$heartCount",
                                 style = typography.time_R_12,
@@ -104,7 +105,7 @@ fun TodayRoutineListBoxItem(
                     }
                 }
             }
-            Spacer(modifier = Modifier.size(14.dp))
+            Spacer(modifier = Modifier.height(14.dp))
             // 2. 요일과 시간
             Row() {
                 Text(
@@ -112,7 +113,7 @@ fun TodayRoutineListBoxItem(
                     style = typography.title_B_12,
                     color = colors.black
                 )
-                Spacer(modifier = Modifier.size(10.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = time,
                     style = typography.title_B_12,

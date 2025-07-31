@@ -370,19 +370,19 @@ fun LandscapeRoutineFocusScreen(
                     .padding(vertical = 6.dp, horizontal = 7.72.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.size(21.dp))
+                Spacer(modifier = Modifier.height(21.dp))
                 Text(
                     text = "루틴을 종료하시겠습니까?",
                     style = typography.title_B_20,
                     color = colors.black
                 )
-                Spacer(modifier = Modifier.size(6.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = "종료한 루틴은 내활동에 저장됩니다.",
                     style = typography.title_B_12.copy(fontWeight = FontWeight.Normal),
                     color = colors.darkGray
                 )
-                Spacer(modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.height(20.dp))
                 Row(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     modifier = Modifier.fillMaxWidth()
@@ -454,7 +454,7 @@ fun LandscapeRoutineFocusScreen(
                     style = typography.title_B_20.copy(fontWeight = FontWeight.SemiBold),
                     color = colors.black
                 )
-                //진행도(spacer도 줘야함)
+                //진행도
                 Spacer(modifier = Modifier.height(12.04.dp))
                 RoutineProgressBar(
                     stepCount = currentstep, //스탭 개수
