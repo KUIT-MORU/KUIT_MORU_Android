@@ -1,4 +1,4 @@
-package com.konkuk.moru.presentation.routinefeed.screen.main
+package com.konkuk.moru.presentation.routinefeed.viewmodel
 
 
 import androidx.lifecycle.ViewModel

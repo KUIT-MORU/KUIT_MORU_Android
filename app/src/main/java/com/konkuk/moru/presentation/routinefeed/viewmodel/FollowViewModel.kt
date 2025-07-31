@@ -1,10 +1,11 @@
-package com.konkuk.moru.presentation.routinefeed.screen.follow
+package com.konkuk.moru.presentation.routinefeed.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.presentation.routinefeed.data.FollowUser
+import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,7 +15,6 @@ import javax.inject.Inject
 
 @HiltViewModel // Hilt를 사용하므로 어노테이션을 붙여줍니다.
 class FollowViewModel @Inject constructor(
-    // 생성자에서 SavedStateHandle을 받아야 내비게이션으로 전달된 userId를 알 수 있습니다.
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -51,7 +51,7 @@ class FollowViewModel @Inject constructor(
                         id = user.userId,
                         profileImageUrl = user.profileImageUrl ?: "", // 프로필 이미지가 null일 경우 빈 문자열 전달
                         username = user.nickname,
-                        bio = user.bio, 
+                        bio = user.bio,
                         isFollowing = isFollowingBack
                     )
                 }

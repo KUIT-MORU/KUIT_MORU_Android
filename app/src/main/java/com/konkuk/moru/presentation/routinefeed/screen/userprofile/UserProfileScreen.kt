@@ -55,6 +55,7 @@ import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppBar
 import com.konkuk.moru.presentation.routinefeed.data.UserProfileUiState
+import com.konkuk.moru.presentation.routinefeed.viewmodel.UserProfileViewModel
 import com.konkuk.moru.ui.theme.MORUTheme
 
 @OptIn(ExperimentalMaterial3Api::class)

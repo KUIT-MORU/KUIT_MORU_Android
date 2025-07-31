@@ -41,7 +41,7 @@ fun ShowUserCheckbox(
             tint = Color.Unspecified
         )
         Spacer(modifier = Modifier.width(3.5.dp))
-        Text("사용자 표시", style = typography.desc_M_14)
+        Text("사용자 표시", style = typography.time_R_12)
     }
 }
 
