@@ -141,6 +141,8 @@ fun AppNavGraph(
                             Route.RoutineFocusIntro.route,
                             Route.RoutineFocus.route,
                             Route.RoutineSimpleRun.route,
+                            Route.RoutineCreate.route,
+                            Route.RoutineSimpleRun.route,
                             Route.MyRoutineDetail.route
                         )
                     ) {

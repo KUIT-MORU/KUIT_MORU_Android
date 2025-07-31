@@ -94,7 +94,7 @@ fun HomeScreen(
                         val centerY = position.y + size.height / 2f
                         fabOffsetY.value = centerY
                     },
-                onClick = { /* 루틴 생성 화면으로 이동! */ }
+                onClick = { navController.navigate(Route.RoutineCreate.route) }
             )
         },
         floatingActionButtonPosition = FabPosition.End, // ← 이걸 추가
