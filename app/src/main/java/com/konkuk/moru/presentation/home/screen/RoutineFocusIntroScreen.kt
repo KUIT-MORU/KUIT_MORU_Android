@@ -157,7 +157,7 @@ fun RoutineFocusIntroScreen(
                     color = colors.black,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
-                Spacer(modifier = Modifier.size(5.dp))
+                Spacer(modifier = Modifier.height(5.dp))
             }
             itemsIndexed(stepStates) { index, step ->
                 RoutineStepItem(
@@ -184,7 +184,7 @@ fun RoutineFocusIntroScreen(
             // TOTAL 소요시간 섹션 (FocusType.FOCUS일 경우만)
             if (focusType == FocusType.FOCUS) {
                 item {
-                    Spacer(modifier = Modifier.size(92.dp))
+                    Spacer(modifier = Modifier.height(92.dp))
 
                     Column(
                         modifier = Modifier
@@ -203,12 +203,12 @@ fun RoutineFocusIntroScreen(
                             style = typography.head_EB_24,
                             color = colors.black
                         )
-                        Spacer(modifier = Modifier.size(21.dp))
+                        Spacer(modifier = Modifier.height(21.dp))
                     }
                 }
             } else {
                 item {
-                    Spacer(modifier = Modifier.size(175.dp))
+                    Spacer(modifier = Modifier.height(175.dp))
                 }
             }
         }
@@ -233,7 +233,7 @@ private fun RoutineFocusIntroScreenPreview() {
     RoutineFocusIntroScreen(
         steps = sampleSteps,
         onStartClick = {}, //시작하기 누르면 다음 화면으로
-        onBackClick = {}, //뒤로 가기 구현해야함
+        onBackClick = {}, //뒤로 가기 누르면 이전 화면으로
         routineTitle = "주말 아침 루틴",
         hashTag = "태그1 태그2",
     )

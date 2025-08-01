@@ -136,8 +136,8 @@ fun HomeScreen(
                         ),
                         color = colors.black,
                         modifier = Modifier
-                            .align(Alignment.TopStart)                  // Box 안의 좌상단
-                            .padding(                                   // ← 내용 여백
+                            .align(Alignment.TopStart)
+                            .padding(
                                 start = 16.dp,
                                 top = 26.dp,
                                 bottom = 25.dp

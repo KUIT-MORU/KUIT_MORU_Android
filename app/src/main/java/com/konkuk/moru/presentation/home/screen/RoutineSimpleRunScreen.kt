@@ -3,6 +3,7 @@ package com.konkuk.moru.presentation.home.screen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -94,7 +95,7 @@ fun RoutineSimpleRunScreen(
                     .clickable { onDismiss() }
             )
 
-            Spacer(modifier = Modifier.size(77.dp))
+            Spacer(modifier = Modifier.height(77.dp))
 
             // 루틴 제목 및 해시태그
             Box(
@@ -110,14 +111,14 @@ fun RoutineSimpleRunScreen(
                             .width(53.dp)
                             .height(52.dp)
                     )
-                    Spacer(modifier = Modifier.size(12.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
                             text = routineTitle,
                             style = typography.head_EB_24,
                             color = colors.black
                         )
-                        Spacer(modifier = Modifier.size(6.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = hashTag,
                             style = typography.body_SB_16,
@@ -127,7 +128,7 @@ fun RoutineSimpleRunScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.size(129.dp))
+            Spacer(modifier = Modifier.height(129.dp))
 
             // 루틴 항목들
             steps.forEachIndexed { index, step ->
@@ -150,7 +151,11 @@ fun RoutineSimpleRunScreen(
                 .offset(x = 221.dp, y = 387.dp)
                 .width(139.dp)
                 .height(123.dp)
-                .clickable(enabled = isAnySelected) {
+                .clickable(
+                    enabled = isAnySelected,
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                ) {
                     showFinishPopup = true
                 },
             contentAlignment = Alignment.Center
@@ -208,19 +213,19 @@ fun RoutineSimpleRunScreen(
                         .padding(vertical = 6.dp, horizontal = 7.72.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.size(21.25.dp))
+                    Spacer(modifier = Modifier.height(21.25.dp))
                     Text(
                         text = "루틴을 종료하시겠습니까?",
                         style = typography.title_B_20.copy(fontWeight = FontWeight.SemiBold),
                         color = colors.black
                     )
-                    Spacer(modifier = Modifier.size(5.79.dp))
+                    Spacer(modifier = Modifier.height(5.79.dp))
                     Text(
                         text = "종료한 루틴은 내활동에 저장됩니다.",
                         style = typography.title_B_12,
                         color = colors.darkGray
                     )
-                    Spacer(modifier = Modifier.size(19.79.dp))
+                    Spacer(modifier = Modifier.height(19.79.dp))
                     Row(
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         modifier = Modifier.fillMaxWidth()
@@ -230,7 +235,10 @@ fun RoutineSimpleRunScreen(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(colors.lightGray)
-                                .clickable {
+                                .clickable(
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) {
                                     showFinishPopup = false
                                 }
                                 .width(123.dp)
@@ -250,11 +258,13 @@ fun RoutineSimpleRunScreen(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(colors.limeGreen)
-                                .clickable {
+                                .clickable(
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) {
                                     showResultPopup = true
                                     showFinishPopup = false
-                                    finalElapsedTime =
-                                        formatElapsedTime(System.currentTimeMillis() - routineStartTime)
+                                    finalElapsedTime = formatElapsedTime(System.currentTimeMillis() - routineStartTime)
                                 }
                                 .width(123.dp)
                                 .height(40.55.dp)
@@ -290,13 +300,13 @@ fun RoutineSimpleRunScreen(
                         .padding(horizontal = 6.02.dp, vertical = 5.98.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.size(14.09.dp))
+                    Spacer(modifier = Modifier.height(14.09.dp))
                     Text(
                         text = "루틴 종료!",
                         style = typography.title_B_20.copy(fontWeight = FontWeight.SemiBold),
                         color = colors.black
                     )
-                    Spacer(modifier = Modifier.size(20.07.dp))
+                    Spacer(modifier = Modifier.height(20.07.dp))
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(10.dp))
@@ -311,19 +321,19 @@ fun RoutineSimpleRunScreen(
                     ) {
                         Column() {
                             RoutineResultRow(R.drawable.schedule_icon, "루틴", routineTitle)
-                            Spacer(modifier = Modifier.size(16.06.dp))
+                            Spacer(modifier = Modifier.height(16.06.dp))
                             RoutineResultRow(R.drawable.check_icon_gray, "결과", "완료")
-                            Spacer(modifier = Modifier.size(16.06.dp))
+                            Spacer(modifier = Modifier.height(16.06.dp))
                             RoutineResultRow(
                                 R.drawable.step_icon,
                                 "스텝",
                                 "${selectedStates.count { it }}/${steps.size}"
                             )
-                            Spacer(modifier = Modifier.size(16.06.dp))
+                            Spacer(modifier = Modifier.height(16.06.dp))
                             RoutineResultRow(R.drawable.clock_icon, "시간", finalElapsedTime)
                         }
                     }
-                    Spacer(modifier = Modifier.size(29.11.dp))
+                    Spacer(modifier = Modifier.height(29.11.dp))
                     //확인 버튼
                     Box(
                         modifier = Modifier
@@ -331,9 +341,12 @@ fun RoutineSimpleRunScreen(
                             .height(42.15.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(colors.limeGreen)
-                            .clickable {
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) {
                                 showResultPopup = false
-                                onDismiss() // 확인 버튼을 눌렀을 시 수행할 행동
+                                onDismiss()
                             },
                         contentAlignment = Alignment.Center
                     ) {

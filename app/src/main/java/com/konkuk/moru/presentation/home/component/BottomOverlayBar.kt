@@ -12,7 +12,7 @@ import com.konkuk.moru.R
 @Composable
 fun BottomOverlayBar(
     modifier: Modifier = Modifier,
-    iconCenters: List<Offset> // ← 위치값을 받음
+    iconCenters: List<Offset>
 ) {
     val density = LocalDensity.current
     val configuration = LocalConfiguration.current
@@ -46,11 +46,11 @@ fun BottomOverlayBar(
                     val offsetX = (center.x - itemWidth / 2f).toDp()
                     val offsetY = (center.y - itemHeight / 2f).toDp()
 
-                    // 기기별 보정값 (필요시 조정)
+                    // 기기별 보정값
                     val iconYCorrection =
                         if (density.density >= 3.0f) (-2).dp else (-1).dp // 고밀도 기기는 더 많이 보정
                     val textXCorrection =
-                        if (density.density >= 3.0f) (-1).dp else (-2).dp // 가상기기(저밀도)에서 텍스트를 왼쪽으로
+                        if (density.density >= 3.0f) (-1).dp else (-2).dp // 저밀도 기기는 덜 보정
 
                     BottomBarIconWithLabelOverlay(
                         iconResId = iconResId,

@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,14 +54,14 @@ import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
-
+// 총 소요시간 계산하는 함수
 fun formatTotalTime(seconds: Int): String {
     val minutes = seconds / 60
     val secs = seconds % 60
     return String.format("%02dm %02ds", minutes, secs)
 }
 
-// 스탭 개수에 따라 그리는 함수
+// 스탭 개수에 따라 타임라인을 그리는 함수
 @Composable
 fun RoutineProgressBar(
     stepCount: Int = 4,
@@ -223,8 +224,6 @@ fun PortraitRoutineFocusScreen(
         viewModel.startTimer()
     }
 
-
-    // 메인 컨텐츠를 Box로 감싸기
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -232,7 +231,7 @@ fun PortraitRoutineFocusScreen(
                 if (isDarkMode) colors.black else Color.White
             )
     ) {
-        // ✅ 1. 시간 초과 시 배경 오버레이 (하단 제외)
+        // 시간 초과 시 배경 오버레이 (하단 제외)
         if (isTimeout) {
             Box(
                 modifier = Modifier
@@ -251,7 +250,7 @@ fun PortraitRoutineFocusScreen(
 //            else
 //                StatusBarMock(isDarkMode = false)
 
-            //시간초과시의 영역만 칠하기 위해 또 Column에
+            // 시간초과시의 영역만 칠하기 위해 또 Column으로 묶음
             Column(
                 modifier = Modifier
                     .background(if (isDarkMode) colors.black else Color.White),
@@ -271,7 +270,12 @@ fun PortraitRoutineFocusScreen(
                         tint = if (isDarkMode) Color.White else colors.black,
                         modifier = Modifier
                             .size(24.dp)
-                            .clickable { onDismiss() }
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) {
+                                onDismiss()
+                            }
                     )
                     // 설정 버튼
                     Icon(
@@ -369,7 +373,10 @@ fun PortraitRoutineFocusScreen(
                                     contentDescription = if (isFinalStep) "완료됨" else "다음 루틴으로",
                                     modifier = Modifier
                                         .size(74.dp)
-                                        .clickable {
+                                        .clickable(
+                                            indication = null,
+                                            interactionSource = remember { MutableInteractionSource() }
+                                        ){
                                             // 다음 step으로 가는 기능
                                             if (!isFinalStep) {
                                                 val nextStepTimeString =
@@ -386,7 +393,7 @@ fun PortraitRoutineFocusScreen(
                                 )
                             }
 
-                            //시간초과이면 NEXT STEP 텍스트 뜨도록
+                            // 시간초과이면 NEXT STEP 텍스트 뜨도록
                             Box(
                                 modifier = Modifier
                                     .size(width = 139.dp, height = 35.dp),
@@ -426,7 +433,7 @@ fun PortraitRoutineFocusScreen(
                 .align(Alignment.BottomCenter)
                 .wrapContentHeight()
         ) {
-            // ✅ 1. 앱 아이콘 (항상 위에)
+            // 앱 아이콘 (항상 메모장보다 위에)
             if (showAppIcons) {
                 Box(
                     modifier = Modifier
@@ -455,7 +462,7 @@ fun PortraitRoutineFocusScreen(
                 }
             }
 
-            // ✅ 2. 메모장 (항상 아래에)
+            // 메모장 (항상 사용 앱보다 아래에)
             if (showMemoPad) {
                 Box(
                     modifier = Modifier
@@ -496,7 +503,7 @@ fun PortraitRoutineFocusScreen(
                 }
             }
 
-            // ✅ 3. 하단 메뉴 버튼 줄
+            // 하단 메뉴 버튼 줄
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -528,7 +535,7 @@ fun PortraitRoutineFocusScreen(
                 )
             }
 
-            // ✅ 4. TOTAL 영역
+            // TOTAL 영역
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -552,7 +559,7 @@ fun PortraitRoutineFocusScreen(
         }
 
 
-        // 팝업 1(종료 확인 팝업) - 메인 컨텐츠와 별도로 위치
+        // 팝업 1(종료 확인 팝업)
         if (showFinishPopup) {
             Box(
                 modifier = Modifier
@@ -570,19 +577,19 @@ fun PortraitRoutineFocusScreen(
                         .padding(vertical = 6.dp, horizontal = 7.72.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.size(21.dp))
+                    Spacer(modifier = Modifier.height(21.dp))
                     Text(
                         text = "루틴을 종료하시겠습니까?",
                         style = typography.title_B_20,
                         color = colors.black
                     )
-                    Spacer(modifier = Modifier.size(6.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = "종료한 루틴은 내활동에 저장됩니다.",
                         style = typography.title_B_12.copy(fontWeight = FontWeight.Normal),
                         color = colors.darkGray
                     )
-                    Spacer(modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
                     Row(
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         modifier = Modifier.fillMaxWidth()
@@ -591,10 +598,11 @@ fun PortraitRoutineFocusScreen(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(colors.lightGray)
-                                .clickable {
+                                .clickable(
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) {
                                     showFinishPopup = false
-                                    // 돌아가기 클릭 시 타이머 다시 시작
-                                    isTimerRunning = true
                                 }
                                 .width(123.dp)
                                 .height(40.55.dp),
@@ -611,9 +619,12 @@ fun PortraitRoutineFocusScreen(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(colors.limeGreen)
-                                .clickable {
-                                    showFinishPopup = false
+                                .clickable(
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) {
                                     showResultPopup = true
+                                    showFinishPopup = false
                                 }
                                 .width(123.dp)
                                 .height(40.dp),
@@ -668,7 +679,7 @@ fun PortraitRoutineFocusScreen(
                         color = colors.black
                     )
                     Spacer(modifier = Modifier.height(9.03.dp))
-                    //정보 박스
+                    // 정보 박스
                     Column(
                         modifier = Modifier
                             .width(252.dp)
@@ -689,7 +700,7 @@ fun PortraitRoutineFocusScreen(
                     }
                     Spacer(modifier = Modifier.height(9.03.dp))
 
-                    //내 기록으로 이동
+                    // 내 기록으로 이동
                     Spacer(modifier = Modifier.width(154.dp))
                     Row(
                         modifier = Modifier
@@ -697,7 +708,6 @@ fun PortraitRoutineFocusScreen(
                             .padding(horizontal = 5.dp),
                         horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically
-                        //박스 안에 텍스트 좌우 여백 같게, 상하 여백 같게 하고 싶어요
                     ) {
                         Box(
                             modifier = Modifier
@@ -722,7 +732,10 @@ fun PortraitRoutineFocusScreen(
                             .height(42.15.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(colors.limeGreen)
-                            .clickable {
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) {
                                 showResultPopup = false
                                 onDismiss()
                             },
@@ -737,23 +750,21 @@ fun PortraitRoutineFocusScreen(
                 }
             }
         }
-        // 설정 팝업 (showSettingsPopup)은 이제 여기에 위치합니다.
         if (showSettingsPopup) {
             //반투명 오버레이
             Box(
                 modifier = Modifier
-                    .fillMaxWidth() // 전체 너비 채우기
-                    .fillMaxHeight() // 전체 높이 채우기
-                    .padding(bottom = 133.dp) // 하단 메뉴(53dp) + TOTAL(80dp) = 133dp 제외
-                    .background(Color(0x33000000)) // 반투명 검정 배경
-                    .zIndex(10f) // 다른 UI 위에 오도록 zIndex 조정 (가장 위에)
-                    .clickable { viewModel.closeSettingsPopup() }, // 오버레이 바깥 클릭 시 팝업 닫기
-                contentAlignment = Alignment.TopEnd // 내용을 우측 상단에 정렬
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .padding(bottom = 133.dp)
+                    .background(Color(0x33000000))
+                    .zIndex(10f)
+                    .clickable { viewModel.closeSettingsPopup() },
+                contentAlignment = Alignment.TopEnd
             ) {
-                // 설정 스위치 그룹 컨테이너
                 Column(
                     modifier = Modifier
-                        .padding(top = 80.dp, end = 17.dp) // 상단바 아래, 우측에 패딩
+                        .padding(top = 80.dp, end = 17.dp)
                         .width(149.dp)
                         .clip(RoundedCornerShape(4.dp))
                         .background(Color(0xFFFFFF).copy(alpha = 0.75f))

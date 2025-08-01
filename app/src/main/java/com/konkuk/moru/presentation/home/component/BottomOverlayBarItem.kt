@@ -56,7 +56,7 @@ fun BottomOverlayBarItem(
 
 @Preview(
     showBackground = true,
-    backgroundColor = 0xFF000000,  // Black 배경
+    backgroundColor = 0xFF000000,
     widthDp = 360,
     heightDp = 100
 )
