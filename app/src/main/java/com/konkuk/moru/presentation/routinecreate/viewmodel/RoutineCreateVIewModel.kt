@@ -59,6 +59,11 @@ class RoutineCreateViewModel : ViewModel() {
         editingStepId.value = stepId
     }
 
+    fun getEditingStepTime(): String? {
+        val id = editingStepId.value ?: return null
+        return stepList.find { it.id == id }?.time
+    }
+
     @SuppressLint("DefaultLocale")
     fun confirmTime(hour: Int, minute: Int, second: Int) {
         val formatted = String.format("%02d:%02d:%02d", hour, minute, second)

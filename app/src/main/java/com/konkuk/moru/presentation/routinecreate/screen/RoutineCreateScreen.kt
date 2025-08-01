@@ -298,6 +298,7 @@ fun RoutineCreateScreen(
         // 시간 선택 팝업
         if (isTimePickerVisible) {
             TimePickerDialog(
+                initialTime = viewModel.getEditingStepTime(),
                 onConfirm = { h, m, s ->
                     viewModel.confirmTime(h, m, s)
                     isTimePickerVisible = false
