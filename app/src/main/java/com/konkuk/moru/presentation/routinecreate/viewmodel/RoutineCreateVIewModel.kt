@@ -16,7 +16,7 @@ class RoutineCreateViewModel : ViewModel() {
     val isFocusingRoutine = mutableStateOf(true)
     val routineTitle = mutableStateOf("")
     val routineDescription = mutableStateOf("")
-    val tags = mutableStateListOf<String>()
+    val tagList = mutableStateListOf<String>()
     val stepList = mutableStateListOf(Step(title = "", time = "")) // ✅ 초기에도 id 생성
     val editingStepId = mutableStateOf<String?>(null)
     val appList = mutableStateListOf<UsedAppInRoutine>()
@@ -35,6 +35,17 @@ class RoutineCreateViewModel : ViewModel() {
 
     fun updateDescription(desc: String) {
         routineDescription.value = desc
+    }
+
+    fun addTag(tag: String) {
+//        if (tag.isNotBlank() && !tagList.contains(tag)) {
+//            tagList.add(tag)
+//        }
+        tagList.add(tag) //Todo: 중복 체크 로직 추가 필요
+    }
+
+    fun removeTag(tag: String) {
+        tagList.remove(tag)
     }
 
     fun updateStepTitle(stepId: String, newTitle: String) {
@@ -80,7 +91,7 @@ class RoutineCreateViewModel : ViewModel() {
             "description" to routineDescription.value,
             "isFocused" to isFocusingRoutine.value,
             "showUser" to showUser.value,
-            "tags" to tags.toList(),
+            "tagList" to tagList.toList(),
             "steps" to stepList.map { it.copy() },
             "apps" to appList.map { it.copy() },
             "imageUri" to imageUri.value?.toString()
@@ -91,7 +102,7 @@ class RoutineCreateViewModel : ViewModel() {
         Log.d("RoutineCreate", "설명: ${routineDescription.value}")
         Log.d("RoutineCreate", "집중 루틴 여부: ${isFocusingRoutine.value}")
         Log.d("RoutineCreate", "사용자 공개 여부: ${showUser.value}")
-        Log.d("RoutineCreate", "태그: ${tags.toList()}")
+        Log.d("RoutineCreate", "태그: ${tagList.toList()}")
         Log.d("RoutineCreate", "스텝: ${stepList.map { "${it.title} - ${it.time}" }}")
         Log.d("RoutineCreate", "사용 앱: ${appList.map { "${it.appName} - ${it.iconUrl}" }}")
         Log.d("RoutineCreate", "이미지 URI: ${imageUri.value?.toString()}")

@@ -29,7 +29,11 @@ fun RoutineImageSelectBox(
             .width(105.dp)
             .fillMaxHeight()
             .background(colors.veryLightGray, RoundedCornerShape(4.dp))
-            .clickable(onClick = onClick),
+            .clickable(
+                onClick = onClick,
+                indication = null,
+                interactionSource = null
+            ),
         contentAlignment = Alignment.Center
     ) {
         if (selectedImageUri != null) {
