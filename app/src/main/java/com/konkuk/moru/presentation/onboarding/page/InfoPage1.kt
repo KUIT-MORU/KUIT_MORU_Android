@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -50,13 +51,15 @@ fun InfoPage1(onNext: () -> Unit) {
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Image(
                         painter = painterResource(R.drawable.img_infopage1),
                         contentDescription = "Info Page 1",
                         modifier = Modifier
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .aspectRatio(1f),
                         contentScale = ContentScale.Crop // 꽉 차도록 자르기
                     )
                     Column(
