@@ -22,14 +22,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +50,8 @@ import com.konkuk.moru.core.component.ImageChoiceOptionButtonScreen
 import com.konkuk.moru.core.component.Switch.RoutineSimpleFocusSwitch
 import com.konkuk.moru.core.component.routinedetail.AddAppBox
 import com.konkuk.moru.core.component.routinedetail.AddStepButton
+import com.konkuk.moru.core.component.routinedetail.DraggableAppSearchBottomSheet
+import com.konkuk.moru.core.component.routinedetail.MyRoutineTagInCreateRoutine
 import com.konkuk.moru.core.component.routinedetail.RoutineDescriptionField
 import com.konkuk.moru.core.component.routinedetail.RoutineImageSelectBox
 import com.konkuk.moru.core.component.routinedetail.ShowUserCheckbox
@@ -55,7 +60,9 @@ import com.konkuk.moru.presentation.routinecreate.component.TimePickerDialog
 import com.konkuk.moru.presentation.routinecreate.viewmodel.RoutineCreateViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("DefaultLocale")
 @Composable
 fun RoutineCreateScreen(
@@ -66,6 +73,7 @@ fun RoutineCreateScreen(
     val isFocusingRoutine by viewModel.isFocusingRoutine
     val showUser by viewModel.showUser
     val routineDescription by viewModel.routineDescription
+    val tagList = viewModel.tagList
     val stepList = viewModel.stepList
 
     var isImageOptionVisible by remember { mutableStateOf(false) }
@@ -84,8 +92,13 @@ fun RoutineCreateScreen(
 
     val isSubmitEnabled = viewModel.routineTitle.value.isNotBlank() &&
             viewModel.stepList.any { it.title.isNotBlank() || it.time.isNotBlank() } &&
-            viewModel.tags.isNotEmpty()
+            viewModel.tagList.isNotEmpty()
     //val isSubmitEnabled = true
+
+    // 사용앱 바텀시트 관련
+    val coroutineScope = rememberCoroutineScope()
+    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var isBottomSheetOpen by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -190,26 +203,16 @@ fun RoutineCreateScreen(
 
                 item {
                     // 태그 추가 버튼
-                    Row(
-                        modifier = Modifier
-                            .height(30.dp)
-                            .background(
-                                color = colors.charcoalBlack,
-                                shape = RoundedCornerShape(15.dp)
-                            )
-                            .clickable { }
-                            .padding(horizontal = 13.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text("#태그 추가", color = colors.limeGreen, style = typography.time_R_14)
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_createroutine_addtag_arrow),
-                            contentDescription = "태그 추가 아이콘",
-                            modifier = Modifier.padding(start = 9.dp),
-                            tint = colors.limeGreen
-                        )
-                    }
+                    MyRoutineTagInCreateRoutine(
+                        tagList = tagList,
+                        //tagList = listOf("운동", "건강", "루틴"),
+                        onAddTag = {
+                            viewModel.addTag("예시태그")
+                        },
+                        onDeleteTag = {
+                            viewModel.removeTag("예시태그")
+                        }
+                    )
                 }
 
                 item { Text("STEP", style = typography.title_B_20) }
@@ -252,7 +255,12 @@ fun RoutineCreateScreen(
                     )
                     Spacer(modifier = Modifier.height(5.dp))
                     Row(modifier = Modifier.padding(start = 11.dp)) {
-                        AddAppBox { }
+                        AddAppBox {
+                            // 이곳을 누르면 기기에 설치된 앱 목록을 불러오고 앱들중 원하는 앱을 선택할 수 있는 바텀시트가 올라옴
+                            coroutineScope.launch {
+                                isBottomSheetOpen = true
+                            }
+                        }
                     }
                 }
             }
@@ -306,7 +314,12 @@ fun RoutineCreateScreen(
                 onDismiss = { isTimePickerVisible = false }
             )
         }
+
     }
+    DraggableAppSearchBottomSheet(
+        isVisible = isBottomSheetOpen,
+        onDismiss = { isBottomSheetOpen = false }
+    )
 }
 
 @Preview
