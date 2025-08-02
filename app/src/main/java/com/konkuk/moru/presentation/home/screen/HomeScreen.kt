@@ -68,9 +68,9 @@ fun HomeScreen(
 
     // 루틴 샘플 데이터(오늘 탭 선택 시 보여줄 박스의 내용들)
     val sampleRoutines = listOf(
-        RoutineData("주말 아침 루틴", "#화이팅", 25, "토일", "am 09:00 ~ am 09:58"),
-        RoutineData("출근 준비 루틴", "#힘내자", 41, "월", "am 08:00 ~ am 08:45"),
-        RoutineData("운동 루틴", "#건강", 12, "수", "pm 06:00 ~ pm 07:00")
+        RoutineData("주말 아침 루틴 (이건 집중 루틴 테스트용)", "#화이팅", 25, "토일", "am 09:00 ~ am 09:58"),
+        RoutineData("출근 준비 루틴 (이건 간편 루틴 테스트용)", "#힘내자", 41, "월", "am 08:00 ~ am 08:45"),
+        RoutineData("운동 루틴 (이건 간편 루틴 테스트용)", "#건강", 12, "수", "pm 06:00 ~ pm 07:00")
     )
 
     // 루틴 태그 샘플(이번주 탭 선택 시 달력 날짜에 들어갈 것들)
@@ -237,9 +237,10 @@ fun HomeScreen(
                         0 -> if (sampleRoutines.isNotEmpty()) {
                             TodayRoutinePager(
                                 routines = sampleRoutines,
-                                onRoutineClick = {
-                                    //Focus 타입에 따라 뜨는 intro화면이 다름
-                                    sharedViewModel.setFocusType(FocusType.SIMPLE)
+                                onRoutineClick = { _,index ->
+                                    // 1번째는 집중 루틴, 2번째는 간편 루틴
+                                    val type = if (index == 0) FocusType.FOCUS else FocusType.SIMPLE
+                                    sharedViewModel.setFocusType(type)
                                     navController.navigate(Route.RoutineFocusIntro.route)
                                 }
                             )

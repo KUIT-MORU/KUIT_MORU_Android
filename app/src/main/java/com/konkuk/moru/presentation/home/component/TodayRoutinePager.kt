@@ -30,7 +30,7 @@ data class RoutineData(
 @Composable
 fun TodayRoutinePager(
     routines: List<RoutineData>,
-    onRoutineClick:(RoutineData) -> Unit
+    onRoutineClick:(RoutineData,Int) -> Unit
 ) {
     //현재 페이지가 몇 페이지인지 기억하기
     val pagerState = rememberPagerState(initialPage = 0)
@@ -56,7 +56,7 @@ fun TodayRoutinePager(
                 heartCount = routine.heartCount,
                 day = routine.day,
                 time = routine.time,
-                onClick = {onRoutineClick(routine)}
+                onClick = {onRoutineClick(routine,page)}
             )
         }
 
@@ -81,13 +81,15 @@ fun TodayRoutinePager(
 @Composable
 private fun TodayRoutinePagerPreview() {
     val sampleRoutines = listOf(
-        RoutineData("주말 아침 루틴", "#화이팅", 25, "토일", "am 09:00 ~ am 09:58"),
-        RoutineData("출근 준비 루틴", "#힘내자", 41, "월", "am 08:00 ~ am 08:45"),
+        RoutineData("주말 아침 루틴 (집중 루틴 테스트용)", "#화이팅", 25, "토일", "am 09:00 ~ am 09:58"),
+        RoutineData("출근 준비 루틴 (간편 루틴 테스트용)", "#힘내자", 41, "월", "am 08:00 ~ am 08:45"),
         RoutineData("운동 루틴", "#건강", 12, "수", "pm 06:00 ~ pm 07:00")
     )
 
     TodayRoutinePager(
         routines = sampleRoutines,
-        onRoutineClick = {}
+        onRoutineClick = { routine, index ->
+            println("루틴 클릭됨: ${routine.title} / 인덱스: $index")
+        }
     )
 }
