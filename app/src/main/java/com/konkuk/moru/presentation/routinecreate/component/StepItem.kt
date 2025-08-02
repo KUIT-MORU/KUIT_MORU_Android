@@ -33,11 +33,11 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 fun StepItem(
     step: Step,
     onTitleChange: (String) -> Unit,
-    onTimeChange: (String) -> Unit,
+    onShowTimePicker: () -> Unit,
+    stepCount: Int,
+    onDelete: (stepId: String) -> Unit
 ) {
-    var isEditingTitle by remember { mutableStateOf(false) } // 👈 활동명 편집 상태
-    var showTimePicker by remember { mutableStateOf(false) } // 👈 시간 선택 다이얼 상태
-    var titleInput by remember { mutableStateOf(step.title) }
+    var titleInput by remember(step.id) { mutableStateOf(step.title) }
 
     Column(
         modifier = Modifier
@@ -61,63 +61,70 @@ fun StepItem(
             Spacer(modifier = Modifier.width(21.dp))
 
             // 활동명 (기본 텍스트 or 입력 필드 전환)
-            if (isEditingTitle) {
-                BasicTextField(
-                    value = titleInput,
-                    onValueChange = {
-                        titleInput = it
-                        onTitleChange(it)
-                    },
-                    singleLine = true,
-                    textStyle = typography.body_SB_14.copy(color = colors.darkGray),
-                    modifier = Modifier
-                        .weight(0.34f)
-                        .padding(end = 4.dp)
-                )
-            } else {
-                Text(
-                    text = if (step.title.isEmpty()) "활동명" else step.title,
-                    style = typography.body_SB_14.copy(color = colors.darkGray),
-                    modifier = Modifier
-                        .weight(0.34f)
-                        .clickable { isEditingTitle = true }
-                )
-            }
+            BasicTextField(
+                value = titleInput,
+                onValueChange = {
+                    titleInput = it
+                    onTitleChange(it)
+                },
+                singleLine = true,
+                textStyle = typography.body_SB_14.copy(color = colors.charcoalBlack),
+                modifier = Modifier
+                    .weight(0.34f)
+                    .padding(end = 4.dp),
+                decorationBox = { innerTextField ->
+                    if (titleInput.isEmpty()) {
+                        Text(
+                            text = "활동명",
+                            style = typography.body_SB_14,
+                            color = colors.charcoalBlack,
+                        )
+                    }
+                    innerTextField()
+                }
+            )
 
             // 소요 시간 (기본 텍스트, 클릭 시 다이얼 팝업)
             Text(
-                text = if (step.time == "00:00:00") "소요 시간" else step.time,
-                style = typography.body_SB_14.copy(color = colors.darkGray),
+                text = if (step.time == "") "소요 시간" else step.time,
+                style = typography.body_SB_14,
+                color = colors.charcoalBlack,
                 modifier = Modifier
                     .weight(0.32f)
-                    .clickable { showTimePicker = true }
+                    .clickable { onShowTimePicker() }
             )
+            if (stepCount > 1) {
+                Spacer(modifier = Modifier.width(10.dp))
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_x),
+                    contentDescription = "Step 삭제",
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable { onDelete(step.id) },
+                    tint = colors.mediumGray
+                )
+            }else{
+                Spacer(modifier = Modifier.width(26.dp))
+            }
         }
 
         HorizontalDivider(thickness = 1.dp, color = colors.mediumGray)
-
-        if (showTimePicker) {
-            TimePickerDialog(
-                onConfirm = { h, m, s ->
-                    onTimeChange(String.format("%02d:%02d:%02d", h, m, s))
-                    showTimePicker = false
-                },
-                onDismiss = { showTimePicker = false }
-            )
-        }
     }
 }
 
 @Preview
 @Composable
 private fun StepItemPreview() {
-    val stepList = remember { mutableStateListOf(
-        Step("", "00:00:00"),
-        Step("", "00:00:00"),
-    ) } // 초기 step 1개
+    val stepList = remember {
+        mutableStateListOf(
+            Step(title = "활동명", time = "")
+        )
+    } // 초기 step 1개
     StepItem(
         step = stepList[0],
         onTitleChange = { stepList[0] = stepList[0].copy(title = it) },
-        onTimeChange = { stepList[0] = stepList[0].copy(time = it) }
+        onShowTimePicker = { },
+        stepCount = 2,
+        onDelete = { stepList.removeAt(0) }
     )
 }

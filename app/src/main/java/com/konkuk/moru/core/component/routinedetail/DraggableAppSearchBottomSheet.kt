@@ -1,0 +1,153 @@
+package com.konkuk.moru.core.component.routinedetail
+
+import android.annotation.SuppressLint
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.konkuk.moru.ui.theme.MORUTheme.colors
+import com.konkuk.moru.ui.theme.MORUTheme.typography
+
+@SuppressLint("ConfigurationScreenWidthHeight")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DraggableAppSearchBottomSheet(
+    isVisible: Boolean,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val sheetHeight = screenHeight * 0.67f
+
+    LaunchedEffect(isVisible) {
+        if (isVisible) {
+            sheetState.show()
+        } else {
+            sheetState.hide()
+        }
+    }
+
+    if (isVisible || sheetState.isVisible) {
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = sheetState,
+            containerColor = Color(0xFFF1F3F5),
+            dragHandle = {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp, bottom = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        Modifier
+                            .width(30.dp)
+                            .height(5.dp)
+                            .background(color = colors.bottomSheetHandleGray, RoundedCornerShape(50))
+                    )
+                }
+            },
+            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+            scrimColor = Color.Black.copy(alpha = 0.0f),
+            tonalElevation = 0.dp,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Box(
+                Modifier
+                    .height(sheetHeight)
+                    .fillMaxWidth()
+            ) {
+                DraggableAppSearchBottomSheetContent()
+            }
+        }
+    }
+}
+
+// 내부 컨텐츠만 분리
+@Composable
+fun DraggableAppSearchBottomSheetContent() {
+    var searchText by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // header
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "사용앱",
+                style = typography.body_SB_16,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            HorizontalDivider(
+                color = colors.lightGray,
+                thickness = 1.dp,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        SearchAppTextField(
+            value = searchText,
+            onValueChange = { searchText = it },
+            modifier = Modifier
+                .padding(horizontal = 25.dp).padding(top = 26.dp)
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        val dummyApps = List(50) { "앱이름" }
+
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(4),
+            verticalArrangement = Arrangement.spacedBy(27.dp),
+            horizontalArrangement = Arrangement.spacedBy(18.dp),
+            contentPadding = PaddingValues(bottom = 16.dp, start = 25.dp, end = 25.dp),
+        ) {
+            items(dummyApps) { name ->
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .width(64.dp)
+                        .clickable { /* 앱 선택 */ }
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .background(Color.White, RoundedCornerShape(10.dp))
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = name,
+                        style = typography.desc_M_12,
+                        color = colors.mediumGray
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 400)
+@Composable
+fun DraggableAppSearchBottomSheetContentPreview() {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(400.dp)
+    ) {
+        DraggableAppSearchBottomSheetContent()
+    }
+}

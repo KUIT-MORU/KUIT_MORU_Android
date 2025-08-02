@@ -32,20 +32,30 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 @Composable
 fun TimePickerDialog(
     onConfirm: (Int, Int, Int) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    initialTime: String? = null
 ) {
     val hours = (0..23).toList()
     val minutes = (0..59).toList()
     val seconds = (0..59).toList()
 
-    var selectedHour by remember { mutableStateOf(0) }
-    var selectedMinute by remember { mutableStateOf(0) }
-    var selectedSecond by remember { mutableStateOf(0) }
+    val (initialHour, initialMinute, initialSecond) = remember(initialTime) {
+        if (initialTime != null && Regex("""\d{2}:\d{2}:\d{2}""").matches(initialTime)) {
+            val parts = initialTime.split(":").map { it.toIntOrNull() ?: 0 }
+            Triple(parts[0], parts[1], parts[2])
+        } else {
+            Triple(0, 0, 0)
+        }
+    }
+
+    var selectedHour by remember { mutableStateOf(initialHour) }
+    var selectedMinute by remember { mutableStateOf(initialMinute) }
+    var selectedSecond by remember { mutableStateOf(initialSecond) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0x80000000)), // 반투명 배경
+            .background(Color.Black.copy(alpha = 0.5f)),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -127,6 +137,6 @@ fun TimePickerDialog(
 private fun TimePickerDialogPreview() {
     TimePickerDialog(
         onConfirm = { h, m, s -> /* Do something with the selected time */ },
-        onDismiss = { /* Dismiss the dialog */ }
+        onDismiss = { /* Dismiss the dialog */ },
     )
 }
