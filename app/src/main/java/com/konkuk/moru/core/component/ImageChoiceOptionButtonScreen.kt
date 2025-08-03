@@ -33,9 +33,10 @@ fun ImageChoiceOptionButtonScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.5f))
-            .clickable{
-                onCancel()
-            },
+            .clickable(
+                indication = null,
+                interactionSource = null
+            ){ onCancel() },
         contentAlignment = Alignment.Center
     ) {
         Column(
