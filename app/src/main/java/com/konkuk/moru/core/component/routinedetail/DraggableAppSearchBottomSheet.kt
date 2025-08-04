@@ -64,7 +64,10 @@ fun DraggableAppSearchBottomSheet(
                         Modifier
                             .width(30.dp)
                             .height(5.dp)
-                            .background(color = colors.bottomSheetHandleGray, RoundedCornerShape(50))
+                            .background(
+                                color = colors.bottomSheetHandleGray,
+                                RoundedCornerShape(50)
+                            )
                     )
                 }
             },
@@ -108,7 +111,9 @@ fun DraggableAppSearchBottomSheetContent(
     ) {
         // header
         Column(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -128,48 +133,69 @@ fun DraggableAppSearchBottomSheetContent(
                 .fillMaxWidth()
         ) {
             if (selectedAppList.isNotEmpty()) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(4),
-                    verticalArrangement = Arrangement.spacedBy(27.dp),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                    contentPadding = PaddingValues(bottom = 0.dp, start = 21.dp, end = 25.dp),
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth().padding(horizontal = 25.dp).padding(bottom = 6.dp),
+                    horizontalAlignment = Alignment.End
                 ) {
-                    items(selectedAppList) { app ->
-                        SelectedAppInBottomSheet(
-                            appIcon = app.appIcon,
-                            appName = app.appName
-                        ) {
-                            if (app in selectedAppList) {
-                                onRemoveApp(app)
+                    Box(
+                        modifier = Modifier
+                            .background(color = Color.White, shape = RoundedCornerShape(50))
+                            .padding(horizontal = 11.dp, vertical = 2.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = selectedAppList.size.toString() + "/4",
+                            style = typography.desc_M_12,
+                            color = colors.mediumGray
+                        )
+                    }
+                }
+                if (selectedAppList.isNotEmpty()) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(4),
+                        verticalArrangement = Arrangement.spacedBy(27.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        contentPadding = PaddingValues(bottom = 0.dp, start = 21.dp, end = 25.dp),
+                    ) {
+                        items(selectedAppList) { app ->
+                            SelectedAppInBottomSheet(
+                                appIcon = app.appIcon,
+                                appName = app.appName
+                            ) {
+                                if (app in selectedAppList) {
+                                    onRemoveApp(app)
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
 
-        SearchAppTextField(
-            value = searchText,
-            onValueChange = { searchText = it },
-            modifier = Modifier
-                .padding(horizontal = 25.dp).padding(top = 26.dp)
-        )
+            SearchAppTextField(
+                value = searchText,
+                onValueChange = { searchText = it },
+                modifier = Modifier
+                    .padding(horizontal = 25.dp)
+                    .padding(top = 26.dp)
+            )
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(4),
-            verticalArrangement = Arrangement.spacedBy(27.dp),
-            horizontalArrangement = Arrangement.spacedBy(18.dp),
-            contentPadding = PaddingValues(bottom = 16.dp, start = 25.dp, end = 25.dp),
-        ) {
-            items(appList) { app ->
-                UnselectedAppInBottomSheet(
-                    appIcon = app.appIcon,
-                    appName = app.appName
-                ){
-                    onAddApp(app)
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(4),
+                verticalArrangement = Arrangement.spacedBy(27.dp),
+                horizontalArrangement = Arrangement.spacedBy(18.dp),
+                contentPadding = PaddingValues(bottom = 16.dp, start = 25.dp, end = 25.dp),
+            ) {
+                items(appList) { app ->
+                    UnselectedAppInBottomSheet(
+                        appIcon = app.appIcon,
+                        appName = app.appName
+                    ) {
+                        onAddApp(app)
+                    }
                 }
             }
         }
