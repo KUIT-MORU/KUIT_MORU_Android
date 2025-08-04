@@ -26,7 +26,7 @@ import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
-fun SelectedApp(
+fun SelectedAppInBottomSheet(
     appIcon: ImageBitmap = ImageBitmap(64, 64),
     appName: String,
     onRemove: () -> Unit
@@ -85,7 +85,7 @@ fun SelectedAppPreview() {
     }
     val dummyImageBitmap = dummyBitmap.asImageBitmap()
 
-    SelectedApp(
+    SelectedAppInBottomSheet(
         appIcon = dummyImageBitmap,
         appName = "Youtube"
     ) {}

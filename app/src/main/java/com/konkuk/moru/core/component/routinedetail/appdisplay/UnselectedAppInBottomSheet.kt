@@ -22,7 +22,7 @@ import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
-fun UnselectedApp(
+fun UnselectedAppInBottomSheet(
     appIcon: ImageBitmap = ImageBitmap(64, 64),
     appName: String,
     onClick: () -> Unit
@@ -61,7 +61,7 @@ fun UnselectedAppPreview() {
     }
     val dummyImageBitmap = dummyBitmap.asImageBitmap()
 
-    UnselectedApp(
+    UnselectedAppInBottomSheet(
         appIcon = dummyImageBitmap,
         appName = "Sample App"
     ){}
