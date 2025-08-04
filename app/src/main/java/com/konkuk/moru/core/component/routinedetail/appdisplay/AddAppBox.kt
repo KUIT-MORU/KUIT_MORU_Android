@@ -1,4 +1,4 @@
-package com.konkuk.moru.core.component.routinedetail
+package com.konkuk.moru.core.component.routinedetail.appdisplay
 
 import android.graphics.DashPathEffect
 import android.graphics.Paint

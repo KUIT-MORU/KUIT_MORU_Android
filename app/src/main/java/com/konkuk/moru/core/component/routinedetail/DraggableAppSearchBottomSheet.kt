@@ -2,7 +2,6 @@ package com.konkuk.moru.core.component.routinedetail
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -13,9 +12,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.konkuk.moru.core.component.routinedetail.appdisplay.SelectedApp
+import com.konkuk.moru.core.component.routinedetail.appdisplay.UnselectedApp
+import com.konkuk.moru.data.model.UsedAppInRoutine
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
@@ -24,11 +27,18 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 @Composable
 fun DraggableAppSearchBottomSheet(
     isVisible: Boolean,
+    appList: List<UsedAppInRoutine>,
+    selectedAppList: List<UsedAppInRoutine>,
+    onAddApp: (UsedAppInRoutine) -> Unit,
+    onRemoveApp: (UsedAppInRoutine) -> Unit,
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val sheetHeight = screenHeight * 0.67f
+
+    // 선택된 앱 목록
+    //var selectedApps by remember { mutableStateOf<List<String>>(emptyList()) }
 
     LaunchedEffect(isVisible) {
         if (isVisible) {
@@ -68,7 +78,16 @@ fun DraggableAppSearchBottomSheet(
                     .height(sheetHeight)
                     .fillMaxWidth()
             ) {
-                DraggableAppSearchBottomSheetContent()
+                DraggableAppSearchBottomSheetContent(
+                    appList = appList,
+                    selectedAppList = selectedAppList,
+                    onAddApp = { app ->
+                        onAddApp(app)
+                    },
+                    onRemoveApp = { app ->
+                        onRemoveApp(app)
+                    }
+                )
             }
         }
     }
@@ -76,7 +95,12 @@ fun DraggableAppSearchBottomSheet(
 
 // 내부 컨텐츠만 분리
 @Composable
-fun DraggableAppSearchBottomSheetContent() {
+fun DraggableAppSearchBottomSheetContent(
+    appList: List<UsedAppInRoutine>,
+    selectedAppList: List<UsedAppInRoutine>,
+    onAddApp: (UsedAppInRoutine) -> Unit,
+    onRemoveApp: (UsedAppInRoutine) -> Unit
+) {
     var searchText by remember { mutableStateOf("") }
 
     Column(
@@ -99,6 +123,32 @@ fun DraggableAppSearchBottomSheetContent() {
             )
         }
 
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            if (selectedAppList.isNotEmpty()) {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(4),
+                    verticalArrangement = Arrangement.spacedBy(27.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    contentPadding = PaddingValues(bottom = 0.dp, start = 21.dp, end = 25.dp),
+                ) {
+                    items(selectedAppList) { app ->
+                        SelectedApp(
+                            appIcon = app.appIcon,
+                            appName = app.appName
+                        ) {
+                            if (app in selectedAppList) {
+                                onRemoveApp(app)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
         SearchAppTextField(
             value = searchText,
             onValueChange = { searchText = it },
@@ -108,39 +158,25 @@ fun DraggableAppSearchBottomSheetContent() {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        val dummyApps = List(50) { "앱이름" }
-
         LazyVerticalGrid(
             columns = GridCells.Fixed(4),
             verticalArrangement = Arrangement.spacedBy(27.dp),
             horizontalArrangement = Arrangement.spacedBy(18.dp),
             contentPadding = PaddingValues(bottom = 16.dp, start = 25.dp, end = 25.dp),
         ) {
-            items(dummyApps) { name ->
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .width(64.dp)
-                        .clickable { /* 앱 선택 */ }
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .background(Color.White, RoundedCornerShape(10.dp))
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = name,
-                        style = typography.desc_M_12,
-                        color = colors.mediumGray
-                    )
+            items(appList) { app ->
+                UnselectedApp(
+                    appIcon = app.appIcon,
+                    appName = app.appName
+                ){
+                    onAddApp(app)
                 }
             }
         }
     }
 }
 
-@Preview(showBackground = true, widthDp = 360, heightDp = 400)
+@Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
 fun DraggableAppSearchBottomSheetContentPreview() {
     Box(
@@ -148,6 +184,19 @@ fun DraggableAppSearchBottomSheetContentPreview() {
             .fillMaxWidth()
             .height(400.dp)
     ) {
-        DraggableAppSearchBottomSheetContent()
+        DraggableAppSearchBottomSheetContent(
+            appList = listOf(
+                UsedAppInRoutine("YouTube", ImageBitmap(64, 64)),
+                UsedAppInRoutine("Instagram", ImageBitmap(64, 64)),
+                UsedAppInRoutine("Twitter", ImageBitmap(64, 64)),
+                UsedAppInRoutine("Facebook", ImageBitmap(64, 64))
+            ),
+            selectedAppList = listOf(
+                UsedAppInRoutine("WhatsApp", ImageBitmap(64, 64)),
+                UsedAppInRoutine("Telegram", ImageBitmap(64, 64))
+            ),
+            onAddApp = {},
+            onRemoveApp = {}
+        )
     }
 }

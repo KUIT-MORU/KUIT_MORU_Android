@@ -1,10 +1,14 @@
 package com.konkuk.moru.presentation.routinecreate.viewmodel
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.pm.PackageManager
+import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.ViewModel
 import com.konkuk.moru.data.model.Step
 import com.konkuk.moru.data.model.UsedAppInRoutine
@@ -20,6 +24,7 @@ class RoutineCreateViewModel : ViewModel() {
     val stepList = mutableStateListOf(Step(title = "", time = "")) // ✅ 초기에도 id 생성
     val editingStepId = mutableStateOf<String?>(null)
     val appList = mutableStateListOf<UsedAppInRoutine>()
+    val selectedAppList = mutableStateListOf<UsedAppInRoutine>()
 
     fun updateTitle(title: String) {
         routineTitle.value = title
@@ -85,6 +90,38 @@ class RoutineCreateViewModel : ViewModel() {
         }
     }
 
+    @SuppressLint("QueryPermissionsNeeded")
+    fun loadInstalledApps(context: Context) {
+        val pm = context.packageManager
+        val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+
+        appList.clear() // 중복 방지
+
+        apps.forEach { appInfo ->
+            try {
+                val label = pm.getApplicationLabel(appInfo).toString()
+                val iconDrawable = pm.getApplicationIcon(appInfo)
+
+                val bitmap = (iconDrawable as BitmapDrawable).bitmap
+                val imageBitmap = bitmap.asImageBitmap()
+
+                // 이미 추가된 앱은 건너뜀
+                if (appList.none { it.appName == label }) {
+                    appList.add(UsedAppInRoutine(appName = label, appIcon = imageBitmap))
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
+    fun addAppToSelected(app: UsedAppInRoutine) {
+        if (app !in selectedAppList && selectedAppList.size < 4) {
+            selectedAppList.add(app)
+        }
+    }
+    fun removeAppFromSelected(app: UsedAppInRoutine) {
+        selectedAppList.remove(app)
+    }
+
     fun submitRoutine() {
         val routineData = mapOf(
             "title" to routineTitle.value,
@@ -104,7 +141,7 @@ class RoutineCreateViewModel : ViewModel() {
         Log.d("RoutineCreate", "사용자 공개 여부: ${showUser.value}")
         Log.d("RoutineCreate", "태그: ${tagList.toList()}")
         Log.d("RoutineCreate", "스텝: ${stepList.map { "${it.title} - ${it.time}" }}")
-        Log.d("RoutineCreate", "사용 앱: ${appList.map { "${it.appName} - ${it.iconUrl}" }}")
+        Log.d("RoutineCreate", "사용 앱: ${appList.map { "${it.appName} - ${it.appIcon}" }}")
         Log.d("RoutineCreate", "이미지 URI: ${imageUri.value?.toString()}")
     }
 }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,15 +21,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,13 +50,14 @@ import androidx.navigation.NavHostController
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.ImageChoiceOptionButtonScreen
 import com.konkuk.moru.core.component.Switch.RoutineSimpleFocusSwitch
-import com.konkuk.moru.core.component.routinedetail.AddAppBox
 import com.konkuk.moru.core.component.routinedetail.AddStepButton
 import com.konkuk.moru.core.component.routinedetail.DraggableAppSearchBottomSheet
 import com.konkuk.moru.core.component.routinedetail.MyRoutineTagInCreateRoutine
 import com.konkuk.moru.core.component.routinedetail.RoutineDescriptionField
 import com.konkuk.moru.core.component.routinedetail.RoutineImageSelectBox
 import com.konkuk.moru.core.component.routinedetail.ShowUserCheckbox
+import com.konkuk.moru.core.component.routinedetail.appdisplay.AddAppBox
+import com.konkuk.moru.core.component.routinedetail.appdisplay.SelectedAppNoText
 import com.konkuk.moru.presentation.routinecreate.component.StepItem
 import com.konkuk.moru.presentation.routinecreate.component.TimePickerDialog
 import com.konkuk.moru.presentation.routinecreate.viewmodel.RoutineCreateViewModel
@@ -91,14 +94,30 @@ fun RoutineCreateScreen(
     val stepListScrollState = rememberLazyListState()
 
     val isSubmitEnabled = viewModel.routineTitle.value.isNotBlank() &&
-            viewModel.stepList.any { it.title.isNotBlank() || it.time.isNotBlank() } &&
+            viewModel.stepList.any { it.title.isNotBlank() && it.time.isNotBlank() } &&
             viewModel.tagList.isNotEmpty()
     //val isSubmitEnabled = true
 
     // 사용앱 바텀시트 관련
     val coroutineScope = rememberCoroutineScope()
-    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isBottomSheetOpen by remember { mutableStateOf(false) }
+    val allApps = viewModel.appList
+    val selectedAppList = viewModel.selectedAppList
+    // 개발용 임시 리스트
+//    val dummyBitmap = createBitmap(64, 64).apply {
+//        eraseColor(0xFFF1F3F5.toInt())
+//    }.asImageBitmap()
+//    val selectedAppList = listOf<UsedAppInRoutine>(
+//        UsedAppInRoutine("YouTube", dummyBitmap),
+//        UsedAppInRoutine("Instagram", dummyBitmap),
+//        UsedAppInRoutine("Twitter", dummyBitmap)
+//    )
+
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.loadInstalledApps(context)
+    }
 
     Box(
         modifier = Modifier
@@ -254,11 +273,23 @@ fun RoutineCreateScreen(
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                     Spacer(modifier = Modifier.height(5.dp))
-                    Row(modifier = Modifier.padding(start = 11.dp)) {
-                        AddAppBox {
-                            // 이곳을 누르면 기기에 설치된 앱 목록을 불러오고 앱들중 원하는 앱을 선택할 수 있는 바텀시트가 올라옴
-                            coroutineScope.launch {
-                                isBottomSheetOpen = true
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(9.dp),
+                        contentPadding = PaddingValues(bottom = 0.dp, start = 11.dp),
+                    ) {
+                        items(selectedAppList) { app ->
+                            SelectedAppNoText(
+                                appIcon = app.appIcon
+                            ) { viewModel.removeAppFromSelected(app) }
+                        }
+
+                        if (selectedAppList.size < 4) {
+                            item {
+                                AddAppBox {
+                                    coroutineScope.launch {
+                                        isBottomSheetOpen = true
+                                    }
+                                }
                             }
                         }
                     }
@@ -318,7 +349,15 @@ fun RoutineCreateScreen(
     }
     DraggableAppSearchBottomSheet(
         isVisible = isBottomSheetOpen,
-        onDismiss = { isBottomSheetOpen = false }
+        onDismiss = { isBottomSheetOpen = false },
+        appList = allApps,
+        selectedAppList = selectedAppList,
+        onAddApp = { app ->
+            viewModel.addAppToSelected(app)
+        },
+        onRemoveApp = { app ->
+            viewModel.removeAppFromSelected(app)
+        },
     )
 }
 
