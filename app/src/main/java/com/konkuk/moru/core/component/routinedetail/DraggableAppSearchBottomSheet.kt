@@ -16,8 +16,8 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.konkuk.moru.core.component.routinedetail.appdisplay.SelectedApp
-import com.konkuk.moru.core.component.routinedetail.appdisplay.UnselectedApp
+import com.konkuk.moru.core.component.routinedetail.appdisplay.SelectedAppInBottomSheet
+import com.konkuk.moru.core.component.routinedetail.appdisplay.UnselectedAppInBottomSheet
 import com.konkuk.moru.data.model.UsedAppInRoutine
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
@@ -135,7 +135,7 @@ fun DraggableAppSearchBottomSheetContent(
                     contentPadding = PaddingValues(bottom = 0.dp, start = 21.dp, end = 25.dp),
                 ) {
                     items(selectedAppList) { app ->
-                        SelectedApp(
+                        SelectedAppInBottomSheet(
                             appIcon = app.appIcon,
                             appName = app.appName
                         ) {
@@ -165,7 +165,7 @@ fun DraggableAppSearchBottomSheetContent(
             contentPadding = PaddingValues(bottom = 16.dp, start = 25.dp, end = 25.dp),
         ) {
             items(appList) { app ->
-                UnselectedApp(
+                UnselectedAppInBottomSheet(
                     appIcon = app.appIcon,
                     appName = app.appName
                 ){

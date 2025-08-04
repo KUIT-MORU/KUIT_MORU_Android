@@ -268,18 +268,19 @@ fun RoutineCreateScreen(
                         .padding(bottom = 30.dp)
                 ) {
                     Text(
-                        "사용앱",
+                        text = "사용앱",
                         style = typography.title_B_20,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                     Spacer(modifier = Modifier.height(5.dp))
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(9.dp),
-                        contentPadding = PaddingValues(bottom = 0.dp, start = 11.dp),
+                        contentPadding = PaddingValues(start = 11.dp),
                     ) {
                         items(selectedAppList) { app ->
                             SelectedAppNoText(
-                                appIcon = app.appIcon
+                                appIcon = app.appIcon,
+                                isRemovable = true
                             ) { viewModel.removeAppFromSelected(app) }
                         }
 
