@@ -182,7 +182,9 @@ fun RoutineCreateScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             BasicTextField(
                                 value = viewModel.routineTitle.value,
-                                onValueChange = { viewModel.updateTitle(it) },
+                                onValueChange = {
+                                    if (it.length <= 30) viewModel.updateTitle(it) // 최대 30자
+                                },
                                 textStyle = typography.title_B_24,
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true,
