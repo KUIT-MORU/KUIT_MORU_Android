@@ -34,7 +34,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
-import com.konkuk.moru.presentation.home.FocusType
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineHeaderBox
 import com.konkuk.moru.presentation.home.component.RoutineStepItem
@@ -60,7 +59,7 @@ fun RoutineFocusIntroScreen(
     // 받아올 정보들
     val routineTitle by sharedViewModel.routineTitle.collectAsState()
     val hashTagList by sharedViewModel.routineTags.collectAsState()
-    val focusType by sharedViewModel.focusType.collectAsState()
+    val category by sharedViewModel.routineCategory.collectAsState()
     val steps by sharedViewModel.selectedSteps.collectAsState()
     val hashTag = hashTagList.joinToString(" ") { "#$it" }
 
@@ -68,7 +67,11 @@ fun RoutineFocusIntroScreen(
     var stepStates by remember { mutableStateOf(steps.map { it.copy() }) }
 
     // 스위치가 on인 상태의 루틴의 소요시간만 합해서 총 소요시간 계산에 반영
-    val totalDuration = stepStates.filter { it.isChecked }.sumOf { it.duration }
+    val totalDuration = if (category == "간편") {
+        stepStates.sumOf { it.duration } // 간편 루틴은 전체 합산
+    } else {
+        stepStates.filter { it.isChecked }.sumOf { it.duration } // 집중 루틴은 체크된 것만 합산
+    }
 
     // 하나라도 on이 되어 있다면 시작하기 버튼 활성화(총 소요시간으로 판단)
     val isStartEnabled = totalDuration > 0
@@ -77,7 +80,12 @@ fun RoutineFocusIntroScreen(
         bottomBar = {
             Button(
                 onClick = {
-                    onStartClick(stepStates.filter { it.isChecked })
+                    val selected = if (category == "간편") {
+                        stepStates
+                    } else {
+                        stepStates.filter { it.isChecked }
+                    }
+                    onStartClick(selected)
                 },
                 enabled = isStartEnabled,
                 modifier = Modifier
@@ -149,7 +157,7 @@ fun RoutineFocusIntroScreen(
                     RoutineHeaderBox(
                         routineTitle = routineTitle,
                         hashTag = hashTag,
-                        focusType = focusType
+                        category = category
                     )
                 }
                 Spacer(modifier = Modifier.height(172.dp))
@@ -171,14 +179,15 @@ fun RoutineFocusIntroScreen(
                     title = step.name,
                     duration = step.duration,
                     isChecked = step.isChecked,
-                    showSwitch = focusType == FocusType.FOCUS,
-                    showDuration = focusType == FocusType.FOCUS,
+                    showSwitch = category == "집중",
+                    showDuration = category == "집중",
                     onCheckedChange = {
                         stepStates = stepStates.toMutableStateList().apply {
                             this[index] = this[index].copy(isChecked = it)
                         }
                     }
                 )
+
                 //divider
                 Divider(
                     color = colors.lightGray,
@@ -187,8 +196,8 @@ fun RoutineFocusIntroScreen(
                         .height(1.5.dp)
                 )
             }
-            // TOTAL 소요시간 섹션 (FocusType.FOCUS일 경우만)
-            if (focusType == FocusType.FOCUS) {
+            // TOTAL 소요시간 섹션 (루틴 타입이 "집중"일 경우만)
+            if (category == "집중") {
                 item {
                     Spacer(modifier = Modifier.height(92.dp))
 
@@ -217,6 +226,7 @@ fun RoutineFocusIntroScreen(
                     Spacer(modifier = Modifier.height(175.dp))
                 }
             }
+
         }
     }
 }
@@ -238,17 +248,16 @@ private fun RoutineFocusIntroScreenPreview() {
         RoutineStepData("옷갈아입기", 8, true)
     )
     dummyViewModel.setSelectedSteps(sampleSteps)
-    dummyViewModel.setFocusType(FocusType.FOCUS)
+    dummyViewModel.setRoutineCategory("집중")  // 또는 "간편"
 
-    // 추가적으로 제목과 태그도 미리 설정
-    dummyViewModel.apply {
-        setRoutineTitle("주말 아침 루틴")
-        setRoutineTags(listOf("태그1", "태그2"))
-    }
+    // 제목과 태그 설정
+    dummyViewModel.setRoutineTitle("주말 아침 루틴")
+    dummyViewModel.setRoutineTags(listOf("태그1", "태그2"))
 
     RoutineFocusIntroScreen(
         sharedViewModel = dummyViewModel,
-        onStartClick = {},  // 시작 버튼 클릭 동작
-        onBackClick = {},   // 뒤로 가기 동작
+        onStartClick = {},  // 시작 버튼 클릭 시 동작
+        onBackClick = {},   // 뒤로가기 버튼 클릭 시 동작
     )
 }
+

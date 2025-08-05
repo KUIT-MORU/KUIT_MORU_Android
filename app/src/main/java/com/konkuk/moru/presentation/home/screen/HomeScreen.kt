@@ -44,7 +44,6 @@ import androidx.navigation.compose.rememberNavController
 import com.konkuk.moru.R
 import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.presentation.home.FabConstants
-import com.konkuk.moru.presentation.home.FocusType
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.HomeFloatingActionButton
 import com.konkuk.moru.presentation.home.component.HomeTopAppBar
@@ -248,10 +247,6 @@ fun HomeScreen(
                             TodayRoutinePager(
                                 routines = sampleRoutines,
                                 onRoutineClick = { routine, index ->
-                                    // FocusType 설정
-                                    val type = if (index == 0) FocusType.FOCUS else FocusType.SIMPLE
-                                    sharedViewModel.setFocusType(type)
-
                                     // Step 리스트 변환
                                     val stepDataList = routine.steps.map {
                                         RoutineStepData(
@@ -273,8 +268,6 @@ fun HomeScreen(
                                     navController.navigate(Route.RoutineFocusIntro.route)
                                 }
                             )
-
-
                         }
 
                         // 이번주 탭 선택 시

@@ -16,7 +16,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
-import com.konkuk.moru.presentation.home.FocusType
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
@@ -25,7 +24,7 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 fun RoutineHeaderBox(
     routineTitle: String,
     hashTag: String,
-    focusType: FocusType,
+    category: String,
 ) {
     Box(
         modifier = Modifier.fillMaxWidth()
@@ -61,9 +60,7 @@ fun RoutineHeaderBox(
                 )
             }
             // 집중 or 간편
-            FocusTypeChip(
-                focusType = focusType,
-            )
+            FocusTypeChip(category = category)
         }
     }
 }
@@ -74,6 +71,6 @@ private fun RoutineHeaderBoxPreview() {
     RoutineHeaderBox(
         routineTitle = "주말 아침 루틴",
         hashTag = "#화이팅 #루틴",
-        focusType = FocusType.FOCUS
+        category = "집중"
     )
 }
