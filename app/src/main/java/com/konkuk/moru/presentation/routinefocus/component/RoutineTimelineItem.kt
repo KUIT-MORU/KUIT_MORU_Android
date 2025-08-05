@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -147,7 +148,10 @@ fun RoutineTimelineItem(
         Text(
             text = title,
             style = typography.time_R_16,
-            color = textColor
+            color = textColor,
+            maxLines = 2,
+            softWrap = true,
+            modifier = Modifier.widthIn(max = 120.dp)
         )
     }
 }

@@ -135,7 +135,6 @@ fun RoutineProgressBar(
     }
 }
 
-
 // 목표시간 초 파싱 함수
 fun parseTimeToSeconds(timeStr: String): Int {
     return when {
@@ -253,12 +252,6 @@ fun PortraitRoutineFocusScreen(
 
         // 상단 StatusBar, 루틴 타이틀, 타이머, 메모장
         Column() {
-//            // 상단 상태 바
-//            if (isDarkMode)
-//                StatusBarMock(isDarkMode = true)
-//            else
-//                StatusBarMock(isDarkMode = false)
-
             // 시간초과시의 영역만 칠하기 위해 또 Column으로 묶음
             Column(
                 modifier = Modifier
@@ -340,31 +333,39 @@ fun PortraitRoutineFocusScreen(
                         }
                 )
 
+                // 타임라인과 다음 버튼을 포함하는 Row
                 Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // 타임라인
+                    // 타임라인 영역 - weight를 사용해서 남은 공간 모두 사용
                     Column(
                         modifier = Modifier
-                            .padding(start = 13.dp, top = 18.dp)
+                            .weight(1f) // 남은 공간 모두 사용
                             .height(275.dp)
+                            .padding(top = 18.dp)
                     ) {
                         routineItems.forEachIndexed { rawIndex, (title, time) ->
                             val index = rawIndex + 1
                             RoutineTimelineItem(
                                 time = time,
                                 title = title,
-                                index = index, // 1,2,3,4,...
+                                index = index,
                                 currentStep = currentstep,
                                 isTimeout = isTimeout,
                                 isDarkMode = isDarkMode
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.width(53.dp))
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    // 다음 버튼 영역 - 고정 크기
                     Box(
                         modifier = Modifier
-                            .size(width = 139.dp, height = 123.dp),
+                            .size(width = 100.dp, height = 123.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -374,14 +375,13 @@ fun PortraitRoutineFocusScreen(
                             //다음 버튼
                             Box(
                                 modifier = Modifier
-                                    .size(width = 138.dp, height = 88.dp)
-                                    .padding(horizontal = 32.dp, vertical = 7.dp)
+                                    .size(74.dp)
                             ) {
                                 Icon(
                                     painter = painterResource(id = if (isFinalStep) R.drawable.enable_check_icon else R.drawable.ic_next_in_circle),
                                     contentDescription = if (isFinalStep) "완료됨" else "다음 루틴으로",
                                     modifier = Modifier
-                                        .size(74.dp)
+                                        .fillMaxSize()
                                         .clickable(
                                             indication = null,
                                             interactionSource = remember { MutableInteractionSource() }
@@ -403,31 +403,25 @@ fun PortraitRoutineFocusScreen(
                             }
 
                             // 시간초과이면 NEXT STEP 텍스트 뜨도록
-                            Box(
-                                modifier = Modifier
-                                    .size(width = 139.dp, height = 35.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                when {
-                                    isFinalStep -> {
-                                        Text(
-                                            text = "FINISH !",
-                                            style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
-                                            color = when {
-                                                isDarkMode -> Color.White
-                                                isFinalStep && isTimeout -> colors.oliveGreen
-                                                else -> colors.black
-                                            }
-                                        )
-                                    }
+                            when {
+                                isFinalStep -> {
+                                    Text(
+                                        text = "FINISH !",
+                                        style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
+                                        color = when {
+                                            isDarkMode -> Color.White
+                                            isFinalStep && isTimeout -> colors.oliveGreen
+                                            else -> colors.black
+                                        }
+                                    )
+                                }
 
-                                    isTimeout -> {
-                                        Text(
-                                            text = "NEXT STEP",
-                                            style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
-                                            color = if (isDarkMode) Color.White else colors.oliveGreen
-                                        )
-                                    }
+                                isTimeout -> {
+                                    Text(
+                                        text = "NEXT STEP",
+                                        style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
+                                        color = if (isDarkMode) Color.White else colors.oliveGreen
+                                    )
                                 }
                             }
                         }
@@ -566,7 +560,6 @@ fun PortraitRoutineFocusScreen(
                 )
             }
         }
-
 
         // 팝업 1(종료 확인 팝업)
         if (showFinishPopup) {
