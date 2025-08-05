@@ -85,7 +85,7 @@ fun HomeScreen(
         8 to listOf("아침 운동", "회의"),
         10 to listOf("아침 운동"),
         12 to listOf("아침 운동", "회의"),
-        13 to listOf("주말아침루틴"),
+        13 to listOf("주말아침 완전집중루틴"),
         14 to listOf("주말아침루틴")
     )
 

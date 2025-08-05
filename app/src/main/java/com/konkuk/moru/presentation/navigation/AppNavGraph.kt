@@ -134,7 +134,9 @@ fun AppNavGraph(
                     .statusBarsPadding(),
                 contentWindowInsets = WindowInsets(0),
                 bottomBar = {
-                    if (currentRoute !in listOf(
+                    if (
+                        currentRoute != null &&
+                        !listOf(
                             Route.ActSetting.route,
                             Route.ActProfile.route,
                             Route.ActFabTag.route,
@@ -145,9 +147,8 @@ fun AppNavGraph(
                             Route.RoutineFocus.route,
                             Route.RoutineSimpleRun.route,
                             Route.RoutineCreate.route,
-                            Route.RoutineSimpleRun.route,
                             Route.MyRoutineDetail.route
-                        )
+                        ).any { routePrefix -> currentRoute.startsWith(routePrefix) }
                     ) {
                         MoruBottomBar(
                             modifier = Modifier.wrapContentHeight().navigationBarsPadding(),
