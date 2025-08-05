@@ -53,7 +53,7 @@ val sampleSteps = listOf(
 fun RoutineFocusIntroScreen(
     modifier: Modifier = Modifier,
     sharedViewModel: SharedRoutineViewModel,
-    onStartClick:(selectedSteps: List<RoutineStepData>)->Unit,
+    onStartClick: (selectedSteps: List<RoutineStepData>, title: String, hashTag: String) -> Unit,
     onBackClick: () -> Unit,
 ) {
     // 받아올 정보들
@@ -85,7 +85,11 @@ fun RoutineFocusIntroScreen(
                     } else {
                         stepStates.filter { it.isChecked }
                     }
-                    onStartClick(selected)
+                    onStartClick(
+                        selected,
+                        routineTitle,
+                        hashTag,
+                    )
                 },
                 enabled = isStartEnabled,
                 modifier = Modifier
@@ -256,8 +260,13 @@ private fun RoutineFocusIntroScreenPreview() {
 
     RoutineFocusIntroScreen(
         sharedViewModel = dummyViewModel,
-        onStartClick = {},  // 시작 버튼 클릭 시 동작
-        onBackClick = {},   // 뒤로가기 버튼 클릭 시 동작
+        onStartClick = { selectedSteps, title, hashTag ->
+            println("선택된 스텝: $selectedSteps")
+            println("루틴 제목: $title")
+            println("해시태그: $hashTag")
+        },
+        onBackClick = {}
     )
 }
+
 

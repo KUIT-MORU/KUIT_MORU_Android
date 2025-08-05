@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +39,7 @@ import com.konkuk.moru.R
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
 import com.konkuk.moru.presentation.home.component.RoutineSelectItem
+import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
@@ -53,12 +55,15 @@ fun formatElapsedTime(ms: Long): String {
 // 간편 루틴 진입 화면
 @Composable
 fun RoutineSimpleRunScreen(
-    modifier: Modifier = Modifier,
-    routineTitle: String = "주말 아침 루틴",
-    hashTag: String = "#태그 #태그",
-    steps: List<RoutineStepData>,
+    sharedViewModel: SharedRoutineViewModel,
     onDismiss: () -> Unit //x버튼 눌렀을 시
 ) {
+    // intro에서 받아올 값들
+    val routineTitle by sharedViewModel.routineTitle.collectAsState()
+    val hashTagList by sharedViewModel.routineTags.collectAsState()
+    val steps by sharedViewModel.selectedSteps.collectAsState()
+    val hashTag = hashTagList.joinToString(" ") { "#$it" }
+
     /*---------------- 상태 ----------------*/
     // 선택 여부 상태 관리
     var selectedStates by remember { mutableStateOf(steps.map { false }.toMutableStateList()) }
@@ -367,19 +372,28 @@ fun RoutineSimpleRunScreen(
     widthDp = 360,
     heightDp = 800,
 )
+@Preview(
+    showBackground = true,
+    widthDp = 360,
+    heightDp = 800,
+)
 @Composable
 private fun RoutineSimpleRunScreenPreview() {
+    val dummyViewModel = remember { SharedRoutineViewModel() }
+
+    // 더미 데이터 설정
     val sampleSteps = listOf(
         RoutineStepData("샤워하기", 15, true),
         RoutineStepData("청소하기", 10, true),
         RoutineStepData("밥먹기", 30, true),
         RoutineStepData("옷갈아입기", 8, true)
     )
+    dummyViewModel.setRoutineTitle("주말 아침 루틴")
+    dummyViewModel.setRoutineTags(listOf("태그", "태그"))
+    dummyViewModel.setSelectedSteps(sampleSteps)
 
     RoutineSimpleRunScreen(
-        routineTitle = "주말 아침 루틴",
-        hashTag = "#태그 #태그",
-        steps = sampleSteps,
+        sharedViewModel = dummyViewModel,
         onDismiss = {}
     )
 }

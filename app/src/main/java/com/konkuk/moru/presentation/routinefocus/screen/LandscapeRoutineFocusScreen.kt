@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,7 +40,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.konkuk.moru.R
+import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
+import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.routinefocus.component.RoutineTimelineItem
 import com.konkuk.moru.presentation.routinefocus.component.SettingSwitchGroup
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
@@ -50,14 +53,16 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 @Composable
 fun LandscapeRoutineFocusScreen(
     viewModel: RoutineFocusViewModel = viewModel(),
+    sharedViewModel: SharedRoutineViewModel,
     onDismiss: () -> Unit,
-    routineItems: List<Pair<String, String>>,
     currentStep: Int,
     forceShowFinishPopup: Boolean = false,
     forceShowResultPopup: Boolean = false
 ) {
-    // 스톱워치 정지 유무
-    var isTimerRunning = viewModel.isTimerRunning
+    // intro 화면에서 넘기는 데이터들
+    val steps by sharedViewModel.selectedSteps.collectAsState()
+    val routineTitle by sharedViewModel.routineTitle.collectAsState()
+    val routineItems = steps.map { it.name to "${it.duration}m" }
 
     // 정지/재생 아이콘 상태
     var isUserPaused by remember { mutableStateOf(false) }
@@ -74,11 +79,8 @@ fun LandscapeRoutineFocusScreen(
     // 현재 스텝의 목표 시간 문자열 추출 ("15m" 등)
     val currentTimeStr = routineItems.getOrNull(currentstep - 1)?.second ?: "0m"
 
-    // 현재 루틴의 세부 루틴 문자열 추출 ("샤워하기" 등)
-    val currentTitle = routineItems.getOrNull(currentstep - 1)?.first ?: ""
-
-    // 문자열을 초 단위로 변환 (예: "15m" → 900초)
-    val maxSeconds = parseTimeToSeconds(currentTimeStr)
+    // 시간이 흐르는지 여부 판별
+    var isTimerRunning = viewModel.isTimerRunning
 
     // 초과 여부 판별
     var isTimeout = viewModel.isTimeout
@@ -104,15 +106,11 @@ fun LandscapeRoutineFocusScreen(
     // 메모장 팝업 상태 저장
     var showMemoPad by remember { mutableStateOf(false) }
 
-    // 메모장 내용 저장
-    var memoText by remember { mutableStateOf("") }
-
     // 앱 아이콘 팝업 상태 저장
     var showAppIcons by remember { mutableStateOf(false) }
 
     // 가로/세로 모드 상태 저장
     val isLandscapeMode = viewModel.isLandscapeMode
-
 
     // 타이머 동작/멈춤
     LaunchedEffect(currentstep) {
@@ -120,7 +118,6 @@ fun LandscapeRoutineFocusScreen(
         viewModel.setStepLimitFromTimeString(stepLimit)
         viewModel.startTimer()
     }
-
 
     Column(
         modifier = Modifier
@@ -162,7 +159,7 @@ fun LandscapeRoutineFocusScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "주말 아침 루틴",
+                text = routineTitle,
                 style = typography.desc_M_16,
                 color = if (isDarkMode) Color.White else colors.black,
             )
@@ -539,18 +536,30 @@ fun LandscapeRoutineFocusScreen(
     }
 }
 
-@Preview(showBackground = true, widthDp = 800, heightDp = 360)
+@Preview(
+    showBackground = true,
+    widthDp = 800,
+    heightDp = 360
+)
 @Composable
 private fun LandscapeRoutineFocusScreenPreview() {
-    val dummyItems = listOf(
-        "샤워하기" to "3s",
-        "청소하기" to "10s",
-        "밥먹기" to "7s",
-        "옷갈아입기" to "5s"
+    val dummyFocusViewModel = remember { RoutineFocusViewModel() }
+    val dummySharedViewModel = remember { SharedRoutineViewModel() }
+
+    val dummySteps = listOf(
+        RoutineStepData("샤워하기", 3, true),
+        RoutineStepData("청소하기", 10, true),
+        RoutineStepData("밥먹기", 7, true),
+        RoutineStepData("옷갈아입기", 5, true)
     )
+
+    dummySharedViewModel.setRoutineTitle("주말 아침 루틴")
+    dummySharedViewModel.setSelectedSteps(dummySteps)
+
     LandscapeRoutineFocusScreen(
+        viewModel = dummyFocusViewModel,
+        sharedViewModel = dummySharedViewModel,
         onDismiss = {},
-        routineItems = dummyItems,
         currentStep = 1,
         forceShowFinishPopup = false,
         forceShowResultPopup = false

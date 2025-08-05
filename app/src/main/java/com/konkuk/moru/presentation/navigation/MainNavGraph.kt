@@ -19,7 +19,6 @@ import com.konkuk.moru.data.model.DummyData.feedRoutines
 import com.konkuk.moru.presentation.home.screen.HomeScreen
 import com.konkuk.moru.presentation.home.screen.RoutineFocusIntroScreen
 import com.konkuk.moru.presentation.home.screen.RoutineSimpleRunScreen
-import com.konkuk.moru.presentation.home.screen.sampleSteps
 import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.myactivity.screen.ActFabTagScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActInsightInfoClickScreen
@@ -85,13 +84,16 @@ fun MainNavGraph(
 
             RoutineFocusIntroScreen(
                 sharedViewModel = sharedViewModel,
-                onStartClick = { selectedSteps ->
+                onStartClick = { selectedSteps, title, hashTag ->
                     sharedViewModel.setSelectedSteps(selectedSteps)
+                    sharedViewModel.setRoutineTitle(title)
+                    sharedViewModel.setRoutineTags(hashTag.split(" ").map { it.removePrefix("#") })
                     navController.navigate("routine_focus")
                 },
                 onBackClick = { navController.popBackStack() }
             )
         }
+
 
 
         composable(route = Route.RoutineFocusIntro.route) {
@@ -106,8 +108,11 @@ fun MainNavGraph(
 
             RoutineFocusIntroScreen(
                 sharedViewModel = sharedViewModel,
-                onStartClick = { selectedSteps ->
+                onStartClick = { selectedSteps, title, hashTag ->
+                    // 루틴 데이터 설정
                     sharedViewModel.setSelectedSteps(selectedSteps)
+                    sharedViewModel.setRoutineTitle(title)
+                    sharedViewModel.setRoutineTags(hashTag.split(" ").map { it.removePrefix("#") })
 
                     // 실행 화면 이동
                     if (category == "집중") {
@@ -139,11 +144,15 @@ fun MainNavGraph(
         }
 
 
+
         composable(route = Route.RoutineSimpleRun.route) {
+            val parentEntry = remember(navController.currentBackStackEntry) {
+                navController.getBackStackEntry(Route.Home.route)
+            }
+            val sharedViewModel = viewModel<SharedRoutineViewModel>(parentEntry)
+
             RoutineSimpleRunScreen(
-                routineTitle = "주말 아침 루틴",
-                hashTag = "#태그 #태그",
-                steps = sampleSteps,
+                sharedViewModel = sharedViewModel,
                 onDismiss = {
                     navController.popBackStack(
                         Route.Home.route,
@@ -159,11 +168,19 @@ fun MainNavGraph(
             )
         }
 
+
         composable(route = Route.RoutineFocus.route) {
             val routineFocusViewModel: RoutineFocusViewModel = viewModel()
 
+            // Home NavGraph의 ViewModel을 공유
+            val parentEntry = remember(navController.currentBackStackEntry) {
+                navController.getBackStackEntry(Route.Home.route)
+            }
+            val sharedViewModel = viewModel<SharedRoutineViewModel>(parentEntry)
+
             RoutineFocusScreenContainer(
-                viewModel = routineFocusViewModel,
+                focusViewModel = routineFocusViewModel,
+                sharedViewModel = sharedViewModel,
                 onDismiss = {
                     navController.popBackStack(
                         Route.Home.route,
@@ -175,15 +192,10 @@ fun MainNavGraph(
                             launchSingleTop = true
                         }
                     }
-                },
-                routineItems = listOf(
-                    "샤워하기" to "15m",
-                    "청소하기" to "10m",
-                    "밥먹기" to "30m",
-                    "옷갈아입기" to "8m"
-                )
+                }
             )
         }
+
 
         composable(route = Route.RoutineFeed.route) {
             val viewModel: RoutineFeedViewModel = viewModel()
