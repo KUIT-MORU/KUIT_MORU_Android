@@ -106,6 +106,10 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
 
     implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // FlowRow를 위한 확장
+    implementation("com.google.accompanist:accompanist-flowlayout:0.30.1")
+
 }
 
 configurations.all {

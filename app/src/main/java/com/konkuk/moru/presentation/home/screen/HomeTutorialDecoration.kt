@@ -1,6 +1,5 @@
 package com.konkuk.moru.presentation.home.component
 
-import android.R.attr.top
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -45,72 +44,89 @@ fun HomeTutorialDecoration(
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit,
     onFabClick: () -> Unit,
-    bottomIconCenters:List<Offset>
+    bottomIconCenters: List<Offset>,
+    todayTabOffsetY: Float,
+    fabOffsetY: Float
 ) {
+    val density = LocalDensity.current
+    val configuration = LocalConfiguration.current
+    val screenWidth = with(density) { configuration.screenWidthDp.dp.toPx() }
+    val screenHeight = with(density) { configuration.screenHeightDp.dp.toPx() }
+
+    val fabY = fabOffsetY
+    val lineStartY = screenHeight * 0.66f
+    val fabRadiusPx = with(density) { (63.dp / 2f).toPx() }
+    val lineLengthToFab =
+        (fabY - lineStartY - fabRadiusPx - with(density) { 8.dp.toPx() }).coerceAtLeast(0f)
+
+
     Box(modifier = modifier.fillMaxSize()) {
         // 정기 루틴 확인하기
-        TutorialHintWithLineByRatio(
+        TutorialHintWithLineByPx(
             text = "정기 루틴 확인하기",
-            textOffsetRatio = 63f / 360f to 368f / 800f,
-            lineOffsetRatio = 53f / 360f to 319f / 800f,
-            lineLengthRatio = 61f / 800f,
+            textOffset = Offset(
+                x = screenWidth * 63f / 360f,
+                y = todayTabOffsetY + with(density) { 36.dp.toPx() + 12.dp.toPx() }
+            ),
+            lineOffset = Offset(
+                x = screenWidth * 53f / 360f,
+                y = todayTabOffsetY + with(density) { 36.dp.toPx() - 10.dp.toPx() } // 기존보다 위로 올림
+            ),
+            lineLengthPx = screenHeight * 0.035f, // 텍스트 옆에서 멈추도록 짧게
             isUpward = true
         )
 
-        // 루틴 생성하기
-        TutorialHintWithLineByRatio(
+
+        // 루틴 생성하기 (FAB 직전까지 반응형 선)
+        TutorialHintWithLineByPx(
             text = "루틴 생성하기",
-            textOffsetRatio = 274f / 360f to 507f / 800f,
-            lineOffsetRatio = 313f / 360f to 532f / 800f,
-            lineLengthRatio = 0.060f,
+            textOffset = Offset(screenWidth * 274f / 360f, screenHeight * 0.63f),
+            lineOffset = Offset(screenWidth * 313f / 360f, lineStartY),
+            lineLengthPx = lineLengthToFab,
             isUpward = false
         )
 
         // 루틴 둘러보기
-        TutorialHintWithLineByRatio(
+        TutorialHintWithLineByPx(
             text = "루틴 둘러보기",
-            textOffsetRatio = 50f / 360f to 672f / 800f,
-            lineOffsetRatio = 132f / 360f to 681f / 800f,
-            lineLengthRatio = 0.050f,
+            textOffset = Offset(screenWidth * 50f / 360f, screenHeight * 0.84f),
+            lineOffset = Offset(screenWidth * 132f / 360f, screenHeight * 0.85f),
+            lineLengthPx = screenHeight * 0.055f,
             isUpward = false
         )
 
         // 루틴 관리하기
-        TutorialHintWithLineByRatio(
+        TutorialHintWithLineByPx(
             text = "루틴 관리하기",
-            textOffsetRatio = 183f / 360f to 656f / 800f,
-            lineOffsetRatio = 223f / 360f to 681f / 800f,
-            lineLengthRatio = 0.050f,
+            textOffset = Offset(screenWidth * 183f / 360f, screenHeight * 0.82f),
+            lineOffset = Offset(screenWidth * 223f / 360f, screenHeight * 0.85f),
+            lineLengthPx = screenHeight * 0.055f,
             isUpward = false
         )
 
-        // 루틴 인사이트 보기 (꺾인 화살표)
-        DotWithBentArrowByRatio(
-            startOffsetRatio = 273f / 360f to 591f / 800f,
-            verticalLengthRatio = 0.19f,
-            horizontalLengthRatio = 0.1f
+        // 루틴 인사이트 보기
+        DotWithBentArrowByPx(
+            startOffset = Offset(screenWidth * 273f / 360f, screenHeight * 0.74f),
+            verticalLength = screenHeight * 0.17f,
+            horizontalLength = screenWidth * 0.1f
         )
-
-        val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-        val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 
         Text(
             text = "루틴 인사이트 보기",
             style = typography.time_R_14.copy(fontWeight = FontWeight.Bold),
             color = Color.White,
-            modifier = Modifier
-                .offset(
-                    x = screenWidth * (159f / 360f),
-                    y = screenHeight * (582f / 800f)
-                )
+            modifier = Modifier.offset(
+                x = with(density) { (screenWidth * (159f / 360f)).toDp() + 5.dp },
+                y = with(density) { (screenHeight * 0.73f).toDp() }
+            )
         )
 
-        // 말풍선
+        // 말풍선 - 루틴 생성하기 위
         SimpleBottomTailBalloonByRatio(
             image = R.drawable.right_arrow_green,
             text = "바로 생성하기!",
-            offsetRatioX = 213f / 360f,
-            offsetRatioY = 440f / 800f
+            offsetRatioX = 0.6f,
+            offsetRatioY = 0.55f
         )
 
         // FAB 터치 클릭 영역
@@ -166,7 +182,6 @@ fun TutorialHintWithLine(
         modifier = Modifier.offset(x = textOffsetDp.first, y = textOffsetDp.second)
     )
 }
-
 
 
 @Composable
@@ -261,7 +276,7 @@ fun DotWithBentArrow(startX: Dp, startY: Dp, verticalLength: Dp, horizontalLengt
 @Composable
 fun SimpleBottomTailBalloon(
     text: String,
-    image:Int,
+    image: Int,
     offsetX: Dp,
     offsetY: Dp,
     balloonWidth: Dp = 138.dp,
@@ -280,15 +295,15 @@ fun SimpleBottomTailBalloon(
         Canvas(
             modifier = Modifier.size(width = balloonWidth, height = balloonHeight + tailHeight)
         ) {
-            val strokePx     = strokeWidthDp.toPx()
+            val strokePx = strokeWidthDp.toPx()
             val cornerRadius = 10.dp.toPx()
             val tailHeightPx = tailHeight.toPx()
-            val tailWidthPx  = tailWidth.toPx()
+            val tailWidthPx = tailWidth.toPx()
 
             val balloonBottom = size.height - tailHeightPx
-            val tailTipX      = size.width - 16.dp.toPx()
-            val tailStartX    = tailTipX - tailWidthPx / 2
-            val tailEndX      = tailTipX + tailWidthPx / 2
+            val tailTipX = size.width - 16.dp.toPx()
+            val tailStartX = tailTipX - tailWidthPx / 2
+            val tailEndX = tailTipX + tailWidthPx / 2
 
             val path = Path().apply {
                 addRoundRect(
@@ -313,7 +328,7 @@ fun SimpleBottomTailBalloon(
         Box(
             modifier = Modifier
                 .offset(inner, inner)
-                .size(balloonWidth  - inner * 2, balloonHeight - inner * 2)
+                .size(balloonWidth - inner * 2, balloonHeight - inner * 2)
                 .padding(horizontal = 8.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -324,7 +339,7 @@ fun SimpleBottomTailBalloon(
                 Text(text, style = typography.body_SB_16, color = colors.oliveGreen)
                 Spacer(modifier = Modifier.width(11.dp))
                 Image(
-                    painter = painterResource(id=image),
+                    painter = painterResource(id = image),
                     contentDescription = "초록색 오른쪽 화살표",
                     modifier = Modifier
                         .size(width = 14.dp, height = 18.dp),
@@ -398,6 +413,8 @@ private fun HomeTutorialDecorationPreview() {
     HomeTutorialDecoration(
         onDismiss = {},
         onFabClick = {},
-        bottomIconCenters = fakeCenters
+        bottomIconCenters = fakeCenters,
+        todayTabOffsetY = 200f,
+        fabOffsetY = 640f
     )
 }

@@ -78,7 +78,8 @@ fun HomeScreen(
     var selectedTab by remember { mutableStateOf(0) }
 
     // 루틴 샘플 데이터(오늘 탭 선택 시 보여줄 박스의 내용들)
-    val sampleRoutines = DummyData.feedRoutines.filter { it.routineId in listOf(501, 502, 503, 504) }
+    val sampleRoutines =
+        DummyData.feedRoutines.filter { it.routineId in listOf(501, 502, 503, 504) }
 
     // 루틴 태그 샘플(이번주 탭 선택 시 달력 날짜에 들어갈 것들)
     val sampleRoutineTags = mapOf(
@@ -285,6 +286,7 @@ fun HomeScreen(
                         thickness = 7.dp,
                         color = colors.lightGray
                     )
+                    Spacer(modifier = Modifier.height(3.dp))
                     //루틴 목록
                     Row(
                         modifier = Modifier.padding(top = 3.dp, start = 16.dp),
@@ -313,7 +315,14 @@ fun HomeScreen(
 
                         // 내 루틴만 필터링
                         val myRoutineIds = listOf(501, 502, 503, 504)
-                        val myRoutines = DummyData.feedRoutines.filter { it.routineId in listOf(501, 502, 503, 504) }
+                        val myRoutines = DummyData.feedRoutines.filter {
+                            it.routineId in listOf(
+                                501,
+                                502,
+                                503,
+                                504
+                            )
+                        }
 
                         RoutineCardList(
                             routines = myRoutines,
@@ -337,7 +346,8 @@ fun HomeScreen(
 
                                     navController.navigate("routine_focus_intro/${routine.routineId}")
                                 } else {
-                                    Toast.makeText(context, "루틴 정보를 찾을 수 없습니다", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "루틴 정보를 찾을 수 없습니다", Toast.LENGTH_SHORT)
+                                        .show()
                                 }
                             }
                         )
