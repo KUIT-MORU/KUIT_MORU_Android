@@ -1,6 +1,7 @@
 package com.konkuk.moru.presentation.home.component
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,11 +18,17 @@ import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
-fun RoutineCardItem(modifier: Modifier = Modifier) {
+fun RoutineCardItem(
+    title: String,
+    tag: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
+) {
     Box(
         modifier = modifier
             .width(98.dp)
             .height(190.dp)
+            .clickable { onClick() }
     ) {
         Column {
             Image(
@@ -33,13 +40,13 @@ fun RoutineCardItem(modifier: Modifier = Modifier) {
             )
             Spacer(modifier = modifier.height(8.dp))
             Text(
-                text = "루틴명",
+                text = title,
                 style = typography.time_R_12,
                 color = colors.black
             )
             Spacer(modifier = modifier.height(2.dp))
             Text(
-                text = "#태그",
+                text = tag,
                 style = typography.time_R_10,
                 color = colors.darkGray
             )
@@ -50,5 +57,8 @@ fun RoutineCardItem(modifier: Modifier = Modifier) {
 @Preview
 @Composable
 private fun RoutineCardItemPreview() {
-    RoutineCardItem()
+    RoutineCardItem(
+        title = "MORU의 스트레칭 루틴",
+        tag = "운동 건강"
+    )
 }

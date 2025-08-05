@@ -25,17 +25,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
+import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
+import java.time.DayOfWeek
+import java.time.LocalTime
+import java.time.format.TextStyle
+import java.util.Locale
 
 @Composable
 fun TodayRoutineListBoxItem(
+    routine: Routine,
     modifier: Modifier = Modifier,
-    title: String = "아침 운동",
-    hashtag: String = "#모닝 루틴 #스트레칭",
-    heartCount: Int = 16,
-    day: String = "토일",
-    time: String = "am 09:00",
     onClick: () -> Unit
 ) {
     Box(
@@ -81,14 +82,14 @@ fun TodayRoutineListBoxItem(
                     ) {
                         // 제목(ex)아침 운동)
                         Text(
-                            text = title,
+                            text = routine.title,
                             style = typography.title_B_14,
                             color = colors.black,
                         )
                         Spacer(modifier = modifier.height(2.dp))
                         // 해시태그(ex)#모닝 루틴,#스트레칭)
                         Text(
-                            text = hashtag,
+                            text = routine.tags.joinToString(" ") { "#$it" },
                             style = typography.time_R_10,
                             color = colors.black
                         )
@@ -100,9 +101,9 @@ fun TodayRoutineListBoxItem(
                                 contentDescription = "empty heart Icon",
                                 modifier = Modifier.size(width = 13.33.dp, height = 11.47.dp)
                             )
-                            Spacer(modifier= Modifier.width(2.67.dp))
+                            Spacer(modifier = Modifier.width(2.67.dp))
                             Text(
-                                text = "$heartCount",
+                                text = "${routine.likes}",
                                 style = typography.time_R_12,
                                 color = colors.black
                             )
@@ -114,13 +115,18 @@ fun TodayRoutineListBoxItem(
             // 2. 요일과 시간
             Row() {
                 Text(
-                    text = day,
+                    text = routine.scheduledDays.joinToString("") {
+                        it.getDisplayName(
+                            TextStyle.SHORT,
+                            Locale.KOREAN
+                        )
+                    },
                     style = typography.title_B_12,
                     color = colors.black
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
-                    text = time,
+                    text = routine.scheduledTime.toString(),
                     style = typography.title_B_12,
                     color = colors.black
                 )
@@ -136,7 +142,30 @@ fun TodayRoutineListBoxItem(
 )
 @Composable
 private fun TodayRoutineListBoxItemPreview() {
+    val sampleRoutine = Routine(
+        routineId = 1,
+        title = "주말 아침 루틴",
+        description = "설명",
+        imageUrl = null,
+        category = "건강",
+        tags = listOf("#모닝", "#운동"),
+        authorId = 0,
+        authorName = "홍길동",
+        authorProfileUrl = null,
+        likes = 42,
+        isLiked = false,
+        isBookmarked = false,
+        isRunning = false,
+        scheduledTime = LocalTime.of(9, 0),
+        scheduledDays = setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY),
+        isAlarmEnabled = true,
+        steps = emptyList(),
+        similarRoutines = emptyList(),
+        usedApps = emptyList()
+    )
+
     TodayRoutineListBoxItem(
+        routine = sampleRoutine,
         onClick = {}
     )
 }

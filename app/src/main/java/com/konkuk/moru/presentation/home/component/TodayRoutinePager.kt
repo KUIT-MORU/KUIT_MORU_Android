@@ -14,23 +14,17 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
+import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.ui.theme.MORUTheme.colors
-
-// 1. 데이터 클래스
-data class RoutineData(
-    val title: String,        // 제목
-    val hashtag: String,      // 해시태그
-    val heartCount: Int,      // 하트 수
-    val day: String,          // 요일
-    val time: String          // 시간
-)
+import java.time.DayOfWeek
+import java.time.LocalTime
 
 // 2. Pager 컴포저블
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun TodayRoutinePager(
-    routines: List<RoutineData>,
-    onRoutineClick:(RoutineData,Int) -> Unit
+    routines: List<Routine>,
+    onRoutineClick: (Routine, Int) -> Unit
 ) {
     //현재 페이지가 몇 페이지인지 기억하기
     val pagerState = rememberPagerState(initialPage = 0)
@@ -51,12 +45,8 @@ fun TodayRoutinePager(
         ) { page ->
             val routine = routines[page]
             TodayRoutineListBoxItem(
-                title = routine.title,
-                hashtag = routine.hashtag,
-                heartCount = routine.heartCount,
-                day = routine.day,
-                time = routine.time,
-                onClick = {onRoutineClick(routine,page)}
+                routine = routine,
+                onClick = { onRoutineClick(routine, page) }
             )
         }
 
@@ -81,9 +71,57 @@ fun TodayRoutinePager(
 @Composable
 private fun TodayRoutinePagerPreview() {
     val sampleRoutines = listOf(
-        RoutineData("주말 아침 루틴 (집중 루틴 테스트용)", "#화이팅", 25, "토일", "am 09:00 ~ am 09:58"),
-        RoutineData("출근 준비 루틴 (간편 루틴 테스트용)", "#힘내자", 41, "월", "am 08:00 ~ am 08:45"),
-        RoutineData("운동 루틴", "#건강", 12, "수", "pm 06:00 ~ pm 07:00")
+        Routine(
+            routineId = 1,
+            title = "주말 아침 루틴 (집중 루틴 테스트용)",
+            description = "설명",
+            imageUrl = null,
+            category = "생활",
+            tags = listOf("#화이팅"),
+            authorId = 100,
+            authorName = "홍길동",
+            authorProfileUrl = null,
+            likes = 25,
+            isLiked = false,
+            isBookmarked = false,
+            isRunning = false,
+            scheduledTime = LocalTime.of(9, 0),
+            scheduledDays = setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
+        ),
+        Routine(
+            routineId = 2,
+            title = "출근 준비 루틴 (간편 루틴 테스트용)",
+            description = "설명",
+            imageUrl = null,
+            category = "생활",
+            tags = listOf("#힘내자"),
+            authorId = 101,
+            authorName = "김영희",
+            authorProfileUrl = null,
+            likes = 41,
+            isLiked = true,
+            isBookmarked = true,
+            isRunning = true,
+            scheduledTime = LocalTime.of(8, 0),
+            scheduledDays = setOf(DayOfWeek.MONDAY)
+        ),
+        Routine(
+            routineId = 3,
+            title = "운동 루틴",
+            description = "설명",
+            imageUrl = null,
+            category = "운동",
+            tags = listOf("#건강"),
+            authorId = 102,
+            authorName = "이철수",
+            authorProfileUrl = null,
+            likes = 12,
+            isLiked = false,
+            isBookmarked = false,
+            isRunning = false,
+            scheduledTime = LocalTime.of(18, 0),
+            scheduledDays = setOf(DayOfWeek.WEDNESDAY)
+        )
     )
 
     TodayRoutinePager(
@@ -93,3 +131,5 @@ private fun TodayRoutinePagerPreview() {
         }
     )
 }
+
+

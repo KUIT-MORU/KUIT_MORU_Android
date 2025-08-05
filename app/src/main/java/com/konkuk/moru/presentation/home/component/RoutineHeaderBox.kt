@@ -31,7 +31,8 @@ fun RoutineHeaderBox(
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.align(Alignment.CenterStart)
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
                 painter = painterResource(R.drawable.transparentbox),
@@ -41,11 +42,16 @@ fun RoutineHeaderBox(
                     .height(52.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
-            Column {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+            ){
                 Text(
                     text = routineTitle,
                     style = typography.head_EB_24,
-                    color = colors.black
+                    color = colors.black,
+                    maxLines = 2,
+                    softWrap = true
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
@@ -54,12 +60,11 @@ fun RoutineHeaderBox(
                     color = colors.darkGray
                 )
             }
+            // 집중 or 간편
+            FocusTypeChip(
+                focusType = focusType,
+            )
         }
-        // 집중 or 간편
-        FocusTypeChip(
-            focusType = focusType,
-            modifier = Modifier.align(Alignment.CenterEnd)
-        )
     }
 }
 

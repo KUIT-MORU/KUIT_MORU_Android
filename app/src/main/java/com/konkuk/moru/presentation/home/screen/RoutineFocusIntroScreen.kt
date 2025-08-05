@@ -19,6 +19,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +38,7 @@ import com.konkuk.moru.presentation.home.FocusType
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineHeaderBox
 import com.konkuk.moru.presentation.home.component.RoutineStepItem
+import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
@@ -51,13 +53,17 @@ val sampleSteps = listOf(
 @Composable
 fun RoutineFocusIntroScreen(
     modifier: Modifier = Modifier,
-    routineTitle: String = "주말 아침 루틴",
-    hashTag: String = "#태그 #태그",
-    focusType: FocusType = FocusType.FOCUS,
-    steps: List<RoutineStepData> = sampleSteps,
+    sharedViewModel: SharedRoutineViewModel,
     onStartClick:(selectedSteps: List<RoutineStepData>)->Unit,
     onBackClick: () -> Unit,
 ) {
+    // 받아올 정보들
+    val routineTitle by sharedViewModel.routineTitle.collectAsState()
+    val hashTagList by sharedViewModel.routineTags.collectAsState()
+    val focusType by sharedViewModel.focusType.collectAsState()
+    val steps by sharedViewModel.selectedSteps.collectAsState()
+    val hashTag = hashTagList.joinToString(" ") { "#$it" }
+
     // 각 루틴의 상태를 기억할 수 있또록 상태로 복사해서 관리
     var stepStates by remember { mutableStateOf(steps.map { it.copy() }) }
 
@@ -222,19 +228,27 @@ fun RoutineFocusIntroScreen(
 )
 @Composable
 private fun RoutineFocusIntroScreenPreview() {
+    val dummyViewModel = remember { SharedRoutineViewModel() }
 
+    // 가짜 데이터 설정
     val sampleSteps = listOf(
         RoutineStepData("샤워하기", 15, true),
         RoutineStepData("청소하기", 10, true),
         RoutineStepData("밥먹기", 30, true),
         RoutineStepData("옷갈아입기", 8, true)
     )
+    dummyViewModel.setSelectedSteps(sampleSteps)
+    dummyViewModel.setFocusType(FocusType.FOCUS)
+
+    // 추가적으로 제목과 태그도 미리 설정
+    dummyViewModel.apply {
+        setRoutineTitle("주말 아침 루틴")
+        setRoutineTags(listOf("태그1", "태그2"))
+    }
 
     RoutineFocusIntroScreen(
-        steps = sampleSteps,
-        onStartClick = {}, //시작하기 누르면 다음 화면으로
-        onBackClick = {}, //뒤로 가기 누르면 이전 화면으로
-        routineTitle = "주말 아침 루틴",
-        hashTag = "태그1 태그2",
+        sharedViewModel = dummyViewModel,
+        onStartClick = {},  // 시작 버튼 클릭 동작
+        onBackClick = {},   // 뒤로 가기 동작
     )
 }

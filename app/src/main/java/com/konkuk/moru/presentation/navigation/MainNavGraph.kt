@@ -73,6 +73,29 @@ fun MainNavGraph(
             )
         }
 
+        // 루틴 목록의 카드 클릭 시
+        composable(
+            route = "routine_focus_intro/{routineId}",
+            arguments = listOf(navArgument("routineId") { type = NavType.IntType })
+        ) { backStackEntry ->
+
+            val parentEntry = remember(navController.currentBackStackEntry) {
+                navController.getBackStackEntry(Route.Home.route)
+            }
+            val sharedViewModel = viewModel<SharedRoutineViewModel>(parentEntry)
+
+            RoutineFocusIntroScreen(
+                sharedViewModel = sharedViewModel,
+                onStartClick = { selectedSteps ->
+                    sharedViewModel.setSelectedSteps(selectedSteps)
+                    navController.navigate("routine_focus")
+                },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+
+
         composable(route = Route.RoutineFocusIntro.route) {
 
             val parentEntry = remember(navController.currentBackStackEntry) {
@@ -84,9 +107,10 @@ fun MainNavGraph(
             val focusType by sharedViewModel.focusType.collectAsState()
 
             RoutineFocusIntroScreen(
-                focusType = focusType,
-                onStartClick = {
-                    sharedViewModel.onStartClick()
+                sharedViewModel = sharedViewModel,
+                onStartClick = { selectedSteps ->
+                    sharedViewModel.setSelectedSteps(selectedSteps)
+                    navController.navigate("routine_focus")
                 },
                 onBackClick = {
                     navController.popBackStack()
