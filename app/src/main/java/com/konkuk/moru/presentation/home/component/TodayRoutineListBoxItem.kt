@@ -67,7 +67,7 @@ fun TodayRoutineListBoxItem(
                     .width(298.dp)
                     .height(72.dp)
             ) {
-                Row() {
+                Row {
                     // 루틴 이미지
                     Image(
                         painter = painterResource(id = R.drawable.routine_image),
@@ -78,22 +78,22 @@ fun TodayRoutineListBoxItem(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 7.dp)
+                            .padding(top = 7.dp, bottom = 7.dp)
                     ) {
                         // 제목(ex)아침 운동)
                         Text(
                             text = routine.title,
-                            style = typography.title_B_14,
+                            style = typography.body_SB_16,
                             color = colors.black,
                         )
                         Spacer(modifier = modifier.height(2.dp))
                         // 해시태그(ex)#모닝 루틴,#스트레칭)
                         Text(
                             text = routine.tags.joinToString(" ") { "#$it" },
-                            style = typography.time_R_10,
-                            color = colors.black
+                            style = typography.title_B_12,
+                            color = Color(0xFF8E8E8E)
                         )
-                        Spacer(modifier = modifier.height(3.dp))
+                        Spacer(modifier = modifier.height(7.dp))
                         //하트와 하트 클릭 수
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Image(
@@ -104,7 +104,7 @@ fun TodayRoutineListBoxItem(
                             Spacer(modifier = Modifier.width(2.67.dp))
                             Text(
                                 text = "${routine.likes}",
-                                style = typography.time_R_12,
+                                style = typography.title_B_12,
                                 color = colors.black
                             )
                         }
@@ -122,13 +122,13 @@ fun TodayRoutineListBoxItem(
                         )
                     },
                     style = typography.title_B_12,
-                    color = colors.black
+                    color = Color(0xFF61646B)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = routine.scheduledTime.toString(),
                     style = typography.title_B_12,
-                    color = colors.black
+                    color = Color(0xFF61646B)
                 )
             }
         }
