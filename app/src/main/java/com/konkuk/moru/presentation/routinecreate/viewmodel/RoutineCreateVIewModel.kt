@@ -16,7 +16,7 @@ import com.konkuk.moru.data.model.UsedAppInRoutine
 class RoutineCreateViewModel : ViewModel() {
 
     val imageUri = mutableStateOf<Uri?>(null)
-    val showUser = mutableStateOf(false)
+    val showUser = mutableStateOf(true)
     val isFocusingRoutine = mutableStateOf(true)
     val routineTitle = mutableStateOf("")
     val routineDescription = mutableStateOf("")

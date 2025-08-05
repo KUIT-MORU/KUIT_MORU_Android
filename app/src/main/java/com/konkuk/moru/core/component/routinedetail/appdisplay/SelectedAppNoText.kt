@@ -25,11 +25,12 @@ import com.konkuk.moru.ui.theme.MORUTheme.colors
 @Composable
 fun SelectedAppNoText(
     appIcon: ImageBitmap = ImageBitmap(64, 64),
-    onRemove: () -> Unit
+    isRemovable: Boolean,
+    onRemove: (() -> Unit)? = null
 ) {
     Column(
         modifier = Modifier.clickable(
-            onClick = onRemove,
+            onClick = if (isRemovable) onRemove ?: { } else { {} },
             indication = null,
             interactionSource = null
         ),
@@ -49,18 +50,20 @@ fun SelectedAppNoText(
                     .background(color = Color.White)
                     .align(Alignment.BottomEnd)
             )
-            Box(
-                modifier = Modifier
-                    .size(16.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(color = colors.lightGray)
-                    .align(Alignment.TopStart),
-                contentAlignment = Alignment.Center
-            ) {
+            if (isRemovable) {
                 Box(
-                    modifier = Modifier.width(10.dp).height(2.dp)
-                        .background(color = colors.darkGray, shape = RoundedCornerShape(50))
-                )
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(color = colors.lightGray)
+                        .align(Alignment.TopStart),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier.width(10.dp).height(2.dp)
+                            .background(color = colors.darkGray, shape = RoundedCornerShape(50))
+                    )
+                }
             }
         }
     }
@@ -74,7 +77,18 @@ fun SelectedAppNoTextPreview() {
     }
     val dummyImageBitmap = dummyBitmap.asImageBitmap()
 
-    SelectedAppNoText(
-        appIcon = dummyImageBitmap,
-    ) {}
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        SelectedAppNoText(
+            appIcon = dummyImageBitmap,
+            isRemovable = true,
+        ) {}
+        SelectedAppNoText(
+            appIcon = dummyImageBitmap,
+            isRemovable = false,
+        ) {}
+    }
+
+
 }
