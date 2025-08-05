@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -272,8 +273,7 @@ fun RoutineSimpleRunScreen(
                                     finalElapsedTime = formatElapsedTime(System.currentTimeMillis() - routineStartTime)
                                 }
                                 .width(123.dp)
-                                .height(40.55.dp)
-                                .padding(horizontal = 33.85.dp, vertical = 10.78.dp),
+                                .height(40.55.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -343,7 +343,7 @@ fun RoutineSimpleRunScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(42.15.dp)
+                            .defaultMinSize(minHeight = 48.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(colors.limeGreen)
                             .clickable(
@@ -352,7 +352,8 @@ fun RoutineSimpleRunScreen(
                             ) {
                                 showResultPopup = false
                                 onDismiss()
-                            },
+                            }
+                            .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(

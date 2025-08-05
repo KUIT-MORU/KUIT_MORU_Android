@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -629,7 +630,7 @@ fun PortraitRoutineFocusScreen(
                                     showFinishPopup = false
                                 }
                                 .width(123.dp)
-                                .height(40.dp),
+                                .height(40.55.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -730,8 +731,8 @@ fun PortraitRoutineFocusScreen(
                     //확인 버튼
                     Box(
                         modifier = Modifier
-                            .width(253.dp)
-                            .height(42.15.dp)
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = 48.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(colors.limeGreen)
                             .clickable(
@@ -740,7 +741,8 @@ fun PortraitRoutineFocusScreen(
                             ) {
                                 showResultPopup = false
                                 onDismiss()
-                            },
+                            }
+                            .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
