@@ -7,7 +7,6 @@ import java.time.DayOfWeek
 import java.time.LocalTime
 
 
-
 object DummyData {
     const val MY_USER_ID = 252 // 내 유저 아이디를 252으로 가정
 
@@ -23,23 +22,78 @@ object DummyData {
     )
 
     val dummyUsers = listOf(
-        User(1, "운동하는 제니", " 꾸준함이 답이다! 매일 아침 운동 기록", "https://images.unsplash.com/photo-1580489944761-15a19d654956"),
-        User(2, "책읽는 라이언", "마음의 양식을 쌓는 중. 한 달에 2권 읽기 목표", "https://images.unsplash.com/photo-1548142813-c348350df52b"),
+        User(
+            1,
+            "운동하는 제니",
+            " 꾸준함이 답이다! 매일 아침 운동 기록",
+            "https://images.unsplash.com/photo-1580489944761-15a19d654956"
+        ),
+        User(
+            2,
+            "책읽는 라이언",
+            "마음의 양식을 쌓는 중. 한 달에 2권 읽기 목표",
+            "https://images.unsplash.com/photo-1548142813-c348350df52b"
+        ),
         User(3, "개발자 모루", "코드로 세상을 이롭게 하고 싶은 개발자입니다.", null),
-        User(4, "요리왕 준", "오늘은 내가 요리사! #집밥 #레시피", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"),
-        User(101, "요가마스터", "몸과 마음의 연결, 요가로 찾으세요.", "https://images.unsplash.com/photo-1552058544-f2b08422138a"),
-        User(102, "개발왕", "1일 1커밋. #TIL #오픈소스", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"),
-        User(201, "지하철독서왕", "이동 시간을 황금으로 만드는 법", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"),
+        User(
+            4,
+            "요리왕 준",
+            "오늘은 내가 요리사! #집밥 #레시피",
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
+        ),
+        User(
+            101,
+            "요가마스터",
+            "몸과 마음의 연결, 요가로 찾으세요.",
+            "https://images.unsplash.com/photo-1552058544-f2b08422138a"
+        ),
+        User(
+            102,
+            "개발왕",
+            "1일 1커밋. #TIL #오픈소스",
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
+        ),
+        User(
+            201,
+            "지하철독서왕",
+            "이동 시간을 황금으로 만드는 법",
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
+        ),
         User(MY_USER_ID, "MORU (나)", "이 앱의 주인공입니다. 루틴을 만들어봐요!", null)
     )
 
     val dummyLiveUsers = listOf(
-        LiveUserInfo(1, "운동하는 제니", "#오운완", "https://images.unsplash.com/photo-1580489944761-15a19d654956"),
-        LiveUserInfo(2, "책읽는 라이언", "#북스타그램", "https://images.unsplash.com/photo-1548142813-c348350df52b"),
+        LiveUserInfo(
+            1,
+            "운동하는 제니",
+            "#오운완",
+            "https://images.unsplash.com/photo-1580489944761-15a19d654956"
+        ),
+        LiveUserInfo(
+            2,
+            "책읽는 라이언",
+            "#북스타그램",
+            "https://images.unsplash.com/photo-1548142813-c348350df52b"
+        ),
         LiveUserInfo(3, "개발자 모루", "#TIL", null),
-        LiveUserInfo(4, "요리왕 준", "#집밥", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"),
-        LiveUserInfo(101, "요가마스터", "#요가", "https://images.unsplash.com/photo-1552058544-f2b08422138a"),
-        LiveUserInfo(102, "개발왕", "#코딩", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d")
+        LiveUserInfo(
+            4,
+            "요리왕 준",
+            "#집밥",
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
+        ),
+        LiveUserInfo(
+            101,
+            "요가마스터",
+            "#요가",
+            "https://images.unsplash.com/photo-1552058544-f2b08422138a"
+        ),
+        LiveUserInfo(
+            102,
+            "개발왕",
+            "#코딩",
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
+        )
     )
 
     // 앱 전체의 루틴을 관리하는 단일 소스. 수정 가능하도록 var와 MutableList 사용
@@ -59,6 +113,7 @@ object DummyData {
             isLiked = true,
             isBookmarked = true,
             isRunning = false,
+            scheduledTime = LocalTime.of(9, 15),
             scheduledDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
             steps = listOf(
                 RoutineStep(name = "편안하게 앉기", duration = "00:30"),
@@ -67,8 +122,14 @@ object DummyData {
                 RoutineStep(name = "마무리 스트레칭", duration = "00:30")
             ),
             usedApps = listOf(
-                AppInfo(name = "Calm", iconUrl = "https://i.pinimg.com/originals/31/28/90/312890339947b7294633999d1c03387c.png"),
-                AppInfo(name = "Youtube", iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/youtube-logotype-icon.png")
+                AppInfo(
+                    name = "Calm",
+                    iconUrl = "https://i.pinimg.com/originals/31/28/90/312890339947b7294633999d1c03387c.png"
+                ),
+                AppInfo(
+                    name = "Youtube",
+                    iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/youtube-logotype-icon.png"
+                )
             )
         ),
         Routine(
@@ -85,6 +146,7 @@ object DummyData {
             isLiked = false,
             isBookmarked = true,
             isRunning = true,
+            scheduledTime = LocalTime.of(10, 25),
             scheduledDays = setOf(DayOfWeek.SATURDAY),
             steps = listOf(
                 RoutineStep(name = "환기하기", duration = "05:00"),
@@ -93,7 +155,10 @@ object DummyData {
                 RoutineStep(name = "물걸레질 하기", duration = "20:00")
             ),
             usedApps = listOf(
-                AppInfo(name = "정리 앱", iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/house-and-home/dustpan-icon.png")
+                AppInfo(
+                    name = "정리 앱",
+                    iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/house-and-home/dustpan-icon.png"
+                )
             )
         ),
         Routine(
@@ -110,6 +175,7 @@ object DummyData {
             isLiked = true,
             isBookmarked = false,
             isRunning = false,
+            scheduledTime = LocalTime.of(1, 5),
             scheduledDays = setOf(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY),
             steps = listOf(
                 RoutineStep(name = "목 스트레칭", duration = "02:00"),
@@ -132,12 +198,16 @@ object DummyData {
             isBookmarked = true,
             isRunning = false,
             scheduledTime = LocalTime.of(20, 0),
+            scheduledDays = setOf(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY),
             steps = listOf(
                 RoutineStep(name = "작업 환경 설정", duration = "05:00"),
                 RoutineStep(name = "25분 집중, 5분 휴식 (x4)", duration = "120:00")
             ),
             usedApps = listOf(
-                AppInfo(name = "Github", iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/github-icon.png")
+                AppInfo(
+                    name = "Github",
+                    iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/github-icon.png"
+                )
             )
         ),
 
@@ -239,8 +309,14 @@ object DummyData {
                 RoutineStep(name = "메인 요리 조리", duration = "90:00")
             ),
             usedApps = listOf(
-                AppInfo(name = "오늘의집", iconUrl = "https://i.pinimg.com/736x/87/a7/9e/87a79e09cc92f802c114325a1215f913.jpg"),
-                AppInfo(name = "마켓컬리", iconUrl = "https://play-lh.googleusercontent.com/F9p-8L9H_nS2z24x6d-L5Z99i5c81NP0yD-cK5Gf_T22mw_s2gT2jCqC-w=w240-h480-rw")
+                AppInfo(
+                    name = "오늘의집",
+                    iconUrl = "https://i.pinimg.com/736x/87/a7/9e/87a79e09cc92f802c114325a1215f913.jpg"
+                ),
+                AppInfo(
+                    name = "마켓컬리",
+                    iconUrl = "https://play-lh.googleusercontent.com/F9p-8L9H_nS2z24x6d-L5Z99i5c81NP0yD-cK5Gf_T22mw_s2gT2jCqC-w=w240-h480-rw"
+                )
             )
         )
     )
