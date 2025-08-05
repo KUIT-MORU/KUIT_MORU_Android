@@ -30,7 +30,7 @@ fun RoutineCardList(
         routines.forEach { routine ->
             RoutineCardItem(
                 title = routine.title,
-                tag = routine.tags.firstOrNull() ?: "#태그없음",
+                tags = routine.tags,
                 onClick = { onRoutineClick(routine.routineId) }
             )
         }

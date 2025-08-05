@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import com.google.accompanist.flowlayout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
@@ -11,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
@@ -20,7 +22,7 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 @Composable
 fun RoutineCardItem(
     title: String,
-    tag: String,
+    tags: List<String>,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
 ) {
@@ -41,15 +43,24 @@ fun RoutineCardItem(
             Spacer(modifier = modifier.height(8.dp))
             Text(
                 text = title,
-                style = typography.time_R_12,
+                style = typography.title_B_12,
                 color = colors.black
             )
             Spacer(modifier = modifier.height(2.dp))
-            Text(
-                text = tag,
-                style = typography.time_R_10,
-                color = colors.darkGray
-            )
+            FlowRow(
+                mainAxisSpacing = 4.dp,
+                crossAxisSpacing = 2.dp
+            ) {
+                tags.forEach { tag ->
+                    Text(
+                        text = "#$tag",
+                        style = typography.time_R_10.copy(fontWeight = FontWeight.Bold),
+                        color = colors.darkGray
+                    )
+                }
+            }
+
+
         }
     }
 }
@@ -59,6 +70,7 @@ fun RoutineCardItem(
 private fun RoutineCardItemPreview() {
     RoutineCardItem(
         title = "MORU의 스트레칭 루틴",
-        tag = "운동 건강"
+        tags = listOf("운동", "건강")
     )
+
 }

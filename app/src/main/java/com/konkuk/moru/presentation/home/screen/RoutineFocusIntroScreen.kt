@@ -160,7 +160,7 @@ fun RoutineFocusIntroScreen(
                 ) {
                     RoutineHeaderBox(
                         routineTitle = routineTitle,
-                        hashTag = hashTag,
+                        tags = hashTagList,
                         category = category
                     )
                 }
