@@ -8,7 +8,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -16,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -69,20 +74,19 @@ fun WeeklyCalendarView(
             dates.forEach { date ->
                 Box(
                     modifier = Modifier
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
+                        .weight(1f)
+                        .padding(horizontal = 4.dp),
+                    contentAlignment = Alignment.TopCenter
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        // 날짜 표시
                         if (date == today) {
                             Box(
                                 modifier = Modifier
                                     .size(17.dp)
-                                    .background(
-                                        colors.limeGreen,
-                                        shape = CircleShape
-                                    ),
+                                    .background(colors.limeGreen, shape = CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -91,7 +95,6 @@ fun WeeklyCalendarView(
                                     color = Color.White
                                 )
                             }
-
                         } else {
                             Text(
                                 text = "$date",
@@ -99,39 +102,56 @@ fun WeeklyCalendarView(
                                 color = colors.mediumGray
                             )
                         }
-                        // 루틴 태크(요일별 할 루틴요소들)
-                        routinesPerDate[date]?.forEach { routine ->
-                            Spacer(modifier = Modifier.height(2.dp))
-                            RoutineTag(routine)
+
+                        // 루틴 태그 리스트
+                        Box(
+                            modifier = Modifier
+                                .wrapContentHeight()
+                                .padding(top = 2.dp)
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                routinesPerDate[date]?.forEachIndexed { index, routine ->
+                                    if (index != 0) {
+                                        Spacer(modifier = Modifier.height(1.dp))
+                                    }
+                                    RoutineTag(routine)
+                                }
+                            }
                         }
                     }
                 }
             }
+
         }
     }
 }
 
-//루틴 태그 컴포넌트
+// 태그 컴포넌트
 @Composable
 fun RoutineTag(
     text: String,
-    minWidth: Dp = 48.dp
+    minWidth: Dp = 60.dp
 ) {
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val tagWidth = screenWidth / 7.5f
+
     Text(
         text = text,
         fontSize = 8.sp,
         fontWeight = FontWeight.Bold,
+        lineHeight = 9.sp,
         color = Color.White,
         textAlign = TextAlign.Center,
-        maxLines = 1,
+        softWrap = true,
+        maxLines = 3,
         modifier = Modifier
+            .width(tagWidth)
             .background(
                 color = colors.darkGray,
                 shape = RoundedCornerShape(2.dp)
             )
-            .defaultMinSize(
-                minWidth = minWidth
-            )
+            .defaultMinSize(minWidth = minWidth)
+            .padding(horizontal = 4.dp, vertical = 1.dp)
     )
 }
 
@@ -147,7 +167,7 @@ private fun WeeklyCalendarViewPreview() {
         8 to listOf("아침 운동", "회의"),
         10 to listOf("아침 운동"),
         12 to listOf("아침 운동", "회의"),
-        13 to listOf("주말아침루틴"),
+        13 to listOf("주말아침완전 집중루틴"),
         14 to listOf("주말아침루틴")
     )
 

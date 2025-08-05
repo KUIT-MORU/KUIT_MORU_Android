@@ -15,8 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.google.accompanist.flowlayout.FlowRow
 import com.konkuk.moru.R
-import com.konkuk.moru.presentation.home.FocusType
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
@@ -24,14 +24,15 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 @Composable
 fun RoutineHeaderBox(
     routineTitle: String,
-    hashTag: String,
-    focusType: FocusType,
+    tags: List<String>,
+    category: String,
 ) {
     Box(
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.align(Alignment.CenterStart)
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
                 painter = painterResource(R.drawable.transparentbox),
@@ -41,25 +42,35 @@ fun RoutineHeaderBox(
                     .height(52.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
-            Column {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+            ){
                 Text(
                     text = routineTitle,
                     style = typography.head_EB_24,
-                    color = colors.black
+                    color = colors.black,
+                    maxLines = 2,
+                    softWrap = true
                 )
                 Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = hashTag,
-                    style = typography.body_SB_16,
-                    color = colors.darkGray
-                )
+                FlowRow(
+                    mainAxisSpacing = 6.dp,
+                    crossAxisSpacing = 4.dp
+                ) {
+                    tags.forEach { tag ->
+                        Text(
+                            text = "#$tag",
+                            style = typography.body_SB_16,
+                            color = colors.darkGray,
+                            maxLines = 1
+                        )
+                    }
+                }
             }
+            // 집중 or 간편
+            FocusTypeChip(category = category)
         }
-        // 집중 or 간편
-        FocusTypeChip(
-            focusType = focusType,
-            modifier = Modifier.align(Alignment.CenterEnd)
-        )
     }
 }
 
@@ -68,7 +79,7 @@ fun RoutineHeaderBox(
 private fun RoutineHeaderBoxPreview() {
     RoutineHeaderBox(
         routineTitle = "주말 아침 루틴",
-        hashTag = "#화이팅 #루틴",
-        focusType = FocusType.FOCUS
+        tags = listOf("화이팅", "루틴"),
+        category = "집중"
     )
 }

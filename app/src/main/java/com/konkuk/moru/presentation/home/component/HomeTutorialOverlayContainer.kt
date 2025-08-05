@@ -94,7 +94,9 @@ fun HomeTutorialOverlayContainer(
         HomeTutorialDecoration(
             onDismiss = onDismiss,
             onFabClick = onFabClick,
-            bottomIconCenters = bottomIconCenters
+            bottomIconCenters = bottomIconCenters,
+            todayTabOffsetY = todayTabOffsetY,
+            fabOffsetY = fabOffsetY
         )
 
         BottomOverlayBar(

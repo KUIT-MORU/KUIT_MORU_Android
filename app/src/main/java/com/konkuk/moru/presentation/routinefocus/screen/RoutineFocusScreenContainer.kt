@@ -1,27 +1,29 @@
 package com.konkuk.moru.presentation.routinefocus.screen
 
 import androidx.compose.runtime.Composable
+import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
 
 @Composable
 fun RoutineFocusScreenContainer(
-    viewModel: RoutineFocusViewModel,
-    onDismiss: () -> Unit,
-    routineItems: List<Pair<String, String>>
-) {
-    if (viewModel.isLandscapeMode) {
+    focusViewModel: RoutineFocusViewModel,
+    sharedViewModel: SharedRoutineViewModel,
+    onDismiss: () -> Unit
+){
+    if (focusViewModel.isLandscapeMode) {
         LandscapeRoutineFocusScreen(
-            viewModel = viewModel,
+            viewModel = focusViewModel,
+            sharedViewModel = sharedViewModel,
             onDismiss = onDismiss,
-            routineItems = routineItems,
-            currentStep = viewModel.currentStep
+            currentStep = focusViewModel.currentStep
         )
     } else {
         PortraitRoutineFocusScreen(
-            viewModel = viewModel,
+            focusViewModel = focusViewModel,
+            sharedViewModel = sharedViewModel,
             onDismiss = onDismiss,
-            routineItems = routineItems,
-            currentStep = viewModel.currentStep
+            currentStep = focusViewModel.currentStep
         )
     }
+
 }

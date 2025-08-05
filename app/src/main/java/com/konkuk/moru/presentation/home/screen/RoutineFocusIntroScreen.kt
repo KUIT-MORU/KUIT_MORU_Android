@@ -19,6 +19,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,10 +34,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
-import com.konkuk.moru.presentation.home.FocusType
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineHeaderBox
 import com.konkuk.moru.presentation.home.component.RoutineStepItem
+import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
@@ -51,18 +52,26 @@ val sampleSteps = listOf(
 @Composable
 fun RoutineFocusIntroScreen(
     modifier: Modifier = Modifier,
-    routineTitle: String = "주말 아침 루틴",
-    hashTag: String = "#태그 #태그",
-    focusType: FocusType = FocusType.FOCUS,
-    steps: List<RoutineStepData> = sampleSteps,
-    onStartClick:(selectedSteps: List<RoutineStepData>)->Unit,
+    sharedViewModel: SharedRoutineViewModel,
+    onStartClick: (selectedSteps: List<RoutineStepData>, title: String, hashTag: String) -> Unit,
     onBackClick: () -> Unit,
 ) {
+    // 받아올 정보들
+    val routineTitle by sharedViewModel.routineTitle.collectAsState()
+    val hashTagList by sharedViewModel.routineTags.collectAsState()
+    val category by sharedViewModel.routineCategory.collectAsState()
+    val steps by sharedViewModel.selectedSteps.collectAsState()
+    val hashTag = hashTagList.joinToString(" ") { "#$it" }
+
     // 각 루틴의 상태를 기억할 수 있또록 상태로 복사해서 관리
     var stepStates by remember { mutableStateOf(steps.map { it.copy() }) }
 
     // 스위치가 on인 상태의 루틴의 소요시간만 합해서 총 소요시간 계산에 반영
-    val totalDuration = stepStates.filter { it.isChecked }.sumOf { it.duration }
+    val totalDuration = if (category == "간편") {
+        stepStates.sumOf { it.duration } // 간편 루틴은 전체 합산
+    } else {
+        stepStates.filter { it.isChecked }.sumOf { it.duration } // 집중 루틴은 체크된 것만 합산
+    }
 
     // 하나라도 on이 되어 있다면 시작하기 버튼 활성화(총 소요시간으로 판단)
     val isStartEnabled = totalDuration > 0
@@ -71,7 +80,16 @@ fun RoutineFocusIntroScreen(
         bottomBar = {
             Button(
                 onClick = {
-                    onStartClick(stepStates.filter { it.isChecked })
+                    val selected = if (category == "간편") {
+                        stepStates
+                    } else {
+                        stepStates.filter { it.isChecked }
+                    }
+                    onStartClick(
+                        selected,
+                        routineTitle,
+                        hashTag,
+                    )
                 },
                 enabled = isStartEnabled,
                 modifier = Modifier
@@ -142,8 +160,8 @@ fun RoutineFocusIntroScreen(
                 ) {
                     RoutineHeaderBox(
                         routineTitle = routineTitle,
-                        hashTag = hashTag,
-                        focusType = focusType
+                        tags = hashTagList,
+                        category = category
                     )
                 }
                 Spacer(modifier = Modifier.height(172.dp))
@@ -165,14 +183,15 @@ fun RoutineFocusIntroScreen(
                     title = step.name,
                     duration = step.duration,
                     isChecked = step.isChecked,
-                    showSwitch = focusType == FocusType.FOCUS,
-                    showDuration = focusType == FocusType.FOCUS,
+                    showSwitch = category == "집중",
+                    showDuration = category == "집중",
                     onCheckedChange = {
                         stepStates = stepStates.toMutableStateList().apply {
                             this[index] = this[index].copy(isChecked = it)
                         }
                     }
                 )
+
                 //divider
                 Divider(
                     color = colors.lightGray,
@@ -181,8 +200,8 @@ fun RoutineFocusIntroScreen(
                         .height(1.5.dp)
                 )
             }
-            // TOTAL 소요시간 섹션 (FocusType.FOCUS일 경우만)
-            if (focusType == FocusType.FOCUS) {
+            // TOTAL 소요시간 섹션 (루틴 타입이 "집중"일 경우만)
+            if (category == "집중") {
                 item {
                     Spacer(modifier = Modifier.height(92.dp))
 
@@ -211,6 +230,7 @@ fun RoutineFocusIntroScreen(
                     Spacer(modifier = Modifier.height(175.dp))
                 }
             }
+
         }
     }
 }
@@ -222,19 +242,31 @@ fun RoutineFocusIntroScreen(
 )
 @Composable
 private fun RoutineFocusIntroScreenPreview() {
+    val dummyViewModel = remember { SharedRoutineViewModel() }
 
+    // 가짜 데이터 설정
     val sampleSteps = listOf(
         RoutineStepData("샤워하기", 15, true),
         RoutineStepData("청소하기", 10, true),
         RoutineStepData("밥먹기", 30, true),
         RoutineStepData("옷갈아입기", 8, true)
     )
+    dummyViewModel.setSelectedSteps(sampleSteps)
+    dummyViewModel.setRoutineCategory("집중")  // 또는 "간편"
+
+    // 제목과 태그 설정
+    dummyViewModel.setRoutineTitle("주말 아침 루틴")
+    dummyViewModel.setRoutineTags(listOf("태그1", "태그2"))
 
     RoutineFocusIntroScreen(
-        steps = sampleSteps,
-        onStartClick = {}, //시작하기 누르면 다음 화면으로
-        onBackClick = {}, //뒤로 가기 누르면 이전 화면으로
-        routineTitle = "주말 아침 루틴",
-        hashTag = "태그1 태그2",
+        sharedViewModel = dummyViewModel,
+        onStartClick = { selectedSteps, title, hashTag ->
+            println("선택된 스텝: $selectedSteps")
+            println("루틴 제목: $title")
+            println("해시태그: $hashTag")
+        },
+        onBackClick = {}
     )
 }
+
+

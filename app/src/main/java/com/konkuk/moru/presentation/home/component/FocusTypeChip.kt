@@ -10,19 +10,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.konkuk.moru.presentation.home.FocusType
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
 fun FocusTypeChip(
-    focusType: FocusType,
+    category: String,
     modifier: Modifier = Modifier
 ) {
-    val text = when (focusType) {
-        FocusType.FOCUS -> "집중"
-        FocusType.SIMPLE -> "간편"
-    }
+    val isValid = category == "집중" || category == "간편"
+    if (!isValid) return
 
     Box(
         modifier = modifier
@@ -33,7 +30,7 @@ fun FocusTypeChip(
             .padding(horizontal = 9.5.dp, vertical = 3.5.dp)
     ) {
         Text(
-            text = text,
+            text = category,
             style = typography.body_SB_16,
             color = colors.oliveGreen
         )
@@ -45,7 +42,8 @@ fun FocusTypeChip(
 @Composable
 private fun FocusTypeChipPreview() {
     Column {
-        FocusTypeChip(FocusType.FOCUS)
-        FocusTypeChip(FocusType.SIMPLE)
+        FocusTypeChip(category = "집중")
+        FocusTypeChip(category = "간편")
+        FocusTypeChip(category = "생활") // 렌더링되지 않음
     }
 }

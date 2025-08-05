@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,7 +30,8 @@ fun HomeFloatingActionButton(
             onClick = onClick,
             backgroundColor = colors.limeGreen,
             contentColor = Color.White,
-            modifier = Modifier.size(63.dp)
+            modifier = Modifier.size(63.dp),
+            elevation = FloatingActionButtonDefaults.elevation(0.dp)
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.baseline_add_24),
