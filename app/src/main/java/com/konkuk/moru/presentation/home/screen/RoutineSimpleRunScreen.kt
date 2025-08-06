@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -105,7 +106,9 @@ fun RoutineSimpleRunScreen(
 
             // 루틴 제목 및 해시태그
             Box(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
             ) {
                 Row(
                     modifier = Modifier.align(Alignment.CenterStart)
@@ -128,7 +131,9 @@ fun RoutineSimpleRunScreen(
                         Text(
                             text = hashTag,
                             style = typography.body_SB_16,
-                            color = colors.darkGray
+                            color = colors.darkGray,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -270,7 +275,8 @@ fun RoutineSimpleRunScreen(
                                 ) {
                                     showResultPopup = true
                                     showFinishPopup = false
-                                    finalElapsedTime = formatElapsedTime(System.currentTimeMillis() - routineStartTime)
+                                    finalElapsedTime =
+                                        formatElapsedTime(System.currentTimeMillis() - routineStartTime)
                                 }
                                 .width(123.dp)
                                 .height(40.55.dp),
