@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.login
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -73,6 +74,7 @@ fun LoginScreen(
 
     val focusManager = LocalFocusManager.current
 
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -133,29 +135,29 @@ fun LoginScreen(
         LoginButton(
             onClick = {
                 if (isButtonEnabled) {
-                    if (true) { // 여기에 실제 로그인 API 호출 로직을 추가해야 합니다.
-                        errorMessage = "이메일 또는 비밀번호가 일치하지 않습니다."
-                    } else {
-                        viewModel.login(email, password, context) {
-                            navController.navigate(Route.AuthCheck.route) {
-                                popUpTo(Route.Login.route) { inclusive = true }
+                    // 실제 로그인 호출
+                    viewModel.login(email.trim(), password) { result ->
+                        result
+                            .onSuccess {
+                                // 로그인+토큰 저장+온보딩 플래그 후 화면 전환
+                                navController.navigate(Route.AuthCheck.route) {
+                                    popUpTo(Route.Login.route) { inclusive = true }
+                                }
                             }
-                        }
-                    }
-                } else { // 테스트용으로 임시로 해둠. 삭제 예정
-                    if (true) {
-                        errorMessage = "이메일 또는 비밀번호가 일치하지 않습니다."
-                    } else {
-                        viewModel.login(email, password, context) {
-                            navController.navigate(Route.AuthCheck.route) {
-                                popUpTo(Route.Login.route) { inclusive = true }
+                            .onFailure { throwable ->
+                                // 인증 실패 시
+                                Log.e("LoginScreen", "login error", throwable)
+                                errorMessage = "이메일 또는 비밀번호가 일치하지 않습니다."
                             }
-                        }
                     }
+                } else {
+                    // 입력이 비어있거나 유효하지 않을 때
+                    errorMessage = "이메일 또는 비밀번호가 일치하지 않습니다."
                 }
             },
             enabled = isButtonEnabled
         )
+
 
         Spacer(modifier = Modifier.height(24.dp))
 
