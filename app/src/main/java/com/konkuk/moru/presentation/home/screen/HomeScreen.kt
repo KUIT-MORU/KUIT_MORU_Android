@@ -1,6 +1,7 @@
 package com.konkuk.moru.presentation.home.screen
 
 import android.widget.Toast
+import android.util.Log // 👈 [추가]
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -54,6 +55,7 @@ import com.konkuk.moru.presentation.home.component.RoutineCardList
 import com.konkuk.moru.presentation.home.component.TodayRoutinePager
 import com.konkuk.moru.presentation.home.component.TodayWeekTab
 import com.konkuk.moru.presentation.home.component.WeeklyCalendarView
+import com.konkuk.moru.presentation.home.viewmodel.HomeRoutinesViewModel
 import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
@@ -84,6 +86,7 @@ fun HomeScreen(
     val serverRoutines by homeVm.serverRoutines.collectAsState()
 
     LaunchedEffect(Unit) {
+        Log.d("HomeScreen", "loadTodayRoutines() 호출")
         homeVm.loadTodayRoutines()
     }
 
@@ -107,42 +110,56 @@ fun HomeScreen(
 
     // 서버 응답이 들어오면: 저장된 순서(todayOrderIds)로 복원, 없으면 서버 순서 그대로 사용
     LaunchedEffect(serverRoutines, savedOrderIds) {
-        if (serverRoutines.isEmpty()) return@LaunchedEffect
+        if (serverRoutines.isEmpty()) {
+            Log.d("HomeScreen", "serverRoutines 비어있음 → 오늘 루틴 없음(서버)")
+            todayRoutines.clear()
+            homeEntry.savedStateHandle["todayOrderIds"] = emptyList<String>()
+            return@LaunchedEffect
+        }
+
+        Log.d("HomeScreen", "serverRoutines size=${serverRoutines.size}, savedOrderIds=${savedOrderIds.size}")
+        Log.d("HomeScreen", "server IDs=" + serverRoutines.joinToString { it.routineId })
 
         val ordered = if (savedOrderIds.isNotEmpty()) {
-            val byId = serverRoutines.associateBy { it.routineId }
-            val inSaved = savedOrderIds.mapNotNull { byId[it] }
-            val remaining = serverRoutines.filter { it.routineId !in savedOrderIds.toSet() }
+            val byId: Map<String, Routine> = serverRoutines.associateBy { it.routineId }
+            val inSaved: List<Routine> = savedOrderIds.mapNotNull { byId[it] }
+            val remaining: List<Routine> = serverRoutines.filter { it.routineId !in savedOrderIds.toSet() }
             inSaved + remaining
         } else {
             serverRoutines // 서버가 TIME + dayOfWeek로 내려줌
         }
+
+        Log.d("HomeScreen", "ordered IDs=" + ordered.joinToString { it.routineId })
 
         todayRoutines.clear()
         todayRoutines.addAll(ordered)
 
         // 첫 진입이면 현재 순서를 저장해 둔다 (복원용)
         if (savedOrderIds.isEmpty()) {
-            homeEntry.savedStateHandle["todayOrderIds"] = ordered.map { it.routineId }
+            val ids = ordered.map { it.routineId }
+            homeEntry.savedStateHandle["todayOrderIds"] = ids
+            Log.d("HomeScreen", "save todayOrderIds=" + ids.joinToString())
         }
     }
 
+    // 완료 루틴 맨 뒤로 이동 + 순서 저장
     LaunchedEffect(finishedId) {
         finishedId?.let { id ->
-            // 1) 현재 보여주는 todayRoutines에서 해당 카드 찾아 제거
+            Log.d("HomeScreen", "finishedId 수신 = $id, beforeOrder=" + todayRoutines.joinToString { it.routineId })
             val idx = todayRoutines.indexOfFirst { it.routineId == id }
             if (idx >= 0) {
                 val finished = todayRoutines.removeAt(idx)
-                // 2) 맨 뒤로 추가
                 todayRoutines.add(finished)
+                Log.d("HomeScreen", "afterOrder=" + todayRoutines.joinToString { it.routineId })
+            } else {
+                Log.w("HomeScreen", "finishedId=$id 가 현재 리스트에 없음")
             }
-            // 3) 순서 저장 + 중복 트리거 방지
             homeEntry.savedStateHandle["todayOrderIds"] = todayRoutines.map { it.routineId }
             homeEntry.savedStateHandle["finishedRoutineId"] = null
         }
     }
 
-    // 루틴 태그 샘플(이번주 탭 선택 시 달력 날짜에 들어갈 것들)
+    // 루틴 태그 샘플(이번주 탭 선택 시 달력 날짜에 들어갈 것들) — 기존 주석/구조 유지
     val sampleRoutineTags = mapOf(
         8 to listOf("아침 운동", "회의"),
         10 to listOf("아침 운동"),
@@ -171,8 +188,8 @@ fun HomeScreen(
     ) { innerPadding ->
 
         LaunchedEffect(todayTabOffsetY.value, fabOffsetY.value) {
-            // 두 값이 모두 측정되었을 때만 온보딩 시작
             if (todayTabOffsetY.value > 0f && fabOffsetY.value > 0f) {
+                Log.d("HomeScreen", "온보딩 트리거: todayTabY=${todayTabOffsetY.value}, fabY=${fabOffsetY.value}")
                 onShowOnboarding()
             }
         }
@@ -258,7 +275,7 @@ fun HomeScreen(
                         color = colors.black
                     )
 
-                    // 4. 상태 텍스트
+                    // 4. 상태 텍스트 (서버 오늘 루틴 기준)
                     Text(
                         modifier = Modifier
                             .padding(horizontal = 16.dp)
@@ -291,7 +308,10 @@ fun HomeScreen(
                     ) {
                         TodayWeekTab(
                             selectedTabIndex = selectedTab,
-                            onTabSelected = { selectedTab = it }
+                            onTabSelected = {
+                                Log.d("HomeScreen", "탭 변경: $selectedTab -> $it")
+                                selectedTab = it
+                            }
                         )
                     }
 
@@ -299,9 +319,11 @@ fun HomeScreen(
                     when (selectedTab) {
                         // 오늘 탭 선택 시
                         0 -> if (todayRoutines.isNotEmpty()) {
+                            Log.d("HomeScreen", "TODAY 탭 노출, count=${todayRoutines.size}")
                             TodayRoutinePager(
                                 routines = todayRoutines,
                                 onRoutineClick = { routine, _ ->
+                                    Log.d("HomeScreen", "Pager 클릭: id=${routine.routineId}, title=${routine.title}")
                                     // Step 리스트 변환
                                     val stepDataList = routine.steps.map {
                                         RoutineStepData(
@@ -310,7 +332,7 @@ fun HomeScreen(
                                             isChecked = false
                                         )
                                     }
-                                    // 기존 Int API와 호환
+                                    // 기존 Int API와 호환 (내부 저장용 키만 변환)
                                     sharedViewModel.setSelectedRoutineId(routine.routineId.toStableIntId())
                                     sharedViewModel.setSelectedSteps(stepDataList)
 
@@ -321,10 +343,18 @@ fun HomeScreen(
                                         tags = routine.tags
                                     )
 
-                                    // 네비게이션 (String ID 사용)
+                                    // 네비게이션
                                     navController.navigate(Route.RoutineFocusIntro.route)
                                 }
                             )
+                        } else {
+                            // 오늘 루틴 없을 때도 Divider가 밀려 오지 않도록 고정 높이 확보
+                            Spacer(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(184.dp) // TodayRoutinePager의 전체 높이와 동일
+                            )
+                            Log.d("HomeScreen", "TODAY 탭이지만 todayRoutines 비어있음 → Pager 미노출")
                         }
 
                         // 이번주 탭 선택 시 (샘플)
@@ -349,7 +379,7 @@ fun HomeScreen(
                     )
                     Spacer(modifier = Modifier.height(3.dp))
 
-                    // 루틴 목록 (오늘 루틴들 그대로 노출)
+                    //루틴 목록 (오늘 루틴들 그대로 노출)
                     Row(
                         modifier = Modifier.padding(top = 3.dp, start = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -374,12 +404,12 @@ fun HomeScreen(
 
                     if (todayRoutines.isNotEmpty()) {
                         val context = LocalContext.current
-
                         val myRoutines = todayRoutines
 
                         RoutineCardList(
                             routines = myRoutines,
-                            onRoutineClick = { routineId -> // routineId: String (RoutineCardList가 String 콜백이어야 함)
+                            onRoutineClick = { routineId: String ->
+                                Log.d("HomeScreen", "카드 클릭: id=$routineId")
                                 val routine = myRoutines.find { it.routineId == routineId }
                                 if (routine != null) {
                                     val stepDataList = routine.steps.map {
@@ -405,6 +435,8 @@ fun HomeScreen(
                                 }
                             }
                         )
+                    } else {
+                        Log.d("HomeScreen", "루틴 목록 섹션에서도 todayRoutines 비어있음")
                     }
                 }
             }

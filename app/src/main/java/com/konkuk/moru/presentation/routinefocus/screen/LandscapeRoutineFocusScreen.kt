@@ -54,8 +54,10 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 fun LandscapeRoutineFocusScreen(
     viewModel: RoutineFocusViewModel = viewModel(),
     sharedViewModel: SharedRoutineViewModel,
+    routineId : Int,
     onDismiss: () -> Unit,
     currentStep: Int,
+    onFinishConfirmed: (Int) -> Unit,
     forceShowFinishPopup: Boolean = false,
     forceShowResultPopup: Boolean = false
 ) {
@@ -521,7 +523,7 @@ fun LandscapeRoutineFocusScreen(
                         .background(colors.limeGreen)
                         .clickable {
                             showResultPopup = false
-                            onDismiss()
+                            onFinishConfirmed(routineId)
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -559,8 +561,10 @@ private fun LandscapeRoutineFocusScreenPreview() {
     LandscapeRoutineFocusScreen(
         viewModel = dummyFocusViewModel,
         sharedViewModel = dummySharedViewModel,
+        routineId = 501,
         onDismiss = {},
         currentStep = 1,
+        onFinishConfirmed = {},
         forceShowFinishPopup = false,
         forceShowResultPopup = false
     )
