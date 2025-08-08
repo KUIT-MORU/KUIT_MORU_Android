@@ -8,53 +8,61 @@ import java.time.LocalTime
 
 
 object DummyData {
-    const val MY_USER_ID = 252 // 내 유저 아이디를 252으로 가정
+    // ⬇️ MY_USER_ID 타입을 String으로 변경
+    const val MY_USER_ID = "user-moru-252" // 내 유저 아이디를 "user-moru-252"으로 가정
 
+    // ⬇️ FollowRelation의 ID들을 String으로 변경
     val dummyFollowRelations = listOf(
-        FollowRelation(followerId = 1, followingId = 3),
-        FollowRelation(followerId = 1, followingId = 101),
-        FollowRelation(followerId = 1, followingId = 102),
-        FollowRelation(followerId = 3, followingId = 1),
-        FollowRelation(followerId = 3, followingId = 102),
-        FollowRelation(followerId = 2, followingId = 101),
-        FollowRelation(followerId = 3, followingId = 101),
-        FollowRelation(followerId = 4, followingId = 101),
+        FollowRelation(followerId = "user-1", followingId = "user-3"),
+        FollowRelation(followerId = "user-1", followingId = "user-101"),
+        FollowRelation(followerId = "user-1", followingId = "user-102"),
+        FollowRelation(followerId = "user-3", followingId = "user-1"),
+        FollowRelation(followerId = "user-3", followingId = "user-102"),
+        FollowRelation(followerId = "user-2", followingId = "user-101"),
+        FollowRelation(followerId = "user-3", followingId = "user-101"),
+        FollowRelation(followerId = "user-4", followingId = "user-101"),
     )
 
+    // ⬇️ User의 ID를 String으로 변경
     val dummyUsers = listOf(
         User(
-            1,
+            "user-1",
             "운동하는 제니",
             " 꾸준함이 답이다! 매일 아침 운동 기록",
             "https://images.unsplash.com/photo-1580489944761-15a19d654956"
         ),
         User(
-            2,
+            "user-2",
             "책읽는 라이언",
             "마음의 양식을 쌓는 중. 한 달에 2권 읽기 목표",
             "https://images.unsplash.com/photo-1548142813-c348350df52b"
         ),
-        User(3, "개발자 모루", "코드로 세상을 이롭게 하고 싶은 개발자입니다.", null),
         User(
-            4,
+            "user-3",
+            "개발자 모루",
+            "코드로 세상을 이롭게 하고 싶은 개발자입니다.",
+            null
+        ),
+        User(
+            "user-4",
             "요리왕 준",
             "오늘은 내가 요리사! #집밥 #레시피",
             "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
         ),
         User(
-            101,
+            "user-101",
             "요가마스터",
             "몸과 마음의 연결, 요가로 찾으세요.",
             "https://images.unsplash.com/photo-1552058544-f2b08422138a"
         ),
         User(
-            102,
+            "user-102",
             "개발왕",
             "1일 1커밋. #TIL #오픈소스",
             "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
         ),
         User(
-            201,
+            "user-201",
             "지하철독서왕",
             "이동 시간을 황금으로 만드는 법",
             "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
@@ -64,43 +72,48 @@ object DummyData {
 
     val dummyLiveUsers = listOf(
         LiveUserInfo(
-            1,
+            "3fa85f64-5717-4562-b3fc-2c963f66afa6",
             "운동하는 제니",
             "#오운완",
             "https://images.unsplash.com/photo-1580489944761-15a19d654956"
         ),
         LiveUserInfo(
-            2,
+            "3fa85f64-5717-4562-b3fc-2c963f66afa61",
             "책읽는 라이언",
             "#북스타그램",
             "https://images.unsplash.com/photo-1548142813-c348350df52b"
         ),
-        LiveUserInfo(3, "개발자 모루", "#TIL", null),
         LiveUserInfo(
-            4,
+            "3fa85f64-5717-4562-b3fc-2c963f66afa62",
+            "개발자 모루",
+            "#TIL",
+            null
+        ),
+        LiveUserInfo(
+            "3fa85f64-5717-4562-b3fc-2c963f66afa63",
             "요리왕 준",
             "#집밥",
             "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
         ),
         LiveUserInfo(
-            101,
+            "3fa85f64-5717-4562-b3fc-2c963f66afa64",
             "요가마스터",
             "#요가",
             "https://images.unsplash.com/photo-1552058544-f2b08422138a"
         ),
         LiveUserInfo(
-            102,
+            "3fa85f64-5717-4562-b3fc-2c963f66afa65",
             "개발왕",
             "#코딩",
             "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
         )
     )
 
-    // 앱 전체의 루틴을 관리하는 단일 소스. 수정 가능하도록 var와 MutableList 사용
+    // ⬇️ Routine의 routineId와 authorId를 String으로 변경
     var feedRoutines: MutableList<Routine> = mutableListOf(
         // --- '나'의 루틴 (MY_USER_ID) ---
         Routine(
-            routineId = 501,
+            routineId = "routine-501",
             title = "MORU의 아침 명상",
             description = "상쾌한 아침을 여는 5분 명상 루틴입니다. 하루를 차분하게 시작하며 마음의 평화를 찾아보세요.",
             imageUrl = "https://images.unsplash.com/photo-1506126613408-4e0e0f7c50e1",
@@ -133,7 +146,7 @@ object DummyData {
             )
         ),
         Routine(
-            routineId = 502,
+            routineId = "routine-502",
             title = "MORU의 주말 대청소",
             description = "개운하게 주말을 맞이하는 청소 루틴! 음악과 함께하면 더 즐거워요.",
             imageUrl = "https://images.unsplash.com/photo-1585421943279-25f1712ba7a8",
@@ -162,7 +175,7 @@ object DummyData {
             )
         ),
         Routine(
-            routineId = 503,
+            routineId = "routine-503",
             title = "MORU의 저녁 스트레칭",
             description = "하루의 피로를 푸는 간단한 스트레칭.",
             imageUrl = "https://images.unsplash.com/photo-1599901860904-17e6ed7083a0",
@@ -184,7 +197,7 @@ object DummyData {
             )
         ),
         Routine(
-            routineId = 504,
+            routineId = "routine-504",
             title = "MORU의 집중 코딩 타임",
             description = "방해 없이 2시간 동안 코딩에 집중하는 시간. 포모도로 기법 활용!",
             imageUrl = "https://images.unsplash.com/photo-1517694712202-14dd9538aa97",
@@ -213,13 +226,13 @@ object DummyData {
 
         // --- 다른 사용자의 루틴 ---
         Routine(
-            routineId = 1,
+            routineId = "routine-1",
             title = "아침 10분 요가",
             description = "간단한 요가로 하루를 시작해요. 몸과 마음을 깨우는 시간을 가져보세요.",
             imageUrl = "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2120&auto=format&fit=crop",
             category = "간편",
             tags = listOf("건강", "요가", "아침루틴", "운동", "명상"),
-            authorId = 101,
+            authorId = "user-101",
             authorName = "요가마스터",
             authorProfileUrl = "https://images.unsplash.com/photo-1552058544-f2b08422138a",
             likes = 112,
@@ -234,13 +247,13 @@ object DummyData {
             )
         ),
         Routine(
-            routineId = 2,
+            routineId = "routine-2",
             title = "매일 TIL 작성하기",
             description = "개발 지식을 매일 기록합니다. 꾸준함이 실력!",
             imageUrl = "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=2072&auto=format&fit=crop",
             category = "집중",
             tags = listOf("개발", "TIL"),
-            authorId = 102,
+            authorId = "user-102",
             authorName = "개발왕",
             authorProfileUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
             likes = 98,
@@ -254,13 +267,13 @@ object DummyData {
         ),
         // --- [추가] 새로운 루틴 데이터 ---
         Routine(
-            routineId = 3,
+            routineId = "routine-3",
             title = "제니의 헬스 3분할",
             description = "오늘은 등 운동 하는 날! #오운완",
             imageUrl = "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
             category = "집중",
             tags = listOf("헬스", "운동", "등운동"),
-            authorId = 1,
+            authorId = "user-1",
             authorName = "운동하는 제니",
             authorProfileUrl = "https://images.unsplash.com/photo-1580489944761-15a19d654956",
             likes = 256,
@@ -274,13 +287,13 @@ object DummyData {
             )
         ),
         Routine(
-            routineId = 4,
+            routineId = "routine-4",
             title = "저녁 독서 30분",
             description = "잠들기 전, 스마트폰 대신 책과 함께.",
             imageUrl = "https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=1887&auto=format&fit=crop",
             category = "간편",
             tags = listOf("독서", "저녁루틴", "자기계발"),
-            authorId = 2,
+            authorId = "user-2",
             authorName = "책읽는 라이언",
             authorProfileUrl = "https://images.unsplash.com/photo-1548142813-c348350df52b",
             likes = 76,
@@ -290,13 +303,13 @@ object DummyData {
             steps = emptyList()
         ),
         Routine(
-            routineId = 5,
+            routineId = "routine-5",
             title = "주간 밀프렙 만들기",
             description = "주말에 미리 준비해서 평일 저녁을 여유롭게!",
             imageUrl = "https://images.unsplash.com/photo-1606787366850-de6330128214",
             category = "집중",
             tags = listOf("요리", "밀프렙", "집밥"),
-            authorId = 4,
+            authorId = "user-4",
             authorName = "요리왕 준",
             authorProfileUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
             likes = 152,
