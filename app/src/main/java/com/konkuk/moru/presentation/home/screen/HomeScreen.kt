@@ -51,7 +51,7 @@ import com.konkuk.moru.presentation.home.component.RoutineCardList
 import com.konkuk.moru.presentation.home.component.TodayRoutinePager
 import com.konkuk.moru.presentation.home.component.TodayWeekTab
 import com.konkuk.moru.presentation.home.component.WeeklyCalendarView
-import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
+import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography

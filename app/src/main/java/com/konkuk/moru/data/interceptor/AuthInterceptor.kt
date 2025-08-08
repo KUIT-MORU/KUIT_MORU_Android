@@ -1,5 +1,6 @@
 package com.konkuk.moru.data.interceptor
 
+import android.util.Log
 import com.konkuk.moru.data.token.TokenManager
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -13,11 +14,15 @@ class AuthInterceptor @Inject constructor(
         val token = tokenManager.getToken()
 
         val newRequest = chain.request().newBuilder().apply {
-            token?.let {
-                addHeader("Authorization", "Bearer $it")
+            if (!token.isNullOrEmpty()) {
+                Log.d("AuthInterceptor", "Token attached: Bearer $token")
+                addHeader("Authorization", "Bearer $token")
+            } else {
+                Log.w("AuthInterceptor", "No token found. Skipping Authorization header.")
             }
         }.build()
 
         return chain.proceed(newRequest)
     }
+
 }
