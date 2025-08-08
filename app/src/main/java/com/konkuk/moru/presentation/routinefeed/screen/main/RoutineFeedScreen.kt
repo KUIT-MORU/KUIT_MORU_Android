@@ -78,12 +78,12 @@ fun RoutineFeedScreen(
     }
 
     val likedStates = remember {
-        mutableStateMapOf<Int, Boolean>().apply {
+        mutableStateMapOf<String, Boolean>().apply {
             DummyData.feedRoutines.forEach { put(it.routineId, it.isLiked) }
         }
     }
     val likeCounts = remember {
-        mutableStateMapOf<Int, Int>().apply {
+        mutableStateMapOf<String, Int>().apply {
             DummyData.feedRoutines.forEach { put(it.routineId, it.likes) }
         }
     }
@@ -120,9 +120,9 @@ private fun RoutineFeedContent(
     navController: NavHostController,
     liveUsers: List<LiveUserInfo>,
     routineSections: List<RoutineFeedSectionModel>,
-    likedStates: Map<Int, Boolean>,
-    likeCounts: Map<Int, Int>,
-    onLikeClick: (Int, Boolean) -> Unit
+    likedStates: Map<String, Boolean>,
+    likeCounts: Map<String, Int>,
+    onLikeClick: (String, Boolean) -> Unit
 ) {
     Surface(modifier = modifier.fillMaxSize(), color = Color.White) {
         LazyColumn(

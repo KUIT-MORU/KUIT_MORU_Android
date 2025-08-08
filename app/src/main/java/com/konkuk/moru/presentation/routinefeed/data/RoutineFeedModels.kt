@@ -9,7 +9,7 @@ data class RoutineSectionModel(
 )
 
 data class LiveUserInfo(
-    val userId: Int,
+    val userId: String,
     val name: String,
     val tag: String,
     val profileImageUrl: String?

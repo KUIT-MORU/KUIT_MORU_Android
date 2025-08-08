@@ -8,7 +8,7 @@ import java.time.LocalTime
  */
 data class Routine(
     // 기본 정보
-    val routineId: Int,
+    val routineId: String,
     val title: String,
     val description: String,
     val imageUrl: String?,
@@ -16,7 +16,7 @@ data class Routine(
     val tags: List<String>,
 
     // 사용자 관련 정보
-    val authorId: Int,
+    val authorId: String,
     val authorName: String,
     val authorProfileUrl: String?,
 

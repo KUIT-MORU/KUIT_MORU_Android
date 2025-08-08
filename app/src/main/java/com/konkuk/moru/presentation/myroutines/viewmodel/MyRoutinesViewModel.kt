@@ -73,7 +73,7 @@ class MyRoutinesViewModel : ViewModel() {
         _uiState.update { it.copy(showInfoTooltip = false) }
     }
 
-    fun onCheckRoutine(routineId: Int, isChecked: Boolean) {
+    fun onCheckRoutine(routineId: String, isChecked: Boolean) {
         _sourceRoutines.update { currentList ->
             currentList.map { if (it.routineId == routineId) it.copy(isChecked = isChecked) else it }
         }
@@ -106,7 +106,7 @@ class MyRoutinesViewModel : ViewModel() {
         }
     }
 
-    fun openTimePicker(routineId: Int) {
+    fun openTimePicker(routineId: String) {
         _uiState.update { it.copy(editingRoutineId = routineId) }
     }
 
@@ -114,7 +114,7 @@ class MyRoutinesViewModel : ViewModel() {
         _uiState.update { it.copy(editingRoutineId = null) }
     }
 
-    fun onConfirmTimeSet(routineId: Int, time: LocalTime, days: Set<DayOfWeek>, alarm: Boolean) {
+    fun onConfirmTimeSet(routineId: String, time: LocalTime, days: Set<DayOfWeek>, alarm: Boolean) {
         _sourceRoutines.update { currentList ->
             currentList.map {
                 // [수정] it.copy에 isAlarmEnabled = alarm 추가
@@ -128,7 +128,7 @@ class MyRoutinesViewModel : ViewModel() {
         closeTimePicker()
     }
 
-    fun onLikeClick(routineId: Int) {
+    fun onLikeClick(routineId: String) {
         _sourceRoutines.update { currentList ->
             currentList.map { routine ->
                 if (routine.routineId == routineId) {

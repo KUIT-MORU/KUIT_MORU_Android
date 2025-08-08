@@ -14,7 +14,7 @@ import com.konkuk.moru.data.model.Routine
 @Composable
 fun RoutineCardList(
     routines: List<Routine>,
-    onRoutineClick: (Int) -> Unit,
+    onRoutineClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     //스크롤 대비 상태 저장
@@ -42,13 +42,13 @@ fun RoutineCardList(
 private fun RoutineCardListPreview() {
     val dummyRoutines = listOf(
         Routine(
-            routineId = 1,
+            routineId = "routine-1",
             title = "MORU의 집중 코딩",
             description = "집중력을 높이는 코딩 루틴",
             imageUrl = null,
             category = "공부",
             tags = listOf("개발", "코딩"),
-            authorId = 1,
+            authorId = "user-1",
             authorName = "MORU",
             authorProfileUrl = null,
             likes = 10,
@@ -57,13 +57,13 @@ private fun RoutineCardListPreview() {
             isRunning = false
         ),
         Routine(
-            routineId = 2,
+            routineId = "routine-2",
             title = "아침 명상 루틴",
             description = "마음을 가다듬는 아침 명상",
             imageUrl = null,
             category = "건강",
             tags = listOf("명상", "아침"),
-            authorId = 1,
+            authorId = "user-2",
             authorName = "MORU",
             authorProfileUrl = null,
             likes = 8,
@@ -72,13 +72,13 @@ private fun RoutineCardListPreview() {
             isRunning = false
         ),
         Routine(
-            routineId = 3,
+            routineId = "routine-3",
             title = "주말 대청소",
             description = "집을 깨끗이! 대청소 루틴",
             imageUrl = null,
             category = "생활",
             tags = listOf("청소", "집안일"),
-            authorId = 1,
+            authorId = "user-3",
             authorName = "MORU",
             authorProfileUrl = null,
             likes = 5,

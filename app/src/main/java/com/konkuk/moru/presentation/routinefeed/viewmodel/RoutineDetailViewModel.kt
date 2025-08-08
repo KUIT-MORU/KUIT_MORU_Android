@@ -25,7 +25,7 @@ class RoutineDetailViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(RoutineDetailUiState())
     val uiState = _uiState.asStateFlow()
 
-    fun loadRoutine(routineId: Int) {
+    fun loadRoutine(routineId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             val targetRoutine = DummyData.feedRoutines.find { it.routineId == routineId }
@@ -61,7 +61,7 @@ class RoutineDetailViewModel : ViewModel() {
 
             // 1. 루틴 복사 및 authorId 변경
             val newRoutine = originalRoutine.copy(
-                routineId = UUID.randomUUID().hashCode(), // 새 고유 ID 부여
+                routineId = UUID.randomUUID().toString(), // 새 고유 ID 부여
                 authorId = DummyData.MY_USER_ID,          // 작성자를 '나'로 변경
                 authorName = myInfo?.nickname ?: "MORU (나)",
                 authorProfileUrl = myInfo?.profileImageUrl,

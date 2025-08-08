@@ -30,7 +30,7 @@ import com.konkuk.moru.ui.theme.MORUTheme
 fun SimilarRoutinesSection(
     modifier: Modifier = Modifier,
     routines: List<SimilarRoutine>,
-    onRoutineClick: (Int) -> Unit,
+    onRoutineClick: (String) -> Unit,
 ) {
     Column(
         modifier = modifier

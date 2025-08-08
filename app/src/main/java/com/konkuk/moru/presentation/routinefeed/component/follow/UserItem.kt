@@ -29,7 +29,7 @@ import com.konkuk.moru.ui.theme.moruFontMedium
 fun UserItem(
     user: FollowUser,
     onFollowClick: (FollowUser) -> Unit,
-    onUserClick: (Int) -> Unit,
+    onUserClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -108,12 +108,12 @@ private fun UserItemPreview() {
     MORUTheme {
         Column {
             UserItem(
-                user = FollowUser(1, "", "사용자명1", "자기소개입니다. 잘 부탁드립니다.", false),
+                user = FollowUser("", "사용자명1", "사용자명 1","자기소개입니다. 잘 부탁드립니다.", false),
                 onFollowClick = {},
                 onUserClick = {}
             )
             UserItem(
-                user = FollowUser(2, "", "사용자명2", "안녕하세요!", true),
+                user = FollowUser("", "", "사용자명2", "안녕하세요!", true),
                 onFollowClick = {},
                 onUserClick = {}
             )

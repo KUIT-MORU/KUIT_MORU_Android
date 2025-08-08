@@ -114,10 +114,10 @@ private fun UserProfileContent(
     state: UserProfileUiState,
     onFollowClick: () -> Unit,
     onToggleExpansion: () -> Unit,
-    onLikeClick: (Int) -> Unit,
+    onLikeClick: (String) -> Unit,
     onFollowerClick: () -> Unit,
     onFollowingClick: () -> Unit,
-    onRoutineClick: (Int) -> Unit
+    onRoutineClick: (String) -> Unit
 ) {
     LazyColumn(modifier = modifier.fillMaxWidth()) {
         item {
@@ -293,8 +293,8 @@ private fun ExpandableRoutineSection(
     routines: List<Routine>,
     nickname: String,
     onToggle: () -> Unit,
-    onLikeClick: (Int) -> Unit,
-    onRoutineClick: (Int) -> Unit
+    onLikeClick: (String) -> Unit,
+    onRoutineClick: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -369,13 +369,13 @@ private fun UserProfileScreenPreview(isDataEmpty: Boolean = false) {
     val sampleRunningRoutines = remember {
         listOf(
             Routine(
-                1,
+                "routine-1",
                 "아침 운동 1",
                 "",
                 null,
                 "운동",
                 listOf("#테그그그그그", "#tag"),
-                1,
+                "user-1",
                 "모루",
                 null,
                 16,
@@ -388,13 +388,13 @@ private fun UserProfileScreenPreview(isDataEmpty: Boolean = false) {
     val sampleUserRoutines = remember {
         List(5) { index ->
             Routine(
-                index + 2,
+                "user-routine-${index}",
                 "아침 운동",
                 "",
                 null,
                 "운동",
                 listOf("#모닝루틴", "#스트레칭"),
-                2,
+                "user-2",
                 "모루",
                 null,
                 16,

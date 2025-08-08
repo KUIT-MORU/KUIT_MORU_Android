@@ -131,7 +131,7 @@ fun MyRoutineDetailContent(
 private fun MyRoutineDetailContentPreview_ViewMode() {
     val viewModel: MyRoutineDetailViewModel = viewModel()
     // '나'의 첫 번째 루틴(ID: 501)을 불러와서 상태를 설정합니다.
-    viewModel.loadRoutine(501)
+    viewModel.loadRoutine("routine-501")
 
     MORUTheme {
         MyRoutineDetailContent(
@@ -149,7 +149,7 @@ private fun MyRoutineDetailContentPreview_ViewMode() {
 private fun MyRoutineDetailContentPreview_EditMode() {
     val viewModel: MyRoutineDetailViewModel = viewModel()
     // '나'의 첫 번째 루틴(ID: 501)을 불러와서 상태를 설정합니다.
-    viewModel.loadRoutine(501)
+    viewModel.loadRoutine("routine-501")
 
     MORUTheme {
         MyRoutineDetailContent(

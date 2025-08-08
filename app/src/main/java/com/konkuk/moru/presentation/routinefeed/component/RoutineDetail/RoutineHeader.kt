@@ -21,7 +21,7 @@ import com.konkuk.moru.data.model.Routine
 @Composable
 fun RoutineHeader(
     routine: Routine,
-    onProfileClick: (authorId: Int) -> Unit
+    onProfileClick: (authorId: String) -> Unit
 ) {
     Box(
         modifier = Modifier

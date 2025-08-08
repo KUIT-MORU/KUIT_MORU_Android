@@ -33,9 +33,9 @@ fun TitledRoutineSection(
     modifier: Modifier = Modifier,
     title: String,
     routines: List<Routine>,
-    likeCounts: Map<Int, Int>,
-    onRoutineClick: (Int) -> Unit,
-    onLikeClick: (Int, Boolean) -> Unit,
+    likeCounts: Map<String, Int>,
+    onRoutineClick: (String) -> Unit,
+    onLikeClick: (String, Boolean) -> Unit,
     onMoreClick: (String) -> Unit,
 ) {
     Column(modifier = modifier.fillMaxWidth().padding(vertical = 12.dp)) {

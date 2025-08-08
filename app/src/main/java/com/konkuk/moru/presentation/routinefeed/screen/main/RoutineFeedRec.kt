@@ -27,7 +27,7 @@ fun RoutineFeedRec(
     title: String,
     routines: List<Routine>,
     onBack: () -> Unit,
-    onRoutineClick: (Int) -> Unit
+    onRoutineClick: (String) -> Unit
 ) {
     var likeStates by remember(routines) {
         mutableStateOf(routines.associate { it.routineId to it.isLiked })

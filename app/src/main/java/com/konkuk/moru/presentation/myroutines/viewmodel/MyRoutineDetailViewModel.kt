@@ -28,7 +28,7 @@ class MyRoutineDetailViewModel : ViewModel() {
     /**
      * 특정 routineId를 가진 '내 루틴'을 불러옵니다.
      */
-    fun loadRoutine(routineId: Int) {
+    fun loadRoutine(routineId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             // '내 루틴'만 찾도록 authorId 조건을 추가합니다.
@@ -53,7 +53,7 @@ class MyRoutineDetailViewModel : ViewModel() {
     }
 
 
-    fun deleteRoutine(routineId: Int) {
+    fun deleteRoutine(routineId: String) {
         viewModelScope.launch {
             DummyData.feedRoutines.removeAll { it.routineId == routineId }
             _deleteCompleted.emit(true) // 삭제 완료 신호를 보냅니다.
@@ -63,7 +63,7 @@ class MyRoutineDetailViewModel : ViewModel() {
     /**
      * 루틴의 설명과 카테고리를 업데이트합니다. -> 수정예정
      */
-    fun updateRoutine(routineId: Int, newDescription: String, newCategory: String) {
+    fun updateRoutine(routineId: String, newDescription: String, newCategory: String) {
         val index = DummyData.feedRoutines.indexOfFirst { it.routineId == routineId }
         if (index != -1) {
             val originalRoutine = DummyData.feedRoutines[index]

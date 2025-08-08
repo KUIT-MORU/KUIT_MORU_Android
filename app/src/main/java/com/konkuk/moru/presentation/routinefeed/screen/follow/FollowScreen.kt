@@ -20,7 +20,7 @@ import com.konkuk.moru.ui.theme.MORUTheme
 @Composable
 fun FollowScreen(
     onBackClick: () -> Unit,
-    onUserClick: (Int) -> Unit,
+    onUserClick: (String) -> Unit,
     viewModel: FollowViewModel = hiltViewModel(),
     selectedTab: String?
 ) {
@@ -53,14 +53,14 @@ private fun FollowScreenPreview() {
         mutableStateOf(
             FollowUiState(
                 followers = listOf(
-                    FollowUser(1, "", "Moru_Official", "모루 공식 계정입니다.", true),
-                    FollowUser(2, "", "Android_Lover", "안드로이드 개발자", false),
-                    FollowUser(3, "", "Compose_Fan", "컴포즈는 쉬워요!", true),
+                    FollowUser("routine-id-1", "", "Moru_Official", "모루 공식 계정입니다.", true),
+                    FollowUser("routine-id-2", "", "Android_Lover", "안드로이드 개발자", false),
+                    FollowUser("routine-id-3", "", "Compose_Fan", "컴포즈는 쉬워요!", true),
                 ), followings = listOf(
-                    FollowUser(1, "", "Moru_Official", "모루 공식 계정입니다.", true),
-                    FollowUser(3, "", "Compose_Fan", "컴포즈는 쉬워요!", true),
-                    FollowUser(4, "", "Kotlin_User", "코틀린 최고", true),
-                    FollowUser(5, "", "Jetpack_Guru", "제트팩 전문가", true),
+                    FollowUser("routine-id-1", "", "Moru_Official", "모루 공식 계정입니다.", true),
+                    FollowUser("routine-id-3", "", "Compose_Fan", "컴포즈는 쉬워요!", true),
+                    FollowUser("routine-id-4", "", "Kotlin_User", "코틀린 최고", true),
+                    FollowUser( "routine-id-5", "Jetpack_Guru", "제트팩 전문가","코틀린 최고",true),
                 )
             )
         )

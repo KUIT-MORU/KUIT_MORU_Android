@@ -30,7 +30,7 @@ import com.konkuk.moru.ui.theme.MORUTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyRoutineDetailScreen(
-    routineId: Int,
+    routineId: String,
     onBackClick: () -> Unit,
     viewModel: MyRoutineDetailViewModel = viewModel(),
 ) {
@@ -105,10 +105,10 @@ fun MyRoutineDetailScreen(
 private fun MyRoutineDetailScreenPreview_ViewMode() {
     MORUTheme {
         val viewModel: MyRoutineDetailViewModel = viewModel()
-        viewModel.loadRoutine(501)
+        viewModel.loadRoutine("routine-501")
 
         MyRoutineDetailScreen(
-            routineId = 501,
+            routineId = "routine-501",
             onBackClick = {},
             viewModel = viewModel
         )
@@ -120,11 +120,11 @@ private fun MyRoutineDetailScreenPreview_ViewMode() {
 private fun MyRoutineDetailScreenPreview_EditMode() {
     MORUTheme {
         val viewModel: MyRoutineDetailViewModel = viewModel()
-        viewModel.loadRoutine(501)
+        viewModel.loadRoutine("routine-501")
         viewModel.setEditMode(true) // 프리뷰를 위해 수정 모드로 설정
 
         MyRoutineDetailScreen(
-            routineId = 501,
+            routineId = "routine-501",
             onBackClick = {},
             viewModel = viewModel
         )

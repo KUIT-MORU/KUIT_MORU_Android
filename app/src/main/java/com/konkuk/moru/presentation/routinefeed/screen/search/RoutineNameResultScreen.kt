@@ -51,7 +51,7 @@ internal fun RoutineNameResultScreen(
     onPerformSearch: () -> Unit, // TopAppBar에서 검색 실행을 위한 콜백
     selectedTags: List<String>,
     onNavigateBack: () -> Unit,
-    onRoutineClick: (Int) -> Unit,
+    onRoutineClick: (String) -> Unit,
     onNavigateToTagSearch: () -> Unit,
     onDeleteTag: (String) -> Unit
 ) {

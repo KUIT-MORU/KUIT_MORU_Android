@@ -39,7 +39,7 @@ fun FollowScreenContent(
     scope: CoroutineScope,
     onBackClick: () -> Unit,
     onFollowClick: (FollowUser) -> Unit,
-    onUserClick: (Int) -> Unit
+    onUserClick: (String) -> Unit
 ) {
     Scaffold(
         modifier = Modifier.padding(11.dp),
