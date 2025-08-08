@@ -124,7 +124,7 @@ fun RoutineCardWithImage(
 fun RoutineListWithImageScreen() {
     // 1. 서버에서 받아온 초기 데이터 모델
     data class RoutineInfo(
-        val id: Int,
+        val id: String,
         val name: String,
         val tags: List<String>,
         val likes: Int,
@@ -136,23 +136,23 @@ fun RoutineListWithImageScreen() {
     val routines = remember {
         listOf(
             // tag = "운동" -> tags = listOf("운동")
-            RoutineInfo(1, "매일 조깅하기", listOf("운동"), 16, isRunning = true, isLiked = true),
+            RoutineInfo("routine-1", "매일 조깅하기", listOf("운동"), 16, isRunning = true, isLiked = true),
             // 여러 태그가 있는 경우
-            RoutineInfo(2, "아침 책읽기", listOf("독서", "자기계발"), 25, isRunning = false, isLiked = false),
-            RoutineInfo(3, "영어 공부", listOf("학습", "외국어"), 8, isRunning = true, isLiked = false),
-            RoutineInfo(4, "요리 배우기", listOf("취미", "쿠킹"), 112, isRunning = false, isLiked = true),
+            RoutineInfo("routine-2", "아침 책읽기", listOf("독서", "자기계발"), 25, isRunning = false, isLiked = false),
+            RoutineInfo("routine-3", "영어 공부", listOf("학습", "외국어"), 8, isRunning = true, isLiked = false),
+            RoutineInfo("routine-4", "요리 배우기", listOf("취미", "쿠킹"), 112, isRunning = false, isLiked = true),
         )
     }
 
     // 3. '좋아요' 상태와 카운트를 UI에서 즉시 반영하기 위한 로컬 상태
     //    서버에서 받은 초기값으로 한 번만 초기화합니다.
     val likedStates = remember {
-        mutableStateMapOf<Int, Boolean>().apply {
+        mutableStateMapOf<String, Boolean>().apply {
             routines.forEach { put(it.id, it.isLiked) }
         }
     }
     val likeCounts = remember {
-        mutableStateMapOf<Int, Int>().apply {
+        mutableStateMapOf<String, Int>().apply {
             routines.forEach { put(it.id, it.likes) }
         }
     }

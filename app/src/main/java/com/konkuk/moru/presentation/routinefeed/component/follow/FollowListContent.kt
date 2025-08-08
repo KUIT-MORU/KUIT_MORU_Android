@@ -13,7 +13,7 @@ fun FollowListContent(
     emptyMessage: String,
     emptySubMessage: String,
     onFollowClick: (FollowUser) -> Unit,
-    onUserClick: (Int) -> Unit
+    onUserClick: (String) -> Unit
 ) {
     if (users.isEmpty()) {
         EmptyFollowContent(

@@ -35,7 +35,7 @@ import com.konkuk.moru.ui.theme.MORUTheme
 public fun RoutineInfoOverlay(
     modifier: Modifier = Modifier,
     routine: Routine,
-    onProfileClick: (authorId: Int) -> Unit
+    onProfileClick: (authorId: String) -> Unit
 ) {
     val contentColor = Color.White
 

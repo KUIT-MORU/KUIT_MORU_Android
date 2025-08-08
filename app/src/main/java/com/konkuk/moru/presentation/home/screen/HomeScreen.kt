@@ -79,7 +79,14 @@ fun HomeScreen(
 
     // 루틴 샘플 데이터(오늘 탭 선택 시 보여줄 박스의 내용들)
     val sampleRoutines =
-        DummyData.feedRoutines.filter { it.routineId in listOf(501, 502, 503, 504) }
+        DummyData.feedRoutines.filter {
+            it.routineId in listOf(
+                "routine-501",
+                "routine-502",
+                "routine-503",
+                "routine-504"
+            )
+        }
 
     // 루틴 태그 샘플(이번주 탭 선택 시 달력 날짜에 들어갈 것들)
     val sampleRoutineTags = mapOf(
@@ -317,10 +324,10 @@ fun HomeScreen(
                         val myRoutineIds = listOf(501, 502, 503, 504)
                         val myRoutines = DummyData.feedRoutines.filter {
                             it.routineId in listOf(
-                                501,
-                                502,
-                                503,
-                                504
+                                "routine-501",
+                                "routine-502",
+                                "routine-503",
+                                "routine-504"
                             )
                         }
 

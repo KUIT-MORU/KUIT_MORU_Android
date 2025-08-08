@@ -72,13 +72,13 @@ fun TodayRoutinePager(
 private fun TodayRoutinePagerPreview() {
     val sampleRoutines = listOf(
         Routine(
-            routineId = 1,
+            routineId = "routine-1",
             title = "주말 아침 루틴 (집중 루틴 테스트용)",
             description = "설명",
             imageUrl = null,
             category = "생활",
             tags = listOf("#화이팅"),
-            authorId = 100,
+            authorId = "user-1",
             authorName = "홍길동",
             authorProfileUrl = null,
             likes = 25,
@@ -89,13 +89,13 @@ private fun TodayRoutinePagerPreview() {
             scheduledDays = setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
         ),
         Routine(
-            routineId = 2,
+            routineId = "routine-1",
             title = "출근 준비 루틴 (간편 루틴 테스트용)",
             description = "설명",
             imageUrl = null,
             category = "생활",
             tags = listOf("#힘내자"),
-            authorId = 101,
+            authorId = "user-101",
             authorName = "김영희",
             authorProfileUrl = null,
             likes = 41,
@@ -106,13 +106,13 @@ private fun TodayRoutinePagerPreview() {
             scheduledDays = setOf(DayOfWeek.MONDAY)
         ),
         Routine(
-            routineId = 3,
+            routineId = "routine-3",
             title = "운동 루틴",
             description = "설명",
             imageUrl = null,
             category = "운동",
             tags = listOf("#건강"),
-            authorId = 102,
+            authorId = "user-102",
             authorName = "이철수",
             authorProfileUrl = null,
             likes = 12,

@@ -3,7 +3,7 @@ package com.konkuk.moru.presentation.routinefeed.data
 import com.konkuk.moru.data.model.Routine
 
 data class FollowUser(
-    val id: Int,
+    val id: String,
     val profileImageUrl: String, // 임시로 비워두거나 기본 이미지 URL 사용
     val username: String,
     val bio: String,
@@ -12,7 +12,7 @@ data class FollowUser(
 
 
 data class UserProfileUiState(
-    val userId: Int = -1,
+    val userId: String = "user--1",
     val nickname: String = "",
     val bio: String = "",
     val profileImageUrl: String? = null,
@@ -27,7 +27,7 @@ data class UserProfileUiState(
 
 
 data class User(
-    val userId: Int,
+    val userId: String,
     val nickname: String,
     val bio: String,
     val profileImageUrl: String?
