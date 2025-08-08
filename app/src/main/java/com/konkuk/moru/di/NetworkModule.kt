@@ -1,11 +1,14 @@
 package com.konkuk.moru.di
 
 import com.konkuk.moru.BuildConfig
+import com.konkuk.moru.data.interceptor.AuthInterceptor
 import com.konkuk.moru.data.service.AuthService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.Interceptor
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
@@ -22,10 +25,24 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(baseUrl: String): Retrofit {
+    fun provideAuthInterceptor(authInterceptor: AuthInterceptor): Interceptor {
+        return authInterceptor
+    }
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(authInterceptor: Interceptor): OkHttpClient {
+        return UnsafeHttpClient.getUnsafeOkHttpClient().newBuilder() // 테스트용 클라이언트 기반
+            .addInterceptor(authInterceptor) // ✅ Authorization 헤더 자동 삽입
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(baseUrl: String, okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
             .baseUrl(baseUrl)
-            .client(UnsafeHttpClient.getUnsafeOkHttpClient()) //테스트용 (인증서 받아야할 것 같습니다..)
+            .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
