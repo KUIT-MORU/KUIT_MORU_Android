@@ -74,7 +74,7 @@ fun MainNavGraph(
         // 루틴 목록의 카드 클릭 시
         composable(
             route = "routine_focus_intro/{routineId}",
-            arguments = listOf(navArgument("routineId") { type = NavType.IntType })
+            arguments = listOf(navArgument("routineId") { type = NavType.StringType })
         ) { backStackEntry ->
 
             val parentEntry = remember(navController.currentBackStackEntry) {
@@ -218,9 +218,9 @@ fun MainNavGraph(
 
         composable(
             route = Route.RoutineFeedDetail.route,
-            arguments = listOf(navArgument("routineId") { type = NavType.IntType })
+            arguments = listOf(navArgument("routineId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val routineId = backStackEntry.arguments?.getInt("routineId")
+            val routineId = backStackEntry.arguments?.getString("routineId")
             if (routineId != null) {
                 RoutineDetailScreen(
                     routineId = routineId,
@@ -292,9 +292,9 @@ fun MainNavGraph(
         // [추가] UserProfileScreen 내비게이션 설정
         composable(
             route = Route.MyRoutineDetail.route,
-            arguments = listOf(navArgument("routineId") { type = NavType.IntType })
+            arguments = listOf(navArgument("routineId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val routineId = backStackEntry.arguments?.getInt("routineId")
+            val routineId = backStackEntry.arguments?.getString("routineId")
             if (routineId != null) {
                 MyRoutineDetailScreen(
                     routineId = routineId,
@@ -309,7 +309,7 @@ fun MainNavGraph(
 
         composable(
             route = Route.UserProfile.route,
-            arguments = listOf(navArgument("userId") { type = NavType.IntType })
+            arguments = listOf(navArgument("userId") { type = NavType.StringType })
         ) { backStackEntry ->
             // userId는 현재 더미 데이터로만 사용되므로 ViewModel에서 직접 로드합니다.
             // 실제 앱에서는 hiltViewModel에 userId를 전달하여 해당 유저 데이터를 불러옵니다.
@@ -320,7 +320,7 @@ fun MainNavGraph(
         composable(
             route = Route.Follow.route,
             arguments = listOf(
-                navArgument("userId") { type = NavType.IntType },
+                navArgument("userId") { type = NavType.StringType },
                 navArgument("selectedTab") { type = NavType.StringType })
         ) { backStackEntry ->
             val selectedTab = backStackEntry.arguments?.getString("selectedTab")

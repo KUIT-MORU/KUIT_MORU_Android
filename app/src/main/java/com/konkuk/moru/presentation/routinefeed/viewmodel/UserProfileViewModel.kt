@@ -24,7 +24,7 @@ class UserProfileViewModel @Inject constructor(
     init {
         // 내비게이션 경로로부터 'userId' 파라미터를 가져옵니다.
         // 이 "userId"는 NavHost에 정의된 `navArgument("userId")`의 이름과 일치해야 합니다.
-        val userId: Int? = savedStateHandle["userId"]
+        val userId: String? = savedStateHandle["userId"]
 
         if (userId != null) {
             loadUserProfile(userId)
@@ -37,7 +37,7 @@ class UserProfileViewModel @Inject constructor(
     /**
      * 전달받은 userId에 맞는 사용자 정보를 불러와 UI 상태를 업데이트합니다.
      */
-    private fun loadUserProfile(userId: Int) {
+    private fun loadUserProfile(userId: String) {
         viewModelScope.launch {
             // 더미 데이터에서 userId와 일치하는 사용자 정보를 찾습니다.
             val user = DummyData.dummyUsers.find { it.userId == userId }
@@ -120,7 +120,7 @@ class UserProfileViewModel @Inject constructor(
         _uiState.update { it.copy(isRunningRoutineExpanded = !it.isRunningRoutineExpanded) }
     }
 
-    fun toggleLike(routineId: Int) {
+    fun toggleLike(routineId: String) {
         _uiState.update { currentState ->
             val updatedRunningRoutines = currentState.runningRoutines.map { routine ->
                 if (routine.routineId == routineId) {

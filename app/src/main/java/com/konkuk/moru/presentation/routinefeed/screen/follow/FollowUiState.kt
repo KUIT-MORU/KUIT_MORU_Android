@@ -10,6 +10,6 @@ data class FollowUiState(
 )
 
 data class FollowRelation(
-    val followerId: Int, // 팔로우를 하는 사람 ID
-    val followingId: Int  // 팔로우를 당하는 사람 ID
+    val followerId: String, // 팔로우를 하는 사람 ID
+    val followingId: String  // 팔로우를 당하는 사람 ID
 )

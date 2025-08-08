@@ -63,7 +63,7 @@ data class MyRoutinesUiState(
     val isDeleteMode: Boolean = false,
     val showDeleteDialog: Boolean = false,
     val showInfoTooltip: Boolean = false,
-    val editingRoutineId: Int? = null,
+    val editingRoutineId: String? = null,
     val showDeleteSuccessDialog: Boolean = false
 )
 
@@ -84,7 +84,7 @@ fun MyRoutinesScreen(
     viewModel: MyRoutinesViewModel,
     onNavigateToCreateRoutine: () -> Unit,
     onNavigateToRoutineFeed: () -> Unit,
-    onNavigateToDetail: (Int) -> Unit
+    onNavigateToDetail: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val routinesToDisplay by viewModel.routinesToDisplay.collectAsState()

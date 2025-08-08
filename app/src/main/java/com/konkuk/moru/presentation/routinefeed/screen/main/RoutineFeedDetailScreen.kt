@@ -42,7 +42,7 @@ import com.konkuk.moru.ui.theme.MORUTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoutineDetailScreen(
-    routineId: Int,
+    routineId: String,
     onBackClick: () -> Unit,
     navController: NavController,
     viewModel: RoutineDetailViewModel = viewModel()

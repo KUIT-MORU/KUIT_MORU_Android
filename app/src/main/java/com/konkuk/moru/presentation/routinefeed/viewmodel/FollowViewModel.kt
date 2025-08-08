@@ -23,7 +23,7 @@ class FollowViewModel @Inject constructor(
 
     init {
         // ViewModel이 생성될 때, NavHost에 정의된 'userId'를 가져옵니다.
-        val userId: Int? = savedStateHandle["userId"]
+        val userId: String? = savedStateHandle["userId"]
         // userId가 있다면, 해당 유저의 팔로우 데이터를 불러옵니다.
         userId?.let {
             loadFollowDataFor(it)
@@ -34,7 +34,7 @@ class FollowViewModel @Inject constructor(
      * loadInitialUsers() 대신, 특정 사용자의 팔로워/팔로잉 목록을 불러오는 함수로 변경합니다.
      * @param currentUserId 현재 팔로우 목록을 보려는 사용자의 ID
      */
-    private fun loadFollowDataFor(currentUserId: Int) {
+    private fun loadFollowDataFor(currentUserId: String) {
         viewModelScope.launch {
             // 1. 내 팔로워 목록 생성 (나를 팔로우하는 사람들)
             val myFollowerIds = DummyData.dummyFollowRelations

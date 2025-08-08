@@ -39,7 +39,7 @@ import com.konkuk.moru.ui.theme.MORUTheme
 fun MoruLiveSection(
     modifier: Modifier = Modifier,
     liveUsers: List<LiveUserInfo>,
-    onUserClick: (Int) -> Unit,
+    onUserClick: (String) -> Unit,
     onTitleClick: () -> Unit
 ) {
     Column(modifier = modifier.padding(top = 16.dp)) {
@@ -126,11 +126,11 @@ fun MoruLiveSection(
 @Composable
 private fun MoruLiveSectionPreview() {
     val sampleUsers = listOf(
-        LiveUserInfo(1, "운동하는 제니--------------", "#오운완", "https://images.unsplash.com/photo-1580489944761-15a19d654956"),
-        LiveUserInfo(3, "개발자 모루", "#TIL", null),
-        LiveUserInfo(101, "요가마스터", "#요가", "https://images.unsplash.com/photo-1552058544-f2b08422138a"),
-        LiveUserInfo(102, "개발왕", "#코딩", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"),
-        LiveUserInfo(4, "요리왕 준", "#집밥", "https://images.unsplash.com/photo-1541533267753-bab141444692"),
+        LiveUserInfo("3fa85f64-5717-4562-b3fc-2c963f66afa6", "운동하는 제니--------------", "#오운완", "https://images.unsplash.com/photo-1580489944761-15a19d654956"),
+        LiveUserInfo("3fa85f64-5717-4562-b3fc-2c963f66afa61", "개발자 모루", "#TIL", null),
+        LiveUserInfo("3fa85f64-5717-4562-b3fc-2c963f66afa62", "요가마스터", "#요가", "https://images.unsplash.com/photo-1552058544-f2b08422138a"),
+        LiveUserInfo("3fa85f64-5717-4562-b3fc-2c963f66afa63", "개발왕", "#코딩", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"),
+        LiveUserInfo("3fa85f64-5717-4562-b3fc-2c963f66afa64", "요리왕 준", "#집밥", "https://images.unsplash.com/photo-1541533267753-bab141444692"),
     )
 
     MoruLiveSection(

@@ -143,13 +143,13 @@ fun TodayRoutineListBoxItem(
 @Composable
 private fun TodayRoutineListBoxItemPreview() {
     val sampleRoutine = Routine(
-        routineId = 1,
+        routineId = "routine-1",
         title = "주말 아침 루틴",
         description = "설명",
         imageUrl = null,
         category = "건강",
         tags = listOf("#모닝", "#운동"),
-        authorId = 0,
+        authorId = "user-1",
         authorName = "홍길동",
         authorProfileUrl = null,
         likes = 42,
