@@ -52,7 +52,10 @@ fun RoutineFeedScreen(
             HomeTopAppBar(
                 onSearchClick = { navController.navigate(Route.RoutineSearch.route) },
                 hasNotification = uiState.hasNotification,
-                onNotificationClick = { viewModel.onNotificationViewed() },
+                onNotificationClick = {
+                    navController.navigate(Route.Notification.route)
+                    viewModel.onNotificationViewed()
+                },
                 onLogoClick = {}
             )
         }
@@ -146,7 +149,8 @@ private fun RoutineFeedScreenPreview() {
                 HomeTopAppBar(
                     onSearchClick = { },
                     hasNotification = dummyUiState.hasNotification,
-                    onNotificationClick = { },
+                    onNotificationClick = {
+                    },
                     onLogoClick = {}
                 )
             }
