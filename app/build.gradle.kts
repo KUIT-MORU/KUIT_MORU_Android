@@ -8,7 +8,15 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
 }
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
 
+
+val baseUrl: String = (localProps.getProperty("base.url") ?: "https://15.164.150.204/").let {
+    if (it.endsWith("/")) it else "$it/"
+}
 val properties = Properties().apply {
     load(project.rootProject.file("local.properties").inputStream())
 }
@@ -25,7 +33,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "BASE_URL", properties["base.url"].toString())
+        buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
     }
 
     buildTypes {

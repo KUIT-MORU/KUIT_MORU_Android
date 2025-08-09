@@ -4,6 +4,7 @@ import com.konkuk.moru.BuildConfig
 import com.konkuk.moru.data.interceptor.AuthInterceptor
 import com.konkuk.moru.data.service.AuthService
 import com.konkuk.moru.data.service.InsightService
+import com.konkuk.moru.data.service.RoutineService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -59,4 +60,10 @@ object NetworkModule {
     fun provideInsightService(retrofit: Retrofit): InsightService {
         return retrofit.create(InsightService::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideRoutineService(retrofit: Retrofit): RoutineService =
+        retrofit.create(RoutineService::class.java)
+
 }

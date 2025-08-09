@@ -3,8 +3,8 @@ package com.konkuk.moru.presentation.routinefocus.screen
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
+import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 
 @Composable
 fun RoutineFocusScreenContainer(

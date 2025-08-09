@@ -1,7 +1,8 @@
 package com.konkuk.moru.presentation.home.screen
 
+import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import android.widget.Toast
-import android.util.Log // 👈 [추가]
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -56,7 +57,6 @@ import com.konkuk.moru.presentation.home.component.TodayRoutinePager
 import com.konkuk.moru.presentation.home.component.TodayWeekTab
 import com.konkuk.moru.presentation.home.component.WeeklyCalendarView
 import com.konkuk.moru.presentation.home.viewmodel.HomeRoutinesViewModel
-import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
