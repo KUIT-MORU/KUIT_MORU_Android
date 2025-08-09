@@ -36,11 +36,17 @@ class HomeRoutinesViewModel @Inject constructor(
 
                     _serverRoutines.value = pageRes.content.map { it.toDomain() }
                 }
-                .onFailure { t ->
-                    // [추가] 실패 로그
-                    Log.e(TAG, "loadTodayRoutines failed", t)
+                .onFailure { e ->
+                    if (e is retrofit2.HttpException) {
+                        val code = e.code()
+                        val err = e.response()?.errorBody()?.string()
+                        android.util.Log.e("HomeRoutinesVM", "HTTP $code errorBody=$err")
+                    } else {
+                        android.util.Log.e("HomeRoutinesVM", "loadTodayRoutines failed", e)
+                    }
                     _serverRoutines.value = emptyList()
                 }
+
         }
     }
 }

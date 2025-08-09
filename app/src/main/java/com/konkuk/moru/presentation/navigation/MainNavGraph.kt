@@ -72,32 +72,32 @@ fun MainNavGraph(
             )
         }
 
-        // 루틴 목록의 카드 클릭 시
-        composable(
-            route = "routine_focus_intro/{routineId}",
-            arguments = listOf(navArgument("routineId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val parent = remember(navController.currentBackStackEntry) {
-                navController.getBackStackEntry(Route.Home.route)
-            }
-            val shared = viewModel<SharedRoutineViewModel>(parent)
-
-            val rid = backStackEntry.arguments?.getInt("routineId")
-            if (rid != null) {
-                shared.setSelectedRoutineId(rid)
-            }
-
-            RoutineFocusIntroScreen(
-                sharedViewModel = shared,
-                onStartClick = { selectedSteps, title, hashTag ->
-                    shared.setSelectedSteps(selectedSteps)
-                    shared.setRoutineTitle(title)
-                    shared.setRoutineTags(hashTag.split(" ").map { it.removePrefix("#") })
-                    navController.navigate("routine_focus")
-                },
-                onBackClick = { navController.popBackStack() }
-            )
-        }
+//        // 루틴 목록의 카드 클릭 시
+//        composable(
+//            route = "routine_focus_intro/{routineId}",
+//            arguments = listOf(navArgument("routineId") { type = NavType.StringType })
+//        ) { backStackEntry ->
+//            val parent = remember(navController.currentBackStackEntry) {
+//                navController.getBackStackEntry(Route.Home.route)
+//            }
+//            val shared = viewModel<SharedRoutineViewModel>(parent)
+//
+//            val rid = backStackEntry.arguments?.getInt("routineId")
+//            if (rid != null) {
+//                shared.setSelectedRoutineId(rid)
+//            }
+//
+//            RoutineFocusIntroScreen(
+//                sharedViewModel = shared,
+//                onStartClick = { selectedSteps, title, hashTag ->
+//                    shared.setSelectedSteps(selectedSteps)
+//                    shared.setRoutineTitle(title)
+//                    shared.setRoutineTags(hashTag.split(" ").map { it.removePrefix("#") })
+//                    navController.navigate("routine_focus")
+//                },
+//                onBackClick = { navController.popBackStack() }
+//            )
+//        }
 
 
 

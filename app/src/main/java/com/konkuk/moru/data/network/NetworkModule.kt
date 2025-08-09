@@ -3,6 +3,7 @@ package com.konkuk.moru.data.network
 import android.content.Context
 import com.konkuk.moru.data.network.interceptor.AuthInterceptor
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.konkuk.moru.BuildConfig
 import com.konkuk.moru.data.service.AuthService
 import com.konkuk.moru.data.service.RoutineService
 import dagger.Module
@@ -36,17 +37,35 @@ object NetworkModule {
             level = HttpLoggingInterceptor.Level.BODY
         }
 
-    @Singleton
     @Provides
+    @Singleton
     fun provideOkHttpClient(
         authInterceptor: AuthInterceptor,
         logging: HttpLoggingInterceptor
     ): OkHttpClient {
-        return OkHttpClient.Builder()
+        val builder = OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
             .addInterceptor(logging)
-            .build()
+
+        if (BuildConfig.DEBUG) {
+            // 🚨 개발용 임시 우회: 모든 인증서/호스트네임 신뢰 (절대 배포 금지)
+            val trustAllCerts = arrayOf<javax.net.ssl.X509TrustManager>(
+                object : javax.net.ssl.X509TrustManager {
+                    override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {}
+                    override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {}
+                    override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> = arrayOf()
+                }
+            )
+            val sslContext = javax.net.ssl.SSLContext.getInstance("TLS").apply {
+                init(null, trustAllCerts, java.security.SecureRandom())
+            }
+            builder.sslSocketFactory(sslContext.socketFactory, trustAllCerts[0])
+            builder.hostnameVerifier { _, _ -> true }
+        }
+
+        return builder.build()
     }
+
 
     @Provides
     @Singleton

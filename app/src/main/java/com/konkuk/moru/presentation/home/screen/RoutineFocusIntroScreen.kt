@@ -19,6 +19,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,17 +65,20 @@ fun RoutineFocusIntroScreen(
     val hashTag = hashTagList.joinToString(" ") { "#$it" }
 
     // 각 루틴의 상태를 기억할 수 있또록 상태로 복사해서 관리
-    var stepStates by remember { mutableStateOf(steps.map { it.copy() }) }
+    var stepStates by remember { mutableStateOf(emptyList<RoutineStepData>()) }
+    LaunchedEffect(steps) { stepStates = steps.map { it.copy() } }
 
     // 스위치가 on인 상태의 루틴의 소요시간만 합해서 총 소요시간 계산에 반영
-    val totalDuration = if (category == "간편") {
-        stepStates.sumOf { it.duration } // 간편 루틴은 전체 합산
-    } else {
-        stepStates.filter { it.isChecked }.sumOf { it.duration } // 집중 루틴은 체크된 것만 합산
+    val totalDuration by remember(stepStates, category) {
+        androidx.compose.runtime.derivedStateOf {
+            if (category == "간편") stepStates.sumOf { it.duration }
+            else stepStates.filter { it.isChecked }.sumOf { it.duration }
+        }
     }
 
     // 하나라도 on이 되어 있다면 시작하기 버튼 활성화(총 소요시간으로 판단)
     val isStartEnabled = totalDuration > 0
+
     Scaffold(
         //시작하기 버튼
         bottomBar = {
@@ -185,9 +189,9 @@ fun RoutineFocusIntroScreen(
                     isChecked = step.isChecked,
                     showSwitch = category == "집중",
                     showDuration = category == "집중",
-                    onCheckedChange = {
-                        stepStates = stepStates.toMutableStateList().apply {
-                            this[index] = this[index].copy(isChecked = it)
+                    onCheckedChange = { checked ->
+                        stepStates = stepStates.toMutableList().also { list ->
+                            list[index] = list[index].copy(isChecked = checked)
                         }
                     }
                 )

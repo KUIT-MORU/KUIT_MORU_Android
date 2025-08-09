@@ -60,8 +60,11 @@ import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
+import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 
 fun convertDurationToMinutes(duration: String): Int {
@@ -69,6 +72,31 @@ fun convertDurationToMinutes(duration: String): Int {
     val minutes = parts.getOrNull(0)?.toIntOrNull() ?: 0
     val seconds = parts.getOrNull(1)?.toIntOrNull() ?: 0
     return minutes + (seconds / 60)
+}
+
+// 라벨 포맷(짧게)
+private fun Routine.toCalendarLabel(): String =
+    this.tags.firstOrNull() ?: this.title
+
+// 이번주(월~일) 맵 생성: dayOfMonth -> [라벨, 라벨, ...]
+private fun buildWeeklyMap(routines: List<Routine>): Pair<Map<Int, List<String>>, Int> {
+    val today = LocalDate.now()
+    val startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    val weekDates = (0..6).map { startOfWeek.plusDays(it.toLong()) }
+
+    val map = weekDates.associate { date ->
+        val labels = routines
+            .filter { r ->
+                // 🔸 요일 세팅된 루틴만 주간에 배치
+                r.scheduledDays.contains(date.dayOfWeek)
+            }
+            .sortedBy { it.scheduledTime ?: LocalTime.MAX }
+            .map { it.toCalendarLabel() }
+
+        date.dayOfMonth to labels
+    }
+
+    return map to today.dayOfMonth
 }
 
 // 홈 메인 페이지
@@ -359,15 +387,11 @@ fun HomeScreen(
 
                         // 이번주 탭 선택 시 (샘플)
                         1 -> {
+                            // 주간 데이터 만들기 (serverRoutines를 주간용으로 바꿀 예정이면 여기만 교체)
+                            val (routinesPerDate, todayDom) = buildWeeklyMap(todayRoutines)
                             WeeklyCalendarView(
-                                routinesPerDate = mapOf(
-                                    8 to listOf("아침 운동", "회의"),
-                                    10 to listOf("아침 운동"),
-                                    12 to listOf("아침 운동", "회의"),
-                                    13 to listOf("주말아침 완전집중루틴"),
-                                    14 to listOf("주말아침루틴")
-                                ),
-                                today = 13
+                                routinesPerDate = routinesPerDate,
+                                today = todayDom
                             )
                         }
                     }
@@ -404,7 +428,7 @@ fun HomeScreen(
 
                     if (todayRoutines.isNotEmpty()) {
                         val context = LocalContext.current
-                        val myRoutines = todayRoutines
+                        val myRoutines = todayRoutines.sortedForList()
 
                         RoutineCardList(
                             routines = myRoutines,
@@ -429,7 +453,7 @@ fun HomeScreen(
                                         tags = routine.tags
                                     )
 
-                                    navController.navigate("routine_focus_intro/${routine.routineId}")
+                                    navController.navigate(Route.RoutineFocusIntro.route)
                                 } else {
                                     Toast.makeText(context, "루틴 정보를 찾을 수 없습니다", Toast.LENGTH_SHORT).show()
                                 }
@@ -454,6 +478,17 @@ private fun String.toStableIntId(): Int {
     for (ch in this) h = (h * 31) + ch.code
     return h
 }
+
+// 오늘 "루틴 목록" 전용 정렬:
+// 1) 진행중(간편) 우선 → 2) 시간 미설정 → 3) 시간 설정(오름차순)
+private fun List<Routine>.sortedForList(): List<Routine> =
+    this.sortedWith(
+        compareByDescending<Routine> { it.isRunning && it.category == "간편" }
+            .thenByDescending { it.scheduledTime == null }
+            .thenBy { it.scheduledTime ?: java.time.LocalTime.MAX }
+    )
+
+
 
 @Preview(
     showBackground = true,
