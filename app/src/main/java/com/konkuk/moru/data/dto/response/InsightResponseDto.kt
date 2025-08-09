@@ -5,18 +5,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class InsightResponseDto(
     val paceGrade: String,
-    val routineCompletionRate: Int,
-    val globalAverageRoutineCompletionRate: Int,
-    val completionDistribution: CompletionDistributionDto,
+    val routineCompletionRate: Double,
+    val globalAverageRoutineCompletionRate: Double,
+    val completionDistribution: Map<String, Int> = emptyMap(), // 동적 키
     val averageRoutineCount: AverageRoutineCountDto,
-    val routineCompletionCountByTimeSlot: CompletionByTimeSlotDto
-)
-
-@Serializable
-data class CompletionDistributionDto(
-    val additionalProp1: Int,
-    val additionalProp2: Int,
-    val additionalProp3: Int
+    val routineCompletionCountByTimeSlot: Map<String, Int> = emptyMap() // 동적 키, 빈 객체 가능
 )
 
 @Serializable
@@ -27,13 +20,7 @@ data class AverageRoutineCountDto(
 
 @Serializable
 data class UserOverallCountDto(
-    val user: Int,
-    val overall: Int
+    val user: Double,
+    val overall: Double
 )
 
-@Serializable
-data class CompletionByTimeSlotDto(
-    val additionalProp1: Int,
-    val additionalProp2: Int,
-    val additionalProp3: Int
-)
