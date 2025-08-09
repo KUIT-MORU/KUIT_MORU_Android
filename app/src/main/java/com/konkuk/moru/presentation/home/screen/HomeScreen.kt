@@ -1,8 +1,7 @@
 package com.konkuk.moru.presentation.home.screen
 
-import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
-import android.widget.Toast
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -58,6 +57,7 @@ import com.konkuk.moru.presentation.home.component.TodayWeekTab
 import com.konkuk.moru.presentation.home.component.WeeklyCalendarView
 import com.konkuk.moru.presentation.home.viewmodel.HomeRoutinesViewModel
 import com.konkuk.moru.presentation.navigation.Route
+import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 import java.time.DayOfWeek
@@ -109,18 +109,6 @@ fun HomeScreen(
     todayTabOffsetY: MutableState<Float>,
     onShowOnboarding: () -> Unit = {},
 ) {
-    // 서버 오늘 루틴
-    val homeVm: HomeRoutinesViewModel = hiltViewModel()
-    val serverRoutines by homeVm.serverRoutines.collectAsState()
-
-    LaunchedEffect(Unit) {
-        Log.d("HomeScreen", "loadTodayRoutines() 호출")
-        homeVm.loadTodayRoutines()
-    }
-
-    //탭 선택 상태(오늘,이번주)
-    var selectedTab by remember { mutableStateOf(0) }
-
     // 오늘 탭 표시용(서버 응답 + 순서 복원/완료 시 뒤로)
     val todayRoutines = remember { mutableStateListOf<Routine>() }
 
@@ -128,6 +116,51 @@ fun HomeScreen(
     val homeEntry = remember(navController) {
         navController.getBackStackEntry(Route.Home.route)
     }
+
+    // 진행중 루틴 ID 수신 (Int 안정 ID)
+    val runningId by homeEntry.savedStateHandle
+        .getStateFlow<Int?>("runningRoutineId", null)
+        .collectAsState(initial = null)
+
+    // 하이라이트 대상 보관
+    var highlightId by remember { mutableStateOf<Int?>(null) }
+
+    // X 눌러서 나온 "진행중" 루틴을 맨 앞으로, isRunning=true, 하이라이트 지정
+    LaunchedEffect(runningId) {
+        runningId?.let { id ->
+            val idx = todayRoutines.indexOfFirst { it.routineId.toStableIntId() == id }
+            if (idx >= 0) {
+                val item = todayRoutines.removeAt(idx)
+                val updated = item.copy(isRunning = true) // 정렬에서도 앞으로 오도록
+                todayRoutines.add(0, updated)
+                // 순서 저장
+                homeEntry.savedStateHandle["todayOrderIds"] = todayRoutines.map { it.routineId }
+                // 하이라이트 지정
+                highlightId = id
+            }
+            // 한 번 처리했으면 플래그 비워주기
+            homeEntry.savedStateHandle["runningRoutineId"] = null
+        }
+    }
+
+    // 서버 오늘 루틴
+    val homeVm: HomeRoutinesViewModel = hiltViewModel()
+
+    // ① Today(오늘용)
+    val serverRoutines by homeVm.serverRoutines.collectAsState()
+    // ② 내 루틴 전체(하단 카드용)
+    val myRoutines by homeVm.myRoutines.collectAsState()
+
+    LaunchedEffect(Unit) {
+        Log.d("HomeScreen", "loadTodayRoutines() 호출")
+        homeVm.loadTodayRoutines()
+        // 하단 카드용 전체 목록도 로드
+        homeVm.loadMyRoutines()
+    }
+
+    //탭 선택 상태(오늘,이번주)
+    var selectedTab by remember { mutableStateOf(0) }
+
     val finishedId by homeEntry.savedStateHandle
         .getStateFlow<String?>("finishedRoutineId", null)
         .collectAsState(initial = null)
@@ -145,13 +178,17 @@ fun HomeScreen(
             return@LaunchedEffect
         }
 
-        Log.d("HomeScreen", "serverRoutines size=${serverRoutines.size}, savedOrderIds=${savedOrderIds.size}")
+        Log.d(
+            "HomeScreen",
+            "serverRoutines size=${serverRoutines.size}, savedOrderIds=${savedOrderIds.size}"
+        )
         Log.d("HomeScreen", "server IDs=" + serverRoutines.joinToString { it.routineId })
 
         val ordered = if (savedOrderIds.isNotEmpty()) {
             val byId: Map<String, Routine> = serverRoutines.associateBy { it.routineId }
             val inSaved: List<Routine> = savedOrderIds.mapNotNull { byId[it] }
-            val remaining: List<Routine> = serverRoutines.filter { it.routineId !in savedOrderIds.toSet() }
+            val remaining: List<Routine> =
+                serverRoutines.filter { it.routineId !in savedOrderIds.toSet() }
             inSaved + remaining
         } else {
             serverRoutines // 서버가 TIME + dayOfWeek로 내려줌
@@ -173,7 +210,9 @@ fun HomeScreen(
     // 완료 루틴 맨 뒤로 이동 + 순서 저장
     LaunchedEffect(finishedId) {
         finishedId?.let { id ->
-            Log.d("HomeScreen", "finishedId 수신 = $id, beforeOrder=" + todayRoutines.joinToString { it.routineId })
+            Log.d(
+                "HomeScreen",
+                "finishedId 수신 = $id, beforeOrder=" + todayRoutines.joinToString { it.routineId })
             val idx = todayRoutines.indexOfFirst { it.routineId == id }
             if (idx >= 0) {
                 val finished = todayRoutines.removeAt(idx)
@@ -217,7 +256,10 @@ fun HomeScreen(
 
         LaunchedEffect(todayTabOffsetY.value, fabOffsetY.value) {
             if (todayTabOffsetY.value > 0f && fabOffsetY.value > 0f) {
-                Log.d("HomeScreen", "온보딩 트리거: todayTabY=${todayTabOffsetY.value}, fabY=${fabOffsetY.value}")
+                Log.d(
+                    "HomeScreen",
+                    "온보딩 트리거: todayTabY=${todayTabOffsetY.value}, fabY=${fabOffsetY.value}"
+                )
                 onShowOnboarding()
             }
         }
@@ -351,7 +393,10 @@ fun HomeScreen(
                             TodayRoutinePager(
                                 routines = todayRoutines,
                                 onRoutineClick = { routine, _ ->
-                                    Log.d("HomeScreen", "Pager 클릭: id=${routine.routineId}, title=${routine.title}")
+                                    Log.d(
+                                        "HomeScreen",
+                                        "Pager 클릭: id=${routine.routineId}, title=${routine.title}"
+                                    )
                                     // Step 리스트 변환
                                     val stepDataList = routine.steps.map {
                                         RoutineStepData(
@@ -426,42 +471,50 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    if (todayRoutines.isNotEmpty()) {
+                    // ⬇️ 하단 카드는 "내 루틴 전체" 사용 + 우선순위 정렬
+                    if (myRoutines.isNotEmpty()) {
                         val context = LocalContext.current
-                        val myRoutines = todayRoutines.sortedForList()
+                        val list = myRoutines.sortedForList()   // 이미 정렬된 리스트
 
                         RoutineCardList(
-                            routines = myRoutines,
+                            routines = list,
                             onRoutineClick = { routineId: String ->
                                 Log.d("HomeScreen", "카드 클릭: id=$routineId")
-                                val routine = myRoutines.find { it.routineId == routineId }
-                                if (routine != null) {
-                                    val stepDataList = routine.steps.map {
-                                        RoutineStepData(
-                                            name = it.name,
-                                            duration = convertDurationToMinutes(it.duration),
-                                            isChecked = false
-                                        )
-                                    }
 
-                                    // 기존 Int API와 호환
-                                    sharedViewModel.setSelectedRoutineId(routine.routineId.toStableIntId())
-                                    sharedViewModel.setSelectedSteps(stepDataList)
-                                    sharedViewModel.setRoutineInfo(
-                                        title = routine.title,
-                                        category = routine.category,
-                                        tags = routine.tags
-                                    )
-
-                                    navController.navigate(Route.RoutineFocusIntro.route)
-                                } else {
+                                // 정렬된 리스트에서 클릭된 루틴 찾기
+                                val routine = list.firstOrNull { it.routineId == routineId }
+                                if (routine == null) {
                                     Toast.makeText(context, "루틴 정보를 찾을 수 없습니다", Toast.LENGTH_SHORT).show()
+                                    return@RoutineCardList
                                 }
+
+                                val stepDataList = routine.steps.map {
+                                    RoutineStepData(
+                                        name = it.name,
+                                        duration = convertDurationToMinutes(it.duration),
+                                        isChecked = false
+                                    )
+                                }
+
+                                // 기존 Int API와 호환
+                                sharedViewModel.setSelectedRoutineId(routine.routineId.toStableIntId())
+                                sharedViewModel.setSelectedSteps(stepDataList)
+                                sharedViewModel.setRoutineInfo(
+                                    title = routine.title,
+                                    category = routine.category,
+                                    tags = routine.tags
+                                )
+
+                                navController.navigate(Route.RoutineFocusIntro.route)
+                            },
+                            runningHighlightId = highlightId?.takeIf { id ->
+                                list.any { it.routineId.toStableIntId() == id }
                             }
                         )
                     } else {
-                        Log.d("HomeScreen", "루틴 목록 섹션에서도 todayRoutines 비어있음")
+                        Log.d("HomeScreen", "내 루틴 목록이 비어있음")
                     }
+
                 }
             }
         }
@@ -487,8 +540,6 @@ private fun List<Routine>.sortedForList(): List<Routine> =
             .thenByDescending { it.scheduledTime == null }
             .thenBy { it.scheduledTime ?: java.time.LocalTime.MAX }
     )
-
-
 
 @Preview(
     showBackground = true,

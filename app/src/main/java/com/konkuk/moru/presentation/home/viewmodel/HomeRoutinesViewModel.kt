@@ -24,6 +24,10 @@ class HomeRoutinesViewModel @Inject constructor(
     private val _serverRoutines = MutableStateFlow<List<Routine>>(emptyList())
     val serverRoutines: StateFlow<List<Routine>> = _serverRoutines
 
+    // 내 루틴 전체(하단 카드)
+    private val _myRoutines = MutableStateFlow<List<Routine>>(emptyList())
+    val myRoutines: StateFlow<List<Routine>> = _myRoutines
+
     fun loadTodayRoutines(page: Int = 0, size: Int = 20) {
         viewModelScope.launch {
             runCatching { repo.getMyRoutinesToday(page, size) }
@@ -48,5 +52,22 @@ class HomeRoutinesViewModel @Inject constructor(
                 }
 
         }
+    }
+    // 전체 루틴 로드
+    fun loadMyRoutines(page: Int = 0, size: Int = 100) = viewModelScope.launch {
+        runCatching { repo.getMyRoutinesToday(page, size) }
+            .onSuccess { pageRes ->
+                _myRoutines.value = pageRes.content.map { it.toDomain() }
+            }
+            .onFailure { e ->
+                if (e is retrofit2.HttpException) {
+                    val code = e.code()
+                    val err = e.response()?.errorBody()?.string()
+                    android.util.Log.e(TAG, "HTTP $code errorBody=$err")
+                } else {
+                    android.util.Log.e(TAG, "loadMyRoutines failed", e)
+                }
+                _myRoutines.value = emptyList()
+            }
     }
 }

@@ -15,6 +15,7 @@ import com.konkuk.moru.data.model.Routine
 fun RoutineCardList(
     routines: List<Routine>,
     onRoutineClick: (String) -> Unit,
+    runningHighlightId: Int? = null,
     modifier: Modifier = Modifier
 ) {
     //스크롤 대비 상태 저장
@@ -28,13 +29,28 @@ fun RoutineCardList(
     ) {
         //나중에 진짜 루틴들 받아올 것
         routines.forEach { routine ->
+            val isHighlighted =
+                runningHighlightId != null &&
+                        runningHighlightId == routine.routineId.toStableIntId()
+
             RoutineCardItem(
                 title = routine.title,
                 tags = routine.tags,
-                onClick = { onRoutineClick(routine.routineId) }
+                onClick = { onRoutineClick(routine.routineId) },
+                isHighlighted = isHighlighted
             )
         }
+
     }
+}
+private fun String.toStableIntId(): Int {
+    this.toLongOrNull()?.let {
+        val mod = (it % Int.MAX_VALUE).toInt()
+        return if (mod >= 0) mod else -mod
+    }
+    var h = 0
+    for (ch in this) h = (h * 31) + ch.code
+    return h
 }
 
 @Preview
@@ -90,6 +106,7 @@ private fun RoutineCardListPreview() {
 
     RoutineCardList(
         routines = dummyRoutines,
-        onRoutineClick = {}
+        onRoutineClick = {},
+        runningHighlightId = "routine-2".toStableIntId()
     )
 }
