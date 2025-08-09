@@ -43,56 +43,11 @@ fun RoutineFeedScreen(
     navController: NavHostController,
     viewModel: RoutineFeedViewModel = hiltViewModel(),
 ) {
-    //val liveUsers = DummyData.dummyLiveUsers
     val uiState by viewModel.uiState.collectAsState()
 
-    val routineSections = remember {
-        listOf(
-            RoutineFeedSectionModel(
-                title = "지금 가장 핫한 루틴은?",
-                routines = DummyData.feedRoutines.filter { it.likes > 70 }.take(7)
-            ),
-            RoutineFeedSectionModel(
-                "MORU님과 딱 맞는 루틴",
-                routines = DummyData.feedRoutines.filter { it.authorName == "MORU" }.take(7)
-            ),
-            RoutineFeedSectionModel(
-                "#지하철#독서",
-                routines = DummyData.feedRoutines.filter {
-                    it.tags.containsAll(
-                        listOf(
-                            "지하철",
-                            "독서"
-                        )
-                    )
-                }.take(7)
-            ),
-            RoutineFeedSectionModel(
-                "#운동#명상",
-                routines = DummyData.feedRoutines.filter {
-                    it.tags.containsAll(
-                        listOf(
-                            "운동",
-                            "명상"
-                        )
-                    )
-                }.take(7)
-            )
-        )
-    }
-
-    val likedStates = remember {
-        mutableStateMapOf<String, Boolean>().apply {
-            DummyData.feedRoutines.forEach { put(it.routineId, it.isLiked) }
-        }
-    }
-    val likeCounts = remember {
-        mutableStateMapOf<String, Int>().apply {
-            DummyData.feedRoutines.forEach { put(it.routineId, it.likes) }
-        }
-    }
 
     Scaffold(
+        containerColor = Color.White,
         topBar = {
             HomeTopAppBar(
                 onSearchClick = { navController.navigate(Route.RoutineSearch.route) },
@@ -106,13 +61,10 @@ fun RoutineFeedScreen(
             modifier = modifier.padding(paddingValues),
             navController = navController,
             liveUsers = uiState.liveUsers,
-            routineSections = uiState.routineSections,
-            likedStates = likedStates,
-            likeCounts = likeCounts,
-            onLikeClick = { routineId, newLikeStatus ->
-                likedStates[routineId] = newLikeStatus
-                val currentCount = likeCounts[routineId] ?: 0
-                likeCounts[routineId] = if (newLikeStatus) currentCount + 1 else currentCount - 1
+            routineSections = uiState.routineSections, // ✅ ViewModel의 데이터를 그대로 사용
+            // ✅ onLikeClick 이벤트가 발생하면 ViewModel의 함수를 호출하도록 변경
+            onLikeClick = { routineId ->
+                viewModel.toggleLike(routineId)
             }
         )
     }
@@ -124,9 +76,7 @@ private fun RoutineFeedContent(
     navController: NavHostController,
     liveUsers: List<LiveUserInfo>,
     routineSections: List<RoutineFeedSectionModel>,
-    likedStates: Map<String, Boolean>,
-    likeCounts: Map<String, Int>,
-    onLikeClick: (String, Boolean) -> Unit
+    onLikeClick: (String) -> Unit
 ) {
     Surface(modifier = modifier.fillMaxSize(), color = Color.White) {
         LazyColumn(
@@ -147,12 +97,7 @@ private fun RoutineFeedContent(
             items(routineSections) { section ->
                 TitledRoutineSection(
                     title = section.title,
-                    routines = section.routines.map { routine ->
-                        routine.copy(
-                            isLiked = likedStates[routine.routineId] ?: routine.isLiked
-                        )
-                    },
-                    likeCounts = likeCounts,
+                    routines = section.routines,
                     onRoutineClick = { routineId ->
                         navController.navigate(Route.RoutineFeedDetail.createRoute(routineId))
                     },
@@ -169,15 +114,34 @@ private fun RoutineFeedContent(
 @Preview(showBackground = true)
 @Composable
 private fun RoutineFeedScreenPreview() {
+    // 1. 미리보기에 사용할 더미 섹션 데이터를 생성합니다.
+    val previewSections = listOf(
+        RoutineFeedSectionModel(
+            title = "지금 가장 핫한 루틴은?",
+            routines = DummyData.feedRoutines.filter { it.likes > 100 }.take(5)
+        ),
+        RoutineFeedSectionModel(
+            "MORU님과 딱 맞는 루틴",
+            routines = DummyData.feedRoutines.filter { it.authorId == DummyData.MY_USER_ID }.take(5)
+        ),
+        RoutineFeedSectionModel(
+            "#개발 #TIL",
+            routines = DummyData.feedRoutines.filter {
+                it.tags.containsAll(listOf("개발", "TIL"))
+            }.take(5)
+        )
+    )
+
     MaterialTheme {
-        // 프리뷰에서는 ViewModel을 생성할 수 없으므로, 더미 UI State를 만듭니다.
+        // 2. 미리보기용 UI State에 생성한 더미 섹션을 포함합니다.
         val dummyUiState = RoutineFeedUiState(
             hasNotification = true,
-            liveUsers = DummyData.dummyLiveUsers // 프리뷰용 더미 데이터
+            liveUsers = DummyData.dummyLiveUsers,
+            routineSections = previewSections // 👈 생성한 더미 섹션 할당
         )
-        // 실제 앱 실행 시에는 이 코드가 호출되지 않습니다.
-        // 이 부분을 온전히 테스트하려면 별도의 Composable로 분리하는 것이 좋습니다.
+
         Scaffold(
+            containerColor = Color.White,
             topBar = {
                 HomeTopAppBar(
                     onSearchClick = { },
@@ -191,10 +155,8 @@ private fun RoutineFeedScreenPreview() {
                 modifier = Modifier.padding(paddingValues),
                 navController = rememberNavController(),
                 liveUsers = dummyUiState.liveUsers,
-                routineSections = emptyList(), // 프리뷰에서는 비워둠
-                likedStates = emptyMap(),
-                likeCounts = emptyMap(),
-                onLikeClick = { _, _ ->}
+                routineSections = dummyUiState.routineSections, // 👈 UI State의 섹션 데이터를 전달
+                onLikeClick = {}
             )
         }
     }

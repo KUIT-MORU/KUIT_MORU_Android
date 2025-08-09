@@ -151,7 +151,6 @@ fun AppNavGraph(
                         ).any { routePrefix -> currentRoute.startsWith(routePrefix) }
                     ) {
                         MoruBottomBar(
-                            modifier = Modifier.wrapContentHeight().navigationBarsPadding(),
                             selectedRoute = currentRoute ?: Route.Home.route,
                             onItemSelected = { route ->
                                 if (currentRoute != route) {
