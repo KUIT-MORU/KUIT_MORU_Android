@@ -1,7 +1,7 @@
 package com.konkuk.moru.presentation.routinefocus.screen
 
 import androidx.compose.runtime.Composable
-import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
+import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
 
 @Composable

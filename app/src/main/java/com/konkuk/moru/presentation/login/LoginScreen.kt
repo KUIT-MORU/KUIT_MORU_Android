@@ -133,25 +133,19 @@ fun LoginScreen(
         LoginButton(
             onClick = {
                 if (isButtonEnabled) {
-                    if (true) { // 여기에 실제 로그인 API 호출 로직을 추가해야 합니다.
-                        errorMessage = "이메일 또는 비밀번호가 일치하지 않습니다."
-                    } else {
-                        viewModel.login(email, password, context) {
+                    viewModel.login(
+                        email = email,
+                        password = password,
+                        context = context,
+                        onSuccess = {
                             navController.navigate(Route.AuthCheck.route) {
                                 popUpTo(Route.Login.route) { inclusive = true }
                             }
+                        },
+                        onFailure = { error ->
+                            errorMessage = error.ifBlank { "로그인에 실패했습니다." }
                         }
-                    }
-                } else { // 테스트용으로 임시로 해둠. 삭제 예정
-                    if (true) {
-                        errorMessage = "이메일 또는 비밀번호가 일치하지 않습니다."
-                    } else {
-                        viewModel.login(email, password, context) {
-                            navController.navigate(Route.AuthCheck.route) {
-                                popUpTo(Route.Login.route) { inclusive = true }
-                            }
-                        }
-                    }
+                    )
                 }
             },
             enabled = isButtonEnabled

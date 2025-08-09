@@ -11,6 +11,8 @@ private val Context.loginDataStore by preferencesDataStore(name = LOGIN_PREFS)
 
 object LoginPreference {
     private val LOGGED_IN_KEY = booleanPreferencesKey("is_logged_in")
+    private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
+    private val REFRESH_TOKEN_KEY = stringPreferencesKey("refresh_token")
 
     fun isLoggedIn(context: Context): Flow<Boolean> {
         return context.loginDataStore.data.map { prefs ->
@@ -21,6 +23,30 @@ object LoginPreference {
     suspend fun setLoggedIn(context: Context, value: Boolean) {
         context.loginDataStore.edit { prefs ->
             prefs[LOGGED_IN_KEY] = value
+        }
+    }
+
+    suspend fun saveAccessToken(context: Context, token: String) {
+        context.loginDataStore.edit { prefs ->
+            prefs[ACCESS_TOKEN_KEY] = token
+        }
+    }
+
+    suspend fun saveRefreshToken(context: Context, token: String) {
+        context.loginDataStore.edit { prefs ->
+            prefs[REFRESH_TOKEN_KEY] = token
+        }
+    }
+
+    fun getAccessToken(context: Context): Flow<String?> {
+        return context.loginDataStore.data.map { prefs ->
+            prefs[ACCESS_TOKEN_KEY]
+        }
+    }
+
+    fun getRefreshToken(context: Context): Flow<String?> {
+        return context.loginDataStore.data.map { prefs ->
+            prefs[REFRESH_TOKEN_KEY]
         }
     }
 }

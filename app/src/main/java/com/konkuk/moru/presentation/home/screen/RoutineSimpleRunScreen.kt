@@ -41,7 +41,7 @@ import com.konkuk.moru.R
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
 import com.konkuk.moru.presentation.home.component.RoutineSelectItem
-import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
+import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 

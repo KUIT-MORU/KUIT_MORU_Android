@@ -96,7 +96,7 @@ fun ActFabTagScreen(
                 topBar = {
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         Spacer(modifier = Modifier.height(14.dp))
-                        BackTitle(title = "내 기록", navController = navController)
+                        BackTitle(title = "내 관심 태그", navController = navController)
                         Spacer(modifier = Modifier.height(14.dp))
                         Box(
                             modifier = Modifier

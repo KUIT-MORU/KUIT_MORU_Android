@@ -1,4 +1,4 @@
-package com.konkuk.moru.presentation.home.viewmodel
+package com.konkuk.moru.presentation.routinefocus.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.konkuk.moru.presentation.home.RoutineStepData
