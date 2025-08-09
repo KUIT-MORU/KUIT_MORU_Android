@@ -11,12 +11,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.konkuk.moru.data.model.DummyData
@@ -27,6 +30,7 @@ import com.konkuk.moru.presentation.routinefeed.component.Routine.TitledRoutineS
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.HomeTopAppBar
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
 import com.konkuk.moru.presentation.routinefeed.viewmodel.RoutineFeedUiState
+import com.konkuk.moru.presentation.routinefeed.viewmodel.RoutineFeedViewModel
 
 data class RoutineFeedSectionModel(
     val title: String,
@@ -37,10 +41,10 @@ data class RoutineFeedSectionModel(
 fun RoutineFeedScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    uiState: RoutineFeedUiState,
-    onNotificationClick: () -> Unit,
+    viewModel: RoutineFeedViewModel = hiltViewModel(),
 ) {
-    val liveUsers = DummyData.dummyLiveUsers
+    //val liveUsers = DummyData.dummyLiveUsers
+    val uiState by viewModel.uiState.collectAsState()
 
     val routineSections = remember {
         listOf(
@@ -93,7 +97,7 @@ fun RoutineFeedScreen(
             HomeTopAppBar(
                 onSearchClick = { navController.navigate(Route.RoutineSearch.route) },
                 hasNotification = uiState.hasNotification,
-                onNotificationClick = onNotificationClick,
+                onNotificationClick = { viewModel.onNotificationViewed() },
                 onLogoClick = {}
             )
         }
@@ -101,8 +105,8 @@ fun RoutineFeedScreen(
         RoutineFeedContent(
             modifier = modifier.padding(paddingValues),
             navController = navController,
-            liveUsers = liveUsers,
-            routineSections = routineSections,
+            liveUsers = uiState.liveUsers,
+            routineSections = uiState.routineSections,
             likedStates = likedStates,
             likeCounts = likeCounts,
             onLikeClick = { routineId, newLikeStatus ->
@@ -166,10 +170,32 @@ private fun RoutineFeedContent(
 @Composable
 private fun RoutineFeedScreenPreview() {
     MaterialTheme {
-        RoutineFeedScreen(
-            navController = rememberNavController(),
-            uiState = RoutineFeedUiState(hasNotification = true),
-            onNotificationClick = {}
+        // 프리뷰에서는 ViewModel을 생성할 수 없으므로, 더미 UI State를 만듭니다.
+        val dummyUiState = RoutineFeedUiState(
+            hasNotification = true,
+            liveUsers = DummyData.dummyLiveUsers // 프리뷰용 더미 데이터
         )
+        // 실제 앱 실행 시에는 이 코드가 호출되지 않습니다.
+        // 이 부분을 온전히 테스트하려면 별도의 Composable로 분리하는 것이 좋습니다.
+        Scaffold(
+            topBar = {
+                HomeTopAppBar(
+                    onSearchClick = { },
+                    hasNotification = dummyUiState.hasNotification,
+                    onNotificationClick = { },
+                    onLogoClick = {}
+                )
+            }
+        ) { paddingValues ->
+            RoutineFeedContent(
+                modifier = Modifier.padding(paddingValues),
+                navController = rememberNavController(),
+                liveUsers = dummyUiState.liveUsers,
+                routineSections = emptyList(), // 프리뷰에서는 비워둠
+                likedStates = emptyMap(),
+                likeCounts = emptyMap(),
+                onLikeClick = { _, _ ->}
+            )
+        }
     }
 }

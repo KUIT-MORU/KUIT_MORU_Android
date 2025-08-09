@@ -198,17 +198,17 @@ fun MainNavGraph(
 
 
         composable(route = Route.RoutineFeed.route) {
-            val viewModel: RoutineFeedViewModel = viewModel()
-            val uiState by viewModel.uiState.collectAsState()
+            /*val viewModel: RoutineFeedViewModel = viewModel()
+            val uiState by viewModel.uiState.collectAsState()*/
 
             RoutineFeedScreen(
                 modifier = modifier.padding(innerPadding),
                 navController = navController,
-                uiState = uiState,
+                /*uiState = uiState,
                 onNotificationClick = {
                     viewModel.onNotificationViewed() // ViewModel의 함수 호출
                     navController.navigate(Route.Notification.route)
-                }
+                }*/
             )
         }
 

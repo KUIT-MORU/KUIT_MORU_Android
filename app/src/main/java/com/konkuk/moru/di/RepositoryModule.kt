@@ -2,8 +2,10 @@ package com.konkuk.moru.di
 
 import com.konkuk.moru.data.repositoryimpl.AuthRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.InsightRepositoryImpl
+import com.konkuk.moru.data.repositoryimpl.RoutineFeedRepositoryImpl
 import com.konkuk.moru.domain.repository.AuthRepository
 import com.konkuk.moru.domain.repository.InsightRepository
+import com.konkuk.moru.domain.repository.RoutineFeedRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -21,4 +23,9 @@ abstract class RepositoryModule {
     abstract fun bindInsightRepository(
         impl: InsightRepositoryImpl
     ): InsightRepository
+
+    @Binds
+    abstract fun bindRoutineFeedRepository(
+        impl: RoutineFeedRepositoryImpl
+    ): RoutineFeedRepository
 }

@@ -4,12 +4,14 @@ import com.konkuk.moru.BuildConfig
 import com.konkuk.moru.data.interceptor.AuthInterceptor
 import com.konkuk.moru.data.service.AuthService
 import com.konkuk.moru.data.service.InsightService
+import com.konkuk.moru.data.service.RoutineFeedService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
@@ -59,4 +61,12 @@ object NetworkModule {
     fun provideInsightService(retrofit: Retrofit): InsightService {
         return retrofit.create(InsightService::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideRoutineFeedService(retrofit: Retrofit): RoutineFeedService {
+        return retrofit.create(RoutineFeedService::class.java)
+    }
+
+
 }
