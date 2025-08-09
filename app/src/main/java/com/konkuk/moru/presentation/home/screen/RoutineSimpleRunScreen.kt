@@ -58,7 +58,9 @@ fun formatElapsedTime(ms: Long): String {
 @Composable
 fun RoutineSimpleRunScreen(
     sharedViewModel: SharedRoutineViewModel,
-    onDismiss: () -> Unit //x버튼 눌렀을 시
+    routineId: Int,
+    onDismiss: () -> Unit, // x버튼 눌렀을 시
+    onFinishConfirmed: (Int) -> Unit
 ) {
     // intro에서 받아올 값들
     val routineTitle by sharedViewModel.routineTitle.collectAsState()
@@ -357,7 +359,7 @@ fun RoutineSimpleRunScreen(
                                 interactionSource = remember { MutableInteractionSource() }
                             ) {
                                 showResultPopup = false
-                                onDismiss()
+                                onFinishConfirmed(routineId)
                             }
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
@@ -401,6 +403,8 @@ private fun RoutineSimpleRunScreenPreview() {
 
     RoutineSimpleRunScreen(
         sharedViewModel = dummyViewModel,
-        onDismiss = {}
+        routineId = 501,
+        onDismiss = {},
+        onFinishConfirmed = {}
     )
 }

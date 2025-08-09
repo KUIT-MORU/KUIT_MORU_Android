@@ -157,8 +157,10 @@ fun formatTime(seconds: Int): String {
 fun PortraitRoutineFocusScreen(
     focusViewModel: RoutineFocusViewModel = viewModel(),
     sharedViewModel: SharedRoutineViewModel,
+    routineId: Int,
     onDismiss: () -> Unit,
     currentStep: Int,
+    onFinishConfirmed: (Int) -> Unit,
     // Preview용 강제 상태 파라미터 추가
     forceShowFinishPopup: Boolean = false,
     forceShowResultPopup: Boolean = false
@@ -386,7 +388,7 @@ fun PortraitRoutineFocusScreen(
                                         .clickable(
                                             indication = null,
                                             interactionSource = remember { MutableInteractionSource() }
-                                        ){
+                                        ) {
                                             // 다음 step으로 가는 기능
                                             if (!isFinalStep) {
                                                 val nextStepTimeString =
@@ -740,7 +742,7 @@ fun PortraitRoutineFocusScreen(
                                 interactionSource = remember { MutableInteractionSource() }
                             ) {
                                 showResultPopup = false
-                                onDismiss()
+                                onFinishConfirmed(routineId)
                             }
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
@@ -820,8 +822,10 @@ private fun PortraitRoutineFocusScreenPreview() {
     PortraitRoutineFocusScreen(
         focusViewModel = dummyFocusViewModel,
         sharedViewModel = dummySharedViewModel,
+        routineId = 501,
         onDismiss = {},
         currentStep = 1,
+        onFinishConfirmed = {},
         forceShowFinishPopup = false,
         forceShowResultPopup = false
     )

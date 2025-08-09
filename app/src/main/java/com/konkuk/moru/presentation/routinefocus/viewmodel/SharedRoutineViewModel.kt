@@ -8,6 +8,11 @@ import java.time.DayOfWeek
 import java.time.LocalTime
 
 class SharedRoutineViewModel : ViewModel() {
+    private val _selectedRoutineId = MutableStateFlow<Int?>(null)
+    val selectedRoutineId: StateFlow<Int?> = _selectedRoutineId
+    fun setSelectedRoutineId(id: Int) {
+        _selectedRoutineId.value = id
+    }
 
     // 루틴 제목
     private val _routineTitle = MutableStateFlow("")

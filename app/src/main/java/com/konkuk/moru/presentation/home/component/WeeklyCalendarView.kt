@@ -29,6 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.temporal.TemporalAdjusters
 
 @Composable
 fun WeeklyCalendarView(
@@ -37,7 +40,11 @@ fun WeeklyCalendarView(
     today: Int // ⬅️ 오늘 날짜 (예: 10)
 ) {
     val daysOfWeek = listOf("월", "화", "수", "목", "금", "토", "일")
-    val dates = listOf(8, 9, 10, 11, 12, 13, 14)
+
+    // 이번주(월~일) 날짜 계산 (월 기준)
+    val startOfWeek = LocalDate.now()
+        .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    val weekDates = (0..6).map { startOfWeek.plusDays(it.toLong()) }
 
     Column(
         modifier = modifier
@@ -51,16 +58,8 @@ fun WeeklyCalendarView(
                 .fillMaxWidth(),
         ) {
             daysOfWeek.forEach { day ->
-                Box(
-                    modifier = Modifier
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = day,
-                        style = typography.title_B_14,
-                        color = colors.black
-                    )
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    Text(text = day, style = typography.title_B_14, color = colors.black)
                 }
             }
         }
@@ -68,21 +67,20 @@ fun WeeklyCalendarView(
         Spacer(modifier = Modifier.height(2.dp))
 
         // 날짜 행
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            dates.forEach { date ->
+        Row(Modifier.fillMaxWidth()) {
+            weekDates.forEach { date ->
+                val dom = date.dayOfMonth
+                val isToday = dom == today
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = 4.dp),
                     contentAlignment = Alignment.TopCenter
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        // 날짜 표시
-                        if (date == today) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                        // 날짜 표시 (오늘 하이라이트)
+                        if (isToday) {
                             Box(
                                 modifier = Modifier
                                     .size(17.dp)
@@ -90,38 +88,35 @@ fun WeeklyCalendarView(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "$date",
+                                    text = "$dom",
                                     style = typography.title_B_14,
                                     color = Color.White
                                 )
                             }
                         } else {
                             Text(
-                                text = "$date",
+                                text = "$dom",
                                 style = typography.title_B_14,
                                 color = colors.mediumGray
                             )
                         }
 
-                        // 루틴 태그 리스트
+                        // 루틴 태그들
                         Box(
                             modifier = Modifier
                                 .wrapContentHeight()
                                 .padding(top = 2.dp)
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                routinesPerDate[date]?.forEachIndexed { index, routine ->
-                                    if (index != 0) {
-                                        Spacer(modifier = Modifier.height(1.dp))
-                                    }
-                                    RoutineTag(routine)
+                                routinesPerDate[dom]?.forEachIndexed { index, label ->
+                                    if (index != 0) Spacer(Modifier.height(1.dp))
+                                    RoutineTag(label)
                                 }
                             }
                         }
                     }
                 }
             }
-
         }
     }
 }

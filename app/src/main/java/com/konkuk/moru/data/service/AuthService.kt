@@ -2,7 +2,9 @@ package com.konkuk.moru.data.service
 
 import com.konkuk.moru.data.dto.request.LoginRequestDto
 import com.konkuk.moru.data.dto.response.LoginResponseDto
+import com.konkuk.moru.data.dto.response.UserProfileResponse
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
 
 interface AuthService {
@@ -10,4 +12,8 @@ interface AuthService {
     suspend fun login(
         @Body body: LoginRequestDto
     ): LoginResponseDto
+
+    @GET("/api/users/me")
+    suspend fun getUserProfile(): UserProfileResponse
+
 }
