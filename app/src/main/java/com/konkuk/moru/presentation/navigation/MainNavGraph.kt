@@ -20,7 +20,7 @@ import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.home.screen.HomeScreen
 import com.konkuk.moru.presentation.home.screen.RoutineFocusIntroScreen
 import com.konkuk.moru.presentation.home.screen.RoutineSimpleRunScreen
-import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
+import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.myactivity.screen.ActFabTagScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActInsightInfoClickScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActMainScreen

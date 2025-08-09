@@ -1,0 +1,23 @@
+package com.konkuk.moru.presentation.login
+
+import com.konkuk.moru.data.token.TokenManager
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class UserSessionManager @Inject constructor(
+    private val tokenManager: TokenManager
+) {
+    private val _isLoggedIn = MutableStateFlow(false)
+    val isLoggedIn: StateFlow<Boolean> = _isLoggedIn
+
+    init {
+        _isLoggedIn.value = !tokenManager.getToken().isNullOrEmpty()
+    }
+
+    fun setLoggedIn(value: Boolean) {
+        _isLoggedIn.value = value
+    }
+}

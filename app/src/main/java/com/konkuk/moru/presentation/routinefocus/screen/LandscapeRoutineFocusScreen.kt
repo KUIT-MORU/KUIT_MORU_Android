@@ -42,7 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
-import com.konkuk.moru.presentation.home.viewmodel.SharedRoutineViewModel
+import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.routinefocus.component.RoutineTimelineItem
 import com.konkuk.moru.presentation.routinefocus.component.SettingSwitchGroup
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel

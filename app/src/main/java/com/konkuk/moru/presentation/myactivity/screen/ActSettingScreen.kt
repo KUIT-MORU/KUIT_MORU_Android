@@ -21,16 +21,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.konkuk.moru.R
 import com.konkuk.moru.core.util.modifier.noRippleClickable
 import com.konkuk.moru.presentation.myactivity.component.BackTitle
+import com.konkuk.moru.presentation.myactivity.viewmodel.InsightViewModel
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
@@ -40,6 +44,7 @@ fun ActSettingScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
+
     val scrollState = rememberScrollState()
     Column(
         modifier = modifier
