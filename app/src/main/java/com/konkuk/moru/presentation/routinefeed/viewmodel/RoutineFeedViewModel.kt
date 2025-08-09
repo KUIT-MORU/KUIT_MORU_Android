@@ -78,6 +78,7 @@ class RoutineFeedViewModel @Inject constructor(
                             )
                         )
                     }
+                    // TODO: 사용자 별명 받으면 title 변경 
                     if (response.personalRoutines.isNotEmpty()) {
                         add(
                             RoutineFeedSectionModel(
