@@ -22,7 +22,9 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideBaseUrl(): String {
-        return BuildConfig.BASE_URL
+        val url = BuildConfig.BASE_URL
+        require(url.isNotBlank() && url != "null") { "BuildConfig.BASE_URL is invalid" }
+        return if (url.endsWith("/")) url else "$url/"
     }
 
     @Provides
