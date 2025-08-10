@@ -14,13 +14,15 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun login(email: String, password: String): Result<Pair<String, String>> {
         return try {
-            val response = service.login(LoginRequestDto(email, password))
+            val res = service.login(LoginRequestDto(email, password))
+            val access = res.token.accessToken
+            val refresh = res.token.refreshToken
 
-            val token = response.token.accessToken
-            Log.d("Login", "받은 accessToken = $token")
-            tokenManager.saveToken(token)
+            Log.d("Login", "받은 accessToken = ${access.take(6)}...${access.takeLast(4)}")
 
-            return Result.success(token to response.token.refreshToken)
+            tokenManager.saveTokens(access, refresh)
+
+            Result.success(access to refresh)
         } catch (e: Exception) {
             Result.failure(e)
         }
