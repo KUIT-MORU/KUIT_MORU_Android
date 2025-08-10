@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- 외부 저장소의 앱 전용 Pictures 디렉토리 -->
+    <!-- 외부 저장소의 앱 전용 Pictures 디렉토리 (영구 보관용) -->
     <external-files-path
         name="images"
         path="Pictures/" />
+
+    <!-- [추가] 내부 cache 디렉터리 (임시 보관용) -->
+    <cache-path
+        name="images_cache"
+        path="." />
 
 </paths>
 
