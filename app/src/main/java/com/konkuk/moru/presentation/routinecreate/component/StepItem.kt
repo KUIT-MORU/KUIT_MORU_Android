@@ -32,10 +32,11 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 @Composable
 fun StepItem(
     step: Step,
+    isFocusingRoutine: Boolean,
     onTitleChange: (String) -> Unit,
     onShowTimePicker: () -> Unit,
     stepCount: Int,
-    onDelete: (stepId: String) -> Unit
+    onDelete: (stepId: String) -> Unit,
 ) {
     var titleInput by remember(step.id) { mutableStateOf(step.title) }
 
@@ -85,14 +86,17 @@ fun StepItem(
             )
 
             // 소요 시간 (기본 텍스트, 클릭 시 다이얼 팝업)
-            Text(
-                text = if (step.time == "") "소요 시간" else step.time,
-                style = typography.body_SB_14,
-                color = colors.charcoalBlack,
-                modifier = Modifier
-                    .weight(0.32f)
-                    .clickable { onShowTimePicker() }
-            )
+            if (isFocusingRoutine) {
+                Text(
+                    text = if (step.time == "") "소요 시간" else step.time,
+                    style = typography.body_SB_14,
+                    color = colors.charcoalBlack,
+                    modifier = Modifier
+                        .weight(0.32f)
+                        .clickable { onShowTimePicker() }
+                )
+            }
+
             if (stepCount > 1) {
                 Spacer(modifier = Modifier.width(10.dp))
                 Icon(
@@ -120,11 +124,23 @@ private fun StepItemPreview() {
             Step(title = "활동명", time = "")
         )
     } // 초기 step 1개
-    StepItem(
-        step = stepList[0],
-        onTitleChange = { stepList[0] = stepList[0].copy(title = it) },
-        onShowTimePicker = { },
-        stepCount = 2,
-        onDelete = { stepList.removeAt(0) }
-    )
+    Column {
+        StepItem(
+            step = stepList[0],
+            isFocusingRoutine = false,
+            onTitleChange = { stepList[0] = stepList[0].copy(title = it) },
+            onShowTimePicker = { },
+            stepCount = 2,
+            onDelete = { stepList.removeAt(0) },
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        StepItem(
+            step = stepList[0],
+            isFocusingRoutine = true,
+            onTitleChange = { stepList[0] = stepList[0].copy(title = it) },
+            onShowTimePicker = { },
+            stepCount = 2,
+            onDelete = { stepList.removeAt(0) },
+        )
+    }
 }
