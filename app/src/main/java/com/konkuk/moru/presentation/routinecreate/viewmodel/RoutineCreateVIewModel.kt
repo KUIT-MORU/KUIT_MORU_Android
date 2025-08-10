@@ -3,7 +3,11 @@ package com.konkuk.moru.presentation.routinecreate.viewmodel
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
@@ -12,6 +16,25 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.ViewModel
 import com.konkuk.moru.data.model.Step
 import com.konkuk.moru.data.model.UsedAppInRoutine
+import androidx.core.graphics.createBitmap
+
+// [유지] 서버 DTO들
+data class CreateRoutineRequest(
+    val title: String,
+    val imageKey: String?,
+    val tags: List<String>,
+    val description: String,
+    val steps: List<StepDto>,
+    val selectedApps: List<String>,
+    val isSimple: Boolean,
+    val isUserVisible: Boolean
+)
+
+data class StepDto(
+    val name: String,
+    val stepOrder: Int,
+    val estimatedTime: String // ISO-8601 duration
+)
 
 class RoutineCreateViewModel : ViewModel() {
 
@@ -21,7 +44,7 @@ class RoutineCreateViewModel : ViewModel() {
     val routineTitle = mutableStateOf("")
     val routineDescription = mutableStateOf("")
     val tagList = mutableStateListOf<String>()
-    val stepList = mutableStateListOf(Step(title = "", time = "")) // ✅ 초기에도 id 생성
+    val stepList = mutableStateListOf(Step(title = "", time = ""))
     val editingStepId = mutableStateOf<String?>(null)
     val appList = mutableStateListOf<UsedAppInRoutine>()
     val selectedAppList = mutableStateListOf<UsedAppInRoutine>()
@@ -43,10 +66,7 @@ class RoutineCreateViewModel : ViewModel() {
     }
 
     fun addTag(tag: String) {
-//        if (tag.isNotBlank() && !tagList.contains(tag)) {
-//            tagList.add(tag)
-//        }
-        tagList.add(tag) //Todo: 중복 체크 로직 추가 필요
+        tagList.add(tag) // TODO: 중복 체크 로직 추가 필요
     }
 
     fun removeTag(tag: String) {
@@ -80,6 +100,20 @@ class RoutineCreateViewModel : ViewModel() {
         return stepList.find { it.id == id }?.time
     }
 
+    // [유지] HH:MM:SS → PT#H#M#S 변환
+    private fun String.toIsoDuration(): String {
+        val parts = split(":")
+        val h = parts.getOrNull(0)?.toIntOrNull() ?: 0
+        val m = parts.getOrNull(1)?.toIntOrNull() ?: 0
+        val s = parts.getOrNull(2)?.toIntOrNull() ?: 0
+        return buildString {
+            append("PT")
+            if (h > 0) append("${h}H")
+            if (m > 0) append("${m}M")
+            if (s > 0 || (h == 0 && m == 0)) append("${s}S")
+        }
+    }
+
     @SuppressLint("DefaultLocale")
     fun confirmTime(hour: Int, minute: Int, second: Int) {
         val formatted = String.format("%02d:%02d:%02d", hour, minute, second)
@@ -95,53 +129,95 @@ class RoutineCreateViewModel : ViewModel() {
         val pm = context.packageManager
         val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
 
-        appList.clear() // 중복 방지
+        appList.clear()
 
         apps.forEach { appInfo ->
             try {
                 val label = pm.getApplicationLabel(appInfo).toString()
-                val iconDrawable = pm.getApplicationIcon(appInfo)
+                val drawable = pm.getApplicationIcon(appInfo)
 
-                val bitmap = (iconDrawable as BitmapDrawable).bitmap
+                // [유지] 어떤 Drawable이 와도 안전하게 비트맵 변환
+                val bitmap = drawableToBitmap(drawable)
                 val imageBitmap = bitmap.asImageBitmap()
+                val pkg = appInfo.packageName
 
-                // 이미 추가된 앱은 건너뜀
-                if (appList.none { it.appName == label }) {
-                    appList.add(UsedAppInRoutine(appName = label, appIcon = imageBitmap))
+                if (appList.none { it.packageName == pkg }) {
+                    appList.add(
+                        UsedAppInRoutine(
+                            appName = label,
+                            appIcon = imageBitmap,
+                            packageName = pkg
+                        )
+                    )
                 }
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    // [유지] Drawable → Bitmap 안전 변환
+    private fun drawableToBitmap(drawable: Drawable): Bitmap {
+        return when (drawable) {
+            is BitmapDrawable -> drawable.bitmap
+            is AdaptiveIconDrawable -> {
+                val bmp = createBitmap(
+                    drawable.intrinsicWidth.coerceAtLeast(1),
+                    drawable.intrinsicHeight.coerceAtLeast(1)
+                )
+                val canvas = Canvas(bmp) // [중요] android.graphics.Canvas 사용
+                drawable.setBounds(0, 0, canvas.width, canvas.height)
+                drawable.draw(canvas)
+                bmp
+            }
+
+            else -> {
+                val bmp = createBitmap(
+                    drawable.intrinsicWidth.coerceAtLeast(1),
+                    drawable.intrinsicHeight.coerceAtLeast(1)
+                )
+                val canvas = Canvas(bmp) // [중요] android.graphics.Canvas 사용
+                drawable.setBounds(0, 0, canvas.width, canvas.height)
+                drawable.draw(canvas)
+                bmp
+            }
         }
     }
 
     fun addAppToSelected(app: UsedAppInRoutine) {
-        if (app !in selectedAppList && selectedAppList.size < 4) {
+        if (selectedAppList.none { it.packageName == app.packageName } && selectedAppList.size < 4) {
             selectedAppList.add(app)
         }
     }
+
     fun removeAppFromSelected(app: UsedAppInRoutine) {
-        selectedAppList.remove(app)
+        selectedAppList.removeAll { it.packageName == app.packageName } // [변경] 패키지 기준
     }
 
-    fun submitRoutine() {
-        val routineData = mapOf(
-            "title" to routineTitle.value,
-            "description" to routineDescription.value,
-            "isFocused" to isFocusingRoutine.value,
-            "showUser" to showUser.value,
-            "tagList" to tagList.toList(),
-            "steps" to stepList.map { it.copy() },
-            "apps" to appList.map { it.copy() },
-            "imageUri" to imageUri.value?.toString()
+    // [유지] 서버 전송용 DTO 생성기
+    fun buildCreateRoutineRequest(imageKey: String?): CreateRoutineRequest {
+        val stepsDto = stepList.mapIndexed { idx, step ->
+            StepDto(
+                name = step.title,
+                stepOrder = idx + 1,
+                estimatedTime = (step.time.takeIf { it.isNotBlank() } ?: "00:00:00").toIsoDuration()
+            )
+        }
+        return CreateRoutineRequest(
+            title = routineTitle.value,
+            imageKey = imageKey,
+            tags = tagList.toList(),
+            description = routineDescription.value,
+            steps = stepsDto,
+            selectedApps = selectedAppList.map { it.packageName }, // [중요 변경]
+            isSimple = !isFocusingRoutine.value, // [중요 매핑]
+            isUserVisible = showUser.value
         )
+    }
 
-        // ✅ Log 출력 추가
-        Log.d("RoutineCreate", "루틴 제목: ${routineTitle.value}")
-        Log.d("RoutineCreate", "설명: ${routineDescription.value}")
-        Log.d("RoutineCreate", "집중 루틴 여부: ${isFocusingRoutine.value}")
-        Log.d("RoutineCreate", "사용자 공개 여부: ${showUser.value}")
-        Log.d("RoutineCreate", "태그: ${tagList.toList()}")
-        Log.d("RoutineCreate", "스텝: ${stepList.map { "${it.title} - ${it.time}" }}")
-        Log.d("RoutineCreate", "사용 앱: ${appList.map { "${it.appName} - ${it.appIcon}" }}")
-        Log.d("RoutineCreate", "이미지 URI: ${imageUri.value?.toString()}")
+    fun submitRoutine(imageKey: String?) {
+        val req = buildCreateRoutineRequest(imageKey)
+        Log.d("RoutineCreate", "CreateRoutineRequest → $req")
+        Log.d("RoutineCreate", "이미지 URI(Local): ${imageUri.value?.toString()}")
+        // TODO: Repository.createRoutine(req) 호출로 네트워크 연결
     }
 }

@@ -17,7 +17,8 @@ data class UserInfo(
     val gender: String = "",
     val birthday: String = "",
     val introduction: String = "",
-    val tags: List<String> = emptyList()
+    val tags: List<String> = emptyList(),
+    val profileImageUri: String? = null
 )
 
 @HiltViewModel
@@ -58,6 +59,10 @@ class OnboardingViewModel @Inject constructor(
 
     fun updateTags(tags: List<String>) {
         _userInfo.value = _userInfo.value.copy(tags = tags)
+    }
+
+    fun updateProfileImage(uri: String?) {
+        _userInfo.value = _userInfo.value.copy(profileImageUri = uri) // [추가]
     }
 
     // ✅ 다음 페이지 로직

@@ -135,7 +135,9 @@ fun DraggableAppSearchBottomSheetContent(
             if (selectedAppList.isNotEmpty()) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth().padding(horizontal = 25.dp).padding(bottom = 6.dp),
+                        .fillMaxWidth()
+                        .padding(horizontal = 25.dp)
+                        .padding(bottom = 6.dp),
                     horizontalAlignment = Alignment.End
                 ) {
                     Box(
@@ -212,14 +214,14 @@ fun DraggableAppSearchBottomSheetContentPreview() {
     ) {
         DraggableAppSearchBottomSheetContent(
             appList = listOf(
-                UsedAppInRoutine("YouTube", ImageBitmap(64, 64)),
-                UsedAppInRoutine("Instagram", ImageBitmap(64, 64)),
-                UsedAppInRoutine("Twitter", ImageBitmap(64, 64)),
-                UsedAppInRoutine("Facebook", ImageBitmap(64, 64))
+                UsedAppInRoutine("YouTube", ImageBitmap(64, 64), ""),
+                UsedAppInRoutine("Instagram", ImageBitmap(64, 64), ""),
+                UsedAppInRoutine("Twitter", ImageBitmap(64, 64), ""),
+                UsedAppInRoutine("Facebook", ImageBitmap(64, 64), "")
             ),
             selectedAppList = listOf(
-                UsedAppInRoutine("WhatsApp", ImageBitmap(64, 64)),
-                UsedAppInRoutine("Telegram", ImageBitmap(64, 64))
+                UsedAppInRoutine("WhatsApp", ImageBitmap(64, 64), ""),
+                UsedAppInRoutine("Telegram", ImageBitmap(64, 64), "")
             ),
             onAddApp = {},
             onRemoveApp = {}

@@ -11,17 +11,24 @@ class AuthInterceptor @Inject constructor(
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
-        val token = tokenManager.getToken()
+        val original = chain.request()
 
-        val newRequest = chain.request().newBuilder().apply {
-            if (!token.isNullOrEmpty()) {
-                Log.d("AuthInterceptor", "Token attached: Bearer $token")
-                addHeader("Authorization", "Bearer $token")
-            } else {
-                Log.w("AuthInterceptor", "No token found. Skipping Authorization header.")
-            }
-        }.build()
+        if (original.header("Authorization") != null) {
+            return chain.proceed(original)
+        }
 
-        return chain.proceed(newRequest)
+        val access = tokenManager.accessTokenBlocking()
+        val req = if (!access.isNullOrEmpty()) {
+            val short = if (access.length > 12) access.take(6) + "..." + access.takeLast(4) else access
+            Log.d("AuthInterceptor", "Attach Authorization: Bearer $short")
+            original.newBuilder()
+                .header("Authorization", "Bearer $access")
+                .build()
+        } else {
+            Log.w("AuthInterceptor", "No access token. Sending request without Authorization.")
+            original
+        }
+
+        return chain.proceed(req)
     }
 }

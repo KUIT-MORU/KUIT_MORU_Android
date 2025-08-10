@@ -14,7 +14,7 @@ class UserSessionManager @Inject constructor(
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn
 
     init {
-        _isLoggedIn.value = !tokenManager.getToken().isNullOrEmpty()
+        _isLoggedIn.value = !tokenManager.accessTokenBlocking().isNullOrEmpty()
     }
 
     fun setLoggedIn(value: Boolean) {
