@@ -7,7 +7,6 @@ import com.konkuk.moru.data.mapper.toUiModel
 import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.model.SimilarRoutine
-import com.konkuk.moru.data.model.findSimilarRoutinesByTags
 import com.konkuk.moru.domain.repository.RoutineFeedRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

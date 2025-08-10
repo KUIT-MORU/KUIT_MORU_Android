@@ -17,7 +17,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.google.gson.Gson
-import com.konkuk.moru.data.model.DummyData.feedRoutines
 import com.konkuk.moru.presentation.home.screen.HomeScreen
 import com.konkuk.moru.presentation.home.screen.RoutineFocusIntroScreen
 import com.konkuk.moru.presentation.home.screen.RoutineSimpleRunScreen

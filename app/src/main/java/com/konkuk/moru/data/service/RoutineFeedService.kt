@@ -1,6 +1,5 @@
 package com.konkuk.moru.data.service
 
-import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
 import com.konkuk.moru.presentation.routinefeed.data.RoutineDetailResponse
 import com.konkuk.moru.presentation.routinefeed.data.RoutineFeedResponse

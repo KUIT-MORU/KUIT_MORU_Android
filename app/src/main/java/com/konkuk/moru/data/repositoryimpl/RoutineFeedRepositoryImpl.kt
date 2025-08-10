@@ -5,7 +5,7 @@ import com.konkuk.moru.domain.repository.RoutineFeedRepository
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
 import com.konkuk.moru.presentation.routinefeed.data.RoutineDetailResponse
 import com.konkuk.moru.presentation.routinefeed.data.RoutineFeedResponse
-import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedSectionModel
+
 import javax.inject.Inject
 
 class RoutineFeedRepositoryImpl @Inject constructor(
