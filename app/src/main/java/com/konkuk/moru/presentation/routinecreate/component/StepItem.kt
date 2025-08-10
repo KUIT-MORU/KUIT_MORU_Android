@@ -107,7 +107,7 @@ fun StepItem(
                         .clickable { onDelete(step.id) },
                     tint = colors.mediumGray
                 )
-            }else{
+            } else {
                 Spacer(modifier = Modifier.width(26.dp))
             }
         }

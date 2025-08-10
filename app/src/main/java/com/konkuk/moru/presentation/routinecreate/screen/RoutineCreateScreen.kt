@@ -406,6 +406,7 @@ fun RoutineCreateScreen(
         },
     )
 }
+
 private fun createImageUri(context: Context): Uri {
     val imageFile = File.createTempFile(
         "moru_camera_", ".jpg",

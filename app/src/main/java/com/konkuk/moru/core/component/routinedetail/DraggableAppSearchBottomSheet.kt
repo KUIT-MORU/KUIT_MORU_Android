@@ -135,7 +135,9 @@ fun DraggableAppSearchBottomSheetContent(
             if (selectedAppList.isNotEmpty()) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth().padding(horizontal = 25.dp).padding(bottom = 6.dp),
+                        .fillMaxWidth()
+                        .padding(horizontal = 25.dp)
+                        .padding(bottom = 6.dp),
                     horizontalAlignment = Alignment.End
                 ) {
                     Box(

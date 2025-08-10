@@ -36,7 +36,7 @@ fun ImageChoiceOptionButtonScreen(
             .clickable(
                 indication = null,
                 interactionSource = null
-            ){ onCancel() },
+            ) { onCancel() },
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -51,7 +51,10 @@ fun ImageChoiceOptionButtonScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(110.dp)
-                    .background(color = colors.lightGray.copy(alpha = 0.7f), shape = RoundedCornerShape(12.dp)),
+                    .background(
+                        color = colors.lightGray.copy(alpha = 0.7f),
+                        shape = RoundedCornerShape(12.dp)
+                    ),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -59,8 +62,11 @@ fun ImageChoiceOptionButtonScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .background(Color.White.copy(alpha = 0.8f), shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
-                        .clickable{
+                        .background(
+                            Color.White.copy(alpha = 0.8f),
+                            shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+                        )
+                        .clickable {
                             onImageSelected()
                         },
                     verticalArrangement = Arrangement.Center,
@@ -77,8 +83,11 @@ fun ImageChoiceOptionButtonScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .background(Color.White.copy(alpha = 0.8f), shape = RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp))
-                        .clickable{
+                        .background(
+                            Color.White.copy(alpha = 0.8f),
+                            shape = RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)
+                        )
+                        .clickable {
                             onCameraSelected()
                         },
                     verticalArrangement = Arrangement.Center,

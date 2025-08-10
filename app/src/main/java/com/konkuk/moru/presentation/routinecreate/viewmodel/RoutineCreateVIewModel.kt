@@ -150,7 +150,8 @@ class RoutineCreateViewModel : ViewModel() {
                         )
                     )
                 }
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
     }
 
@@ -168,6 +169,7 @@ class RoutineCreateViewModel : ViewModel() {
                 drawable.draw(canvas)
                 bmp
             }
+
             else -> {
                 val bmp = createBitmap(
                     drawable.intrinsicWidth.coerceAtLeast(1),
