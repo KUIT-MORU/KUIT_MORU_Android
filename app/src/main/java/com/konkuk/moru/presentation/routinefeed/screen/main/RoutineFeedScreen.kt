@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.google.gson.Gson
 import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.navigation.Route
@@ -102,6 +103,11 @@ private fun RoutineFeedContent(
                     title = section.title,
                     routines = section.routines,
                     onRoutineClick = { routineId ->
+                        section.routines.firstOrNull { it.routineId == routineId }?.let { selected ->
+                            navController.currentBackStackEntry
+                                ?.savedStateHandle
+                                ?.set("selectedRoutineJson", Gson().toJson(selected)) // [수정]
+                        }
                         navController.navigate(Route.RoutineFeedDetail.createRoute(routineId))
                     },
                     onMoreClick = { title ->

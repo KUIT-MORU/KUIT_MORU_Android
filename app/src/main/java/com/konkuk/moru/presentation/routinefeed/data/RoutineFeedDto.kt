@@ -9,7 +9,7 @@ data class RoutineSectionModel(
 )
 
 data class LiveUserInfo(
-    @SerializedName("userId")
+    @SerializedName("userId") //필요시 userId로
     val userId: String,
 
     @SerializedName("nickname") // JSON의 "nickname" 필드를 "name" 변수에 매핑

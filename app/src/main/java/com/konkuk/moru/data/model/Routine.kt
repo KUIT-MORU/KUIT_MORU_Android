@@ -12,7 +12,7 @@ data class Routine(
     val title: String,
     val description: String,
     val imageUrl: String?,
-    val category: String,
+    val category: String, // 집중, 간편
     val tags: List<String>,
 
     // 사용자 관련 정보

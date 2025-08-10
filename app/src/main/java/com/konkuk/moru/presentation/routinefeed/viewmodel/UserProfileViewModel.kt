@@ -3,7 +3,9 @@ package com.konkuk.moru.presentation.routinefeed.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.konkuk.moru.data.model.DummyData
+import com.konkuk.moru.data.model.Routine
+import com.konkuk.moru.data.model.RoutineCardDomain
+import com.konkuk.moru.domain.repository.UserRepository
 import com.konkuk.moru.presentation.routinefeed.data.UserProfileUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,105 +17,71 @@ import javax.inject.Inject
 
 @HiltViewModel
 class UserProfileViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UserProfileUiState())
     val uiState: StateFlow<UserProfileUiState> = _uiState.asStateFlow()
 
     init {
-        // 내비게이션 경로로부터 'userId' 파라미터를 가져옵니다.
-        // 이 "userId"는 NavHost에 정의된 `navArgument("userId")`의 이름과 일치해야 합니다.
+        // NavGraph의 route = "user_profile/{userId}" 와 인자 이름이 정확히 "userId" 인지 확인
         val userId: String? = savedStateHandle["userId"]
-
-        if (userId != null) {
-            loadUserProfile(userId)
-        } else {
-            // userId가 없는 비정상적인 경우, 기본 프로필이나 에러 상태를 표시합니다.
-            loadDefaultProfile()
-        }
-    }
-
-    /**
-     * 전달받은 userId에 맞는 사용자 정보를 불러와 UI 상태를 업데이트합니다.
-     */
-    private fun loadUserProfile(userId: String) {
         viewModelScope.launch {
-            // 더미 데이터에서 userId와 일치하는 사용자 정보를 찾습니다.
-            val user = DummyData.dummyUsers.find { it.userId == userId }
-            // 더미 데이터에서 authorId가 일치하는 루틴 목록을 찾습니다.
-            val userRoutines = DummyData.feedRoutines.filter { it.authorId == userId }
-            val followerCount = DummyData.dummyFollowRelations.count { it.followingId == userId }
-            val followingCount = DummyData.dummyFollowRelations.count { it.followerId == userId }
-
-            val isFollowing = DummyData.dummyFollowRelations.any {
-                it.followerId == DummyData.MY_USER_ID && it.followingId == userId
-            }
-
-            if (user != null) {
-                // 찾은 사용자 정보로 UI 상태를 업데이트합니다.
-                _uiState.update {
-                    it.copy(
-                        userId = userId,
-                        profileImageUrl = user.profileImageUrl,
-                        nickname = user.nickname,
-                        bio = user.bio + " (ID: ${user.userId})", // 실제 앱에서는 user 모델에 bio 필드가 있어야 합니다.
-                        routineCount = userRoutines.size,
-                        followerCount = followerCount,
-                        followingCount = followingCount,
-                        isFollowing = isFollowing, // 기본 상태는 false로 설정
-                        runningRoutines = userRoutines.filter { routine -> routine.isRunning },
-                        userRoutines = userRoutines.filter { routine -> !routine.isRunning }
+            runCatching {
+                if (userId.isNullOrBlank()) {
+                    // 내 프로필
+                    userRepository.getMe()
+                } else {
+                    // 타인 프로필
+                    userRepository.getUserProfile(userId)
+                }
+            }.onSuccess { domain ->
+                _uiState.update { prev ->
+                    prev.copy(
+                        userId = userId, // null이면 내 프로필
+                        profileImageUrl = domain.profileImageUrl,
+                        nickname = domain.nickname,
+                        bio = domain.bio ?: "",
+                        routineCount = domain.routineCount,
+                        followerCount = domain.followerCount,
+                        followingCount = domain.followingCount,
+                        // 서버 스펙에 팔로잉 여부가 없으면 기본 false
+                        isFollowing = false,
+                        // currentRoutine을 "실행 중" 섹션처럼 보여주고 싶다면 아래처럼 1개짜리 리스트로 매핑
+                        runningRoutines = domain.currentRoutine?.let { listOf(it.toUiRoutine(userId)) }
+                            ?: emptyList(),
+                        // 나머지 루틴들
+                        userRoutines = domain.routines.map { it.toUiRoutine(userId) }
                     )
                 }
-            } else {
-                // 해당하는 유저 정보가 없으면 기본 프로필을 로드합니다.
-                loadDefaultProfile()
+            }.onFailure { e ->
+                _uiState.update {
+                    it.copy(
+                        nickname = "알 수 없는 사용자",
+                        bio = "사용자 정보를 불러오는 데 실패했습니다. (${e.message ?: "알 수 없는 오류"})",
+                        routineCount = 0,
+                        followerCount = 0,
+                        followingCount = 0,
+                        runningRoutines = emptyList(),
+                        userRoutines = emptyList()
+                    )
+                }
             }
-        }
-    }
-
-    /**
-     * userId를 찾지 못했거나 없는 경우 호출되는 기본 상태 로드 함수입니다.
-     */
-    private fun loadDefaultProfile() {
-        _uiState.update {
-            it.copy(
-                nickname = "알 수 없는 사용자",
-                bio = "사용자 정보를 불러오는 데 실패했습니다.",
-                routineCount = 0,
-                followerCount = 0,
-                followingCount = 0,
-                runningRoutines = emptyList(),
-                userRoutines = emptyList()
-            )
         }
     }
 
     fun toggleFollow() {
-        val previousState = _uiState.value
-        val isNowFollowing = !previousState.isFollowing
-
-        _uiState.update { currentState ->
-            currentState.copy(
-                isFollowing = isNowFollowing,
-                followerCount = if (isNowFollowing) {
-                    currentState.followerCount + 1
-                } else {
-                    currentState.followerCount - 1
-                }
+        val previous = _uiState.value
+        val nowFollowing = !previous.isFollowing
+        _uiState.update {
+            it.copy(
+                isFollowing = nowFollowing,
+                followerCount = if (nowFollowing) it.followerCount + 1 else it.followerCount - 1
             )
         }
-
-        viewModelScope.launch {
-            try {
-                // TODO: 실제 서버 API 호출
-                println("서버 API 요청: 팔로우 상태 -> $isNowFollowing")
-            } catch (e: Exception) {
-                _uiState.value = previousState
-                println("서버 API 요청 실패! UI를 원래대로 롤백합니다.")
-            }
-        }
+        // TODO: 서버에 팔로우/언팔로우 요청 (실패 시 롤백)
+        // 실패하면 _uiState.value = previous
     }
 
     fun toggleRunningRoutineExpansion() {
@@ -121,32 +89,52 @@ class UserProfileViewModel @Inject constructor(
     }
 
     fun toggleLike(routineId: String) {
-        _uiState.update { currentState ->
-            val updatedRunningRoutines = currentState.runningRoutines.map { routine ->
-                if (routine.routineId == routineId) {
-                    routine.copy(
-                        isLiked = !routine.isLiked,
-                        likes = if (!routine.isLiked) routine.likes + 1 else routine.likes - 1
-                    )
-                } else {
-                    routine
-                }
+        _uiState.update { current ->
+            val updatedRunning = current.runningRoutines.map { r ->
+                if (r.routineId == routineId) r.copy(
+                    isLiked = !r.isLiked,
+                    likes = if (!r.isLiked) r.likes + 1 else r.likes - 1
+                ) else r
             }
-            val updatedUserRoutines = currentState.userRoutines.map { routine ->
-                if (routine.routineId == routineId) {
-                    routine.copy(
-                        isLiked = !routine.isLiked,
-                        likes = if (!routine.isLiked) routine.likes + 1 else routine.likes - 1
-                    )
-                } else {
-                    routine
-                }
+            val updatedUser = current.userRoutines.map { r ->
+                if (r.routineId == routineId) r.copy(
+                    isLiked = !r.isLiked,
+                    likes = if (!r.isLiked) r.likes + 1 else r.likes - 1
+                ) else r
             }
-            currentState.copy(
-                runningRoutines = updatedRunningRoutines,
-                userRoutines = updatedUserRoutines
-            )
+            current.copy(runningRoutines = updatedRunning, userRoutines = updatedUser)
         }
-        // TODO: 서버에 좋아요 상태 변경 API 요청
+        // TODO: 서버 좋아요 토글 API 호출
     }
 }
+
+/**
+ * Domain → UI 모델 매핑
+ * UI에서 사용하는 Routine(피드 카드용)으로 가볍게 채워 넣습니다.
+ * authorId는 프로필 주인 id로 세팅(상세로 넘어갈 때 작성자 프로필 이동 등에 사용 가능)
+ */
+private fun RoutineCardDomain.toUiRoutine(profileOwnerId: String?): Routine =
+    Routine(
+        routineId = id,
+        title = title,
+        imageUrl = imageUrl,
+        tags = tags,
+        likes = likeCount,
+
+        // UI에서 필요하지만 서버 카드 응답에 없는 값들은 기본값으로
+        description = "",
+        category = "일상",
+        authorId = profileOwnerId ?: "", // 프로필 화면 주인의 id
+        authorName = "",
+        authorProfileUrl = null,
+        isLiked = false,
+        isBookmarked = false,
+        isRunning = false,
+        isChecked = false,
+        scheduledTime = null,
+        scheduledDays = emptySet(),
+        isAlarmEnabled = false,
+        steps = emptyList(),
+        similarRoutines = emptyList(),
+        usedApps = emptyList()
+    )

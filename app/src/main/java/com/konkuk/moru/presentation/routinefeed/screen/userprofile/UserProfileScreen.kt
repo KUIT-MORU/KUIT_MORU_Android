@@ -70,7 +70,7 @@ fun UserProfileScreen(
         containerColor = Color.White,
         topBar = {
             BasicTopAppBar(
-                title = "사용자명",
+                title = uiState.nickname.ifBlank { "사용자명" },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")

@@ -199,7 +199,8 @@ class MyRoutineDetailViewModel : ViewModel() {
             // 예시로 새 앱 추가
             val newApp = AppInfo(
                 name = "새로운 앱",
-                iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/hand-gestures/good-icon.png"
+                iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/hand-gestures/good-icon.png",
+                packageName = ""
             )
             val updatedApps = state.routine?.usedApps?.plus(newApp)
             state.copy(routine = state.routine?.copy(usedApps = updatedApps ?: listOf(newApp)))

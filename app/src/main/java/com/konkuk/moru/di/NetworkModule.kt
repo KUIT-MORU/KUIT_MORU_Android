@@ -5,6 +5,7 @@ import com.konkuk.moru.data.interceptor.AuthInterceptor
 import com.konkuk.moru.data.service.AuthService
 import com.konkuk.moru.data.service.InsightService
 import com.konkuk.moru.data.service.RoutineFeedService
+import com.konkuk.moru.data.service.UserService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,6 +25,13 @@ object NetworkModule {
     @Singleton
     fun provideBaseUrl(): String {
         return BuildConfig.BASE_URL
+    }
+
+
+    @Provides
+    @Singleton
+    fun provideAuthService(retrofit: Retrofit): AuthService {
+        return retrofit.create(AuthService::class.java)
     }
 
     @Provides
@@ -50,11 +58,6 @@ object NetworkModule {
             .build()
     }
 
-    @Provides
-    @Singleton
-    fun provideAuthService(retrofit: Retrofit): AuthService {
-        return retrofit.create(AuthService::class.java)
-    }
 
     @Provides
     @Singleton
@@ -67,6 +70,11 @@ object NetworkModule {
     fun provideRoutineFeedService(retrofit: Retrofit): RoutineFeedService {
         return retrofit.create(RoutineFeedService::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideUserService(retrofit: Retrofit): UserService =
+        retrofit.create(UserService::class.java)
 
 
 }

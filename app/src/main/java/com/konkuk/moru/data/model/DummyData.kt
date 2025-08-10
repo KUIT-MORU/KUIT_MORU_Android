@@ -137,11 +137,13 @@ object DummyData {
             usedApps = listOf(
                 AppInfo(
                     name = "Calm",
-                    iconUrl = "https://i.pinimg.com/originals/31/28/90/312890339947b7294633999d1c03387c.png"
+                    iconUrl = "https://i.pinimg.com/originals/31/28/90/312890339947b7294633999d1c03387c.png",
+                    packageName = ""
                 ),
                 AppInfo(
                     name = "Youtube",
-                    iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/youtube-logotype-icon.png"
+                    iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/youtube-logotype-icon.png",
+                    packageName = ""
                 )
             )
         ),
@@ -170,7 +172,9 @@ object DummyData {
             usedApps = listOf(
                 AppInfo(
                     name = "정리 앱",
-                    iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/house-and-home/dustpan-icon.png"
+                    iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/house-and-home/dustpan-icon.png",
+                    packageName = ""
+
                 )
             )
         ),
@@ -219,7 +223,8 @@ object DummyData {
             usedApps = listOf(
                 AppInfo(
                     name = "Github",
-                    iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/github-icon.png"
+                    iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/github-icon.png",
+                    packageName = ""
                 )
             )
         ),
@@ -324,11 +329,13 @@ object DummyData {
             usedApps = listOf(
                 AppInfo(
                     name = "오늘의집",
-                    iconUrl = "https://i.pinimg.com/736x/87/a7/9e/87a79e09cc92f802c114325a1215f913.jpg"
+                    iconUrl = "https://i.pinimg.com/736x/87/a7/9e/87a79e09cc92f802c114325a1215f913.jpg",
+                    packageName= ""
                 ),
                 AppInfo(
                     name = "마켓컬리",
-                    iconUrl = "https://play-lh.googleusercontent.com/F9p-8L9H_nS2z24x6d-L5Z99i5c81NP0yD-cK5Gf_T22mw_s2gT2jCqC-w=w240-h480-rw"
+                    iconUrl = "https://play-lh.googleusercontent.com/F9p-8L9H_nS2z24x6d-L5Z99i5c81NP0yD-cK5Gf_T22mw_s2gT2jCqC-w=w240-h480-rw",
+                    packageName = ""
                 )
             )
         )

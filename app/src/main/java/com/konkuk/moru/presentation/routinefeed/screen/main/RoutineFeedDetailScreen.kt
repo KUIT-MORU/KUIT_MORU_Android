@@ -27,11 +27,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.google.gson.Gson
 import com.konkuk.moru.data.model.DummyData
+import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.routinefeed.component.RoutineDetail.RoutineHeader
 import com.konkuk.moru.presentation.routinefeed.component.RoutineDetail.RoutineStepSection
@@ -45,11 +48,25 @@ fun RoutineDetailScreen(
     routineId: String,
     onBackClick: () -> Unit,
     navController: NavController,
-    viewModel: RoutineDetailViewModel = viewModel()
+    viewModel: RoutineDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(key1 = routineId) {
+    // [추가] 이전 화면에서 넘긴 선택 루틴이 있으면 우선 세팅
+    LaunchedEffect(routineId) {
+        navController.previousBackStackEntry
+            ?.savedStateHandle
+            ?.get<String>("selectedRoutineJson")
+            ?.let { json ->
+                runCatching { Gson().fromJson(json, Routine::class.java) }.getOrNull()
+            }?.let { pre ->
+                viewModel.setInitialRoutine(pre)
+            }
+
+        // ✅ 재사용 방지(깨끗하게 비우기)
+        navController.previousBackStackEntry?.savedStateHandle?.remove<String>("selectedRoutineJson")
+
+        // ✅ 서버 최신 상세로 덮어쓰기
         viewModel.loadRoutine(routineId)
     }
 
@@ -68,9 +85,16 @@ fun RoutineDetailScreen(
         return
     }
 
-    var isLiked by remember(routine.routineId) { mutableStateOf(routine.isLiked) }
+    /*var isLiked by remember(routine.routineId) { mutableStateOf(routine.isLiked) }
     var likeCount by remember(routine.routineId) { mutableIntStateOf(routine.likes) }
     var isBookmarked by remember(routine.routineId) { mutableStateOf(routine.isBookmarked) }
+
+    LaunchedEffect(routine) {
+        isLiked = routine.isLiked
+        likeCount = routine.likes
+        isBookmarked = routine.isBookmarked
+    }*/
+
 
     Scaffold(
         containerColor = Color.White,
@@ -137,14 +161,15 @@ fun RoutineDetailScreen(
 
 
             RoutineDetailTopAppBar(
-                likeCount = likeCount,
-                isLiked = isLiked,
-                isBookmarked = isBookmarked,
+                likeCount = routine.likes,         // ✅ 항상 서버값
+                isLiked = routine.isLiked,
+                isBookmarked = routine.isBookmarked,
                 onLikeClick = {
-                    isLiked = !isLiked
-                    if (isLiked) likeCount++ else likeCount--
+                    if (!uiState.isLiking && !uiState.isLoading) viewModel.toggleLikeSync()
                 },
-                onBookmarkClick = { isBookmarked = !isBookmarked },
+                onBookmarkClick = {
+                    if (!uiState.isScrapping && !uiState.isLoading) viewModel.toggleScrapSync()
+                },
                 onBackClick = onBackClick,
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Color.Transparent,
