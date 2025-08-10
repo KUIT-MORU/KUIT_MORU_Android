@@ -16,6 +16,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.konkuk.moru.data.model.DummyData.feedRoutines
+import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.home.screen.HomeScreen
 import com.konkuk.moru.presentation.home.screen.RoutineFocusIntroScreen
 import com.konkuk.moru.presentation.home.screen.RoutineSimpleRunScreen
@@ -71,28 +72,32 @@ fun MainNavGraph(
             )
         }
 
-        // 루틴 목록의 카드 클릭 시
-        composable(
-            route = "routine_focus_intro/{routineId}",
-            arguments = listOf(navArgument("routineId") { type = NavType.StringType })
-        ) { backStackEntry ->
-
-            val parentEntry = remember(navController.currentBackStackEntry) {
-                navController.getBackStackEntry(Route.Home.route)
-            }
-            val sharedViewModel = viewModel<SharedRoutineViewModel>(parentEntry)
-
-            RoutineFocusIntroScreen(
-                sharedViewModel = sharedViewModel,
-                onStartClick = { selectedSteps, title, hashTag ->
-                    sharedViewModel.setSelectedSteps(selectedSteps)
-                    sharedViewModel.setRoutineTitle(title)
-                    sharedViewModel.setRoutineTags(hashTag.split(" ").map { it.removePrefix("#") })
-                    navController.navigate("routine_focus")
-                },
-                onBackClick = { navController.popBackStack() }
-            )
-        }
+//        // 루틴 목록의 카드 클릭 시
+//        composable(
+//            route = "routine_focus_intro/{routineId}",
+//            arguments = listOf(navArgument("routineId") { type = NavType.StringType })
+//        ) { backStackEntry ->
+//            val parent = remember(navController.currentBackStackEntry) {
+//                navController.getBackStackEntry(Route.Home.route)
+//            }
+//            val shared = viewModel<SharedRoutineViewModel>(parent)
+//
+//            val rid = backStackEntry.arguments?.getInt("routineId")
+//            if (rid != null) {
+//                shared.setSelectedRoutineId(rid)
+//            }
+//
+//            RoutineFocusIntroScreen(
+//                sharedViewModel = shared,
+//                onStartClick = { selectedSteps, title, hashTag ->
+//                    shared.setSelectedSteps(selectedSteps)
+//                    shared.setRoutineTitle(title)
+//                    shared.setRoutineTags(hashTag.split(" ").map { it.removePrefix("#") })
+//                    navController.navigate("routine_focus")
+//                },
+//                onBackClick = { navController.popBackStack() }
+//            )
+//        }
 
 
 
@@ -146,26 +151,37 @@ fun MainNavGraph(
 
 
         composable(route = Route.RoutineSimpleRun.route) {
-            val parentEntry = remember(navController.currentBackStackEntry) {
+            val parent = remember(navController.currentBackStackEntry) {
                 navController.getBackStackEntry(Route.Home.route)
             }
-            val sharedViewModel = viewModel<SharedRoutineViewModel>(parentEntry)
+            val shared = viewModel<SharedRoutineViewModel>(parent)
+            val currentId by shared.selectedRoutineId.collectAsState()
 
-            RoutineSimpleRunScreen(
-                sharedViewModel = sharedViewModel,
-                onDismiss = {
-                    navController.popBackStack(
-                        Route.Home.route,
-                        inclusive = false
-                    )
-                    if (navController.currentDestination?.route != Route.Home.route) {
-                        navController.navigate(Route.Home.route) {
-                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                            launchSingleTop = true
+            if (currentId != null) {
+                RoutineSimpleRunScreen(
+                    sharedViewModel = shared,
+                    routineId = currentId!!,
+                    onDismiss = {
+                        navController.popBackStack(
+                            Route.Home.route,
+                            inclusive = false
+                        )
+                        if (navController.currentDestination?.route != Route.Home.route) {
+                            navController.navigate(Route.Home.route) {
+                                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                                launchSingleTop = true
+                            }
                         }
+
+                    },
+                    onFinishConfirmed = { finishedId ->
+                        navController.getBackStackEntry(Route.Home.route)
+                            .savedStateHandle["finishedRoutineId"] = finishedId
+
+                        navController.popBackStack(Route.Home.route, false)
                     }
-                }
-            )
+                )
+            }
         }
 
 
@@ -192,6 +208,11 @@ fun MainNavGraph(
                             launchSingleTop = true
                         }
                     }
+                },
+                onFinishConfirmed = { finishedId ->
+                    navController.getBackStackEntry(Route.Home.route)
+                        .savedStateHandle["finishedRoutineId"] = finishedId
+                    navController.popBackStack(Route.Home.route, false)
                 }
             )
         }

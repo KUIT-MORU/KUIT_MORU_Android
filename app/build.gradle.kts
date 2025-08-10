@@ -8,12 +8,17 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
 }
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
 
+
+val baseUrl: String = (localProps.getProperty("base.url") ?: "https://15.164.150.204/").let {
+    if (it.endsWith("/")) it else "$it/"
+}
 val properties = Properties().apply {
-    val f = project.rootProject.file("local.properties")
-    if (f.exists()) {
-        load(f.inputStream())
-    }
+    load(project.rootProject.file("local.properties").inputStream())
 }
 
 android {
@@ -28,11 +33,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        val baseUrl: String = properties.getProperty("base.url")
-            ?: "http://10.0.2.2:8080/" // 기본값(없을 때만 사용)
-        require(baseUrl.isNotBlank()) { "base.url is missing in local.properties" } // [추가]
-        val ensured = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"            // [추가]
-        buildConfigField("String", "BASE_URL", "\"$ensured\"")
+        buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
     }
 
     buildTypes {

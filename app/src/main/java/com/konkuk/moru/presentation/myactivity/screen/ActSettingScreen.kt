@@ -44,8 +44,6 @@ fun ActSettingScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
-    val viewModel: InsightViewModel = hiltViewModel()
-    val paceGrade by viewModel.paceGrade.collectAsState()
 
     val scrollState = rememberScrollState()
     Column(
@@ -58,11 +56,6 @@ fun ActSettingScreen(
         Spacer(modifier = Modifier.padding(16.dp))
         BackTitle(title = "설정", navController)
         Spacer(modifier = Modifier.padding(48.dp))
-
-        Text(
-            text = "페이스 등급: $paceGrade",
-            style = MaterialTheme.typography.bodyLarge
-        )
 
         Column(
             modifier = Modifier
