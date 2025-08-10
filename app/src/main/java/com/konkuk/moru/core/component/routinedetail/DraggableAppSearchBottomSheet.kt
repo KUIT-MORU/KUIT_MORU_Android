@@ -212,14 +212,14 @@ fun DraggableAppSearchBottomSheetContentPreview() {
     ) {
         DraggableAppSearchBottomSheetContent(
             appList = listOf(
-                UsedAppInRoutine("YouTube", ImageBitmap(64, 64)),
-                UsedAppInRoutine("Instagram", ImageBitmap(64, 64)),
-                UsedAppInRoutine("Twitter", ImageBitmap(64, 64)),
-                UsedAppInRoutine("Facebook", ImageBitmap(64, 64))
+                UsedAppInRoutine("YouTube", ImageBitmap(64, 64), ""),
+                UsedAppInRoutine("Instagram", ImageBitmap(64, 64), ""),
+                UsedAppInRoutine("Twitter", ImageBitmap(64, 64), ""),
+                UsedAppInRoutine("Facebook", ImageBitmap(64, 64), "")
             ),
             selectedAppList = listOf(
-                UsedAppInRoutine("WhatsApp", ImageBitmap(64, 64)),
-                UsedAppInRoutine("Telegram", ImageBitmap(64, 64))
+                UsedAppInRoutine("WhatsApp", ImageBitmap(64, 64), ""),
+                UsedAppInRoutine("Telegram", ImageBitmap(64, 64), "")
             ),
             onAddApp = {},
             onRemoveApp = {}

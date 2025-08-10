@@ -4,5 +4,6 @@ import androidx.compose.ui.graphics.ImageBitmap
 
 data class UsedAppInRoutine(
     val appName: String,
-    val appIcon: ImageBitmap
+    val appIcon: ImageBitmap,
+    val packageName: String
 )
