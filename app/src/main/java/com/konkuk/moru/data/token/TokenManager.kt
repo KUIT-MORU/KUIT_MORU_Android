@@ -17,23 +17,41 @@ private val Context.dataStore by preferencesDataStore(name = "auth_prefs")
 class TokenManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    private val TOKEN_KEY = stringPreferencesKey("auth_token")
-
-    fun getToken(): String? = runBlocking {
-        context.dataStore.data.map { prefs ->
-            prefs[TOKEN_KEY]
-        }.first()
+    private object Keys {
+        val ACCESS = stringPreferencesKey("access_token")
+        val REFRESH = stringPreferencesKey("refresh_token")
     }
 
-    suspend fun saveToken(token: String) {
+    /** -------- 읽기 (suspend) -------- */
+    suspend fun accessToken(): String? =
+        context.dataStore.data.map { it[Keys.ACCESS] }.first()
+
+    suspend fun refreshToken(): String? =
+        context.dataStore.data.map { it[Keys.REFRESH] }.first()
+
+    /** -------- 읽기 (blocking) : Interceptor/Authenticator 용 -------- */
+    fun accessTokenBlocking(): String? = runBlocking { accessToken() }
+    fun refreshTokenBlocking(): String? = runBlocking { refreshToken() }
+
+    /** -------- 저장 -------- */
+    // 로그인 직후나 갱신 성공 시 원자적으로 저장
+    suspend fun saveTokens(access: String, refresh: String?) {
         context.dataStore.edit { prefs ->
-            prefs[TOKEN_KEY] = token
+            prefs[Keys.ACCESS] = access
+            if (refresh != null) prefs[Keys.REFRESH] = refresh
         }
     }
 
-    suspend fun clearToken() {
+    // access 만 갱신(서버가 refresh 를 안 주는 타입의 갱신 응답일 때)
+    suspend fun updateAccess(access: String) {
+        context.dataStore.edit { prefs -> prefs[Keys.ACCESS] = access }
+    }
+
+    /** -------- 삭제(로그아웃) -------- */
+    suspend fun clear() {
         context.dataStore.edit { prefs ->
-            prefs.remove(TOKEN_KEY)
+            prefs.remove(Keys.ACCESS)
+            prefs.remove(Keys.REFRESH)
         }
     }
 }
