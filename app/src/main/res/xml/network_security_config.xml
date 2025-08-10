@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 모든 호스트에 대해 시스템+사용자 인증서 신뢰 -->
+    <base-config>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- 특정 도메인(혹은 IP)에 대해 cleartext 허용 및 추가 신뢰 -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">15.164.150.204</domain>
+    </domain-config>
+</network-security-config>
