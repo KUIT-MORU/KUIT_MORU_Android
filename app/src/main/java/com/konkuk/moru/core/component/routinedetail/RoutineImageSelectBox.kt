@@ -63,7 +63,7 @@ private fun RoutineImageSelectBoxPreview() {
             .height(140.dp),
         verticalAlignment = Alignment.Top
     ) {
-        RoutineImageSelectBox(){}
+        RoutineImageSelectBox() {}
     }
 
 }
