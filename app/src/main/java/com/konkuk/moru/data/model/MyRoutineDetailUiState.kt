@@ -6,4 +6,5 @@ data class MyRoutineDetailUiState(
     val isEditMode: Boolean = false,
     val draggedStepIndex: Int? = null,
     val draggedStepVerticalOffset: Float = 0f,
+    val isQuickMode: Boolean = false,
 )

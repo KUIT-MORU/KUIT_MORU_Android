@@ -34,6 +34,8 @@ fun MyRoutineDetailContent(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val routine = uiState.routine ?: return
     val isEditMode = uiState.isEditMode
+    val hideUsedApps = uiState.isEditMode && uiState.isQuickMode
+    val isSimpleMode = routine.category == "간편"
 
     // LazyColumn에서 실제 스텝 리스트가 시작되기 전의 아이템 개수 (Card, Tag, "STEP" 헤더)
     val headerItemCount = 3
@@ -89,7 +91,7 @@ fun MyRoutineDetailContent(
                 actions = routineStepActions
             )
 
-            if (routine.usedApps.isNotEmpty() || isEditMode) {
+            if (!isSimpleMode && (routine.usedApps.isNotEmpty() || isEditMode)) {
                 item {
                     Spacer(modifier = Modifier.height(20.dp))
                     UsedAppsSection(

@@ -52,6 +52,15 @@ class MyRoutineDetailViewModel : ViewModel() {
         _uiState.update { it.copy(routine = originalRoutine) }
     }
 
+    fun setQuickMode(enabled: Boolean) {
+        _uiState.update { it.copy(isQuickMode = enabled) }
+    }
+
+    fun toggleQuickMode() {
+        _uiState.update { it.copy(isQuickMode = !it.isQuickMode) }
+    }
+
+
 
     fun deleteRoutine(routineId: String) {
         viewModelScope.launch {
