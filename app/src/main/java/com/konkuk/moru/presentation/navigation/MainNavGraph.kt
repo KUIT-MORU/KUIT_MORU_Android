@@ -345,6 +345,7 @@ fun MainNavGraph(
                 onUserClick = { userId ->
                     navController.navigate(Route.UserProfile.createRoute(userId))
                 },
+                navController = navController
             )
         }
 

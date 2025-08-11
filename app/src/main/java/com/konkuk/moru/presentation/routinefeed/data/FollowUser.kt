@@ -21,6 +21,7 @@ data class UserProfileUiState(
     val followerCount: Int = 0,
     val followingCount: Int = 0,
     val isFollowing: Boolean = false,
+    val isFollowLoading: Boolean = false,
     val runningRoutines: List<Routine> = emptyList(),
     val userRoutines: List<Routine> = emptyList(),
     val isRunningRoutineExpanded: Boolean = true

@@ -4,16 +4,21 @@ import com.konkuk.moru.data.repositoryimpl.AuthRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.InsightRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.NotificationRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.RoutineFeedRepositoryImpl
+import com.konkuk.moru.data.repositoryimpl.SocialRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.UserRepositoryImpl
+import com.konkuk.moru.data.service.SocialService
 import com.konkuk.moru.domain.repository.AuthRepository
 import com.konkuk.moru.domain.repository.InsightRepository
 import com.konkuk.moru.domain.repository.NotificationRepository
 import com.konkuk.moru.domain.repository.RoutineFeedRepository
+import com.konkuk.moru.domain.repository.SocialRepository
 import com.konkuk.moru.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import retrofit2.Retrofit
 import javax.inject.Singleton
 
 @Module
@@ -50,5 +55,7 @@ abstract class RepositoryModule {
         impl: NotificationRepositoryImpl
     ): NotificationRepository
 
+    @Binds @Singleton
+    abstract fun bindSocialRepository(impl: SocialRepositoryImpl): SocialRepository
 
 }

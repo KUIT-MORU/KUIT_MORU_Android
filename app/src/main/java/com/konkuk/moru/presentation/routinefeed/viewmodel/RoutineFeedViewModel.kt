@@ -125,7 +125,7 @@ class RoutineFeedViewModel @Inject constructor(
         _uiState.update { it.copy(hasNotification = false) }
     }
 
-    fun toggleLike(routineId: String) {
+    /*fun toggleLike(routineId: String) {
         val sections = _uiState.value.routineSections
 
         // 현재 화면에 있는 모든 루틴 목록에서 ID가 일치하는 루틴을 찾습니다.
@@ -149,7 +149,77 @@ class RoutineFeedViewModel @Inject constructor(
         // 새로운 루틴 목록으로 UI State를 업데이트합니다.
         // Compose는 State가 변경된 것을 감지하고 화면을 자동으로 다시 그립니다.
         _uiState.update { it.copy(routineSections = updatedSections) }
+    }*/
+
+    fun toggleLike(routineId: String) {
+        val before = _uiState.value.routineSections
+
+        // 1) 낙관적 업데이트 (UI 먼저 반응)
+        val after = before.map { section ->
+            section.copy(
+                routines = section.routines.map { r ->
+                    if (r.routineId == routineId) {
+                        val newLiked = !r.isLiked
+                        val newCount = (r.likes + if (newLiked) 1 else -1).coerceAtLeast(0)
+                        r.copy(isLiked = newLiked, likes = newCount)
+                    } else r
+                }
+            )
+        }
+        _uiState.update { it.copy(routineSections = after) }
+
+        // 2) 서버 반영
+        viewModelScope.launch {
+            runCatching {
+                val target = after.firstNotNullOfOrNull { s -> s.routines.find { it.routineId == routineId } }
+                if (target?.isLiked == true) {
+                    routineFeedRepository.addLike(routineId)
+                } else {
+                    routineFeedRepository.removeLike(routineId)
+                }
+            }.onFailure { e ->
+                // 3) 실패 시 롤백
+                _uiState.update { it.copy(routineSections = before, errorMessage = e.message) }
+            }
+        }
     }
+
+    // [추가] 스크랩 토글
+    fun toggleScrap(routineId: String) {
+        val before = _uiState.value.routineSections
+
+        // 1) 낙관적 업데이트: isBookmarked만 토글
+        val after = before.map { section ->
+            section.copy(
+                routines = section.routines.map { r ->
+                    if (r.routineId == routineId) {
+                        val newScrap = !r.isBookmarked
+                        r.copy(
+                            isBookmarked = newScrap
+                            // scrapCount = ...  // [삭제] 더 이상 건드리지 않음
+                        )
+                    } else r
+                }
+            )
+        }
+        _uiState.update { it.copy(routineSections = after) }
+
+        // 2) 서버 반영
+        viewModelScope.launch {
+            runCatching {
+                val target = after.firstNotNullOfOrNull { s -> s.routines.find { it.routineId == routineId } }
+                if (target?.isBookmarked == true) {
+                    routineFeedRepository.addScrap(routineId)   // [유지]
+                } else {
+                    routineFeedRepository.removeScrap(routineId) // [유지]
+                }
+            }.onFailure { e ->
+                // 3) 실패 시 롤백
+                _uiState.update { it.copy(routineSections = before, errorMessage = e.message) }
+            }
+        }
+    }
+
 }
 
 

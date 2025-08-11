@@ -3,104 +3,112 @@ package com.konkuk.moru.presentation.routinefeed.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.konkuk.moru.data.dto.response.FollowCursorDto
+import com.konkuk.moru.data.mapper.toUi
 import com.konkuk.moru.data.model.DummyData
+import com.konkuk.moru.domain.repository.SocialRepository
+import com.konkuk.moru.domain.repository.UserRepository
 import com.konkuk.moru.presentation.routinefeed.data.FollowUser
 import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@HiltViewModel // Hilt를 사용하므로 어노테이션을 붙여줍니다.
+@HiltViewModel
 class FollowViewModel @Inject constructor(
+    private val socialRepository: SocialRepository,
+    private val userRepository: UserRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FollowUiState())
     val uiState = _uiState.asStateFlow()
+    private val _followResult = MutableSharedFlow<Pair<String, Boolean>>(extraBufferCapacity = 1)
+    val followResult = _followResult.asSharedFlow()
+    // [추가] 페이징 커서 보관
+    private var followersCursor: FollowCursorDto? = null
+    private var followingsCursor: FollowCursorDto? = null
+    private var ownerUserId: String = savedStateHandle["userId"] ?: ""
 
     init {
-        // ViewModel이 생성될 때, NavHost에 정의된 'userId'를 가져옵니다.
-        val userId: String? = savedStateHandle["userId"]
-        // userId가 있다면, 해당 유저의 팔로우 데이터를 불러옵니다.
-        userId?.let {
-            loadFollowDataFor(it)
-        }
+        // 첫 페이지 로드
+        loadFollowers(refresh = true)
+        loadFollowings(refresh = true)
     }
 
-    /**
-     * loadInitialUsers() 대신, 특정 사용자의 팔로워/팔로잉 목록을 불러오는 함수로 변경합니다.
-     * @param currentUserId 현재 팔로우 목록을 보려는 사용자의 ID
-     */
-    private fun loadFollowDataFor(currentUserId: String) {
+    fun loadFollowers(refresh: Boolean = false) {
         viewModelScope.launch {
-            // 1. 내 팔로워 목록 생성 (나를 팔로우하는 사람들)
-            val myFollowerIds = DummyData.dummyFollowRelations
-                .filter { it.followingId == currentUserId }
-                .map { it.followerId }
-
-            val followers = DummyData.dummyUsers
-                .filter { myFollowerIds.contains(it.userId) }
-                .map { user ->
-                    val isFollowingBack = DummyData.dummyFollowRelations
-                        .any { it.followerId == currentUserId && it.followingId == user.userId }
-                    // [수정] FollowUser의 생성자 형식에 맞게 데이터를 전달합니다.
-                    FollowUser(
-                        id = user.userId,
-                        profileImageUrl = user.profileImageUrl ?: "", // 프로필 이미지가 null일 경우 빈 문자열 전달
-                        username = user.nickname,
-                        bio = user.bio,
-                        isFollowing = isFollowingBack
+            val lastNick = if (refresh) null else followersCursor?.nickname
+            val lastId = if (refresh) null else followersCursor?.userId
+            runCatching {
+                socialRepository.getFollowers(ownerUserId, lastNick, lastId, limit = 10)
+            }.onSuccess { res ->
+                val items = res.content.map { it.toUi() }
+                _uiState.update {
+                    it.copy(
+                        followers = if (refresh) items else it.followers + items
                     )
                 }
-
-            // 2. 내 팔로잉 목록 생성 (내가 팔로우하는 사람들)
-            val myFollowingIds = DummyData.dummyFollowRelations
-                .filter { it.followerId == currentUserId }
-                .map { it.followingId }
-
-            val followings = DummyData.dummyUsers
-                .filter { myFollowingIds.contains(it.userId) }
-                .map { user ->
-                    FollowUser(
-                        id = user.userId,
-                        profileImageUrl = user.profileImageUrl ?: "",
-                        username = user.nickname,
-                        bio = user.bio,
-                        isFollowing = true // 내가 팔로우하는 사람이므로 항상 true
-                    )
-                }
-
-            _uiState.value = FollowUiState(followers = followers, followings = followings)
+                followersCursor = res.nextCursor
+            }
         }
     }
 
-    // 팔로우/언팔로우 로직은 이전과 동일한 형태로 유지합니다.
+    fun loadFollowings(refresh: Boolean = false) {
+        viewModelScope.launch {
+            val lastNick = if (refresh) null else followingsCursor?.nickname
+            val lastId = if (refresh) null else followingsCursor?.userId
+            runCatching {
+                socialRepository.getFollowing(ownerUserId, lastNick, lastId, limit = 10)
+            }.onSuccess { res ->
+                val meId = runCatching { userRepository.getMe().id }.getOrNull()
+                val mapped = res.content.map { it.toUi() }
+                val items = if (meId != null && ownerUserId == meId) {
+                    mapped.map { it.copy(isFollowing = true) }   // ✅ 강제 ON
+                } else mapped
+
+                _uiState.update { it.copy(followings = if (refresh) items else it.followings + items) }
+                followingsCursor = res.nextCursor
+            }
+        }
+    }
+
     fun toggleFollow(clickedUser: FollowUser) {
-        viewModelScope.launch {
-            _uiState.update { currentState ->
-                val currentFollowers = currentState.followers.toMutableList()
-                val currentFollowings = currentState.followings.toMutableList()
-                val isCurrentlyFollowing = clickedUser.isFollowing
+        val before = _uiState.value
+        val wantFollow = !clickedUser.isFollowing
 
-                if (isCurrentlyFollowing) {
-                    currentFollowings.removeIf { it.id == clickedUser.id }
-                    val followerIndex = currentFollowers.indexOfFirst { it.id == clickedUser.id }
-                    if (followerIndex != -1) {
-                        currentFollowers[followerIndex] = currentFollowers[followerIndex].copy(isFollowing = false)
-                    }
+        // 1) 낙관적 업데이트
+        _uiState.update { current ->
+            current.copy(
+                followers = current.followers.map {
+                    if (it.id == clickedUser.id) it.copy(isFollowing = wantFollow) else it
+                },
+                followings = if (wantFollow) {
+                    // 새로 팔로우 → 팔로잉 목록에 없으면 앞에 추가
+                    if (current.followings.any { it.id == clickedUser.id }) current.followings
+                    else listOf(clickedUser.copy(isFollowing = true)) + current.followings
                 } else {
-                    if (currentFollowings.none { it.id == clickedUser.id }) {
-                        currentFollowings.add(0, clickedUser.copy(isFollowing = true))
-                    }
-                    val followerIndex = currentFollowers.indexOfFirst { it.id == clickedUser.id }
-                    if (followerIndex != -1) {
-                        currentFollowers[followerIndex] = currentFollowers[followerIndex].copy(isFollowing = true)
-                    }
+                    // 언팔 → 팔로잉 목록에서 제거
+                    current.followings.filterNot { it.id == clickedUser.id }
                 }
-                currentState.copy(followers = currentFollowers, followings = currentFollowings)
+            )
+        }
+
+        // 2) 서버 반영
+        viewModelScope.launch {
+            runCatching {
+                if (wantFollow) socialRepository.follow(clickedUser.id)
+                else socialRepository.unfollow(clickedUser.id)
+            }.onSuccess {
+                // ✅ 프로필 화면으로 전달할 결과 이벤트 발행
+                _followResult.tryEmit(clickedUser.id to wantFollow)
+            }.onFailure {
+                _uiState.value = before
             }
         }
     }

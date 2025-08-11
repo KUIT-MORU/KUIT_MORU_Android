@@ -37,7 +37,8 @@ data class RoutineInfo(
     @SerializedName("tags") val tags: List<String>,
     @SerializedName("likeCount") val likeCount: Int,
     @SerializedName("createdAt") val createdAt: String,
-    @SerializedName("requiredTime") val requiredTime: String?
+    @SerializedName("requiredTime") val requiredTime: String?,
+    @SerializedName("isRunning") val isRunning: Boolean
 )
 
 // 태그 조합 섹션

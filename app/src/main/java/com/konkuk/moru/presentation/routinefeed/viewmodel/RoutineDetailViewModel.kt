@@ -38,23 +38,6 @@ class RoutineDetailViewModel @Inject constructor(
         _uiState.update { it.copy(routine = r, isLoading = true, errorMessage = null) }
     }
 
-    /*fun setInitialRoutine(routine: Routine) {
-        viewModelScope.launch {
-            val similar = findSimilarRoutinesByTags(
-                targetRoutine = routine,
-                allRoutines = DummyData.feedRoutines
-            )
-            _uiState.update {
-                it.copy(
-                    routine = routine,
-                    similarRoutines = similar,
-                    canBeAddedToMyRoutines = routine.authorId != DummyData.MY_USER_ID &&
-                            DummyData.feedRoutines.none { r -> r.authorId == DummyData.MY_USER_ID && r.title == routine.title },
-                    isLoading = false
-                )
-            }
-        }
-    }*/
 
 
     fun toggleLikeSync() {
@@ -63,21 +46,26 @@ class RoutineDetailViewModel @Inject constructor(
         if (current.isLiking || current.isLoading) return
 
         val wantLike = !r.isLiked
-        _uiState.update { it.copy(isLiking = true, errorMessage = null) }
+
+        // [추가] 1) 낙관적 업데이트
+        val before = _uiState.value
+        val bumpedLikes = (r.likes + if (wantLike) 1 else -1).coerceAtLeast(0) // [추가]
+        _uiState.update { it.copy(routine = r.copy(isLiked = wantLike, likes = bumpedLikes), isLiking = true, errorMessage = null) } // [추가]
 
         viewModelScope.launch {
             runCatching {
                 if (wantLike) repository.addLike(r.routineId) else repository.removeLike(r.routineId)
-                repository.getRoutineDetail(r.routineId) // ✅ 서버 최신 재조회
+                repository.getRoutineDetail(r.routineId) // 서버 최신 재조회
             }.onSuccess { fresh ->
                 _uiState.update {
                     it.copy(
-                        routine = fresh.toRoutineModel(prev = it.routine),
+                        routine = fresh.toRoutineModel(prev = it.routine), // [유지] 서버 값으로 동기화
                         isLiking = false
                     )
                 }
             }.onFailure { e ->
-                _uiState.update { it.copy(isLiking = false, errorMessage = e.message) }
+                // [추가] 실패 시 롤백
+                _uiState.value = before.copy(isLiking = false, errorMessage = e.message)
             }
         }
     }
@@ -88,12 +76,15 @@ class RoutineDetailViewModel @Inject constructor(
         if (current.isScrapping || current.isLoading) return
 
         val wantScrap = !r.isBookmarked
-        _uiState.update { it.copy(isScrapping = true, errorMessage = null) }
+
+        // [추가] 1) 낙관적 업데이트
+        val before = _uiState.value
+        _uiState.update { it.copy(routine = r.copy(isBookmarked = wantScrap), isScrapping = true, errorMessage = null) } // [추가]
 
         viewModelScope.launch {
             runCatching {
                 if (wantScrap) repository.addScrap(r.routineId) else repository.removeScrap(r.routineId)
-                repository.getRoutineDetail(r.routineId) // ✅ 재조회
+                repository.getRoutineDetail(r.routineId)
             }.onSuccess { fresh ->
                 _uiState.update {
                     it.copy(
@@ -102,7 +93,8 @@ class RoutineDetailViewModel @Inject constructor(
                     )
                 }
             }.onFailure { e ->
-                _uiState.update { it.copy(isScrapping = false, errorMessage = e.message) }
+                // [추가] 실패 시 롤백
+                _uiState.value = before.copy(isScrapping = false, errorMessage = e.message)
             }
         }
     }
@@ -115,7 +107,7 @@ class RoutineDetailViewModel @Inject constructor(
                 repository.getRoutineDetail(routineId) // [수정] 서버 호출
             }.onSuccess { dto ->
                 val merged = dto.toRoutineModel(prev = _uiState.value.routine)
-                val similar = dto.similarRoutines.map { it.toUiModel() }
+                val similar = dto.similarRoutines?.map { it.toUiModel() } ?: emptyList()
                 _uiState.update {
                     it.copy(
                         routine = merged,

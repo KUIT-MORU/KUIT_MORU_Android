@@ -26,6 +26,8 @@ data class Routine(
     var isBookmarked: Boolean,
     val isRunning: Boolean, // 현재 사용자가 이 루틴을 실행 중인지
     var isChecked: Boolean = false, // '내 루틴' 삭제 모드에서 사용
+    var scrapCount: Int = 0, // [추가]
+
 
     // 시간 정보 (내 루틴)
     val scheduledTime: LocalTime? = null,

@@ -21,5 +21,6 @@ data class RoutineCardDomain(
     val tags: List<String>,
     val likeCount: Int,
     val createdAt: String?,
-    val requiredTime: String?
+    val requiredTime: String?,
+    val isRunning:Boolean
 )

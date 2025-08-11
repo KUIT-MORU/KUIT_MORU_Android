@@ -28,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -66,6 +67,14 @@ fun UserProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(uiState.userId) {
+        val key = "follow_result_${uiState.userId}"
+        val handle = navController.currentBackStackEntry?.savedStateHandle ?: return@LaunchedEffect
+        // 초기값은 현재 isFollowing
+        handle.getStateFlow(key, uiState.isFollowing).collect { isFollowing ->
+            viewModel.applyExternalFollow(isFollowing)
+        }
+    }
     Scaffold(
         containerColor = Color.White,
         topBar = {
@@ -80,7 +89,10 @@ fun UserProfileScreen(
         }
     ) { paddingValues ->
         UserProfileContent(
-            modifier = Modifier.padding(paddingValues),
+            modifier = Modifier
+                .padding(paddingValues)
+                .padding(bottom = 80.dp)
+                .background(Color.White),
             state = uiState,
             onFollowClick = viewModel::toggleFollow,
             onToggleExpansion = viewModel::toggleRunningRoutineExpansion,
@@ -160,7 +172,7 @@ private fun UserProfileContent(
                     likeCount = routine.likes,
                     isLiked = routine.isLiked,
                     onLikeClick = { onLikeClick(routine.routineId) },
-                    onItemClick = { onRoutineClick(routine.routineId)}
+                    onItemClick = { onRoutineClick(routine.routineId) }
                 )
             }
         }

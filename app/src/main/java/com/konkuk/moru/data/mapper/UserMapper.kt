@@ -9,7 +9,7 @@ import com.konkuk.moru.presentation.routinefeed.data.UserMeResponse
 
 fun UserMeResponse.toDomain(): UserProfileDomain =
     UserProfileDomain(
-        id=id,
+        id = id,
         isMe = true,
         nickname = nickname,
         profileImageUrl = profileImageUrl,
@@ -21,9 +21,9 @@ fun UserMeResponse.toDomain(): UserProfileDomain =
         routines = emptyList()
     )
 
-fun RoutineUserProfileResponse.toDomain(userId:String): UserProfileDomain =
+fun RoutineUserProfileResponse.toDomain(userId: String): UserProfileDomain =
     UserProfileDomain(
-        id=userId,
+        id = userId,
         isMe = isMe,
         nickname = nickname,
         profileImageUrl = profileImageUrl,
@@ -41,6 +41,7 @@ fun RoutineSummaryDto.toDomain() = RoutineCardDomain(
     imageUrl = imageUrl,
     tags = tags,
     likeCount = likeCount,
-    createdAt = createdAt?:"",
-    requiredTime = requiredTime
+    createdAt = createdAt ?: "",
+    requiredTime = requiredTime,
+    isRunning = isRunning
 )

@@ -1,7 +1,7 @@
 package com.konkuk.moru.data.service
 
+import com.konkuk.moru.data.dto.response.RoutineDetailResponse
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
-import com.konkuk.moru.presentation.routinefeed.data.RoutineDetailResponse
 import com.konkuk.moru.presentation.routinefeed.data.RoutineFeedResponse
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -13,7 +13,6 @@ interface RoutineFeedService {
     @GET("api/routines/live-users")
     suspend fun getLiveUsers(): List<LiveUserInfo>
 
-    // 🚨 실제 서버 API 명세에 맞게 엔드포인트를 수정해야 합니다.
     @GET("api/routines/recommend/feed")
     suspend fun getRoutineFeed(): RoutineFeedResponse
 
@@ -36,7 +35,6 @@ interface RoutineFeedService {
 
     @DELETE("api/social/{routineId}/scraps")
     suspend fun removeScrap(@Path("routineId") routineId: String)
-
 
 
 }

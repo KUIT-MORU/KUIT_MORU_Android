@@ -6,6 +6,7 @@ import com.konkuk.moru.data.service.AuthService
 import com.konkuk.moru.data.service.InsightService
 import com.konkuk.moru.data.service.NotificationService
 import com.konkuk.moru.data.service.RoutineFeedService
+import com.konkuk.moru.data.service.SocialService
 import com.konkuk.moru.data.service.UserService
 import dagger.Module
 import dagger.Provides
@@ -98,4 +99,11 @@ object NetworkModule {
     @Singleton
     fun provideNotificationService(retrofit: Retrofit): NotificationService =
         retrofit.create(NotificationService::class.java)
+
+
+    @Provides
+    @Singleton
+    fun provideSocialService(retrofit: Retrofit): SocialService =
+        retrofit.create(SocialService::class.java)
+
 }

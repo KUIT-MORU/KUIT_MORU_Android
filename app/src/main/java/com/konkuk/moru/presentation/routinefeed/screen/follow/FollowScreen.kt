@@ -1,24 +1,33 @@
 package com.konkuk.moru.presentation.routinefeed.screen.follow
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.konkuk.moru.presentation.routinefeed.component.follow.FollowScreenContent
 import com.konkuk.moru.presentation.routinefeed.data.FollowUser
 import com.konkuk.moru.presentation.routinefeed.viewmodel.FollowViewModel
 import com.konkuk.moru.ui.theme.MORUTheme
+import androidx.compose.ui.graphics.Color
+import androidx.navigation.NavController
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FollowScreen(
+    navController: NavController,
     onBackClick: () -> Unit,
     onUserClick: (String) -> Unit,
     viewModel: FollowViewModel = hiltViewModel(),
@@ -30,18 +39,31 @@ fun FollowScreen(
     val initialPage = if (selectedTab == "following") 1 else 0
     val pagerState = rememberPagerState(initialPage = initialPage) { tabs.size }
 
+    LaunchedEffect(Unit) {
+        viewModel.followResult.collect { (userId, isFollowing) ->
+            navController.previousBackStackEntry
+                ?.savedStateHandle
+                ?.set("follow_result_$userId", isFollowing)
+        }
+    }
 
-    FollowScreenContent(
-        uiState = uiState,
-        tabs = tabs,
-        pagerState = pagerState,
-        scope = scope,
-        onBackClick = onBackClick,
-        onFollowClick = viewModel::toggleFollow,
-        onUserClick = onUserClick
-    )
+
+    Column(
+        modifier = Modifier
+            .padding(bottom = 80.dp)
+            .background(Color.White)
+    ) {
+        FollowScreenContent(
+            uiState = uiState,
+            tabs = tabs,
+            pagerState = pagerState,
+            scope = scope,
+            onBackClick = onBackClick,
+            onFollowClick = viewModel::toggleFollow,
+            onUserClick = onUserClick
+        )
+    }
 }
-
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -60,7 +82,7 @@ private fun FollowScreenPreview() {
                     FollowUser("routine-id-1", "", "Moru_Official", "모루 공식 계정입니다.", true),
                     FollowUser("routine-id-3", "", "Compose_Fan", "컴포즈는 쉬워요!", true),
                     FollowUser("routine-id-4", "", "Kotlin_User", "코틀린 최고", true),
-                    FollowUser( "routine-id-5", "Jetpack_Guru", "제트팩 전문가","코틀린 최고",true),
+                    FollowUser("routine-id-5", "Jetpack_Guru", "제트팩 전문가", "코틀린 최고", true),
                 )
             )
         )

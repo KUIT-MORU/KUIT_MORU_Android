@@ -1,9 +1,9 @@
 package com.konkuk.moru.data.repositoryimpl
 
+import com.konkuk.moru.data.dto.response.RoutineDetailResponse
 import com.konkuk.moru.data.service.RoutineFeedService
 import com.konkuk.moru.domain.repository.RoutineFeedRepository
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
-import com.konkuk.moru.presentation.routinefeed.data.RoutineDetailResponse
 import com.konkuk.moru.presentation.routinefeed.data.RoutineFeedResponse
 
 import javax.inject.Inject

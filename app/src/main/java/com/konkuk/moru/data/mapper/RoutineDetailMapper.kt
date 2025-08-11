@@ -1,12 +1,13 @@
 package com.konkuk.moru.data.mapper
 
 
+import com.konkuk.moru.data.dto.response.RoutineDetailResponse
 import com.konkuk.moru.data.model.AppInfo
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.model.RoutineStep
 import com.konkuk.moru.data.model.SimilarRoutine
 import com.konkuk.moru.presentation.routinefeed.data.AppDto
-import com.konkuk.moru.presentation.routinefeed.data.RoutineDetailResponse
+
 import com.konkuk.moru.presentation.routinefeed.data.RoutineStepDto
 import com.konkuk.moru.presentation.routinefeed.data.SimilarRoutineItemDto
 import java.time.Duration
@@ -29,14 +30,17 @@ fun RoutineDetailResponse.toRoutineModel(prev: Routine? = null): Routine {
         description = firstNonBlank(description, base.description) ?: "",
         imageUrl = firstNonBlank(imageUrl, base.imageUrl),
         category = if (isSimple) "간편" else "집중",
-        tags = tags.ifEmpty { base.tags },
+        tags = tags.orEmpty().ifEmpty { base.tags },
         likes = likeCount,
 
-        isLiked = likedByMe ?: base.isLiked,
-        isBookmarked = scrapedByMe ?: base.isBookmarked,
+        isLiked = this.isLiked ?: base.isLiked,
+        isBookmarked = this.isScrapped ?: base.isBookmarked,
+        scrapCount = scrapCount,
 
-        steps = steps.sortedBy { it.stepOrder }.map { it.toStepModel() },
-        usedApps = apps.map { it.toAppModel() },
+        steps = steps.orEmpty()                                              // [변경]
+            .sortedBy { it.stepOrder }
+            .map { it.toStepModel() },
+        usedApps = apps.orEmpty().map { it.toAppModel() },
 
         authorId = resolvedAuthorId,
         authorName = resolvedAuthorName,
@@ -72,14 +76,13 @@ private fun emptyRoutine(routineId: String) = Routine(
 )
 
 
-
 // SimilarRoutineItemDto -> UI용 SimilarRoutine
 fun SimilarRoutineItemDto.toUiModel(): SimilarRoutine {
     return SimilarRoutine(
         id = id,
         imageUrl = imageUrl,
         name = title,
-        tag = tags.firstOrNull()?.let { "#$it" } ?: "#루틴"
+        tag = (tags?.firstOrNull())?.let { "#$it" } ?: "#루틴"
     )
 }
 
