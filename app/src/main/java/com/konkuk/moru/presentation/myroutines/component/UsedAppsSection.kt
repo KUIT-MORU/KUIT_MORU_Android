@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.konkuk.moru.R
@@ -107,5 +108,24 @@ fun UsedAppsSection(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun UsedAppsSectionPreview() {
+    val sampleApps = listOf(
+        AppInfo("app1", "https://example.com/app1.png"),
+        AppInfo("app2", "https://example.com/app2.png"),
+        AppInfo("app3", "https://example.com/app3.png"),
+        AppInfo("app4", "https://example.com/app4.png")
+    )
+    MORUTheme {
+        UsedAppsSection(
+            apps = sampleApps,
+            isEditMode = true,
+            onAddApp = { /* TODO: Add app logic */ },
+            onDeleteApp = { /* TODO: Delete app logic */ }
+        )
     }
 }

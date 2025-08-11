@@ -155,7 +155,6 @@ class RoutineCreateViewModel : ViewModel() {
         }
     }
 
-    // [유지] Drawable → Bitmap 안전 변환
     private fun drawableToBitmap(drawable: Drawable): Bitmap {
         return when (drawable) {
             is BitmapDrawable -> drawable.bitmap

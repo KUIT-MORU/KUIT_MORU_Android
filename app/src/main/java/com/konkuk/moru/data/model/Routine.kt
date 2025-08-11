@@ -1,5 +1,6 @@
 package com.konkuk.moru.data.model
 
+import android.net.Uri
 import java.time.DayOfWeek
 import java.time.LocalTime
 
@@ -37,7 +38,8 @@ data class Routine(
     val similarRoutines: List<SimilarRoutine> = emptyList(),
 
     // 사용앱 관련 정보
-    val usedApps: List<AppInfo> = emptyList()
+    //val usedApps: List<AppInfo> = emptyList()
+    val usedApps: List<UsedAppInRoutine> = emptyList()
 )
 
 
