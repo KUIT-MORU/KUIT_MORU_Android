@@ -1,5 +1,6 @@
 package com.konkuk.moru.data.model
 
+/*
 data class UserProfile(
     val id: String,
     val nickname: String,
@@ -10,4 +11,4 @@ data class UserProfile(
     val routineCount: Int,
     val followerCount: Int,
     val followingCount: Int
-)
+)*/
