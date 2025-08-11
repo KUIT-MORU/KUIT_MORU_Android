@@ -56,6 +56,7 @@ import com.konkuk.moru.presentation.home.component.TodayRoutinePager
 import com.konkuk.moru.presentation.home.component.TodayWeekTab
 import com.konkuk.moru.presentation.home.component.WeeklyCalendarView
 import com.konkuk.moru.presentation.home.viewmodel.HomeRoutinesViewModel
+import com.konkuk.moru.presentation.home.viewmodel.UserViewModel
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
@@ -109,6 +110,10 @@ fun HomeScreen(
     todayTabOffsetY: MutableState<Float>,
     onShowOnboarding: () -> Unit = {},
 ) {
+    val userVm: UserViewModel = hiltViewModel()
+    val nickname by userVm.nickname.collectAsState()
+    LaunchedEffect(Unit) { userVm.loadMe() }
+
     // 오늘 탭 표시용(서버 응답 + 순서 복원/완료 시 뒤로)
     val todayRoutines = remember { mutableStateListOf<Routine>() }
 
@@ -280,8 +285,9 @@ fun HomeScreen(
                         .height(111.dp)
                 ) {
                     // 1.인삿말
+                    val displayName = nickname ?: "XX"
                     Text(
-                        text = "XX님,\n오늘은 어떤 루틴을 시작할까요?",
+                        text = "${displayName}님,\n오늘은 어떤 루틴을 시작할까요?",
                         style = typography.title_B_20.copy(lineHeight = 30.sp),
                         color = colors.black,
                         modifier = Modifier

@@ -5,6 +5,7 @@ import com.konkuk.moru.data.dto.request.LoginRequestDto
 import com.konkuk.moru.data.service.AuthService
 import com.konkuk.moru.data.token.TokenManager
 import com.konkuk.moru.domain.repository.AuthRepository
+import retrofit2.HttpException
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
@@ -14,7 +15,21 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun login(email: String, password: String): Result<Pair<String, String>> {
         return try {
-            val res = service.login(LoginRequestDto(email, password))
+            val response = service.login(LoginRequestDto(email, password))
+            
+            if (!response.isSuccessful) {
+                val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                Log.e("Login", "HTTP ${response.code()}: $errorBody")
+                
+                return when (response.code()) {
+                    400 -> Result.failure(Exception("잘못된 요청입니다. 이메일과 비밀번호를 확인해주세요."))
+                    401 -> Result.failure(Exception("이메일 또는 비밀번호가 올바르지 않습니다."))
+                    500 -> Result.failure(Exception("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."))
+                    else -> Result.failure(Exception("로그인에 실패했습니다. (${response.code()})"))
+                }
+            }
+            
+            val res = response.body() ?: throw Exception("응답 데이터가 없습니다.")
             val access = res.token.accessToken
             val refresh = res.token.refreshToken
 
@@ -23,7 +38,11 @@ class AuthRepositoryImpl @Inject constructor(
             tokenManager.saveTokens(access, refresh)
 
             Result.success(access to refresh)
+        } catch (e: HttpException) {
+            Log.e("Login", "HTTP Exception: ${e.code()}", e)
+            Result.failure(e)
         } catch (e: Exception) {
+            Log.e("Login", "Login failed", e)
             Result.failure(e)
         }
     }

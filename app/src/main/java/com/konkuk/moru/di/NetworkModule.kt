@@ -13,7 +13,9 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
 import javax.inject.Singleton
 import javax.inject.Named
 
@@ -35,7 +37,7 @@ object NetworkModule {
     ): Retrofit = Retrofit.Builder()
         .baseUrl(baseUrl)
         .client(ok)
-        .addConverterFactory(GsonConverterFactory.create())
+        .addConverterFactory(Json.asConverterFactory("application/json".toMediaType()))
         .build()
 
     @Provides @Singleton
@@ -56,7 +58,7 @@ object NetworkModule {
         Retrofit.Builder()
             .baseUrl(baseUrl)
             .client(okHttp)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(Json.asConverterFactory("application/json".toMediaType()))
             .build()
 
     @Provides @Singleton
@@ -71,4 +73,10 @@ object NetworkModule {
     @Singleton
     fun provideRoutineService(retrofit: Retrofit): RoutineService =
         retrofit.create(RoutineService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideUserService(retrofit: Retrofit): com.konkuk.moru.data.service.UserService =
+        retrofit.create(com.konkuk.moru.data.service.UserService::class.java)
+
 }
