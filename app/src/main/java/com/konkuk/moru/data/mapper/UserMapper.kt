@@ -2,7 +2,7 @@ package com.konkuk.moru.data.mapper
 
 
 import com.konkuk.moru.data.dto.response.RoutineSummaryDto
-import com.konkuk.moru.data.dto.response.UserProfileResponse
+import com.konkuk.moru.data.dto.response.RoutineUserProfileResponse
 import com.konkuk.moru.data.model.RoutineCardDomain
 import com.konkuk.moru.data.model.UserProfileDomain
 import com.konkuk.moru.presentation.routinefeed.data.UserMeResponse
@@ -21,7 +21,7 @@ fun UserMeResponse.toDomain(): UserProfileDomain =
         routines = emptyList()
     )
 
-fun UserProfileResponse.toDomain(userId:String): UserProfileDomain =
+fun RoutineUserProfileResponse.toDomain(userId:String): UserProfileDomain =
     UserProfileDomain(
         id=userId,
         isMe = isMe,

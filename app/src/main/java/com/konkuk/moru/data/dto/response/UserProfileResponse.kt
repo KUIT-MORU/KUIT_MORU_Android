@@ -2,7 +2,7 @@ package com.konkuk.moru.data.dto.response
 
 import com.google.gson.annotations.SerializedName
 
-data class UserProfileResponse(
+data class RoutineUserProfileResponse(
     @SerializedName("isMe") val isMe: Boolean,
     @SerializedName("nickname") val nickname: String,
     @SerializedName("profileImageUrl") val profileImageUrl: String?,
