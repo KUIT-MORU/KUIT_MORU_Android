@@ -1,14 +1,9 @@
 package com.konkuk.moru.data.service
 
+import com.konkuk.moru.data.dto.response.UserProfileResponse
 import retrofit2.http.GET
-
-// 서버 응답에 맞춰 필요한 필드만 사용
-data class UserMeResponse(
-    val id: String,
-    val nickname: String
-)
 
 interface UserService {
     @GET("/api/user/me")
-    suspend fun getMe(): UserMeResponse
+    suspend fun getMe(): UserProfileResponse
 }

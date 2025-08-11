@@ -1,7 +1,7 @@
 package com.konkuk.moru.di
 
 import com.konkuk.moru.data.repositoryimpl.UserRepositoryImpl
-import com.konkuk.moru.presentation.home.viewmodel.UserRepository
+import com.konkuk.moru.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

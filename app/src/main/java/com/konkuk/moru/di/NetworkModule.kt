@@ -1,5 +1,6 @@
 package com.konkuk.moru.di
 
+import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.konkuk.moru.BuildConfig
 import com.konkuk.moru.data.interceptor.AuthInterceptor
 import com.konkuk.moru.data.interceptor.TokenAuthenticator
@@ -12,8 +13,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import javax.inject.Singleton
@@ -26,9 +27,20 @@ object NetworkModule {
     @Provides @Singleton
     fun provideBaseUrl(): String = BuildConfig.BASE_URL
 
+    @Provides @Singleton
+    fun provideHttpLoggingInterceptor(): HttpLoggingInterceptor {
+        return HttpLoggingInterceptor().apply {
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
+        }
+    }
+
     @Provides @Singleton @Named("authlessOkHttp")
-    fun provideAuthlessOkHttp(): OkHttpClient =
-        UnsafeHttpClient.getUnsafeOkHttpClient()
+    fun provideAuthlessOkHttp(
+        loggingInterceptor: HttpLoggingInterceptor
+    ): OkHttpClient =
+        UnsafeHttpClient.getUnsafeOkHttpClient().newBuilder()
+            .addInterceptor(loggingInterceptor)
+            .build()
 
     @Provides @Singleton @Named("authlessRetrofit")
     fun provideAuthlessRetrofit(
@@ -46,10 +58,12 @@ object NetworkModule {
     @Provides @Singleton
     fun provideOkHttpClient(
         authInterceptor: Interceptor,
-        tokenAuthenticator: TokenAuthenticator
+        tokenAuthenticator: TokenAuthenticator,
+        loggingInterceptor: HttpLoggingInterceptor
     ): OkHttpClient =
         UnsafeHttpClient.getUnsafeOkHttpClient().newBuilder()
             .addInterceptor(authInterceptor)
+            .addInterceptor(loggingInterceptor)
             .authenticator(tokenAuthenticator)
             .build()
 

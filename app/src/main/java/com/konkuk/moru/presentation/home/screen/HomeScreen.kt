@@ -61,12 +61,14 @@ import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
+import com.konkuk.moru.core.datastore.SchedulePreference
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
 import java.util.Locale
+import android.content.Context
 
 fun convertDurationToMinutes(duration: String): Int {
     val parts = duration.split(":")
@@ -85,18 +87,37 @@ private fun buildWeeklyMap(routines: List<Routine>): Pair<Map<Int, List<String>>
     val startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
     val weekDates = (0..6).map { startOfWeek.plusDays(it.toLong()) }
 
+    Log.d("HomeScreen", "buildWeeklyMap 시작: routines.size=${routines.size}")
+    routines.forEach { routine ->
+        Log.d("HomeScreen", "루틴: ${routine.title}, scheduledDays=${routine.scheduledDays}, scheduledTime=${routine.scheduledTime}")
+    }
+
     val map = weekDates.associate { date ->
         val labels = routines
             .filter { r ->
                 // 🔸 요일 세팅된 루틴만 주간에 배치
-                r.scheduledDays.contains(date.dayOfWeek)
+                val hasScheduledDays = r.scheduledDays.isNotEmpty()
+                val containsDayOfWeek = r.scheduledDays.contains(date.dayOfWeek)
+                
+                // 임시 해결책: scheduledDays가 비어있으면 오늘 요일로 설정
+                val shouldShow = if (!hasScheduledDays) {
+                    // scheduledDays가 비어있으면 오늘 요일인 경우에만 표시
+                    date.dayOfWeek == today.dayOfWeek
+                } else {
+                    containsDayOfWeek
+                }
+                
+                Log.d("HomeScreen", "날짜 ${date.dayOfMonth}(${date.dayOfWeek}): ${r.title} - scheduledDays=${r.scheduledDays}, hasScheduledDays=$hasScheduledDays, containsDayOfWeek=$containsDayOfWeek, shouldShow=$shouldShow")
+                shouldShow
             }
             .sortedBy { it.scheduledTime ?: LocalTime.MAX }
             .map { it.toCalendarLabel() }
 
+        Log.d("HomeScreen", "날짜 ${date.dayOfMonth}에 표시될 라벨: $labels")
         date.dayOfMonth to labels
     }
 
+    Log.d("HomeScreen", "최종 주간 맵: $map")
     return map to today.dayOfMonth
 }
 
@@ -113,6 +134,9 @@ fun HomeScreen(
     val userVm: UserViewModel = hiltViewModel()
     val nickname by userVm.nickname.collectAsState()
     LaunchedEffect(Unit) { userVm.loadMe() }
+
+    // Context 가져오기
+    val context = LocalContext.current
 
     // 오늘 탭 표시용(서버 응답 + 순서 복원/완료 시 뒤로)
     val todayRoutines = remember { mutableStateListOf<Routine>() }
@@ -155,12 +179,37 @@ fun HomeScreen(
     val serverRoutines by homeVm.serverRoutines.collectAsState()
     // ② 내 루틴 전체(하단 카드용)
     val myRoutines by homeVm.myRoutines.collectAsState()
+    // ③ 스케줄 정보가 병합된 루틴 (주간 달력용)
+    val scheduledRoutines by homeVm.scheduledRoutines.collectAsState()
 
     LaunchedEffect(Unit) {
         Log.d("HomeScreen", "loadTodayRoutines() 호출")
         homeVm.loadTodayRoutines()
         // 하단 카드용 전체 목록도 로드
         homeVm.loadMyRoutines()
+    }
+
+    // 서버 데이터 로드 후 로컬 스케줄 정보와 병합
+    LaunchedEffect(serverRoutines) {
+        if (serverRoutines.isNotEmpty()) {
+            Log.d("HomeScreen", "서버 데이터 로드 완료, 로컬 스케줄 정보와 병합 시작")
+            homeVm.mergeWithLocalSchedule(context)
+            
+            // 테스트용: 임시로 스케줄 데이터 설정 (실제로는 시계 아이콘을 통해 설정)
+            if (serverRoutines.isNotEmpty()) {
+                val firstRoutine = serverRoutines.first()
+                val testSchedule = SchedulePreference.ScheduleInfo(
+                    routineId = firstRoutine.routineId,
+                    scheduledDays = SchedulePreference.dayOfWeeksToStrings(setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY)),
+                    scheduledTime = SchedulePreference.localTimeToString(LocalTime.of(9, 0))
+                )
+                SchedulePreference.saveSchedule(context, testSchedule)
+                Log.d("HomeScreen", "테스트 스케줄 설정: ${firstRoutine.title} - ${testSchedule.scheduledDays}, ${testSchedule.scheduledTime}")
+                
+                // 스케줄 정보 다시 병합
+                homeVm.mergeWithLocalSchedule(context)
+            }
+        }
     }
 
     //탭 선택 상태(오늘,이번주)
@@ -438,8 +487,10 @@ fun HomeScreen(
 
                         // 이번주 탭 선택 시 (샘플)
                         1 -> {
-                            // 주간 데이터 만들기 (serverRoutines를 주간용으로 바꿀 예정이면 여기만 교체)
-                            val (routinesPerDate, todayDom) = buildWeeklyMap(todayRoutines)
+                            // 주간 데이터 만들기 (scheduledRoutines 사용 - 스케줄 정보 포함)
+                            Log.d("HomeScreen", "이번주 탭 선택됨: scheduledRoutines.size=${scheduledRoutines.size}")
+                            val (routinesPerDate, todayDom) = buildWeeklyMap(scheduledRoutines)
+                            Log.d("HomeScreen", "주간 데이터 생성 완료: routinesPerDate=$routinesPerDate, todayDom=$todayDom")
                             WeeklyCalendarView(
                                 routinesPerDate = routinesPerDate,
                                 today = todayDom
