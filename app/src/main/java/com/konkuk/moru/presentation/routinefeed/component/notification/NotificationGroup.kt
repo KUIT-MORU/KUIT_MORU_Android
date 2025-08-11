@@ -34,7 +34,7 @@ fun NotificationGroup(
         )
 
         itemsToShow.forEach { notification ->
-            NotificationRow(notification = notification)
+            NotificationRow(notification = notification, onProfileClick = {})
             Divider(color = Color.LightGray, thickness = 0.5.dp)
         }
 

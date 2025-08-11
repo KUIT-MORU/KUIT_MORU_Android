@@ -4,6 +4,7 @@ import com.konkuk.moru.BuildConfig
 import com.konkuk.moru.data.interceptor.AuthInterceptor
 import com.konkuk.moru.data.service.AuthService
 import com.konkuk.moru.data.service.InsightService
+import com.konkuk.moru.data.service.NotificationService
 import com.konkuk.moru.data.service.RoutineFeedService
 import com.konkuk.moru.data.service.UserService
 import dagger.Module
@@ -12,6 +13,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -43,8 +45,23 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(authInterceptor: Interceptor): OkHttpClient {
-        return UnsafeHttpClient.getUnsafeOkHttpClient().newBuilder() // 테스트용 클라이언트 기반
-            .addInterceptor(authInterceptor) // ✅ Authorization 헤더 자동 삽입
+        val logging = HttpLoggingInterceptor().apply {
+            // 바디까지 다 찍기 (개발용)
+            level = HttpLoggingInterceptor.Level.BODY
+            // 기본값은 Authorization 헤더가 마스킹됩니다
+            // logging.redactHeader("Authorization") // 필요시 마스킹 유지
+        }
+
+        return UnsafeHttpClient.getUnsafeOkHttpClient().newBuilder()
+            .addInterceptor(authInterceptor) // 헤더 붙이기
+            .addNetworkInterceptor { chain -> // ★ 응답 코드/URL 즉시 확인용
+                val req = chain.request()
+                android.util.Log.d("HTTP", "--> ${req.method} ${req.url}")
+                val res = chain.proceed(req)
+                android.util.Log.d("HTTP", "<-- ${res.code} ${res.message} ${req.url}")
+                res
+            }
+            .addInterceptor(logging) // ★ BODY까지
             .build()
     }
 
@@ -77,4 +94,8 @@ object NetworkModule {
         retrofit.create(UserService::class.java)
 
 
+    @Provides
+    @Singleton
+    fun provideNotificationService(retrofit: Retrofit): NotificationService =
+        retrofit.create(NotificationService::class.java)
 }

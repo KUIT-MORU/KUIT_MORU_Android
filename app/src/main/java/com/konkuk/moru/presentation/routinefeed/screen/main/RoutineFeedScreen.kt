@@ -28,6 +28,7 @@ import com.konkuk.moru.presentation.routinefeed.component.Routine.MoruLiveSectio
 import com.konkuk.moru.presentation.routinefeed.component.Routine.TitledRoutineSection
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.HomeTopAppBar
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
+import com.konkuk.moru.presentation.routinefeed.viewmodel.MainViewModel
 import com.konkuk.moru.presentation.routinefeed.viewmodel.RoutineFeedUiState
 import com.konkuk.moru.presentation.routinefeed.viewmodel.RoutineFeedViewModel
 
@@ -41,19 +42,20 @@ fun RoutineFeedScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     viewModel: RoutineFeedViewModel = hiltViewModel(),
+    mainViewModel: MainViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
+    val hasNotification by mainViewModel.hasUnreadNotification.collectAsState() // [추가]
 
     Scaffold(
         containerColor = Color.White,
         topBar = {
             HomeTopAppBar(
                 onSearchClick = { navController.navigate(Route.RoutineSearch.route) },
-                hasNotification = uiState.hasNotification,
+                hasNotification = hasNotification, // [수정]
                 onNotificationClick = {
+                    mainViewModel.onNotificationIconClicked() // [수정]
                     navController.navigate(Route.Notification.route)
-                    viewModel.onNotificationViewed()
                 },
                 onLogoClick = {}
             )

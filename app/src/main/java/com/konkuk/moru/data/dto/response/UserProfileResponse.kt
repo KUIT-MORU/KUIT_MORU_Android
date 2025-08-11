@@ -20,6 +20,6 @@ data class RoutineSummaryDto(
     @SerializedName("imageUrl") val imageUrl: String?,
     @SerializedName("tags") val tags: List<String>,
     @SerializedName("likeCount") val likeCount: Int,
-    @SerializedName("createdAt") val createdAt: String,
+    @SerializedName("createdAt") val createdAt: String?,
     @SerializedName("requiredTime") val requiredTime: String?
 )

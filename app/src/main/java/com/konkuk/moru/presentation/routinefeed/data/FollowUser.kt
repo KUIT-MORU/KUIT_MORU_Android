@@ -12,7 +12,8 @@ data class FollowUser(
 
 
 data class UserProfileUiState(
-    val userId: String? = "user-1",
+    val userId:String?=null,
+    val isMe: Boolean?=false,
     val nickname: String = "",
     val bio: String = "",
     val profileImageUrl: String? = null,

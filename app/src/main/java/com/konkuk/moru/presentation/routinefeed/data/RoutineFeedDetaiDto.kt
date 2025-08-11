@@ -12,6 +12,7 @@ data class RoutineDetailResponse(
     @SerializedName("id") val id: String,
     @SerializedName("title") val title: String,
     @SerializedName("imageUrl") val imageUrl: String?,
+    @SerializedName("author") val author: AuthorDto?,
     @SerializedName("tags") val tags: List<String>,
     @SerializedName("description") val description: String,
     @SerializedName("isSimple") val isSimple: Boolean,
@@ -25,7 +26,7 @@ data class RoutineDetailResponse(
     @SerializedName("scrapCount") val scrapCount: Int,
     @SerializedName("isOwner") val isOwner: Boolean,
     @SerializedName("similarRoutines") val similarRoutines: List<SimilarRoutineItemDto>,
-    @SerializedName("author") val author: AuthorDto? = null,
+
 
     // 선택: 서버가 내 상태도 내려주면(권장)
     @SerializedName("likedByMe") val likedByMe: Boolean? = null,

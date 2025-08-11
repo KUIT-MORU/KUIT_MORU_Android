@@ -366,7 +366,8 @@ fun MainNavGraph(
             NotificationScreen(
                 onNavigateBack = {
                     navController.popBackStack()
-                }
+                },
+                navController = navController
             )
         }
 

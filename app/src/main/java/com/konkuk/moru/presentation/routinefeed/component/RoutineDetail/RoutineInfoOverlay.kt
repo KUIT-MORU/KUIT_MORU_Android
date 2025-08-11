@@ -55,7 +55,8 @@ public fun RoutineInfoOverlay(
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.clickable { onProfileClick(routine.authorId) }
+                modifier = Modifier.clickable(enabled = routine.authorId.isNotBlank()) { // 👈 이 부분!
+                    onProfileClick(routine.authorId)}
             ) {
                 AsyncImage(
                     model = routine.authorProfileUrl,

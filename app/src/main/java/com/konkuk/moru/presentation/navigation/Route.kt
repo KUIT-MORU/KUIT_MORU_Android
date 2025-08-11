@@ -42,11 +42,14 @@ sealed class Route(
     }
 
     // [추가] UserProfileScreen 경로 정의 (어떤 유저의 프로필인지 'userId' 파라미터 추가)
-    object UserProfile : Route("user_profile?userId={userId}") {
-        fun createRoute(userId: String?): String =
-            if (userId.isNullOrBlank()) "user_profile" else "user_profile?userId=$userId"
+    object UserProfile : Route("user_profile/{userId}") {
+        fun createRoute(userId: String) = "user_profile/$userId"
     }
 
+    object RoutineDetail {
+        const val route = "routine_detail/{routineId}"
+        fun create(routineId: String) = "routine_detail/$routineId"
+    }
     data object MyRoutine : Route(route = "my_routine")
 
     data object MyRoutineDetail : Route("my_routine_detail/{routineId}") {

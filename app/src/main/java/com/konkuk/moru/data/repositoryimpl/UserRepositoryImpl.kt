@@ -12,7 +12,7 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun getMe(): UserProfileDomain = userService.getMe().toDomain()
 
     override suspend fun getUserProfile(userId: String): UserProfileDomain =
-        userService.getUserProfile(userId).toDomain()
+        userService.getUserProfile(userId).toDomain(userId)
 }
 
 

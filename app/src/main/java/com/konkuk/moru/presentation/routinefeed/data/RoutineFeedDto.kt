@@ -13,10 +13,10 @@ data class LiveUserInfo(
     val userId: String,
 
     @SerializedName("nickname") // JSON의 "nickname" 필드를 "name" 변수에 매핑
-    val name: String,
+    val nickname: String,
 
     @SerializedName("motivationTag") // JSON의 "motivationTag" 필드를 "tag" 변수에 매핑
-    val tag: String,
+    val motivationTag: String,
 
     @SerializedName("profileImageUrl")
     val profileImageUrl: String?

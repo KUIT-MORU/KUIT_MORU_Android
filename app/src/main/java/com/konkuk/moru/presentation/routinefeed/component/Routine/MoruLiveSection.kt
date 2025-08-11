@@ -78,7 +78,7 @@ fun MoruLiveSection(
                                 .size(Size(256, 256)) // 64dp보다 큰 적절한 픽셀 크기로 지정 (256px 정도면 충분)
                                 .crossfade(true) // 부드러운 이미지 전환 효과
                                 .build(),
-                            contentDescription = "${user.name}의 프로필 사진",
+                            contentDescription = "${user.nickname}의 프로필 사진",
                             placeholder = painterResource(id = R.drawable.ic_profile_with_background),
                             error = painterResource(id = R.drawable.ic_profile_with_background),
                             contentScale = ContentScale.Crop,
@@ -88,7 +88,7 @@ fun MoruLiveSection(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = if (user.name.length > 6) "${user.name.take(6)}.." else user.name,
+                            text = if (user.nickname.length > 6) "${user.nickname.take(6)}.." else user.nickname,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black
@@ -96,7 +96,7 @@ fun MoruLiveSection(
 
                         // ✅ 수정된 부분: 태그가 8글자 넘으면 말줄임표 처리
                         Text(
-                            text = if (user.tag.length > 6) "#${user.tag.take(6)}.." else user.tag,
+                            text = if (user.motivationTag.length > 6) "#${user.motivationTag.take(6)}.." else "#${user.motivationTag}",
                             fontSize = 12.sp,
                             color = Color.Gray
                         )

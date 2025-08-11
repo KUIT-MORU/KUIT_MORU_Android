@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.routinefeed.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -30,29 +31,36 @@ class UserProfileViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching {
                 if (userId.isNullOrBlank()) {
-                    // 내 프로필
-                    userRepository.getMe()
+                    // --- 👇 [핵심 수정 로직] 내 프로필 정보 로드 ---
+                    // 1. /api/user/me API를 호출해 내 기본 정보와 ID를 얻어옵니다.
+                    val myInfo = userRepository.getMe()
+                    // 2. 위에서 얻은 내 ID를 사용해, 루틴 정보가 포함된
+                    //    /api/user/{userId} API를 다시 호출합니다.
+                    userRepository.getUserProfile(myInfo.id)
+                    // --- [수정 로직 끝] ---
                 } else {
                     // 타인 프로필
                     userRepository.getUserProfile(userId)
                 }
             }.onSuccess { domain ->
                 _uiState.update { prev ->
+                    Log.d("MoruDebug", "State updating with nickname: ${domain.nickname}")
                     prev.copy(
-                        userId = userId, // null이면 내 프로필
+                        userId = domain.id,
+                        isMe = domain.isMe, // isMe 상태도 domain에서 가져옵니다.
                         profileImageUrl = domain.profileImageUrl,
                         nickname = domain.nickname,
                         bio = domain.bio ?: "",
                         routineCount = domain.routineCount,
                         followerCount = domain.followerCount,
                         followingCount = domain.followingCount,
-                        // 서버 스펙에 팔로잉 여부가 없으면 기본 false
                         isFollowing = false,
-                        // currentRoutine을 "실행 중" 섹션처럼 보여주고 싶다면 아래처럼 1개짜리 리스트로 매핑
-                        runningRoutines = domain.currentRoutine?.let { listOf(it.toUiRoutine(userId)) }
-                            ?: emptyList(),
-                        // 나머지 루틴들
-                        userRoutines = domain.routines.map { it.toUiRoutine(userId) }
+                        runningRoutines = domain.currentRoutine?.let {
+                            listOf(it.toUiRoutine(domain.id, domain.nickname, domain.profileImageUrl))
+                        } ?: emptyList(),
+                        userRoutines = domain.routines.map {
+                            it.toUiRoutine(domain.id, domain.nickname, domain.profileImageUrl)
+                        }
                     )
                 }
             }.onFailure { e ->
@@ -113,7 +121,11 @@ class UserProfileViewModel @Inject constructor(
  * UI에서 사용하는 Routine(피드 카드용)으로 가볍게 채워 넣습니다.
  * authorId는 프로필 주인 id로 세팅(상세로 넘어갈 때 작성자 프로필 이동 등에 사용 가능)
  */
-private fun RoutineCardDomain.toUiRoutine(profileOwnerId: String?): Routine =
+private fun RoutineCardDomain.toUiRoutine(
+    profileOwnerId: String,
+    authorName: String,
+    authorProfileUrl: String?
+): Routine =
     Routine(
         routineId = id,
         title = title,
@@ -125,8 +137,8 @@ private fun RoutineCardDomain.toUiRoutine(profileOwnerId: String?): Routine =
         description = "",
         category = "일상",
         authorId = profileOwnerId ?: "", // 프로필 화면 주인의 id
-        authorName = "",
-        authorProfileUrl = null,
+        authorName = authorName,
+        authorProfileUrl = authorProfileUrl,
         isLiked = false,
         isBookmarked = false,
         isRunning = false,
