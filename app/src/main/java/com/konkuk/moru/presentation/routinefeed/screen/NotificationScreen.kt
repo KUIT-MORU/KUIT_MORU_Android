@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
@@ -24,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -42,7 +40,6 @@ import coil3.request.crossfade
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppBar
 import com.konkuk.moru.presentation.routinefeed.viewmodel.NotificationViewModel
-import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -175,13 +172,13 @@ private fun NotificationRow(
         )
 
         androidx.compose.foundation.layout.Column(Modifier.weight(1f)) {
-            androidx.compose.material3.Text(
+            Text(
                 text = nickname,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.clickable { onProfileClick(senderId) } // ★ 유지
             )
-            androidx.compose.material3.Text(text = message, color = Color.DarkGray)
-            androidx.compose.material3.Text(text = relativeTime, color = Color.Gray)
+            Text(text = message, color = Color.DarkGray)
+            Text(text = relativeTime, color = Color.Gray)
         }
     }
 }

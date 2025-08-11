@@ -14,7 +14,6 @@ import androidx.compose.ui.unit.dp
 import com.konkuk.moru.presentation.routinefeed.data.Notification
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NotificationGroup(
     title: String,
