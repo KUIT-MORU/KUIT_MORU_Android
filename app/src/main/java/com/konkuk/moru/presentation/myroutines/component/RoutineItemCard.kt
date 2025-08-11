@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.myroutines.component
 
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -40,6 +41,7 @@ import com.konkuk.moru.R
 import com.konkuk.moru.core.component.Switch.RoutineSimpleFocusSwitch
 import com.konkuk.moru.core.component.chip.MoruChip
 import com.konkuk.moru.core.component.routinedetail.RoutineDescriptionField
+import com.konkuk.moru.core.component.routinedetail.RoutineImageSelectBox
 import com.konkuk.moru.core.component.routinedetail.ShowUserCheckbox
 import com.konkuk.moru.presentation.routinefeed.component.modale.CenteredInfoDialog
 import com.konkuk.moru.presentation.routinefeed.component.modale.CustomDialog

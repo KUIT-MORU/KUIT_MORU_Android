@@ -1,5 +1,15 @@
 package com.konkuk.moru.presentation.myroutines.viewmodel
 
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.AdaptiveIconDrawable
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.core.graphics.createBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.konkuk.moru.data.model.AppInfo
@@ -7,6 +17,8 @@ import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.MyRoutineDetailUiState
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.model.RoutineStep
+import com.konkuk.moru.data.model.UsedAppInRoutine
+import com.konkuk.moru.data.model.placeholderIcon
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -18,6 +30,9 @@ import kotlinx.coroutines.launch
 class MyRoutineDetailViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(MyRoutineDetailUiState())
     val uiState = _uiState.asStateFlow()
+
+    private val _availableApps = MutableStateFlow<List<UsedAppInRoutine>>(emptyList())  // [추가]
+    val availableApps = _availableApps.asStateFlow()
 
     // 삭제 완료 후 이전 화면으로 돌아가기 위한 신호(Event)
     private val _deleteCompleted = MutableSharedFlow<Boolean>()
@@ -155,8 +170,69 @@ class MyRoutineDetailViewModel : ViewModel() {
         _uiState.update { it.copy(draggedStepVerticalOffset = it.draggedStepVerticalOffset + offset) }
     }
 
-    
 
+    // [수정] 설치 앱 로드: 기존 appList 참조 제거하고 StateFlow 채우기
+    @SuppressLint("QueryPermissionsNeeded")
+    fun loadInstalledApps(context: Context) {
+        viewModelScope.launch {
+            runCatching {
+                val pm = context.packageManager
+                pm.getInstalledApplications(PackageManager.GET_META_DATA)
+                    .mapNotNull { appInfo ->
+                        val label = pm.getApplicationLabel(appInfo)?.toString() ?: return@mapNotNull null
+                        val drawable = pm.getApplicationIcon(appInfo.packageName)
+                        val bitmap = drawableToBitmap(drawable)
+                        val imageBitmap = bitmap.asImageBitmap()
+                        UsedAppInRoutine(
+                            appName = label,
+                            appIcon = imageBitmap,
+                            packageName = appInfo.packageName
+                        )
+                    }
+                    .sortedBy { it.appName.lowercase() }
+            }.onSuccess { list -> _availableApps.value = list }
+                .onFailure { _availableApps.value = emptyList() }
+        }
+    }
+
+    // [추가] 실제 선택앱 추가(중복/최대 4개 방지)
+    fun addApp(app: UsedAppInRoutine) {
+        _uiState.update { state ->
+            val current = state.routine?.usedApps ?: emptyList()
+            if (current.any { it.packageName == app.packageName } || current.size >= 4) {
+                return@update state
+            }
+            val updated = current + app
+            state.copy(routine = state.routine?.copy(usedApps = updated) ?: state.routine)
+        }
+    }
+
+    private fun drawableToBitmap(drawable: Drawable): Bitmap {
+        return when (drawable) {
+            is BitmapDrawable -> drawable.bitmap
+            is AdaptiveIconDrawable -> {
+                val bmp = createBitmap(
+                    drawable.intrinsicWidth.coerceAtLeast(1),
+                    drawable.intrinsicHeight.coerceAtLeast(1)
+                )
+                val canvas = Canvas(bmp) // [중요] android.graphics.Canvas 사용
+                drawable.setBounds(0, 0, canvas.width, canvas.height)
+                drawable.draw(canvas)
+                bmp
+            }
+
+            else -> {
+                val bmp = createBitmap(
+                    drawable.intrinsicWidth.coerceAtLeast(1),
+                    drawable.intrinsicHeight.coerceAtLeast(1)
+                )
+                val canvas = Canvas(bmp) // [중요] android.graphics.Canvas 사용
+                drawable.setBounds(0, 0, canvas.width, canvas.height)
+                drawable.draw(canvas)
+                bmp
+            }
+        }
+    }
 
 
     fun finalizeStepReorder(from: Int, to: Int) {
@@ -186,9 +262,9 @@ class MyRoutineDetailViewModel : ViewModel() {
         }
     }
 
-    fun deleteApp(appToDelete: AppInfo) {
+    fun deleteApp(appToDelete: UsedAppInRoutine) {
         _uiState.update { state ->
-            val updatedApps = state.routine?.usedApps?.filter { it.name != appToDelete.name }
+            val updatedApps = state.routine?.usedApps?.filter { it.appName != appToDelete.appName }
             state.copy(routine = state.routine?.copy(usedApps = updatedApps ?: emptyList()))
         }
     }
@@ -197,9 +273,10 @@ class MyRoutineDetailViewModel : ViewModel() {
     fun addApp() {
         _uiState.update { state ->
             // 예시로 새 앱 추가
-            val newApp = AppInfo(
-                name = "새로운 앱",
-                iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/hand-gestures/good-icon.png"
+            val newApp = UsedAppInRoutine(
+                appName = "새로운 앱",
+                appIcon = placeholderIcon(), // 더미 아이콘 사용
+                packageName = "com.example.newapp"
             )
             val updatedApps = state.routine?.usedApps?.plus(newApp)
             state.copy(routine = state.routine?.copy(usedApps = updatedApps ?: listOf(newApp)))
