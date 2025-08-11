@@ -1,10 +1,10 @@
 package com.konkuk.moru.data.mapper
 
 import com.konkuk.moru.data.dto.response.RoutineResponse
-import com.konkuk.moru.data.dto.response.RoutineStepResponse
 import com.konkuk.moru.data.model.Routine
-import com.konkuk.moru.data.model.RoutineStep
 import java.time.DayOfWeek
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 // 서버가 dayOfWeek=MON~SUN으로 필터링해서 내려주므로,
 // 클라이언트는 정렬/요일 계산을 하지 않고 "응답 순서" 그대로 사용한다.
@@ -13,20 +13,34 @@ fun RoutineResponse.toDomain(): Routine =
         routineId = routineId,             // 서버 String ID를 그대로 사용
         title = title,
         description = "",                  // 목록 응답에 없으므로 기본값
-        imageUrl = null,                   // 필요 시 서버 필드 추가되면 매핑
-        category = category,
+        imageUrl = imageUrl,               // 서버에서 받은 imageUrl 사용
+        category = "",                     // 서버 응답에 없으므로 기본값
         tags = tags,
         authorId = "me",                   // DummyData 제거: 임시 고정값(프로필 연동 시 교체)
         authorName = "",                   // 필요 시 유저 프로필에서 채움
         authorProfileUrl = null,
-        likes = 0,
+        likes = likeCount,                 // 서버에서 받은 likeCount 사용
         isLiked = false,
         isBookmarked = false,
-        isRunning = false,
-        scheduledDays = emptySet<DayOfWeek>(),
-        scheduledTime = null,
-        steps = steps.map { it.toDomain() }
+        isRunning = isRunning,             // 서버에서 받은 isRunning 사용
+        scheduledDays = scheduledDays.mapNotNull { dayString ->
+            when (dayString.uppercase()) {
+                "MON" -> DayOfWeek.MONDAY
+                "TUE" -> DayOfWeek.TUESDAY
+                "WED" -> DayOfWeek.WEDNESDAY
+                "THU" -> DayOfWeek.THURSDAY
+                "FRI" -> DayOfWeek.FRIDAY
+                "SAT" -> DayOfWeek.SATURDAY
+                "SUN" -> DayOfWeek.SUNDAY
+                else -> null
+            }
+        }.toSet(),
+        scheduledTime = scheduledTime?.let { timeString ->
+            try {
+                LocalTime.parse(timeString, DateTimeFormatter.ofPattern("HH:mm"))
+            } catch (e: Exception) {
+                null
+            }
+        },
+        steps = emptyList()                // 서버 응답에 없으므로 빈 리스트
     )
-
-private fun RoutineStepResponse.toDomain(): RoutineStep =
-    RoutineStep(name = name, duration = duration) // "MM:SS"

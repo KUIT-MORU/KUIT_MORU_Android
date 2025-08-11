@@ -97,6 +97,9 @@ dependencies {
     implementation(libs.retrofit.kotlin.serialization.converter)
     implementation(libs.kotlinx.serialization.json)
 
+    // Gson for local data serialization
+    implementation("com.google.code.gson:gson:2.10.1")
+
     // Hilt
     implementation(libs.hilt.android)
     implementation(libs.hilt.core)
@@ -118,8 +121,7 @@ dependencies {
     // FlowRow를 위한 확장
     implementation("com.google.accompanist:accompanist-flowlayout:0.30.1")
 
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("io.coil-kt:coil-compose:2.5.0")
 }
 
 configurations.all {

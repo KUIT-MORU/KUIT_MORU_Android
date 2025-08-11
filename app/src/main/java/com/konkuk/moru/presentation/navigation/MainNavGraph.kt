@@ -162,6 +162,11 @@ fun MainNavGraph(
                     sharedViewModel = shared,
                     routineId = currentId!!,
                     onDismiss = {
+                        // 홈으로 돌아갈 때 "진행중 루틴" 알림
+                        navController.getBackStackEntry(Route.Home.route)
+                            .savedStateHandle["runningRoutineId"] = currentId!!
+
+
                         navController.popBackStack(
                             Route.Home.route,
                             inclusive = false
