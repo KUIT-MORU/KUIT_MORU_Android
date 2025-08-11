@@ -1,7 +1,6 @@
 package com.konkuk.moru.presentation.home.screen
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -69,6 +68,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 import android.content.Context
+import kotlinx.coroutines.delay
 
 fun convertDurationToMinutes(duration: String): Int {
     val parts = duration.split(":")
@@ -131,9 +131,17 @@ fun HomeScreen(
     todayTabOffsetY: MutableState<Float>,
     onShowOnboarding: () -> Unit = {},
 ) {
+    Log.d("HomeScreen", "🚀 HomeScreen Composable 시작!")
+    Log.d("HomeScreen", "📱 앱이 실행되고 있습니다!")
+    Log.d("HomeScreen", "🔍 navController: $navController")
+    Log.d("HomeScreen", "🔍 sharedViewModel: $sharedViewModel")
+    
     val userVm: UserViewModel = hiltViewModel()
     val nickname by userVm.nickname.collectAsState()
-    LaunchedEffect(Unit) { userVm.loadMe() }
+    LaunchedEffect(Unit) { 
+        Log.d("HomeScreen", "🔄 userVm.loadMe() 호출")
+        userVm.loadMe() 
+    }
 
     // Context 가져오기
     val context = LocalContext.current
@@ -208,6 +216,41 @@ fun HomeScreen(
                 
                 // 스케줄 정보 다시 병합
                 homeVm.mergeWithLocalSchedule(context)
+            }
+        }
+    }
+
+    // 네비게이션 트리거 처리
+    val navigateToRoutineFocus by homeEntry.savedStateHandle
+        .getStateFlow<String?>("navigateToRoutineFocus", null)
+        .collectAsState(initial = null)
+
+    LaunchedEffect(navigateToRoutineFocus) {
+        Log.d("HomeScreen", "🔄 LaunchedEffect(navigateToRoutineFocus) 실행: $navigateToRoutineFocus")
+        navigateToRoutineFocus?.let { routineId ->
+            Log.d("HomeScreen", "✅ 네비게이션 트리거 감지: routineId=$routineId")
+            // 스텝 정보 로드 완료 후 네비게이션
+            kotlinx.coroutines.delay(500)
+            Log.d("HomeScreen", "🔄 500ms 딜레이 완료, 네비게이션 시작")
+            navController.navigate(Route.RoutineFocusIntro.route)
+            Log.d("HomeScreen", "✅ RoutineFocusIntro로 네비게이션 완료")
+            // 트리거 초기화
+            homeEntry.savedStateHandle["navigateToRoutineFocus"] = null
+            Log.d("HomeScreen", "🔄 네비게이션 트리거 초기화 완료")
+        }
+    }
+    
+    // routineDetail이 로드되면 스텝 정보를 SharedRoutineViewModel에 설정
+    LaunchedEffect(homeVm.routineDetail.value) {
+        val detail = homeVm.routineDetail.value
+        if (detail != null) {
+            Log.d("HomeScreen", "✅ LaunchedEffect(routineDetail): 스텝 정보 설정")
+            sharedViewModel.setStepsFromServer(detail.steps)
+            
+            // category도 함께 설정
+            if (detail.category?.isNotBlank() == true && detail.category != "없음") {
+                Log.d("HomeScreen", "🔄 routineDetail에서 category 설정: ${detail.category}")
+                sharedViewModel.setRoutineCategory(detail.category)
             }
         }
     }
@@ -290,6 +333,7 @@ fun HomeScreen(
     )
 
     Scaffold(
+        modifier = modifier,
         containerColor = Color.White,
         // FAB
         floatingActionButton = {
@@ -319,7 +363,7 @@ fun HomeScreen(
         }
 
         LazyColumn(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
@@ -448,31 +492,26 @@ fun HomeScreen(
                             TodayRoutinePager(
                                 routines = todayRoutines,
                                 onRoutineClick = { routine, _ ->
-                                    Log.d(
-                                        "HomeScreen",
-                                        "Pager 클릭: id=${routine.routineId}, title=${routine.title}"
-                                    )
-                                    // Step 리스트 변환
-                                    val stepDataList = routine.steps.map {
-                                        RoutineStepData(
-                                            name = it.name,
-                                            duration = convertDurationToMinutes(it.duration),
-                                            isChecked = false
-                                        )
-                                    }
-                                    // 기존 Int API와 호환 (내부 저장용 키만 변환)
-                                    sharedViewModel.setSelectedRoutineId(routine.routineId.toStableIntId())
-                                    sharedViewModel.setSelectedSteps(stepDataList)
-
-                                    // 루틴 기본 정보 설정
-                                    sharedViewModel.setRoutineInfo(
-                                        title = routine.title,
-                                        category = routine.category,
-                                        tags = routine.tags
-                                    )
-
-                                    // 네비게이션
-                                    navController.navigate(Route.RoutineFocusIntro.route)
+                                    Log.d("HomeScreen", "🔄 Pager 루틴 클릭:")
+                                    Log.d("HomeScreen", "   - routineId: ${routine.routineId}")
+                                    Log.d("HomeScreen", "   - title: ${routine.title}")
+                                    Log.d("HomeScreen", "   - category: ${routine.category}")
+                                    Log.d("HomeScreen", "   - tags: ${routine.tags}")
+                                    val stableId = routine.routineId.toStableIntId()
+                                    Log.d("HomeScreen", "   - stableId: $stableId")
+                                    sharedViewModel.setSelectedRoutineId(stableId)
+                                    Log.d("HomeScreen", "🔄 setRoutineInfo 호출")
+                                    // category가 "없음"이면 "집중"으로 설정 (스텝이 있으므로)
+                                    val actualCategory = if (routine.category.isBlank() || routine.category == "없음") "집중" else routine.category
+                                    sharedViewModel.setRoutineInfo(title = routine.title, category = actualCategory, tags = routine.tags)
+                                    
+                                    // 루틴 상세 정보 로드 (스텝 포함) 후 SharedRoutineViewModel에 직접 설정
+                                    Log.d("HomeScreen", "🔄 loadRoutineDetail 호출")
+                                    homeVm.loadRoutineDetail(routine.routineId)
+                                    
+                                    // 네비게이션 트리거 설정
+                                    Log.d("HomeScreen", "🔄 네비게이션 트리거 설정")
+                                    homeEntry.savedStateHandle["navigateToRoutineFocus"] = routine.routineId
                                 }
                             )
                         } else {
@@ -533,37 +572,32 @@ fun HomeScreen(
                         val context = LocalContext.current
                         val list = myRoutines.sortedForList()   // 이미 정렬된 리스트
 
-                        RoutineCardList(
-                            routines = list,
-                            onRoutineClick = { routineId: String ->
-                                Log.d("HomeScreen", "카드 클릭: id=$routineId")
-
-                                // 정렬된 리스트에서 클릭된 루틴 찾기
-                                val routine = list.firstOrNull { it.routineId == routineId }
-                                if (routine == null) {
-                                    Toast.makeText(context, "루틴 정보를 찾을 수 없습니다", Toast.LENGTH_SHORT).show()
-                                    return@RoutineCardList
-                                }
-
-                                val stepDataList = routine.steps.map {
-                                    RoutineStepData(
-                                        name = it.name,
-                                        duration = convertDurationToMinutes(it.duration),
-                                        isChecked = false
+                                                    RoutineCardList(
+                                routines = list,
+                                onRoutineClick = { routineId: String ->
+                                    Log.d("HomeScreen", "카드 클릭: id=$routineId")
+                                    
+                                    // 정렬된 리스트에서 클릭된 루틴 찾기
+                                    val routine = list.firstOrNull { it.routineId == routineId }
+                                    if (routine == null) {
+                                        Log.w("HomeScreen", "루틴 정보를 찾을 수 없습니다")
+                                        return@RoutineCardList
+                                    }
+                                    
+                                    // 기존 Int API와 호환
+                                    sharedViewModel.setSelectedRoutineId(routine.routineId.toStableIntId())
+                                    sharedViewModel.setRoutineInfo(
+                                        title = routine.title,
+                                        category = routine.category,
+                                        tags = routine.tags
                                     )
-                                }
-
-                                // 기존 Int API와 호환
-                                sharedViewModel.setSelectedRoutineId(routine.routineId.toStableIntId())
-                                sharedViewModel.setSelectedSteps(stepDataList)
-                                sharedViewModel.setRoutineInfo(
-                                    title = routine.title,
-                                    category = routine.category,
-                                    tags = routine.tags
-                                )
-
-                                navController.navigate(Route.RoutineFocusIntro.route)
-                            },
+                                    
+                                    // 루틴 상세 정보 로드 (스텝 포함) 후 네비게이션
+                                    homeVm.loadRoutineDetail(routine.routineId)
+                                    
+                                    // 네비게이션 트리거 설정
+                                    homeEntry.savedStateHandle["navigateToRoutineFocus"] = routine.routineId
+                                },
                             runningHighlightId = highlightId?.takeIf { id ->
                                 list.any { it.routineId.toStableIntId() == id }
                             }

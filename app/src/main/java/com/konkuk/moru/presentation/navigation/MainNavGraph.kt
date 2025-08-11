@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.navigation
 
+import android.util.Log
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -65,7 +66,7 @@ fun MainNavGraph(
             HomeScreen(
                 navController = navController,
                 sharedViewModel = sharedViewModel,
-                modifier = modifier.padding(innerPadding),
+                modifier = Modifier.padding(innerPadding),
                 fabOffsetY = fabOffsetY,
                 todayTabOffsetY = todayTabOffsetY,
                 onShowOnboarding = onShowOnboarding,
@@ -113,16 +114,27 @@ fun MainNavGraph(
 
             RoutineFocusIntroScreen(
                 sharedViewModel = sharedViewModel,
-                onStartClick = { selectedSteps, title, hashTag ->
+                onStartClick = { selectedSteps, title, hashTag, category, totalDuration ->
+                    Log.d("MainNavGraph", "🚀 RoutineFocusIntroScreen에서 시작하기 버튼 클릭!")
+                    Log.d("MainNavGraph", "   - 카테고리: $category")
+                    Log.d("MainNavGraph", "   - 선택된 스텝: ${selectedSteps.size}개")
+                    Log.d("MainNavGraph", "   - 총 소요시간: ${totalDuration}분")
+                    Log.d("MainNavGraph", "   - 제목: $title")
+                    Log.d("MainNavGraph", "   - 태그: $hashTag")
+                    
                     // 루틴 데이터 설정
                     sharedViewModel.setSelectedSteps(selectedSteps)
                     sharedViewModel.setRoutineTitle(title)
                     sharedViewModel.setRoutineTags(hashTag.split(" ").map { it.removePrefix("#") })
-
+                    sharedViewModel.setRoutineCategory(category)
+                    sharedViewModel.setTotalDuration(totalDuration)
+                    
                     // 실행 화면 이동
                     if (category == "집중") {
+                        Log.d("MainNavGraph", "🎯 집중 루틴으로 이동: RoutineFocus")
                         navController.navigate(Route.RoutineFocus.route)
                     } else {
+                        Log.d("MainNavGraph", "🎯 간편 루틴으로 이동: RoutineSimpleRun")
                         navController.navigate(Route.RoutineSimpleRun.route)
                     }
                 },
@@ -156,6 +168,17 @@ fun MainNavGraph(
             }
             val shared = viewModel<SharedRoutineViewModel>(parent)
             val currentId by shared.selectedRoutineId.collectAsState()
+            val title by shared.routineTitle.collectAsState()
+            val category by shared.routineCategory.collectAsState()
+            val totalDuration by shared.totalDuration.collectAsState()
+            val steps by shared.selectedSteps.collectAsState()
+
+            Log.d("MainNavGraph", "🚀 RoutineSimpleRun 화면 진입!")
+            Log.d("MainNavGraph", "   - routineId: $currentId")
+            Log.d("MainNavGraph", "   - 제목: $title")
+            Log.d("MainNavGraph", "   - 카테고리: $category")
+            Log.d("MainNavGraph", "   - 총 소요시간: ${totalDuration}분")
+            Log.d("MainNavGraph", "   - 선택된 스텝: ${steps.size}개")
 
             if (currentId != null) {
                 RoutineSimpleRunScreen(
@@ -198,6 +221,16 @@ fun MainNavGraph(
                 navController.getBackStackEntry(Route.Home.route)
             }
             val sharedViewModel = viewModel<SharedRoutineViewModel>(parentEntry)
+            val title by sharedViewModel.routineTitle.collectAsState()
+            val category by sharedViewModel.routineCategory.collectAsState()
+            val totalDuration by sharedViewModel.totalDuration.collectAsState()
+            val steps by sharedViewModel.selectedSteps.collectAsState()
+
+            Log.d("MainNavGraph", "🚀 RoutineFocus 화면 진입!")
+            Log.d("MainNavGraph", "   - 제목: $title")
+            Log.d("MainNavGraph", "   - 카테고리: $category")
+            Log.d("MainNavGraph", "   - 총 소요시간: ${totalDuration}분")
+            Log.d("MainNavGraph", "   - 선택된 스텝: ${steps.size}개")
 
             RoutineFocusScreenContainer(
                 focusViewModel = routineFocusViewModel,
@@ -228,7 +261,6 @@ fun MainNavGraph(
             val uiState by viewModel.uiState.collectAsState()
 
             RoutineFeedScreen(
-                modifier = modifier.padding(innerPadding),
                 navController = navController,
                 uiState = uiState,
                 onNotificationClick = {
@@ -301,7 +333,6 @@ fun MainNavGraph(
             val viewModel: MyRoutinesViewModel = viewModel()
 
             MyRoutinesScreen(
-                modifier = modifier.padding(innerPadding),
                 viewModel = viewModel, // ViewModel 인스턴스만 전달
                 onNavigateToRoutineFeed = {
                     navController.navigate(Route.RoutineFeed.route)
@@ -361,14 +392,12 @@ fun MainNavGraph(
 
         composable(route = Route.MyActivity.route) {
             ActMainScreen(
-                modifier = modifier.padding(innerPadding),
                 navController = navController
             )
         }
 
         composable(route = Route.ActSetting.route) {
             ActSettingScreen(
-                modifier = modifier.padding(innerPadding),
                 navController = navController
             )
         }
@@ -383,7 +412,6 @@ fun MainNavGraph(
 
         composable(route = Route.ActScrab.route) {
             ActScrabScreen(
-                modifier = modifier.padding(innerPadding),
                 navController = navController
             )
         }
@@ -391,21 +419,18 @@ fun MainNavGraph(
 
         composable(route = Route.ActFabTag.route) {
             ActFabTagScreen(
-                modifier = modifier.padding(innerPadding),
                 navController = navController
             )
         }
 
         composable(route = Route.ActRecord.route) {
             ActRecordScreen(
-                modifier = modifier.padding(innerPadding),
                 navController = navController
             )
         }
 
         composable(route = Route.ActProfile.route) {
             ActProfileScreen(
-                modifier = modifier.padding(innerPadding),
                 navController = navController
             )
         }
@@ -421,14 +446,12 @@ fun MainNavGraph(
 
             ActRecordDetailScreen(
                 title = decodedTitle,
-                navController = navController,
-                modifier.padding(innerPadding)
+                navController = navController
             )
         }
 
         composable(route = Route.ActInsightInfo.route) {
             ActInsightInfoClickScreen(
-                modifier = modifier.padding(innerPadding),
                 navController = navController
             )
         }

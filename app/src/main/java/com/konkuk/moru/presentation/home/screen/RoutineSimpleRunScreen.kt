@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
@@ -63,9 +63,9 @@ fun RoutineSimpleRunScreen(
     onFinishConfirmed: (Int) -> Unit
 ) {
     // intro에서 받아올 값들
-    val routineTitle by sharedViewModel.routineTitle.collectAsState()
-    val hashTagList by sharedViewModel.routineTags.collectAsState()
-    val steps by sharedViewModel.selectedSteps.collectAsState()
+    val routineTitle = sharedViewModel.routineTitle.collectAsStateWithLifecycle<String>().value
+    val hashTagList = sharedViewModel.routineTags.collectAsStateWithLifecycle<List<String>>().value
+    val steps = sharedViewModel.selectedSteps.collectAsStateWithLifecycle<List<RoutineStepData>>().value
     val hashTag = hashTagList.joinToString(" ") { "#$it" }
 
     /*---------------- 상태 ----------------*/

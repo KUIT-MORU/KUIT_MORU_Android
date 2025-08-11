@@ -9,6 +9,7 @@ data class RoutineResponse(
     val routineId: String,
     val title: String,
     val imageUrl: String? = null,
+    val category: String? = null,
     val tags: List<String>,
     val likeCount: Int,
     val createdAt: String,
