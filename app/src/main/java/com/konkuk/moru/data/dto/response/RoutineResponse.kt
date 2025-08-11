@@ -13,7 +13,7 @@ data class RoutineResponse(
     val tags: List<String>,
     val likeCount: Int,
     val createdAt: String,
-    val requiredTime: String,
+    val requiredTime: String? = null,  // nullable로 변경
     val isRunning: Boolean,
     val scheduledDays: List<String> = emptyList(),  // 요일별 스케줄 (MON, TUE, WED, ...)
     val scheduledTime: String? = null               // 스케줄 시간 (HH:mm)

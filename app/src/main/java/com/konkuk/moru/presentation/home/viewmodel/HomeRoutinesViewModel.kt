@@ -66,10 +66,21 @@ class HomeRoutinesViewModel @Inject constructor(
                         val code = e.code()
                         val err = e.response()?.errorBody()?.string()
                         android.util.Log.e("HomeRoutinesVM", "HTTP $code errorBody=$err")
+                        
+                        // HTTP 500 오류 시 사용자에게 친화적인 메시지
+                        if (code == 500) {
+                            Log.e(TAG, "🚨 서버 내부 오류 (500) - 서버 점검 중일 수 있습니다")
+                            Log.d(TAG, "💡 서버 점검 완료까지 잠시 기다려주세요")
+                        }
                     } else {
-                        android.util.Log.e("HomeRoutinesVM", "loadTodayRoutines failed", e)
+                        android.util.Log.e(TAG, "loadTodayRoutines failed", e)
                     }
+                    
+                    // 서버 오류 시 빈 리스트로 설정 (UI가 깨지지 않도록)
                     _serverRoutines.value = emptyList()
+                    
+                    // TODO: 향후 로컬 캐시 데이터를 사용하도록 개선
+                    Log.d(TAG, "💡 서버 오류로 인해 빈 리스트로 설정됨. 서버 상태를 확인해주세요.")
                 }
         }
     }
@@ -95,7 +106,7 @@ class HomeRoutinesViewModel @Inject constructor(
     // 루틴 상세 정보 로드 (스텝 포함)
     fun loadRoutineDetail(routineId: String) = viewModelScope.launch {
         Log.d(TAG, "🔄 loadRoutineDetail 시작: routineId=$routineId")
-        
+
         runCatching { repo.getRoutineDetail(routineId) }
             .onSuccess { detail ->
                 Log.d(TAG, "✅ loadRoutineDetail 성공!")
@@ -105,32 +116,32 @@ class HomeRoutinesViewModel @Inject constructor(
                 Log.d(TAG, "   - 태그: ${detail.tags}")
                 Log.d(TAG, "   - 스텝 개수: ${detail.steps.size}")
                 Log.d(TAG, "   - 작성자: ${detail.author?.name ?: detail.authorName ?: "없음"}")
-                
+
                 detail.steps.forEachIndexed { index, step ->
                     Log.d(TAG, "   - 스텝 ${index + 1}: ${step.name} (${step.duration})")
                     Log.d(TAG, "     설명: ${step.description ?: "없음"}")
                 }
                 _routineDetail.value = detail
                 Log.d(TAG, "✅ _routineDetail StateFlow 업데이트 완료")
-                
+
                 // 스텝 정보를 SharedRoutineViewModel에 직접 설정
                 Log.d(TAG, "🔄 스텝 정보를 SharedRoutineViewModel에 설정")
                 setStepsToSharedViewModel(detail.steps)
             }
             .onFailure { e ->
                 Log.e(TAG, "❌ loadRoutineDetail 실패: routineId=$routineId", e)
-                
+
                 // HTTP 오류인 경우 응답 본문 출력
                 if (e is retrofit2.HttpException) {
                     val response = e.response()
                     val errorBody = response?.errorBody()?.string()
                     Log.e(TAG, "HTTP ${response?.code()} 응답: $errorBody")
                 }
-                
+
                 _routineDetail.value = null
             }
     }
-    
+
     // 스텝 정보를 SharedRoutineViewModel에 설정
     private fun setStepsToSharedViewModel(steps: List<com.konkuk.moru.data.dto.response.RoutineStepResponse>) {
         Log.d(TAG, "🔄 setStepsToSharedViewModel 호출: ${steps.size}개 스텝")
@@ -140,12 +151,12 @@ class HomeRoutinesViewModel @Inject constructor(
             Log.d(TAG, "   - 스텝 ${index + 1}: ${step.name} (${step.duration})")
         }
     }
-    
+
     // SharedRoutineViewModel 인스턴스를 받아서 스텝 설정
     fun setSharedRoutineViewModel(sharedViewModel: com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel) {
         _sharedViewModel = sharedViewModel
     }
-    
+
     private var _sharedViewModel: com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel? = null
 
     // 로컬 스케줄 정보와 병합
@@ -153,11 +164,11 @@ class HomeRoutinesViewModel @Inject constructor(
         try {
             val localSchedules = SchedulePreference.getSchedules(context)
             Log.d(TAG, "로컬 스케줄 정보 로드: ${localSchedules.size}개")
-            
+
             localSchedules.forEach { schedule ->
                 Log.d(TAG, "루틴 ${schedule.routineId}: ${schedule.scheduledDays}, ${schedule.scheduledTime}")
             }
-            
+
             // 서버 루틴과 로컬 스케줄 정보 병합
             val mergedRoutines = _serverRoutines.value.map { routine ->
                 val localSchedule = localSchedules.find { it.routineId == routine.routineId }
@@ -170,10 +181,10 @@ class HomeRoutinesViewModel @Inject constructor(
                     routine
                 }
             }
-            
+
             _scheduledRoutines.value = mergedRoutines
             Log.d(TAG, "스케줄 정보 병합 완료: ${mergedRoutines.size}개")
-            
+
         } catch (e: Exception) {
             Log.e(TAG, "로컬 스케줄 정보 병합 실패", e)
             _scheduledRoutines.value = _serverRoutines.value

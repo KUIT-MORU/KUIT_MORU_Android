@@ -15,6 +15,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.Divider
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
@@ -98,7 +101,7 @@ private fun buildWeeklyMap(routines: List<Routine>): Pair<Map<Int, List<String>>
                 // 🔸 요일 세팅된 루틴만 주간에 배치
                 val hasScheduledDays = r.scheduledDays.isNotEmpty()
                 val containsDayOfWeek = r.scheduledDays.contains(date.dayOfWeek)
-                
+
                 // 임시 해결책: scheduledDays가 비어있으면 오늘 요일로 설정
                 val shouldShow = if (!hasScheduledDays) {
                     // scheduledDays가 비어있으면 오늘 요일인 경우에만 표시
@@ -106,7 +109,7 @@ private fun buildWeeklyMap(routines: List<Routine>): Pair<Map<Int, List<String>>
                 } else {
                     containsDayOfWeek
                 }
-                
+
                 Log.d("HomeScreen", "날짜 ${date.dayOfMonth}(${date.dayOfWeek}): ${r.title} - scheduledDays=${r.scheduledDays}, hasScheduledDays=$hasScheduledDays, containsDayOfWeek=$containsDayOfWeek, shouldShow=$shouldShow")
                 shouldShow
             }
@@ -135,12 +138,12 @@ fun HomeScreen(
     Log.d("HomeScreen", "📱 앱이 실행되고 있습니다!")
     Log.d("HomeScreen", "🔍 navController: $navController")
     Log.d("HomeScreen", "🔍 sharedViewModel: $sharedViewModel")
-    
+
     val userVm: UserViewModel = hiltViewModel()
     val nickname by userVm.nickname.collectAsState()
-    LaunchedEffect(Unit) { 
+    LaunchedEffect(Unit) {
         Log.d("HomeScreen", "🔄 userVm.loadMe() 호출")
-        userVm.loadMe() 
+        userVm.loadMe()
     }
 
     // Context 가져오기
@@ -202,7 +205,7 @@ fun HomeScreen(
         if (serverRoutines.isNotEmpty()) {
             Log.d("HomeScreen", "서버 데이터 로드 완료, 로컬 스케줄 정보와 병합 시작")
             homeVm.mergeWithLocalSchedule(context)
-            
+
             // 테스트용: 임시로 스케줄 데이터 설정 (실제로는 시계 아이콘을 통해 설정)
             if (serverRoutines.isNotEmpty()) {
                 val firstRoutine = serverRoutines.first()
@@ -213,7 +216,7 @@ fun HomeScreen(
                 )
                 SchedulePreference.saveSchedule(context, testSchedule)
                 Log.d("HomeScreen", "테스트 스케줄 설정: ${firstRoutine.title} - ${testSchedule.scheduledDays}, ${testSchedule.scheduledTime}")
-                
+
                 // 스케줄 정보 다시 병합
                 homeVm.mergeWithLocalSchedule(context)
             }
@@ -239,14 +242,14 @@ fun HomeScreen(
             Log.d("HomeScreen", "🔄 네비게이션 트리거 초기화 완료")
         }
     }
-    
+
     // routineDetail이 로드되면 스텝 정보를 SharedRoutineViewModel에 설정
     LaunchedEffect(homeVm.routineDetail.value) {
         val detail = homeVm.routineDetail.value
         if (detail != null) {
             Log.d("HomeScreen", "✅ LaunchedEffect(routineDetail): 스텝 정보 설정")
             sharedViewModel.setStepsFromServer(detail.steps)
-            
+
             // category도 함께 설정
             if (detail.category?.isNotBlank() == true && detail.category != "없음") {
                 Log.d("HomeScreen", "🔄 routineDetail에서 category 설정: ${detail.category}")
@@ -365,7 +368,9 @@ fun HomeScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(innerPadding),
+            contentPadding = PaddingValues(bottom = 100.dp), // 하단 여유 공간 추가
+            verticalArrangement = Arrangement.spacedBy(8.dp) // 아이템 간 간격 추가
         ) {
             item {
                 //로고와 MORU
@@ -504,11 +509,11 @@ fun HomeScreen(
                                     // category가 "없음"이면 "집중"으로 설정 (스텝이 있으므로)
                                     val actualCategory = if (routine.category.isBlank() || routine.category == "없음") "집중" else routine.category
                                     sharedViewModel.setRoutineInfo(title = routine.title, category = actualCategory, tags = routine.tags)
-                                    
+
                                     // 루틴 상세 정보 로드 (스텝 포함) 후 SharedRoutineViewModel에 직접 설정
                                     Log.d("HomeScreen", "🔄 loadRoutineDetail 호출")
                                     homeVm.loadRoutineDetail(routine.routineId)
-                                    
+
                                     // 네비게이션 트리거 설정
                                     Log.d("HomeScreen", "🔄 네비게이션 트리거 설정")
                                     homeEntry.savedStateHandle["navigateToRoutineFocus"] = routine.routineId
@@ -572,32 +577,32 @@ fun HomeScreen(
                         val context = LocalContext.current
                         val list = myRoutines.sortedForList()   // 이미 정렬된 리스트
 
-                                                    RoutineCardList(
-                                routines = list,
-                                onRoutineClick = { routineId: String ->
-                                    Log.d("HomeScreen", "카드 클릭: id=$routineId")
-                                    
-                                    // 정렬된 리스트에서 클릭된 루틴 찾기
-                                    val routine = list.firstOrNull { it.routineId == routineId }
-                                    if (routine == null) {
-                                        Log.w("HomeScreen", "루틴 정보를 찾을 수 없습니다")
-                                        return@RoutineCardList
-                                    }
-                                    
-                                    // 기존 Int API와 호환
-                                    sharedViewModel.setSelectedRoutineId(routine.routineId.toStableIntId())
-                                    sharedViewModel.setRoutineInfo(
-                                        title = routine.title,
-                                        category = routine.category,
-                                        tags = routine.tags
-                                    )
-                                    
-                                    // 루틴 상세 정보 로드 (스텝 포함) 후 네비게이션
-                                    homeVm.loadRoutineDetail(routine.routineId)
-                                    
-                                    // 네비게이션 트리거 설정
-                                    homeEntry.savedStateHandle["navigateToRoutineFocus"] = routine.routineId
-                                },
+                        RoutineCardList(
+                            routines = list,
+                            onRoutineClick = { routineId: String ->
+                                Log.d("HomeScreen", "카드 클릭: id=$routineId")
+
+                                // 정렬된 리스트에서 클릭된 루틴 찾기
+                                val routine = list.firstOrNull { it.routineId == routineId }
+                                if (routine == null) {
+                                    Log.w("HomeScreen", "루틴 정보를 찾을 수 없습니다")
+                                    return@RoutineCardList
+                                }
+
+                                // 기존 Int API와 호환
+                                sharedViewModel.setSelectedRoutineId(routine.routineId.toStableIntId())
+                                sharedViewModel.setRoutineInfo(
+                                    title = routine.title,
+                                    category = routine.category,
+                                    tags = routine.tags
+                                )
+
+                                // 루틴 상세 정보 로드 (스텝 포함) 후 네비게이션
+                                homeVm.loadRoutineDetail(routine.routineId)
+
+                                // 네비게이션 트리거 설정
+                                homeEntry.savedStateHandle["navigateToRoutineFocus"] = routine.routineId
+                            },
                             runningHighlightId = highlightId?.takeIf { id ->
                                 list.any { it.routineId.toStableIntId() == id }
                             }
@@ -606,6 +611,8 @@ fun HomeScreen(
                         Log.d("HomeScreen", "내 루틴 목록이 비어있음")
                     }
 
+                    // 하단 여유 공간 추가 (스크롤이 제대로 작동하도록)
+                    Spacer(modifier = Modifier.height(120.dp))
                 }
             }
         }

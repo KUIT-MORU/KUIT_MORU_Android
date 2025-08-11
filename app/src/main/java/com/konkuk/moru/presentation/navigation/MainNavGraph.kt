@@ -121,14 +121,14 @@ fun MainNavGraph(
                     Log.d("MainNavGraph", "   - 총 소요시간: ${totalDuration}분")
                     Log.d("MainNavGraph", "   - 제목: $title")
                     Log.d("MainNavGraph", "   - 태그: $hashTag")
-                    
+
                     // 루틴 데이터 설정
                     sharedViewModel.setSelectedSteps(selectedSteps)
                     sharedViewModel.setRoutineTitle(title)
                     sharedViewModel.setRoutineTags(hashTag.split(" ").map { it.removePrefix("#") })
                     sharedViewModel.setRoutineCategory(category)
                     sharedViewModel.setTotalDuration(totalDuration)
-                    
+
                     // 실행 화면 이동
                     if (category == "집중") {
                         Log.d("MainNavGraph", "🎯 집중 루틴으로 이동: RoutineFocus")
