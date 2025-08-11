@@ -1,4 +1,3 @@
-// presentation/onboarding/page/PermissionPage.kt
 package com.konkuk.moru.presentation.onboarding.page
 
 import androidx.compose.foundation.Image
