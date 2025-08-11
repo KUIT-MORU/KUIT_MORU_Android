@@ -78,11 +78,16 @@ private fun emptyRoutine(routineId: String) = Routine(
 
 // SimilarRoutineItemDto -> UI용 SimilarRoutine
 fun SimilarRoutineItemDto.toUiModel(): SimilarRoutine {
+    val picked = when {
+        !tag.isNullOrBlank() -> tag
+        !tags.isNullOrEmpty() -> tags.first()
+        else -> null
+    }
     return SimilarRoutine(
         id = id,
         imageUrl = imageUrl,
         name = title,
-        tag = (tags?.firstOrNull())?.let { "#$it" } ?: "#루틴"
+        tag = picked?.let { "#$it" } ?: "#루틴"
     )
 }
 

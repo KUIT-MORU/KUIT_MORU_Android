@@ -1,11 +1,10 @@
 package com.konkuk.moru.presentation.routinefeed.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.konkuk.moru.data.model.Routine
-import com.konkuk.moru.data.model.RoutineCardDomain
+import com.konkuk.moru.core.datastore.RoutineSyncBus
+import com.konkuk.moru.data.mapper.toUiRoutine
 import com.konkuk.moru.domain.repository.SocialRepository
 import com.konkuk.moru.domain.repository.UserRepository
 import com.konkuk.moru.presentation.routinefeed.data.UserProfileUiState
@@ -13,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -75,6 +75,44 @@ class UserProfileViewModel @Inject constructor(
 
             // ✅ 여기서 실제 초기 팔로잉 여부를 보정
             refreshInitialFollowing()
+
+            viewModelScope.launch {
+                RoutineSyncBus.events.collectLatest { e ->
+                    when (e) {
+                        is RoutineSyncBus.Event.Like -> {
+                            _uiState.update { s ->
+                                s.copy(
+                                    runningRoutines = s.runningRoutines.map { r ->
+                                        if (r.routineId == e.routineId) r.copy(isLiked = e.isLiked, likes = e.likeCount) else r
+                                    },
+                                    userRoutines = s.userRoutines.map { r ->
+                                        if (r.routineId == e.routineId) r.copy(isLiked = e.isLiked, likes = e.likeCount) else r
+                                    }
+                                )
+                            }
+                        }
+                        is RoutineSyncBus.Event.Scrap -> {
+                            _uiState.update { s ->
+                                s.copy(
+                                    runningRoutines = s.runningRoutines.map { r ->
+                                        if (r.routineId == e.routineId) r.copy(isBookmarked = e.isScrapped) else r
+                                    },
+                                    userRoutines = s.userRoutines.map { r ->
+                                        if (r.routineId == e.routineId) r.copy(isBookmarked = e.isScrapped) else r
+                                    }
+                                )
+                            }
+                        }
+                        is RoutineSyncBus.Event.Follow -> {
+                            // 내 프로필이 아니라면, 이 프로필의 follow 상태/팔로워수도 동기화
+                            val targetId = _uiState.value.userId
+                            if (targetId != null && targetId == e.userId) {
+                                applyExternalFollow(e.isFollowing) // [기존 함수 재사용]
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -103,7 +141,6 @@ class UserProfileViewModel @Inject constructor(
         val found = page?.content?.any { it.userId == targetId } == true
         _uiState.update { it.copy(isFollowing = found) }
     }
-
 
 
     fun toggleFollow() {
@@ -183,38 +220,3 @@ class UserProfileViewModel @Inject constructor(
 
 }
 
-/**
- * Domain → UI 모델 매핑
- * UI에서 사용하는 Routine(피드 카드용)으로 가볍게 채워 넣습니다.
- * authorId는 프로필 주인 id로 세팅(상세로 넘어갈 때 작성자 프로필 이동 등에 사용 가능)
- */
-private fun RoutineCardDomain.toUiRoutine(
-    profileOwnerId: String,
-    authorName: String,
-    authorProfileUrl: String?
-): Routine =
-    Routine(
-        routineId = id,
-        title = title,
-        imageUrl = imageUrl,
-        tags = tags,
-        likes = likeCount,
-        isRunning = isRunning,
-
-        // UI에서 필요하지만 서버 카드 응답에 없는 값들은 기본값으로
-        description = "",
-        category = "일상",
-        authorId = profileOwnerId ?: "", // 프로필 화면 주인의 id
-        authorName = authorName,
-        authorProfileUrl = authorProfileUrl,
-        isLiked = false,
-        isBookmarked = false,
-
-        isChecked = false,
-        scheduledTime = null,
-        scheduledDays = emptySet(),
-        isAlarmEnabled = false,
-        steps = emptyList(),
-        similarRoutines = emptyList(),
-        usedApps = emptyList()
-    )

@@ -2,6 +2,7 @@ package com.konkuk.moru.presentation.routinefeed.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.konkuk.moru.core.datastore.RoutineSyncBus
 import com.konkuk.moru.data.mapper.toRoutineModel
 import com.konkuk.moru.data.mapper.toUiModel
 import com.konkuk.moru.data.model.DummyData
@@ -38,7 +39,36 @@ class RoutineDetailViewModel @Inject constructor(
         _uiState.update { it.copy(routine = r, isLoading = true, errorMessage = null) }
     }
 
+    // [추가] 서버값과 낙관값 병합 유틸
+    private fun mergeLikesAfterToggle(
+        beforeLikes: Int,
+        wantLike: Boolean,
+        serverLikes: Int
+    ): Int {
+        // 우리가 기대한 낙관값
+        val expected = (beforeLikes + if (wantLike) 1 else -1).coerceAtLeast(0)
+        // 서버가 아직 반영 전이면(좋아요 직후 서버값이 더 작거나 / 취소 직후 서버값이 더 큰 경우) 낙관값 유지
+        return when {
+            wantLike  && serverLikes < expected -> expected
+            !wantLike && serverLikes > expected -> expected
+            else -> serverLikes
+        }
+    }
 
+    // [추가] 초기 진입 시(로드 시) 피드에서 들고 온 값과 서버값 병합
+    private fun mergeLikesOnLoad(prevLikes: Int?, serverLikes: Int?): Int {
+        // prevLikes가 존재하고, 서버가 늦게 반영되어 "돌아가는" 경우를 막기 위한 간단한 규칙:
+        // - 서버값이 prev보다 작아졌다면(좋아요 직후) prev 유지
+        // - 서버값이 prev보다 커졌다면(좋아요 취소 직후) prev 유지
+        // - 둘 다 아니면 서버값 채택
+        if (prevLikes == null) return serverLikes ?: 0
+        if (serverLikes == null) return prevLikes
+        return when {
+            serverLikes < prevLikes -> prevLikes
+            serverLikes > prevLikes -> prevLikes
+            else -> serverLikes
+        }
+    }
 
     fun toggleLikeSync() {
         val current = _uiState.value
@@ -47,28 +77,114 @@ class RoutineDetailViewModel @Inject constructor(
 
         val wantLike = !r.isLiked
 
-        // [추가] 1) 낙관적 업데이트
+        // 1) 낙관적 업데이트
         val before = _uiState.value
-        val bumpedLikes = (r.likes + if (wantLike) 1 else -1).coerceAtLeast(0) // [추가]
-        _uiState.update { it.copy(routine = r.copy(isLiked = wantLike, likes = bumpedLikes), isLiking = true, errorMessage = null) } // [추가]
+        val bumpedLikes = (r.likes + if (wantLike) 1 else -1).coerceAtLeast(0)
+        _uiState.update {
+            it.copy(routine = r.copy(isLiked = wantLike, likes = bumpedLikes), isLiking = true, errorMessage = null)
+        }
 
+        // 2) 서버 반영 + 재조회
         viewModelScope.launch {
             runCatching {
                 if (wantLike) repository.addLike(r.routineId) else repository.removeLike(r.routineId)
-                repository.getRoutineDetail(r.routineId) // 서버 최신 재조회
+                repository.getRoutineDetail(r.routineId)
             }.onSuccess { fresh ->
-                _uiState.update {
-                    it.copy(
-                        routine = fresh.toRoutineModel(prev = it.routine), // [유지] 서버 값으로 동기화
-                        isLiking = false
+                val serverModel = fresh.toRoutineModel(prev = _uiState.value.routine)
+                // [변경] 서버값과 낙관값 병합
+                val finalLikes = mergeLikesAfterToggle(
+                    beforeLikes = r.likes,
+                    wantLike = wantLike,
+                    serverLikes = serverModel.likes
+                )
+                val finalModel = serverModel.copy(likes = finalLikes)
+
+                _uiState.update { it.copy(routine = finalModel, isLiking = false) }
+
+                // [유지/보강] 다른 화면 동기화 (병합된 최종값 발행)
+                RoutineSyncBus.publish(
+                    RoutineSyncBus.Event.Like(
+                        routineId = finalModel.routineId,
+                        isLiked = finalModel.isLiked,
+                        likeCount = finalModel.likes
                     )
-                }
+                )
             }.onFailure { e ->
-                // [추가] 실패 시 롤백
                 _uiState.value = before.copy(isLiking = false, errorMessage = e.message)
             }
         }
     }
+
+    fun loadRoutine(routineId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            runCatching { repository.getRoutineDetail(routineId) }
+                .onSuccess { dto ->
+                    val prev = _uiState.value.routine // 피드에서 전달받은 pre-selected 값(있으면)
+                    val mapped = dto.toRoutineModel(prev = prev)
+                    // [변경] 로드 시에도 prev.likes와 서버 likes를 병합해서 "되돌림" 방지
+                    val stitchedLikes = mergeLikesOnLoad(prevLikes = prev?.likes, serverLikes = mapped.likes)
+                    val final = mapped.copy(likes = stitchedLikes)
+
+                    _uiState.update {
+                        it.copy(
+                            routine = final,
+                            similarRoutines = dto.similarRoutines?.map { it.toUiModel() } ?: emptyList(),
+                            canBeAddedToMyRoutines = !dto.isOwner,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    }
+
+                    // [추가] 최종값을 한 번 더 브로드캐스트 → 피드와 즉시 일치
+                    RoutineSyncBus.publish(
+                        RoutineSyncBus.Event.Like(
+                            routineId = final.routineId,
+                            isLiked = final.isLiked,
+                            likeCount = final.likes
+                        )
+                    )
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
+                }
+        }
+    }
+
+    /*fun toggleLikeSync() {
+        val current = _uiState.value
+        val r = current.routine ?: return
+        if (current.isLiking || current.isLoading) return
+
+        val wantLike = !r.isLiked
+
+        val before = _uiState.value
+        val bumpedLikes = (r.likes + if (wantLike) 1 else -1).coerceAtLeast(0)
+        _uiState.update {
+            it.copy(routine = r.copy(isLiked = wantLike, likes = bumpedLikes), isLiking = true, errorMessage = null)
+        }
+
+        viewModelScope.launch {
+            runCatching {
+                if (wantLike) repository.addLike(r.routineId) else repository.removeLike(r.routineId)
+                repository.getRoutineDetail(r.routineId) // [유지] 서버 최신 재조회
+            }.onSuccess { fresh ->
+                val synced = fresh.toRoutineModel(prev = _uiState.value.routine)
+                _uiState.update { it.copy(routine = synced, isLiking = false) }
+
+                // [추가] 다른 화면 동기화: 서버값으로 발행(정확도 ↑)
+                RoutineSyncBus.publish(
+                    RoutineSyncBus.Event.Like(
+                        routineId = synced.routineId,
+                        isLiked = synced.isLiked,
+                        likeCount = synced.likes
+                    )
+                )
+            }.onFailure { e ->
+                _uiState.value = before.copy(isLiking = false, errorMessage = e.message)
+            }
+        }
+    }*/
 
     fun toggleScrapSync() {
         val current = _uiState.value
@@ -77,30 +193,32 @@ class RoutineDetailViewModel @Inject constructor(
 
         val wantScrap = !r.isBookmarked
 
-        // [추가] 1) 낙관적 업데이트
         val before = _uiState.value
-        _uiState.update { it.copy(routine = r.copy(isBookmarked = wantScrap), isScrapping = true, errorMessage = null) } // [추가]
+        _uiState.update { it.copy(routine = r.copy(isBookmarked = wantScrap), isScrapping = true, errorMessage = null) }
 
         viewModelScope.launch {
             runCatching {
                 if (wantScrap) repository.addScrap(r.routineId) else repository.removeScrap(r.routineId)
                 repository.getRoutineDetail(r.routineId)
             }.onSuccess { fresh ->
-                _uiState.update {
-                    it.copy(
-                        routine = fresh.toRoutineModel(prev = it.routine),
-                        isScrapping = false
+                val synced = fresh.toRoutineModel(prev = _uiState.value.routine)
+                _uiState.update { it.copy(routine = synced, isScrapping = false) }
+
+                // [추가]
+                RoutineSyncBus.publish(
+                    RoutineSyncBus.Event.Scrap(
+                        routineId = synced.routineId,
+                        isScrapped = synced.isBookmarked
                     )
-                }
+                )
             }.onFailure { e ->
-                // [추가] 실패 시 롤백
                 _uiState.value = before.copy(isScrapping = false, errorMessage = e.message)
             }
         }
     }
 
 
-    fun loadRoutine(routineId: String) {
+    /*fun loadRoutine(routineId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             runCatching {
@@ -123,7 +241,7 @@ class RoutineDetailViewModel @Inject constructor(
                 }
             }
         }
-    }
+    }*/
 
     // [핵심] '내 루틴으로 복사' 기능을 구현하는 함수
     fun copyRoutineToMyList() {

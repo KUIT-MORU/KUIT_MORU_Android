@@ -3,14 +3,15 @@ package com.konkuk.moru.presentation.routinefeed.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.konkuk.moru.core.datastore.RoutineSyncBus
 import com.konkuk.moru.data.mapper.toRoutineModel
-import com.konkuk.moru.domain.repository.AuthRepository
 import com.konkuk.moru.domain.repository.RoutineFeedRepository
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedSectionModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -33,6 +34,47 @@ class RoutineFeedViewModel @Inject constructor(
     init {
         loadLiveUsers()
         loadRoutineFeed()
+
+        // [추가] 다른 화면에서 발생한 변경 사항을 피드에 반영
+        viewModelScope.launch {
+            RoutineSyncBus.events.collectLatest { e ->
+                when (e) {
+                    is RoutineSyncBus.Event.Like -> {
+                        _uiState.update { state ->
+                            state.copy(
+                                routineSections = state.routineSections.map { section ->
+                                    section.copy(
+                                        routines = section.routines.map { r ->
+                                            if (r.routineId == e.routineId)
+                                                r.copy(isLiked = e.isLiked, likes = e.likeCount)
+                                            else r
+                                        }
+                                    )
+                                }
+                            )
+                        }
+                    }
+
+                    is RoutineSyncBus.Event.Scrap -> {
+                        _uiState.update { state ->
+                            state.copy(
+                                routineSections = state.routineSections.map { section ->
+                                    section.copy(
+                                        routines = section.routines.map { r ->
+                                            if (r.routineId == e.routineId)
+                                                r.copy(isBookmarked = e.isScrapped)
+                                            else r
+                                        }
+                                    )
+                                }
+                            )
+                        }
+                    }
+
+                    else -> Unit
+                }
+            }
+        }
     }
 
     private fun loadLiveUsers() {
@@ -125,31 +167,7 @@ class RoutineFeedViewModel @Inject constructor(
         _uiState.update { it.copy(hasNotification = false) }
     }
 
-    /*fun toggleLike(routineId: String) {
-        val sections = _uiState.value.routineSections
 
-        // 현재 화면에 있는 모든 루틴 목록에서 ID가 일치하는 루틴을 찾습니다.
-        val updatedSections = sections.map { section ->
-            section.copy(
-                routines = section.routines.map { routine ->
-                    if (routine.routineId == routineId) {
-                        // ID가 일치하면, isLiked 상태를 뒤집고 likes 수를 조절합니다.
-                        val newLikedState = !routine.isLiked
-                        val newLikeCount =
-                            if (newLikedState) routine.likes + 1 else routine.likes - 1
-
-                        routine.copy(isLiked = newLikedState, likes = newLikeCount)
-                    } else {
-                        routine
-                    }
-                }
-            )
-        }
-
-        // 새로운 루틴 목록으로 UI State를 업데이트합니다.
-        // Compose는 State가 변경된 것을 감지하고 화면을 자동으로 다시 그립니다.
-        _uiState.update { it.copy(routineSections = updatedSections) }
-    }*/
 
     fun toggleLike(routineId: String) {
         val before = _uiState.value.routineSections
@@ -177,8 +195,13 @@ class RoutineFeedViewModel @Inject constructor(
                 } else {
                     routineFeedRepository.removeLike(routineId)
                 }
+            }.onSuccess {
+                // [추가] 현재 UI 값으로 이벤트 발행 (가벼운 동기화)
+                val latest = _uiState.value.routineSections.firstNotNullOfOrNull { s -> s.routines.find { it.routineId == routineId } }
+                latest?.let {
+                    RoutineSyncBus.publish(RoutineSyncBus.Event.Like(routineId, it.isLiked, it.likes))
+                }
             }.onFailure { e ->
-                // 3) 실패 시 롤백
                 _uiState.update { it.copy(routineSections = before, errorMessage = e.message) }
             }
         }
@@ -209,12 +232,17 @@ class RoutineFeedViewModel @Inject constructor(
             runCatching {
                 val target = after.firstNotNullOfOrNull { s -> s.routines.find { it.routineId == routineId } }
                 if (target?.isBookmarked == true) {
-                    routineFeedRepository.addScrap(routineId)   // [유지]
+                    routineFeedRepository.addScrap(routineId)
                 } else {
-                    routineFeedRepository.removeScrap(routineId) // [유지]
+                    routineFeedRepository.removeScrap(routineId)
+                }
+            }.onSuccess {
+                // [추가]
+                val latest = _uiState.value.routineSections.firstNotNullOfOrNull { s -> s.routines.find { it.routineId == routineId } }
+                latest?.let {
+                    RoutineSyncBus.publish(RoutineSyncBus.Event.Scrap(routineId, it.isBookmarked))
                 }
             }.onFailure { e ->
-                // 3) 실패 시 롤백
                 _uiState.update { it.copy(routineSections = before, errorMessage = e.message) }
             }
         }

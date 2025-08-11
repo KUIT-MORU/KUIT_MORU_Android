@@ -3,6 +3,7 @@ package com.konkuk.moru.presentation.routinefeed.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.konkuk.moru.core.datastore.RoutineSyncBus
 import com.konkuk.moru.data.dto.response.FollowCursorDto
 import com.konkuk.moru.data.mapper.toUi
 import com.konkuk.moru.data.model.DummyData
@@ -105,8 +106,15 @@ class FollowViewModel @Inject constructor(
                 if (wantFollow) socialRepository.follow(clickedUser.id)
                 else socialRepository.unfollow(clickedUser.id)
             }.onSuccess {
-                // ✅ 프로필 화면으로 전달할 결과 이벤트 발행
                 _followResult.tryEmit(clickedUser.id to wantFollow)
+
+                // [추가] 전역 이벤트 발행 → 프로필/피드 동기화
+                RoutineSyncBus.publish(
+                    RoutineSyncBus.Event.Follow(
+                        userId = clickedUser.id,
+                        isFollowing = wantFollow
+                    )
+                )
             }.onFailure {
                 _uiState.value = before
             }
