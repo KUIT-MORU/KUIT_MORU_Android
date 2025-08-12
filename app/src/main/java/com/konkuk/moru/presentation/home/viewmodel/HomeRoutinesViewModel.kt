@@ -87,11 +87,25 @@ class HomeRoutinesViewModel @Inject constructor(
 
     // 전체 루틴 로드
     fun loadMyRoutines(page: Int = 0, size: Int = 100) = viewModelScope.launch {
+        Log.d(TAG, "🔄 loadMyRoutines 호출됨: page=$page, size=$size")
         runCatching { repo.getMyRoutinesToday(page, size) }
             .onSuccess { pageRes ->
-                _myRoutines.value = pageRes.content.map { it.toDomain() }
+                Log.d(TAG, "✅ loadMyRoutines 성공!")
+                Log.d(TAG, "📊 응답 데이터: total=${pageRes.totalElements}, page=${pageRes.number}, size=${pageRes.size}, contentSize=${pageRes.content.size}")
+                
+                val routines = pageRes.content.map { it.toDomain() }
+                Log.d(TAG, "🔄 도메인 변환 완료: ${routines.size}개")
+                
+                // 각 루틴의 상세 정보 로깅
+                routines.forEachIndexed { index, routine ->
+                    Log.d(TAG, "🔍 루틴[$index]: ${routine.title}, category=${routine.category}, scheduledDays=${routine.scheduledDays}, scheduledTime=${routine.scheduledTime}, requiredTime=${routine.requiredTime}")
+                }
+                
+                _myRoutines.value = routines
+                Log.d(TAG, "✅ _myRoutines StateFlow 업데이트 완료")
             }
             .onFailure { e ->
+                Log.e(TAG, "❌ loadMyRoutines 실패!", e)
                 if (e is retrofit2.HttpException) {
                     val code = e.code()
                     val err = e.response()?.errorBody()?.string()
@@ -155,6 +169,17 @@ class HomeRoutinesViewModel @Inject constructor(
     // SharedRoutineViewModel 인스턴스를 받아서 스텝 설정
     fun setSharedRoutineViewModel(sharedViewModel: com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel) {
         _sharedViewModel = sharedViewModel
+    }
+    
+    // 로컬 스케줄 정보 가져오기
+    suspend fun getLocalSchedule(context: Context, routineId: String): com.konkuk.moru.core.datastore.SchedulePreference.ScheduleInfo? {
+        return try {
+            val localSchedules = com.konkuk.moru.core.datastore.SchedulePreference.getSchedules(context)
+            localSchedules.find { it.routineId == routineId }
+        } catch (e: Exception) {
+            Log.e(TAG, "로컬 스케줄 정보 가져오기 실패: routineId=$routineId", e)
+            null
+        }
     }
 
     private var _sharedViewModel: com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel? = null
