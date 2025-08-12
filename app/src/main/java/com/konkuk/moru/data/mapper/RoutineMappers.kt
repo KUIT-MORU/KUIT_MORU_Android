@@ -23,6 +23,8 @@ fun RoutineResponse.toDomain(): Routine =
         isLiked = false,
         isBookmarked = false,
         isRunning = isRunning,             // 서버에서 받은 isRunning 사용
+        isSimple = isSimple,               // 서버에서 받은 isSimple 사용
+        requiredTime = requiredTime ?: "", // 서버에서 받은 requiredTime 사용
         scheduledDays = scheduledDays.mapNotNull { dayString ->
             when (dayString.uppercase()) {
                 "MON" -> DayOfWeek.MONDAY
