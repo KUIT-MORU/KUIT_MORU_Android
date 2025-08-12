@@ -60,7 +60,7 @@ fun RoutineSimpleRunScreen(
     sharedViewModel: SharedRoutineViewModel,
     routineId: Int,
     onDismiss: () -> Unit, // x버튼 눌렀을 시
-    onFinishConfirmed: (Int) -> Unit
+    onFinishConfirmed: (String) -> Unit
 ) {
     // intro에서 받아올 값들
     val routineTitle = sharedViewModel.routineTitle.collectAsStateWithLifecycle<String>().value
@@ -359,7 +359,7 @@ fun RoutineSimpleRunScreen(
                                 interactionSource = remember { MutableInteractionSource() }
                             ) {
                                 showResultPopup = false
-                                onFinishConfirmed(routineId)
+                                onFinishConfirmed(routineId.toString())
                             }
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
