@@ -84,7 +84,7 @@ internal fun TagSearchScreen(
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp)
+                    .padding(start=16.dp,end=16.dp,bottom=80.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 Spacer(modifier = Modifier.height(16.dp))

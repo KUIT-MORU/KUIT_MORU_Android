@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,9 +21,13 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.rememberPagerState
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppBar
 import com.konkuk.moru.presentation.routinefeed.data.FollowUser
 import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowUiState
@@ -106,5 +111,42 @@ fun FollowScreenContent(
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class, ExperimentalPagerApi::class)
+@Preview(showBackground = true)
+@Composable
+private fun FollowScreenContentPreview() {
+    val tabs = listOf("팔로워", "팔로잉")
+    val pagerState = rememberPagerState(initialPage = 0) { tabs.size }
+    val scope = rememberCoroutineScope()
+
+    val me = "me-123"
+    val followers = listOf(
+        FollowUser(id = me, profileImageUrl = "", username = "나", bio = "It's me", isFollowing = false),
+        FollowUser(id = "u-2", profileImageUrl = "", username = "Alice", bio = "안녕", isFollowing = true),
+        FollowUser(id = "u-3", profileImageUrl = "", username = "Bob", bio = "hi", isFollowing = false),
+    )
+    val followings = listOf(
+        FollowUser(id = "u-10", profileImageUrl = "", username = "Carol", bio = "yo", isFollowing = true),
+        FollowUser(id = "u-11", profileImageUrl = "", username = "Dave", bio = "sup", isFollowing = true),
+        FollowUser(id = me, profileImageUrl = "", username = "나", bio = "me again", isFollowing = true),
+    )
+
+    MORUTheme {
+        FollowScreenContent(
+            uiState = FollowUiState(
+                myId = me,               // ✅ 내 아이디
+                followers = followers,
+                followings = followings
+            ),
+            tabs = tabs,
+            pagerState = pagerState,
+            scope = scope,
+            onBackClick = {},
+            onFollowClick = {},
+            onUserClick = {}
+        )
     }
 }

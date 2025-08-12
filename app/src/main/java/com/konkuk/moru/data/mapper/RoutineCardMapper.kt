@@ -2,33 +2,42 @@ package com.konkuk.moru.data.mapper
 
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.model.RoutineCardDomain
+import com.konkuk.moru.core.datastore.SocialMemory
 
 /**
  * Domain → UI 모델 매핑
  * UI에서 사용하는 Routine(피드 카드용)으로 가볍게 채워 넣습니다.
  * authorId는 프로필 주인 id로 세팅(상세로 넘어갈 때 작성자 프로필 이동 등에 사용 가능)
  */
+
+
 fun RoutineCardDomain.toUiRoutine(
     profileOwnerId: String,
     authorName: String,
     authorProfileUrl: String?
-): Routine =
-    Routine(
+): Routine {
+    // [추가] 전역 메모리 조회
+    val mem = SocialMemory.getRoutine(id)
+
+    return Routine(
         routineId = id,
         title = title,
         imageUrl = imageUrl,
         tags = tags,
-        likes = likeCount,
+
+        // [변경] 카드에도 최신 likeCount 반영
+        likes = mem?.likeCount ?: likeCount,
         isRunning = isRunning,
 
-        // UI에서 필요하지만 서버 카드 응답에 없는 값들은 기본값으로
         description = "",
         category = "일상",
-        authorId = profileOwnerId ?: "", // 프로필 화면 주인의 id
+        authorId = profileOwnerId ?: "",
         authorName = authorName,
         authorProfileUrl = authorProfileUrl,
-        isLiked = false,
-        isBookmarked = false,
+
+        // [변경] 초기 상태도 메모리 우선
+        isLiked = mem?.isLiked ?: false,          // ★ 기존: false 고정 → 수정
+        isBookmarked = mem?.isScrapped ?: false,  // ★ 기존: false 고정 → 수정
 
         isChecked = false,
         scheduledTime = null,
@@ -38,3 +47,4 @@ fun RoutineCardDomain.toUiRoutine(
         similarRoutines = emptyList(),
         usedApps = emptyList()
     )
+}

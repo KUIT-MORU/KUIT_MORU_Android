@@ -1,6 +1,7 @@
 package com.konkuk.moru.data.mapper
 
 
+import com.konkuk.moru.core.datastore.SocialMemory
 import com.konkuk.moru.data.dto.response.RoutineDetailResponse
 import com.konkuk.moru.data.model.AppInfo
 import com.konkuk.moru.data.model.Routine
@@ -24,6 +25,15 @@ fun RoutineDetailResponse.toRoutineModel(prev: Routine? = null): Routine {
     val resolvedAuthorName = firstNonBlank(author?.nickname, base.authorName, "알 수 없음") ?: "알 수 없음"
     val resolvedAuthorProfile = firstNonBlank(author?.profileImageUrl, base.authorProfileUrl)
 
+    // [추가] 전역 메모리 오버레이(최신 사용자 동작 우선)
+    val mem = SocialMemory.getRoutine(id)
+
+    val finalLikeCount = mem?.likeCount ?: this.likeCount
+    val finalIsLiked = mem?.isLiked ?: (this.isLiked ?: base.isLiked)
+
+    val finalScrapCount = mem?.scrapCount ?: this.scrapCount
+    val finalIsScrapped = mem?.isScrapped ?: (this.isScrapped ?: base.isBookmarked)
+
     return base.copy(
         routineId = id,
         title = firstNonBlank(title, base.title) ?: "",
@@ -31,13 +41,14 @@ fun RoutineDetailResponse.toRoutineModel(prev: Routine? = null): Routine {
         imageUrl = firstNonBlank(imageUrl, base.imageUrl),
         category = if (isSimple) "간편" else "집중",
         tags = tags.orEmpty().ifEmpty { base.tags },
-        likes = likeCount,
 
-        isLiked = this.isLiked ?: base.isLiked,
-        isBookmarked = this.isScrapped ?: base.isBookmarked,
-        scrapCount = scrapCount,
+        // [변경] 서버값 대신 오버레이 결과 사용
+        likes = finalLikeCount,
+        isLiked = finalIsLiked,
+        isBookmarked = finalIsScrapped,
+        scrapCount = finalScrapCount,
 
-        steps = steps.orEmpty()                                              // [변경]
+        steps = steps.orEmpty()
             .sortedBy { it.stepOrder }
             .map { it.toStepModel() },
         usedApps = apps.orEmpty().map { it.toAppModel() },

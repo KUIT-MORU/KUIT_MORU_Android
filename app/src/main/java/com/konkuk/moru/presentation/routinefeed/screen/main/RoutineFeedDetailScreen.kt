@@ -1,6 +1,7 @@
 package com.konkuk.moru.presentation.routinefeed.screen.main
 
 import RoutineDetailTopAppBar
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -28,6 +30,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.gson.Gson
+import com.konkuk.moru.core.datastore.SocialMemory
 import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.navigation.Route
@@ -80,6 +83,13 @@ fun RoutineDetailScreen(
         return
     }
 
+    val topBarLikeCount = remember(routine.routineId, routine.likes) {
+        SocialMemory.getRoutine(routine.routineId)?.likeCount ?: routine.likes
+    }
+    // [추가] 디버그 로그 (문제 추적 시 유용)
+    LaunchedEffect(topBarLikeCount) {
+        Log.d("RoutineDetailTopAppBar", "likeCount passed=$topBarLikeCount (uiState=${routine.likes})")
+    }
 
     Scaffold(
         containerColor = Color.White,
@@ -146,7 +156,7 @@ fun RoutineDetailScreen(
 
 
             RoutineDetailTopAppBar(
-                likeCount = routine.likes,         // ✅ 항상 서버값
+                likeCount = topBarLikeCount,         // ✅ 항상 서버값
                 isLiked = routine.isLiked,
                 isBookmarked = routine.isBookmarked,
                 onLikeClick = {

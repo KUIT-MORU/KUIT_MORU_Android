@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.konkuk.moru.core.datastore.LikeMemory
 import com.konkuk.moru.core.datastore.RoutineSyncBus
+import com.konkuk.moru.core.datastore.SocialMemory
 import com.konkuk.moru.data.mapper.toRoutineModel
 import com.konkuk.moru.domain.repository.RoutineFeedRepository
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
@@ -173,13 +174,14 @@ class RoutineFeedViewModel @Inject constructor(
     fun toggleLike(routineId: String) {
         val before = _uiState.value.routineSections
 
-        // 1) 낙관적 업데이트 (UI 먼저 반응)
         val after = before.map { section ->
             section.copy(
                 routines = section.routines.map { r ->
                     if (r.routineId == routineId) {
                         val newLiked = !r.isLiked
                         val newCount = (r.likes + if (newLiked) 1 else -1).coerceAtLeast(0)
+                        // [추가] SocialMemory 즉시 반영
+                        SocialMemory.setLike(routineId, newLiked, newCount)
                         r.copy(isLiked = newLiked, likes = newCount)
                     } else r
                 }
@@ -187,23 +189,25 @@ class RoutineFeedViewModel @Inject constructor(
         }
         _uiState.update { it.copy(routineSections = after) }
 
-        // 2) 서버 반영
         viewModelScope.launch {
             runCatching {
                 val target = after.firstNotNullOfOrNull { s -> s.routines.find { it.routineId == routineId } }
-                if (target?.isLiked == true) {
-                    routineFeedRepository.addLike(routineId)
-                } else {
-                    routineFeedRepository.removeLike(routineId)
-                }
+                if (target?.isLiked == true) routineFeedRepository.addLike(routineId)
+                else routineFeedRepository.removeLike(routineId)
             }.onSuccess {
-                // [추가] 현재 UI 값으로 이벤트 발행 (가벼운 동기화)
-                val latest = _uiState.value.routineSections.firstNotNullOfOrNull { s -> s.routines.find { it.routineId == routineId } }
+                val latest = _uiState.value.routineSections
+                    .firstNotNullOfOrNull { s -> s.routines.find { it.routineId == routineId } }
                 latest?.let {
+                    // [유지]
                     RoutineSyncBus.publish(RoutineSyncBus.Event.Like(routineId, it.isLiked, it.likes))
+                    // [선택] 서버 재조회/확정 로직을 추가하고 싶다면 여기서 상세값 가져와 SocialMemory 재확정
                 }
             }.onFailure { e ->
                 _uiState.update { it.copy(routineSections = before, errorMessage = e.message) }
+                // [추가] 메모리 롤백
+                before.flatMap { it.routines }.find { it.routineId == routineId }?.let { rb ->
+                    SocialMemory.setLike(rb.routineId, rb.isLiked, rb.likes)
+                }
             }
         }
     }
@@ -212,39 +216,36 @@ class RoutineFeedViewModel @Inject constructor(
     fun toggleScrap(routineId: String) {
         val before = _uiState.value.routineSections
 
-        // 1) 낙관적 업데이트: isBookmarked만 토글
         val after = before.map { section ->
             section.copy(
                 routines = section.routines.map { r ->
                     if (r.routineId == routineId) {
                         val newScrap = !r.isBookmarked
-                        r.copy(
-                            isBookmarked = newScrap
-                            // scrapCount = ...  // [삭제] 더 이상 건드리지 않음
-                        )
+                        val newScrapCount = (r.scrapCount + if (newScrap) 1 else -1).coerceAtLeast(0)
+                        SocialMemory.setScrap(routineId, newScrap, newScrapCount)
+                        r.copy(isBookmarked = newScrap, scrapCount = newScrapCount)
                     } else r
                 }
             )
         }
         _uiState.update { it.copy(routineSections = after) }
 
-        // 2) 서버 반영
         viewModelScope.launch {
             runCatching {
                 val target = after.firstNotNullOfOrNull { s -> s.routines.find { it.routineId == routineId } }
-                if (target?.isBookmarked == true) {
-                    routineFeedRepository.addScrap(routineId)
-                } else {
-                    routineFeedRepository.removeScrap(routineId)
-                }
+                if (target?.isBookmarked == true) routineFeedRepository.addScrap(routineId)
+                else routineFeedRepository.removeScrap(routineId)
             }.onSuccess {
-                // [추가]
-                val latest = _uiState.value.routineSections.firstNotNullOfOrNull { s -> s.routines.find { it.routineId == routineId } }
+                val latest = _uiState.value.routineSections
+                    .firstNotNullOfOrNull { s -> s.routines.find { it.routineId == routineId } }
                 latest?.let {
                     RoutineSyncBus.publish(RoutineSyncBus.Event.Scrap(routineId, it.isBookmarked))
                 }
             }.onFailure { e ->
                 _uiState.update { it.copy(routineSections = before, errorMessage = e.message) }
+                before.flatMap { it.routines }.find { it.routineId == routineId }?.let { rb ->
+                    SocialMemory.setScrap(rb.routineId, rb.isBookmarked, rb.scrapCount)
+                }
             }
         }
     }
