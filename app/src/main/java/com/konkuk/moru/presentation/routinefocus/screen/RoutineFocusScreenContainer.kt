@@ -11,7 +11,8 @@ fun RoutineFocusScreenContainer(
     focusViewModel: RoutineFocusViewModel,
     sharedViewModel: SharedRoutineViewModel,
     onDismiss: () -> Unit,
-    onFinishConfirmed: (Int) -> Unit
+    onFinishConfirmed: (String) -> Unit,
+    onScreenBlockTrigger: () -> Unit = {}
 ){
     val selectedIdState by sharedViewModel.selectedRoutineId.collectAsState(initial = null)
     val selectedId: Int = selectedIdState ?: 0
