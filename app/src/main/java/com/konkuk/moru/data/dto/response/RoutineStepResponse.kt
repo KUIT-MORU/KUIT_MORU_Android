@@ -12,6 +12,6 @@ data class RoutineStepResponse(
     val order: Int,
     val name: String,
     @SerialName("estimatedTime")
-    val duration: String,
+    val duration: String? = null,
     val description: String? = null
 )
