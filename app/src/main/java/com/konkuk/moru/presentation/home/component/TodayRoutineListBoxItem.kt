@@ -30,6 +30,7 @@ import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 import java.time.DayOfWeek
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -125,8 +126,69 @@ fun TodayRoutineListBoxItem(
                     color = Color(0xFF61646B)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
+                
+                // 설정 시간대~종료 시간대 표시
+                val timeText = if (routine.scheduledTime != null) {
+                    val startTime = routine.scheduledTime
+                    val endTime = if (routine.requiredTime.isNotBlank()) {
+                        try {
+                            val durationMinutes = when {
+                                routine.requiredTime.startsWith("PT") -> {
+                                    val timePart = routine.requiredTime.substring(2)
+                                    when {
+                                        timePart.endsWith("H") -> {
+                                            val hours = timePart.removeSuffix("H").toIntOrNull() ?: 0
+                                            hours * 60
+                                        }
+                                        timePart.endsWith("M") -> {
+                                            timePart.removeSuffix("M").toIntOrNull() ?: 0
+                                        }
+                                        else -> {
+                                            var totalMinutes = 0
+                                            var currentNumber = ""
+                                            for (char in timePart) {
+                                                when (char) {
+                                                    'H' -> {
+                                                        totalMinutes += (currentNumber.toIntOrNull() ?: 0) * 60
+                                                        currentNumber = ""
+                                                    }
+                                                    'M' -> {
+                                                        totalMinutes += currentNumber.toIntOrNull() ?: 0
+                                                        currentNumber = ""
+                                                    }
+                                                    else -> currentNumber += char
+                                                }
+                                            }
+                                            totalMinutes
+                                        }
+                                    }
+                                }
+                                else -> {
+                                    val parts = routine.requiredTime.split(":")
+                                    val minutes = parts.getOrNull(0)?.toIntOrNull() ?: 0
+                                    val seconds = parts.getOrNull(1)?.toIntOrNull() ?: 0
+                                    minutes + (seconds / 60)
+                                }
+                            }
+                            startTime.plusMinutes(durationMinutes.toLong())
+                        } catch (e: Exception) {
+                            null
+                        }
+                    } else {
+                        null
+                    }
+                    
+                    if (endTime != null) {
+                        "${startTime.format(DateTimeFormatter.ofPattern("HH:mm"))}~${endTime.format(DateTimeFormatter.ofPattern("HH:mm"))}"
+                    } else {
+                        startTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+                    }
+                } else {
+                    "시간 미설정"
+                }
+                
                 Text(
-                    text = routine.scheduledTime.toString(),
+                    text = timeText,
                     style = typography.title_B_12,
                     color = Color(0xFF61646B)
                 )
