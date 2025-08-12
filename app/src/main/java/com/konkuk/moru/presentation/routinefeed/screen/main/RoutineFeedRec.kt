@@ -77,14 +77,6 @@ fun RoutineFeedRec(
                     likeCount = currentLikeCount,
                     isLiked = liked,
                     showCheckbox = false,
-                    onLikeClick = {
-                        val newState = !liked
-                        likeStates =
-                            likeStates.toMutableMap().apply { this[r.routineId] = newState }
-                        likeCounts = likeCounts.toMutableMap().apply {
-                            this[r.routineId] = currentLikeCount + if (newState) 1 else -1
-                        }
-                    },
                     onItemClick = { onRoutineClick(r.routineId) }
                 )
             }

@@ -59,7 +59,7 @@ fun RoutineCardWithImage(
     tags: List<String>,
     likeCount: Int,
     isLiked: Boolean,
-    onLikeClick: () -> Unit,
+    //onLikeClick: () -> Unit,
     onClick: () -> Unit,
 ) {
     Column(
@@ -101,12 +101,12 @@ fun RoutineCardWithImage(
         Spacer(modifier = Modifier.height(3.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.clickable { onLikeClick() }
+            //modifier = Modifier.clickable { onLikeClick() }
         ) {
             Icon(
-                imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                imageVector = Icons.Outlined.FavoriteBorder,
                 contentDescription = "좋아요",
-                tint = if (isLiked) Color.Red else Color.Gray,
+                tint =  Color.Gray,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
@@ -185,16 +185,6 @@ fun RoutineListWithImageScreen() {
                             // TODO: 상세 화면으로 이동하는 로직 구현
                             println("${routine.name} 카드 클릭됨!")
                         },
-                        onLikeClick = {
-                            // 로컬 UI 상태를 즉시 업데이트 (Optimistic UI)
-                            val newLikeStatus = !isLiked
-                            likedStates[routine.id] = newLikeStatus
-                            likeCounts[routine.id] =
-                                if (newLikeStatus) currentLikeCount + 1 else currentLikeCount - 1
-
-                            // TODO: ViewModel을 통해 서버에 API 요청을 보내는 로직 구현
-                            println("서버로 '${routine.name}' 좋아요 상태($newLikeStatus) 전송 요청")
-                        }
                     )
                 }
             }

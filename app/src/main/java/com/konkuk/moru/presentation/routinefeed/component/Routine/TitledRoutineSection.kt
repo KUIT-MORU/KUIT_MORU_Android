@@ -37,7 +37,9 @@ fun TitledRoutineSection(
     onLikeClick: (String) -> Unit, // ✅ (String, Boolean) -> (String) 으로 변경
     onMoreClick: (String) -> Unit,
 ) {
-    Column(modifier = modifier.fillMaxWidth().padding(vertical = 12.dp)) {
+    Column(modifier = modifier
+        .fillMaxWidth()
+        .padding(vertical = 12.dp)) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -65,7 +67,6 @@ fun TitledRoutineSection(
                     tags = routine.tags,
                     likeCount = routine.likes, // ✅ routine 객체의 likes 값을 직접 사용
                     isLiked = routine.isLiked, // ✅ routine 객체의 isLiked 값을 직접 사용
-                    onLikeClick = { onLikeClick(routine.routineId) }, // ✅ routineId만 전달
                     onClick = { onRoutineClick(routine.routineId) }
                 )
             }

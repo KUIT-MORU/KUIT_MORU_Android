@@ -125,7 +125,6 @@ internal fun RoutineNameResultScreen(
                     tags = routine.tags,
                     likeCount = routine.likes,
                     isLiked = routine.isLiked,
-                    onLikeClick = { /* 좋아요 로직 */ },
                     onItemClick = { onRoutineClick(routine.routineId) }
                 )
                 Spacer(modifier = Modifier.height(8.dp))

@@ -220,7 +220,7 @@ fun MainNavGraph(
             if (routineId != null) {
                 RoutineDetailScreen(
                     routineId = routineId,
-                    onBackClick = { navController.popBackStack() },
+                    onBackClick = { navController.navigateUpOrHome() },
                     navController = navController
                 )
             } else {
@@ -247,31 +247,11 @@ fun MainNavGraph(
             }
 
 
-            /*val routinesToShow = when {
-                title.startsWith("#") -> {
-                    val tags = title.removePrefix("#").split("#").filter { it.isNotEmpty() }
-                    feedRoutines.filter { routine ->
-                        tags.all { tagToFind ->
-                            routine.tags.contains(
-                                tagToFind
-                            )
-                        }
-                    }
-                }
-
-                title == "지금 가장 핫한 루틴은?" -> feedRoutines.filter { it.likes > 70 }
-                title == "MORU님과 딱 맞는 루틴" -> feedRoutines.filter { it.authorName == "MORU" }
-                title == "이 루틴과 비슷한 루틴" -> {
-                    feedRoutines.filter { it.tags.contains("운동") || it.tags.contains("명상") }
-                }
-
-                else -> emptyList()
-            }*/
 
             RoutineFeedRec(
                 title = title,
                 routines = routinesToShow,
-                onBack = { navController.popBackStack() },
+                onBack = { navController.navigateUpOrHome() },
                 onRoutineClick = { routineId ->
                     routinesToShow.firstOrNull { it.routineId == routineId }?.let { selected ->
                         navController.currentBackStackEntry
@@ -340,7 +320,7 @@ fun MainNavGraph(
         ) { backStackEntry ->
             val selectedTab = backStackEntry.arguments?.getString("selectedTab")
             FollowScreen(
-                onBackClick = { navController.popBackStack() },
+                onBackClick = { navController.navigateUpOrHome()},
                 selectedTab = selectedTab,
                 onUserClick = { userId ->
                     navController.navigate(Route.UserProfile.createRoute(userId))

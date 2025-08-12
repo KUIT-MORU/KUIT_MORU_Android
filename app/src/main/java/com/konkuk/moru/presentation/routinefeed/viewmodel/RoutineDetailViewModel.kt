@@ -12,10 +12,15 @@ import com.konkuk.moru.domain.repository.RoutineFeedRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 
 // 상세 화면의 모든 UI 상태를 담는 데이터 클래스
 data class RoutineDetailUiState(
@@ -151,40 +156,13 @@ class RoutineDetailViewModel @Inject constructor(
         }
     }
 
-    /*fun toggleLikeSync() {
-        val current = _uiState.value
-        val r = current.routine ?: return
-        if (current.isLiking || current.isLoading) return
-
-        val wantLike = !r.isLiked
-
-        val before = _uiState.value
-        val bumpedLikes = (r.likes + if (wantLike) 1 else -1).coerceAtLeast(0)
-        _uiState.update {
-            it.copy(routine = r.copy(isLiked = wantLike, likes = bumpedLikes), isLiking = true, errorMessage = null)
-        }
-
-        viewModelScope.launch {
-            runCatching {
-                if (wantLike) repository.addLike(r.routineId) else repository.removeLike(r.routineId)
-                repository.getRoutineDetail(r.routineId) // [유지] 서버 최신 재조회
-            }.onSuccess { fresh ->
-                val synced = fresh.toRoutineModel(prev = _uiState.value.routine)
-                _uiState.update { it.copy(routine = synced, isLiking = false) }
-
-                // [추가] 다른 화면 동기화: 서버값으로 발행(정확도 ↑)
-                RoutineSyncBus.publish(
-                    RoutineSyncBus.Event.Like(
-                        routineId = synced.routineId,
-                        isLiked = synced.isLiked,
-                        likeCount = synced.likes
-                    )
-                )
-            }.onFailure { e ->
-                _uiState.value = before.copy(isLiking = false, errorMessage = e.message)
-            }
-        }
-    }*/
+    private data class ToggleStamp(
+        val expectedLikes: Int,
+        val wantLike: Boolean,
+        val mark: TimeMark = TimeSource.Monotonic.markNow()
+    )
+    private val toggleStampMap = ConcurrentHashMap<String, ToggleStamp>()
+    private val PROTECT_TTL = 2.seconds
 
     fun toggleScrapSync() {
         val current = _uiState.value
@@ -218,30 +196,6 @@ class RoutineDetailViewModel @Inject constructor(
     }
 
 
-    /*fun loadRoutine(routineId: String) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            runCatching {
-                repository.getRoutineDetail(routineId) // [수정] 서버 호출
-            }.onSuccess { dto ->
-                val merged = dto.toRoutineModel(prev = _uiState.value.routine)
-                val similar = dto.similarRoutines?.map { it.toUiModel() } ?: emptyList()
-                _uiState.update {
-                    it.copy(
-                        routine = merged,
-                        similarRoutines = similar,
-                        canBeAddedToMyRoutines = !dto.isOwner, // [수정] 서버 필드 사용
-                        isLoading = false,
-                        errorMessage = null
-                    )
-                }
-            }.onFailure { e ->
-                _uiState.update {
-                    it.copy(isLoading = false, errorMessage = e.message)
-                }
-            }
-        }
-    }*/
 
     // [핵심] '내 루틴으로 복사' 기능을 구현하는 함수
     fun copyRoutineToMyList() {

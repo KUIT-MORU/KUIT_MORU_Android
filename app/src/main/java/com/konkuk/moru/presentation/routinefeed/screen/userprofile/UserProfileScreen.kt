@@ -49,11 +49,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.google.gson.Gson
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.routine.RoutineListItem
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.navigation.Route
+import com.konkuk.moru.presentation.navigation.navigateUpOrHome
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppBar
 import com.konkuk.moru.presentation.routinefeed.data.UserProfileUiState
 import com.konkuk.moru.presentation.routinefeed.viewmodel.UserProfileViewModel
@@ -81,7 +83,7 @@ fun UserProfileScreen(
             BasicTopAppBar(
                 title = uiState.nickname.ifBlank { "사용자명" },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
+                    IconButton(onClick = { navController.navigateUpOrHome() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
                     }
                 }
@@ -171,7 +173,6 @@ private fun UserProfileContent(
                     tags = routine.tags,
                     likeCount = routine.likes,
                     isLiked = routine.isLiked,
-                    onLikeClick = { onLikeClick(routine.routineId) },
                     onItemClick = { onRoutineClick(routine.routineId) }
                 )
             }
@@ -362,7 +363,6 @@ private fun ExpandableRoutineSection(
                             tags = routine.tags,
                             likeCount = routine.likes,
                             isLiked = routine.isLiked,
-                            onLikeClick = { onLikeClick(routine.routineId) },
                             onItemClick = { onRoutineClick(routine.routineId) }
                         )
                     }

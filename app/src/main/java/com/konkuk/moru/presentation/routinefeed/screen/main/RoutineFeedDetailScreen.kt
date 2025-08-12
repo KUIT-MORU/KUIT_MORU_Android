@@ -80,16 +80,6 @@ fun RoutineDetailScreen(
         return
     }
 
-    /*var isLiked by remember(routine.routineId) { mutableStateOf(routine.isLiked) }
-    var likeCount by remember(routine.routineId) { mutableIntStateOf(routine.likes) }
-    var isBookmarked by remember(routine.routineId) { mutableStateOf(routine.isBookmarked) }
-
-    LaunchedEffect(routine) {
-        isLiked = routine.isLiked
-        likeCount = routine.likes
-        isBookmarked = routine.isBookmarked
-    }*/
-
 
     Scaffold(
         containerColor = Color.White,

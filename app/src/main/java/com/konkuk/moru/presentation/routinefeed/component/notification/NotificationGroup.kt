@@ -1,3 +1,4 @@
+/*
 package com.konkuk.moru.presentation.routinefeed.component.notification
 
 
@@ -39,4 +40,4 @@ fun NotificationGroup(
 
         // 그룹 내 '더보기' 버튼 제거
     }
-}
+}*/
