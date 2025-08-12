@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf // [추가]
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -43,20 +44,24 @@ class PermissionController(
         when (type) {
             PermissionType.PUSH_NOTIFICATION -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                } else {
-                    if (!areNotificationsEnabledCompat(context)) {
-                        context.startActivity(
-                            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                                putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                            }
-                        )
+                    val granted = ContextCompat.checkSelfPermission(
+                        context, Manifest.permission.POST_NOTIFICATIONS
+                    ) == PackageManager.PERMISSION_GRANTED
+                    if (granted) {
+                        states[PermissionType.PUSH_NOTIFICATION] = true // [추가] 즉시 granted 반영
+                    } else {
+                        notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) // [변경]
                     }
+                } else {
+                    // Android 12 이하: 런타임 퍼미션 없음 → 실제 알림 허용 여부로 반영
+                    states[PermissionType.PUSH_NOTIFICATION] = areNotificationsEnabledCompat(context) // [변경]
+                    // (선택) 설정으로 보내고 싶다면 주석 해제
+                    // openAppNotificationSettings(context)
                 }
             }
 
             PermissionType.OVERLAY -> {
-                if (!android.provider.Settings.canDrawOverlays(context)) {
+                if (!Settings.canDrawOverlays(context)) {
                     context.startActivity(
                         Intent(
                             Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
@@ -67,8 +72,7 @@ class PermissionController(
             }
 
             PermissionType.DO_NOT_DISTURB -> {
-                val nm =
-                    context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 if (!nm.isNotificationPolicyAccessGranted) {
                     context.startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
                 }
@@ -90,8 +94,9 @@ class PermissionController(
 
         // 1) 푸시 알림
         val pushGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
-                    PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(
+                context, Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
         } else {
             areNotificationsEnabledCompat(context)
         }
@@ -117,6 +122,16 @@ class PermissionController(
     private fun areNotificationsEnabledCompat(context: Context): Boolean {
         return NotificationManagerCompat.from(context).areNotificationsEnabled()
     }
+
+    // (선택) 알림 설정 화면으로 보내고 싶을 때 사용
+    @Suppress("unused")
+    private fun openAppNotificationSettings(context: Context) { // [추가]
+        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+    }
 }
 
 @Composable
@@ -125,17 +140,20 @@ fun rememberPermissionController(): PermissionController {
     val isPreview = LocalInspectionMode.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // 알림 런처: 콜백에서 상태 반영 + 설정 이동
+    // [추가] 컨트롤러를 콜백에서 참조하기 위한 홀더
+    val controllerState = remember { mutableStateOf<PermissionController?>(null) }
+
+    // 알림 런처: 콜백에서 바로 상태 갱신
     val notificationLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        // 콜백 시점에는 컨트롤러가 만들어져 있어야 하므로 아래에서 refresh로 커버
-        // (별도 로직 없이도 refresh가 상태를 정확히 맞춤)
+    ) { _ ->
+        controllerState.value?.refresh() // [추가]
     }
 
-    val controller = remember(context, isPreview) {
+    val controller = remember(context, isPreview, notificationLauncher) {
         PermissionController(context, notificationLauncher, isPreview)
     }
+    LaunchedEffect(controller) { controllerState.value = controller } // [추가]
 
     // 최초 진입 때 갱신
     LaunchedEffect(Unit) {

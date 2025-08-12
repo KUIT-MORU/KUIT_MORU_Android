@@ -14,18 +14,24 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.konkuk.moru.R
+import com.konkuk.moru.core.component.routinedetail.DraggableAppSearchBottomSheet
 import com.konkuk.moru.presentation.myroutines.viewmodel.MyRoutineDetailViewModel
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppBar
 import com.konkuk.moru.ui.theme.MORUTheme
+import androidx.activity.compose.BackHandler
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,9 +42,20 @@ fun MyRoutineDetailScreen(
 ) {
     // ✨ ViewModel의 UiState를 구독하여 단일 진실 공급원 원칙을 따름
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
-    LaunchedEffect(key1 = routineId) {
+    var isBottomSheetOpen by remember { mutableStateOf(false) }
+    val allApps by viewModel.availableApps.collectAsStateWithLifecycle()
+    val selectedAppList = uiState.routine?.usedApps ?: emptyList()
+
+    LaunchedEffect(Unit) {
         viewModel.loadRoutine(routineId)
+        viewModel.loadInstalledApps(context)
+    }
+
+    BackHandler(enabled = uiState.isEditMode) {
+        viewModel.restoreRoutine()
+        viewModel.setEditMode(false)
     }
 
     LaunchedEffect(Unit) {
@@ -91,11 +108,22 @@ fun MyRoutineDetailScreen(
 
                 else -> {
                     // ✨ Content에는 UiState와 ViewModel만 전달하여 구조를 단순화
-                    MyRoutineDetailContent(viewModel = viewModel)
+                    MyRoutineDetailContent(
+                        viewModel = viewModel,
+                        onOpenBottomSheet = { isBottomSheetOpen = true }
+                    )
                 }
             }
         }
     }
+    DraggableAppSearchBottomSheet(
+        isVisible = isBottomSheetOpen,
+        onDismiss = { isBottomSheetOpen = false },
+        appList = allApps,
+        selectedAppList = selectedAppList,
+        onAddApp = { app -> viewModel.addApp(app) },
+        onRemoveApp = { app -> viewModel.deleteApp(app) }
+    )
 }
 
 

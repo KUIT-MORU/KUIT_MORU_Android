@@ -18,22 +18,25 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.routinedetail.MyRoutineTag
+import com.konkuk.moru.core.component.routinedetail.SelectUsedAppSection
 import com.konkuk.moru.data.model.RoutineStepActions
 import com.konkuk.moru.presentation.myroutines.component.RoutineItemCard
-import com.konkuk.moru.presentation.myroutines.component.UsedAppsSection
 import com.konkuk.moru.core.component.routinedetail.routineStepEditableList
 import com.konkuk.moru.presentation.myroutines.viewmodel.MyRoutineDetailViewModel
 import com.konkuk.moru.ui.theme.MORUTheme
+import kotlinx.coroutines.Job
 
 
 @Composable
 fun MyRoutineDetailContent(
     viewModel: MyRoutineDetailViewModel,
+    onOpenBottomSheet: () -> Unit,
 ) {
     val listState = rememberLazyListState()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val routine = uiState.routine ?: return
     val isEditMode = uiState.isEditMode
+    //val isEditMode = true
 
     // LazyColumn에서 실제 스텝 리스트가 시작되기 전의 아이템 개수 (Card, Tag, "STEP" 헤더)
     val headerItemCount = 3
@@ -89,14 +92,35 @@ fun MyRoutineDetailContent(
                 actions = routineStepActions
             )
 
-            if (routine.usedApps.isNotEmpty() || isEditMode) {
+//            if (routine.usedApps.isNotEmpty() || isEditMode) {
+//                item {
+//                    Spacer(modifier = Modifier.height(20.dp))
+//                    UsedAppsSection(
+//                        apps = routine.usedApps,
+//                        isEditMode = isEditMode,
+//                        onAddApp = viewModel::addApp,
+//                        onDeleteApp = viewModel::deleteApp
+//                    )
+//                }
+//            }
+            if (routine.usedApps.isNotEmpty()) {
                 item {
                     Spacer(modifier = Modifier.height(20.dp))
-                    UsedAppsSection(
-                        apps = routine.usedApps,
+//                    UsedAppsSection(
+//                        apps = routine.usedApps,
+//                        isEditMode = isEditMode,
+//                        onAddApp = viewModel::addApp,
+//                        onDeleteApp = viewModel::deleteApp
+//                    )
+                    SelectUsedAppSection(
+                        selectedAppList = routine.usedApps,
                         isEditMode = isEditMode,
-                        onAddApp = viewModel::addApp,
-                        onDeleteApp = viewModel::deleteApp
+                        onRemove = { app ->
+                            viewModel.deleteApp(app)
+                        },
+                        onAddApp = {
+                            onOpenBottomSheet()
+                        }
                     )
                 }
             }
@@ -126,25 +150,25 @@ fun MyRoutineDetailContent(
  * '보기 모드'일 때의 UI를 미리 보여줍니다.
  * 사용자는 루틴 정보를 조회만 할 수 있으며, 수정 관련 UI(삭제 버튼 등)는 보이지 않습니다.
  */
-@Preview(showBackground = true, name = "상세 화면 - 보기 모드")
-@Composable
-private fun MyRoutineDetailContentPreview_ViewMode() {
-    val viewModel: MyRoutineDetailViewModel = viewModel()
-    // '나'의 첫 번째 루틴(ID: 501)을 불러와서 상태를 설정합니다.
-    viewModel.loadRoutine("routine-501")
-
-    MORUTheme {
-        MyRoutineDetailContent(
-            viewModel = viewModel,
-        )
-    }
-}
+//@Preview(showBackground = true, name = "상세 화면 - 보기 모드")
+//@Composable
+//private fun MyRoutineDetailContentPreview_ViewMode() {
+//    val viewModel: MyRoutineDetailViewModel = viewModel()
+//    // '나'의 첫 번째 루틴(ID: 501)을 불러와서 상태를 설정합니다.
+//    viewModel.loadRoutine("routine-501")
+//
+//    MORUTheme {
+//        MyRoutineDetailContent(
+//            viewModel = viewModel,
+//        )
+//    }
+//}
 
 /**
  * '수정 모드'일 때의 UI를 미리 보여줍니다.
  * 정보 수정, 태그/스텝/사용 앱 추가 및 삭제 등 편집과 관련된 UI가 활성화됩니다.
  */
-@Preview(showBackground = true, name = "상세 화면 - 수정 모드")
+@Preview(showBackground = true, name = "상세 화면 - 수정 모드", heightDp = 1000)
 @Composable
 private fun MyRoutineDetailContentPreview_EditMode() {
     val viewModel: MyRoutineDetailViewModel = viewModel()
@@ -154,6 +178,7 @@ private fun MyRoutineDetailContentPreview_EditMode() {
     MORUTheme {
         MyRoutineDetailContent(
             viewModel = viewModel,
+            onOpenBottomSheet = {  }
         )
     }
 }

@@ -60,6 +60,7 @@ import com.konkuk.moru.core.component.routinedetail.DraggableAppSearchBottomShee
 import com.konkuk.moru.core.component.routinedetail.MyRoutineTagInCreateRoutine
 import com.konkuk.moru.core.component.routinedetail.RoutineDescriptionField
 import com.konkuk.moru.core.component.routinedetail.RoutineImageSelectBox
+import com.konkuk.moru.core.component.routinedetail.SelectUsedAppSection
 import com.konkuk.moru.core.component.routinedetail.ShowUserCheckbox
 import com.konkuk.moru.core.component.routinedetail.appdisplay.AddAppBox
 import com.konkuk.moru.core.component.routinedetail.appdisplay.SelectedAppNoText
@@ -291,40 +292,17 @@ fun RoutineCreateScreen(
             }
 
             if (isFocusingRoutine) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(color = Color.White)
-                        .padding(bottom = 30.dp)
-                ) {
-                    Text(
-                        text = "사용앱",
-                        style = typography.title_B_20,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                    Spacer(modifier = Modifier.height(5.dp))
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(9.dp),
-                        contentPadding = PaddingValues(start = 11.dp),
-                    ) {
-                        items(selectedAppList) { app ->
-                            SelectedAppNoText(
-                                appIcon = app.appIcon,
-                                isRemovable = true
-                            ) { viewModel.removeAppFromSelected(app) }
-                        }
-
-                        if (selectedAppList.size < 4) {
-                            item {
-                                AddAppBox {
-                                    coroutineScope.launch {
-                                        isBottomSheetOpen = true
-                                    }
-                                }
-                            }
+                SelectUsedAppSection(
+                    selectedAppList = selectedAppList,
+                    onRemove = { app ->
+                        viewModel.removeAppFromSelected(app)
+                    },
+                    onAddApp = {
+                        coroutineScope.launch {
+                            isBottomSheetOpen = true
                         }
                     }
-                }
+                )
             }
 
             // 완료하기 버튼
