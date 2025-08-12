@@ -120,6 +120,10 @@ dependencies {
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    //스와이프 기능
+    implementation(platform("androidx.compose:compose-bom:2024.06.00")) // 쓰는 BOM 버전에 맞춰서
+    implementation("androidx.compose.material:material")
 }
 
 configurations.all {

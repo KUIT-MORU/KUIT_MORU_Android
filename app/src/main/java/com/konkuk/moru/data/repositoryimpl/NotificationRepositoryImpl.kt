@@ -46,9 +46,5 @@ class NotificationRepositoryImpl @Inject constructor(
     override suspend fun deleteNotification(notificationId: String) {
         api.deleteNotification(notificationId)
     }
-
-    override suspend fun markAllAsRead() {
-        // TODO: 서버 API 추가 시 구현
-        // api.markAllAsRead()
-    }
+    
 }

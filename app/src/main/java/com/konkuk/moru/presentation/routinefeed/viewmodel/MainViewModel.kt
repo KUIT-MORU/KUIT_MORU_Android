@@ -31,9 +31,6 @@ class MainViewModel @Inject constructor(
     fun onNotificationIconClicked() {
         if (!_hasUnreadNotification.value) return
         _hasUnreadNotification.value = false // UI 즉시 업데이트
-        viewModelScope.launch {
-            // 나중에 서버 API가 추가되면 이 호출이 실제로 동작합니다.
-            notificationRepository.markAllAsRead()
-        }
+
     }
 }

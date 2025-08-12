@@ -2,29 +2,39 @@ package com.konkuk.moru.presentation.routinefeed.screen
 
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -67,18 +77,16 @@ fun NotificationScreen(
         }
     }
 
-    // API가 relativeTime만 주므로, relativeTime 기반으로 섹션 그룹핑
+    // 상대/날짜 문자열을 섹션으로 그룹핑
     val grouped = remember(state.items) {
         state.items.groupBy { item ->
             item.createdAt?.let { bucketFromInstant(it) }
-                ?: parseRelativeOrDateToBucket(item.relativeTime) // ✅ 변경: 날짜 문자열도 버킷으로
+                ?: parseRelativeOrDateToBucket(item.relativeTime)
         }
     }
 
-
     Scaffold(
-        modifier = Modifier
-            .padding(bottom = 80.dp),
+        modifier = Modifier.padding(bottom = 80.dp),
         containerColor = Color.White,
         topBar = {
             BasicTopAppBar(
@@ -110,34 +118,75 @@ fun NotificationScreen(
                 .padding(paddingValues),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
-            // 섹션 헤더 + 아이템 렌더링
             grouped.forEach { (sectionTitle, list) ->
-                stickyHeader {
-                    SectionHeader(title = sectionTitle)
-                }
-                items(
-                    items = list,
-                    key = { it.id }
-                ) { item ->
+                stickyHeader { SectionHeader(title = sectionTitle) }
+
+                items(items = list, key = { it.id }) { item ->
 
                     val displayRelative = item.createdAt?.let { relativeFromInstant(it) }
-                        ?: normalizeRelativeForDisplay(item.relativeTime)  // ✅ 변경: 날짜 → "n일 전"으로
+                        ?: normalizeRelativeForDisplay(item.relativeTime)
 
-                    NotificationRow(
-                        senderId = item.senderId,
-                        nickname = item.senderNickname,
-                        profileUrl = item.senderProfileImage,
-                        message = item.message,
-                        // 표시는 서버가 내려준 relativeTime 그대로 사용
-                        relativeTime = displayRelative,
-                        onProfileClick = { uid ->
-                            navController.navigate(
-                                com.konkuk.moru.presentation.navigation.Route.UserProfile.createRoute(
-                                    uid
-                                )
-                            )
+                    // 스와이프 상태
+                    val dismissState = rememberSwipeToDismissBoxState(
+                        initialValue = SwipeToDismissBoxValue.Settled,
+                        confirmValueChange = { value ->
+                            if (value == SwipeToDismissBoxValue.EndToStart) {
+                                viewModel.deleteNotification(item.id)
+                                true
+                            } else false
                         }
                     )
+
+                    // 스와이프 컨테이너
+                    SwipeToDismissBox(
+                        state = dismissState,
+                        enableDismissFromStartToEnd = false, // 오른→왼 만
+                        backgroundContent = {
+                            // 뒤(배경): 빨간 삭제 영역
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color(0xFFFF3B30))
+                                    .padding(horizontal = 24.dp),
+                                contentAlignment = Alignment.CenterEnd
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "삭제",
+                                        color = Color.White,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Icon(
+                                        imageVector = Icons.Filled.Delete,
+                                        contentDescription = "삭제",
+                                        tint = Color.White
+                                    )
+                                }
+                            }
+                        }
+                    ) {
+                        // 앞(내용): 네가 만든 셀. 평소에 빨강이 보이지 않도록 흰 배경으로 감싼다.
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = Color.White
+                        ) {
+                            NotificationRow(
+                                senderId = item.senderId,
+                                nickname = item.senderNickname,
+                                profileUrl = item.senderProfileImage,
+                                message = item.message,
+                                relativeTime = displayRelative,
+                                onProfileClick = { uid ->
+                                    navController.navigate(
+                                        com.konkuk.moru.presentation.navigation.Route.UserProfile
+                                            .createRoute(uid)
+                                    )
+                                }
+                            )
+                        }
+                    }
                 }
             }
 
@@ -169,6 +218,7 @@ fun NotificationScreen(
         }
     }
 }
+
 
 /* ===================== 시간 유틸 & 섹션 헤더 ===================== */
 
