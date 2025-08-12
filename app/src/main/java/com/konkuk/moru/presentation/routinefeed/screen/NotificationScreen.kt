@@ -192,7 +192,7 @@ private fun formatTimestamp(timestamp: LocalDateTime): String {
 @Composable
 private fun SectionHeader(title: String) {
     Surface(
-        color = Color(0xFFF8F9FA),
+        color = Color.White,
         contentColor = Color.Black,
         tonalElevation = 0.dp,
         shadowElevation = 0.dp
