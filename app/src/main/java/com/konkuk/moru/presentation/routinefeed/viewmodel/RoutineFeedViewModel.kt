@@ -3,6 +3,7 @@ package com.konkuk.moru.presentation.routinefeed.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.konkuk.moru.core.datastore.LikeMemory
 import com.konkuk.moru.core.datastore.RoutineSyncBus
 import com.konkuk.moru.data.mapper.toRoutineModel
 import com.konkuk.moru.domain.repository.RoutineFeedRepository

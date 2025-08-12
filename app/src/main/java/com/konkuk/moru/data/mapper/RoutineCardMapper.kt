@@ -1,5 +1,6 @@
 package com.konkuk.moru.data.mapper
 
+import com.konkuk.moru.core.datastore.LikeMemory
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.model.RoutineCardDomain
 

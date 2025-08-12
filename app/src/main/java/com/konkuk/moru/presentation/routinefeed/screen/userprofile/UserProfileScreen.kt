@@ -1,6 +1,10 @@
 package com.konkuk.moru.presentation.routinefeed.screen.userprofile
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -193,7 +197,7 @@ private fun ProfileHeader(
     val backgroundColor = if (state.isFollowing) MORUTheme.colors.veryLightGray else Color.Black
     val contentColor =
         if (state.isFollowing) MORUTheme.colors.mediumGray else MORUTheme.colors.limeGreen
-
+    val showFollowButton = state.isMe == false   // null이면 숨김, false일 때만 노출
     val bottomRoundedCornerShape = RoundedCornerShape(
         topStart = 0.dp,
         topEnd = 0.dp,
@@ -233,18 +237,27 @@ private fun ProfileHeader(
             )
             Spacer(modifier = Modifier.width(24.dp))
             Column(modifier = Modifier.weight(1f)) {
-                MoruButton(
-                    text = buttonText,
-                    onClick = onFollowClick,
-                    backgroundColor = backgroundColor,
-                    contentColor = contentColor,
-                    shape = RoundedCornerShape(140.dp),
-                    textStyle = MORUTheme.typography.title_B_14,
-                    modifier = Modifier
-                        .height(37.dp)
-                        .width(88.dp)
-                )
-                Spacer(modifier = Modifier.height(12.dp))
+
+                AnimatedVisibility(
+                    visible = showFollowButton,
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut()
+                ) {
+                    Column {
+                        MoruButton(
+                            text = if (state.isFollowing) "팔로잉" else "팔로우",
+                            onClick = onFollowClick,
+                            backgroundColor = if (state.isFollowing) MORUTheme.colors.veryLightGray else Color.Black,
+                            contentColor = if (state.isFollowing) MORUTheme.colors.mediumGray else MORUTheme.colors.limeGreen,
+                            shape = RoundedCornerShape(140.dp),
+                            textStyle = MORUTheme.typography.title_B_14,
+                            modifier = Modifier
+                                .height(37.dp)
+                                .width(88.dp)
+                        )
+                        Spacer(Modifier.height(12.dp))
+                    }
+                }
                 ProfileStats(
                     routineCount = state.routineCount,
                     followerCount = state.followerCount,

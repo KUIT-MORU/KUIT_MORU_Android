@@ -3,8 +3,11 @@ package com.konkuk.moru.presentation.routinefeed.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.konkuk.moru.core.datastore.LikeMemory
 import com.konkuk.moru.core.datastore.RoutineSyncBus
+import com.konkuk.moru.data.mapper.toRoutineModel
 import com.konkuk.moru.data.mapper.toUiRoutine
+import com.konkuk.moru.domain.repository.RoutineFeedRepository
 import com.konkuk.moru.domain.repository.SocialRepository
 import com.konkuk.moru.domain.repository.UserRepository
 import com.konkuk.moru.presentation.routinefeed.data.UserProfileUiState
@@ -21,7 +24,8 @@ import javax.inject.Inject
 class UserProfileViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val userRepository: UserRepository,
-    private val socialRepository: SocialRepository
+    private val socialRepository: SocialRepository,
+    private val routineFeedRepository: RoutineFeedRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UserProfileUiState())
@@ -83,14 +87,21 @@ class UserProfileViewModel @Inject constructor(
                             _uiState.update { s ->
                                 s.copy(
                                     runningRoutines = s.runningRoutines.map { r ->
-                                        if (r.routineId == e.routineId) r.copy(isLiked = e.isLiked, likes = e.likeCount) else r
+                                        if (r.routineId == e.routineId) r.copy(
+                                            isLiked = e.isLiked,
+                                            likes = e.likeCount
+                                        ) else r
                                     },
                                     userRoutines = s.userRoutines.map { r ->
-                                        if (r.routineId == e.routineId) r.copy(isLiked = e.isLiked, likes = e.likeCount) else r
+                                        if (r.routineId == e.routineId) r.copy(
+                                            isLiked = e.isLiked,
+                                            likes = e.likeCount
+                                        ) else r
                                     }
                                 )
                             }
                         }
+
                         is RoutineSyncBus.Event.Scrap -> {
                             _uiState.update { s ->
                                 s.copy(
@@ -103,6 +114,7 @@ class UserProfileViewModel @Inject constructor(
                                 )
                             }
                         }
+
                         is RoutineSyncBus.Event.Follow -> {
                             // 내 프로필이 아니라면, 이 프로필의 follow 상태/팔로워수도 동기화
                             val targetId = _uiState.value.userId
@@ -185,22 +197,42 @@ class UserProfileViewModel @Inject constructor(
     }
 
     fun toggleLike(routineId: String) {
-        _uiState.update { current ->
-            val updatedRunning = current.runningRoutines.map { r ->
-                if (r.routineId == routineId) r.copy(
-                    isLiked = !r.isLiked,
-                    likes = if (!r.isLiked) r.likes + 1 else r.likes - 1
+        val before = _uiState.value
+        val after = before.copy(
+            runningRoutines = before.runningRoutines.map { r ->
+                if (r.routineId == routineId) r.copy(isLiked = !r.isLiked,
+                    likes = (r.likes + if (!r.isLiked) 1 else -1).coerceAtLeast(0)
+                ) else r
+            },
+            userRoutines = before.userRoutines.map { r ->
+                if (r.routineId == routineId) r.copy(isLiked = !r.isLiked,
+                    likes = (r.likes + if (!r.isLiked) 1 else -1).coerceAtLeast(0)
                 ) else r
             }
-            val updatedUser = current.userRoutines.map { r ->
-                if (r.routineId == routineId) r.copy(
-                    isLiked = !r.isLiked,
-                    likes = if (!r.isLiked) r.likes + 1 else r.likes - 1
-                ) else r
+        )
+        _uiState.value = after
+
+        viewModelScope.launch {
+            runCatching {
+                val now = (after.runningRoutines + after.userRoutines).first { it.routineId == routineId }
+                if (now.isLiked) routineFeedRepository.addLike(routineId)
+                else routineFeedRepository.removeLike(routineId)
+                // 서버 최종값 확보(가능하면)
+                routineFeedRepository.getRoutineDetail(routineId)
+            }.onSuccess { fresh ->
+                val server = fresh.toRoutineModel()
+                // 프로필 화면의 해당 아이템들 갱신
+                _uiState.update { s ->
+                    s.copy(
+                        runningRoutines = s.runningRoutines.map { if (it.routineId == routineId) it.copy(isLiked = server.isLiked, likes = server.likes) else it },
+                        userRoutines = s.userRoutines.map { if (it.routineId == routineId) it.copy(isLiked = server.isLiked, likes = server.likes) else it },
+                    )
+                }
+                RoutineSyncBus.publish(RoutineSyncBus.Event.Like(server.routineId, server.isLiked, server.likes))
+            }.onFailure { e ->
+                _uiState.value = before // 롤백
             }
-            current.copy(runningRoutines = updatedRunning, userRoutines = updatedUser)
         }
-        // TODO: 서버 좋아요 토글 API 호출
     }
 
     fun applyExternalFollow(isFollowing: Boolean) {
