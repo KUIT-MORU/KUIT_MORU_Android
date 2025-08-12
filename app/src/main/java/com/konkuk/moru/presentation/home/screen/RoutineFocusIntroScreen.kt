@@ -76,6 +76,7 @@ fun RoutineFocusIntroScreen(
     val routineTitle = sharedViewModel.routineTitle.collectAsState<String>().value
     val hashTagList = sharedViewModel.routineTags.collectAsState<List<String>>().value
     val category = sharedViewModel.routineCategory.collectAsState<String>().value
+    val isSimple = sharedViewModel.isSimple.collectAsState<Boolean>().value
     val steps = sharedViewModel.selectedSteps.collectAsState<List<RoutineStepData>>().value
 
     val routineDetail: com.konkuk.moru.data.dto.response.RoutineDetailResponse? =
@@ -86,6 +87,7 @@ fun RoutineFocusIntroScreen(
     Log.d("RoutineFocusIntroScreen", "🔄 데이터 수신 상태:")
     Log.d("RoutineFocusIntroScreen", "   - routineTitle: '$routineTitle'")
     Log.d("RoutineFocusIntroScreen", "   - category: '$category' (길이: ${category.length})")
+    Log.d("RoutineFocusIntroScreen", "   - isSimple: $isSimple")
     Log.d("RoutineFocusIntroScreen", "   - hashTagList: $hashTagList")
     Log.d("RoutineFocusIntroScreen", "   - steps 개수: ${steps.size}")
     Log.d("RoutineFocusIntroScreen", "   - routineDetail: ${routineDetail?.title ?: "null"}")
@@ -118,11 +120,11 @@ fun RoutineFocusIntroScreen(
     }
 
     // 스위치가 on인 상태의 루틴의 소요시간만 합해서 총 소요시간 계산에 반영
-    val totalDurationState = remember(stepStates, category) {
+    val totalDurationState = remember(stepStates, category, isSimple) {
         derivedStateOf<Int> {
-            val duration = if (category == "간편") stepStates.sumOf { it.duration }
+            val duration = if (isSimple || category == "간편") stepStates.sumOf { it.duration }
             else stepStates.filter { it.isChecked }.sumOf { it.duration }
-            Log.d("RoutineFocusIntroScreen", "🔄 totalDuration 계산: category=$category, stepStates.size=${stepStates.size}, duration=$duration")
+            Log.d("RoutineFocusIntroScreen", "🔄 totalDuration 계산: category=$category, isSimple=$isSimple, stepStates.size=${stepStates.size}, duration=$duration")
             duration
         }
     }
@@ -131,11 +133,11 @@ fun RoutineFocusIntroScreen(
     Log.d("RoutineFocusIntroScreen", "📊 totalDuration: $totalDuration, stepStates.size: ${stepStates.size}")
 
     // 하나라도 on이 되어 있다면 시작하기 버튼 활성화(총 소요시간으로 판단)
-    // 간편 루틴: 소요시간과 관계없이 활성화
+    // 간편 루틴 또는 isSimple=true: 소요시간과 관계없이 활성화
     // 집중 루틴: 선택된 루틴의 소요시간 > 0일 때만 활성화
     val isStartEnabled = when {
-        category == "간편" -> {
-            Log.d("RoutineFocusIntroScreen", "🔘 간편 루틴: 시작하기 버튼 활성화")
+        isSimple || category == "간편" -> {
+            Log.d("RoutineFocusIntroScreen", "🔘 간편 루틴 (isSimple=$isSimple): 시작하기 버튼 활성화")
             true
         }
         category == "집중" -> {
@@ -161,7 +163,7 @@ fun RoutineFocusIntroScreen(
         bottomBar = {
             Button(
                 onClick = {
-                    val selected = if (category == "간편") {
+                    val selected = if (isSimple || category == "간편") {
                         stepStates
                     } else {
                         stepStates.filter { it.isChecked }
@@ -274,8 +276,8 @@ fun RoutineFocusIntroScreen(
                     title = step.name,
                     duration = step.duration,
                     isChecked = step.isChecked,
-                    showSwitch = category == "집중",
-                    showDuration = category == "집중",
+                    showSwitch = !isSimple && category == "집중",
+                    showDuration = !isSimple && category == "집중",
                     onCheckedChange = { checked ->
                         stepStates = stepStates.toMutableList().also { list ->
                             list[index] = list[index].copy(isChecked = checked)
@@ -291,8 +293,8 @@ fun RoutineFocusIntroScreen(
                         .height(1.5.dp)
                 )
             }
-            // TOTAL 소요시간 섹션 (루틴 타입이 "집중"일 경우만)
-            if (category == "집중") {
+            // TOTAL 소요시간 섹션 (루틴 타입이 "집중"이고 간편 루틴이 아닐 경우만)
+            if (category == "집중" && !isSimple) {
                 item {
                     Spacer(modifier = Modifier.height(92.dp))
 
