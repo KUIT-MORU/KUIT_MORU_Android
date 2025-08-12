@@ -20,7 +20,6 @@ import com.google.gson.Gson
 import com.konkuk.moru.presentation.home.screen.HomeScreen
 import com.konkuk.moru.presentation.home.screen.RoutineFocusIntroScreen
 import com.konkuk.moru.presentation.home.screen.RoutineSimpleRunScreen
-import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.myactivity.screen.ActFabTagScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActInsightInfoClickScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActMainScreen
@@ -38,11 +37,11 @@ import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetailScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedRec
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedScreen
-import com.konkuk.moru.presentation.routinefeed.screen.search.RoutineSearchHost
 import com.konkuk.moru.presentation.routinefeed.screen.userprofile.UserProfileScreen
 import com.konkuk.moru.presentation.routinefeed.viewmodel.RoutineFeedViewModel
 import com.konkuk.moru.presentation.routinefocus.screen.RoutineFocusScreenContainer
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
+import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 

@@ -2,7 +2,6 @@ package com.konkuk.moru.presentation.routinefeed.screen
 
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,15 +40,15 @@ import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppB
 import com.konkuk.moru.presentation.routinefeed.viewmodel.NotificationViewModel
 import com.konkuk.moru.ui.theme.MORUTheme
 import com.konkuk.moru.ui.theme.moruFontBold
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 private val KST: ZoneId = ZoneId.of("Asia/Seoul") // 변경: KST 고정
 

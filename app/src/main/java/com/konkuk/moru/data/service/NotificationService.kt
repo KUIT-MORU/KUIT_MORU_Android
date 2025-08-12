@@ -25,10 +25,4 @@ interface NotificationService {
     @DELETE("/api/notifications/{notificationId}")
     suspend fun deleteNotification(@Path("notificationId") notificationId: String): Response<Unit>
 
-    // [주석 처리] 나중에 추가할 '모두 읽음' 처리 API
-    /*
-    @POST("/api/notifications/read-all")
-    suspend fun markAllAsRead(): Response<Unit>
-    */
-
 }

@@ -10,6 +10,5 @@ interface NotificationRepository {
     ): NotificationPage
     suspend fun getUnreadCount(): Int
     suspend fun deleteNotification(notificationId: String) // [추가]
-    suspend fun markAllAsRead()
 
 }
