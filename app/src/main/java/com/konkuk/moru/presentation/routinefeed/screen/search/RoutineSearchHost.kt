@@ -2,9 +2,11 @@ package com.konkuk.moru.presentation.routinefeed.screen.search
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.konkuk.moru.presentation.navigation.Route
+import com.konkuk.moru.presentation.routinefeed.viewmodel.SearchViewModel
 import com.konkuk.moru.ui.theme.MORUTheme
 
 /**
@@ -20,15 +22,21 @@ internal enum class SearchMode {
 fun RoutineSearchHost(
     navController: NavHostController
 ) {
+
+    val vm: SearchViewModel = hiltViewModel()
+    val ui by vm.uiState.collectAsState()
+
     var searchMode by remember { mutableStateOf(SearchMode.INITIAL) }
     var searchQuery by remember { mutableStateOf("") }
 
-    var recentSearches by remember {
-        mutableStateOf(
-            listOf("아침 요가", "산책", "TIL 작성하기", "명상", "헬스", "독서")
-        )
-    }
+    val recentSearches = ui.recentSearches.map { it.text }
+
     val selectedTags = remember { mutableStateListOf<String>() }
+    // 변경: VM 상태로 동기화
+    LaunchedEffect(ui.selectedTags) {
+        selectedTags.clear()
+        selectedTags.addAll(ui.selectedTags)
+    }
 
     val handleNavigateBack: () -> Unit = {
         when (searchMode) {
@@ -48,46 +56,36 @@ fun RoutineSearchHost(
     when (searchMode) {
         SearchMode.INITIAL -> {
             RoutineSearchInitialScreen(
-                recentSearches = recentSearches,
+                // 변경: 최근 검색과 삭제/전체삭제 -> VM 사용
+                recentSearches = ui.recentSearches.map { it.text },
                 onPerformSearch = { query ->
                     searchQuery = query
+                    vm.onQueryChange(query) // 변경: 검색어 상태 전달
+                    vm.performSearch(resetPage = true) // 변경: 서버 검색 실행
                     searchMode = SearchMode.ROUTINE_NAME_RESULT
                 },
-                onDeleteRecentSearch = { item ->
-                    recentSearches = recentSearches - item
+                onDeleteRecentSearch = { text ->
+                    // 변경: id를 찾아서 삭제
+                    ui.recentSearches.firstOrNull { it.text == text }?.id?.let(vm::deleteRecent)
                 },
-                onDeleteAllRecentSearches = {
-                    recentSearches = emptyList()
-                },
-                onNavigateToTagSearch = {
-                    searchMode = SearchMode.TAG_SEARCH
-                },
+                onDeleteAllRecentSearches = vm::deleteAllRecent,
+                onNavigateToTagSearch = { searchMode = SearchMode.TAG_SEARCH },
                 onNavigateBack = handleNavigateBack
             )
         }
 
         SearchMode.ROUTINE_NAME_RESULT -> {
             RoutineNameResultScreen(
-                query = searchQuery,
-                // ▼▼▼ `searchQuery`를 수정할 수 있는 람다 함수를 전달합니다.
-                onQueryChange = { newQuery ->
-                    searchQuery = newQuery
-                },
-                onPerformSearch = {
-                    // 현재 검색창(query)에 있는 내용으로 검색을 재실행합니다.
-                    // 이 부분은 실제 검색 로직(예: API 호출)이 있다면 추가 구현이 필요할 수 있습니다.
-                    // 지금은 상태 기반 필터링이므로 별도 작업은 필요 없습니다.
-                    println("검색 재실행: $searchQuery")
-                },
-                selectedTags = selectedTags,
+                query = ui.query, // 변경
+                onQueryChange = { q -> vm.onQueryChange(q) }, // 변경
+                onPerformSearch = { vm.performSearch(resetPage = true) }, // 변경
+                selectedTags = ui.selectedTags, // 변경
                 onNavigateBack = handleNavigateBack,
                 onRoutineClick = { routineId ->
                     navController.navigate(Route.RoutineFeedDetail.createRoute(routineId))
                 },
                 onNavigateToTagSearch = { searchMode = SearchMode.TAG_SEARCH },
-                onDeleteTag = { tag ->
-                    selectedTags.remove(tag)
-                }
+                onDeleteTag = { tag -> vm.removeTag(tag) } // 변경
             )
         }
 
@@ -96,10 +94,10 @@ fun RoutineSearchHost(
                 originalQuery = searchQuery,
                 onNavigateBack = handleNavigateBack,
                 onTagSelected = { selectedTag ->
-                    if (!selectedTags.contains(selectedTag)) {
-                        selectedTags.add(selectedTag)
-                    }
-                    searchMode = SearchMode.ROUTINE_NAME_RESULT
+                    // ✅ 변경: 태그를 VM에 추가하고, 결과 화면으로 이동 + 재검색
+                    vm.addTag(selectedTag) // ← "#” 유무는 내부에서 보정되도록 구현
+                    searchMode = SearchMode.ROUTINE_NAME_RESULT  // ← 결과 화면으로
+                    vm.performSearch(resetPage = true)           // ← 서버 필터링 실행
                 }
             )
         }

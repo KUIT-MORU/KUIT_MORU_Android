@@ -18,6 +18,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,12 +30,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.konkuk.moru.presentation.myactivity.screen.TagDto
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.konkuk.moru.data.model.FavoriteTag
+import com.konkuk.moru.data.model.TagItem
 import com.konkuk.moru.presentation.routinefeed.component.search.BackTitle
 import com.konkuk.moru.presentation.routinefeed.component.search.HashTagSearchField
 import com.konkuk.moru.presentation.routinefeed.component.search.TagChip
 import com.konkuk.moru.presentation.routinefeed.component.search.TagSectionHeader
 import com.konkuk.moru.presentation.routinefeed.component.search.generateDummyTags
+import com.konkuk.moru.presentation.routinefeed.viewmodel.SearchViewModel
 import com.konkuk.moru.ui.theme.MORUTheme
 
 @Composable
@@ -42,22 +47,25 @@ internal fun TagSearchScreen(
     onNavigateBack: () -> Unit,
     onTagSelected: (String) -> Unit
 ) {
-    var allTags by remember { mutableStateOf(generateDummyTags()) }
+    val vm: SearchViewModel = hiltViewModel()
+    val ui by vm.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        if (ui.allTags.isEmpty()) vm.refreshAllTags()
+        if (ui.favoriteTags.isEmpty()) vm.refreshFavoriteTags()
+    }
+
     var query by remember { mutableStateOf("") }
     val isHashtagMode = query.trim().startsWith("#")
 
-    // '관심태그'와 '전체태그'를 구분합니다.
-    val interestedTags = allTags.filter { it.isSelected }
-    val normalTags = allTags.filterNot { it.isSelected }
+    // 변경: 관심 태그는 서버에서 가져온 목록 사용
+    val favoriteTags = ui.favoriteTags              // 관심태그 (서버)
+    val allTags: List<TagItem> = ui.allTags
 
-    // 검색어에 따라 '전체태그' 목록을 필터링합니다.
-    val filteredNormalTags = remember(query, normalTags) {
-        if (query.isBlank() || query == "#") {
-            normalTags
-        } else {
-            val searchQuery = if (query.startsWith("#")) query.substring(1) else query
-            normalTags.filter { it.name.contains(searchQuery, ignoreCase = true) }
-        }
+    // 변경: 전체태그 대용 - 관심태그에서 필터
+    val filteredTags = remember(query, allTags) {
+        val q = query.removePrefix("#")
+        if (q.isBlank()) allTags else allTags.filter { it.name.contains(q, ignoreCase = true) }
     }
 
     val titleText = if (originalQuery.isNotBlank()) originalQuery else "내 기록"
@@ -99,13 +107,12 @@ internal fun TagSearchScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    interestedTags.forEach { tag ->
+                    favoriteTags.forEach { tag ->
                         TagChip(
-                            text = tag.name,
-                            selected = false, // 선택 상태는 사용하지 않음
-                            showCloseIcon = true,
-                            // 클릭 시 즉시 태그를 전달하고 화면을 전환합니다.
-                            onClick = { onTagSelected(tag.name) }
+                            text = "#${tag.name.removePrefix("#")}",
+                            selected = false,
+                            showCloseIcon = false, // 변경: 검색 선택용이므로 닫기 X
+                            onClick = { onTagSelected(tag.name) } // VM이 '#' 보정
                         )
                     }
                 }
@@ -117,11 +124,10 @@ internal fun TagSearchScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    filteredNormalTags.forEach { tag ->
+                    filteredTags.forEach { tag ->
                         TagChip(
-                            text = tag.name,
-                            selected = false, // 선택 상태는 사용하지 않음
-                            // 클릭 시 즉시 태그를 전달하고 화면을 전환합니다.
+                            text = "#${tag.name.removePrefix("#")}", // 표시용 '#'
+                            selected = false,
                             onClick = { onTagSelected(tag.name) }
                         )
                     }
@@ -134,18 +140,12 @@ internal fun TagSearchScreen(
             HashtagSearchResultOverlay(
                 query = query,
                 onQueryChange = { query = it },
-                tags = allTags.filter {
-                    it.name.contains(
-                        query.trim().substring(1),
-                        ignoreCase = true
-                    )
-                },
-                onTagClick = { tag ->
-                    onTagSelected(tag.name)
-                },
+                tags = filteredTags, // TagItem
+                onTagClick = { tag -> onTagSelected(tag.name) },
                 onDismiss = { query = "" }
             )
         }
+
     }
 }
 
@@ -156,8 +156,8 @@ internal fun TagSearchScreen(
 private fun HashtagSearchResultOverlay(
     query: String,
     onQueryChange: (String) -> Unit,
-    tags: List<TagDto>,
-    onTagClick: (TagDto) -> Unit,
+    tags: List<TagItem>,                 // [CHANGE] TagItem으로 교체
+    onTagClick: (TagItem) -> Unit,
     onDismiss: () -> Unit
 ) {
     Box(
@@ -198,7 +198,7 @@ private fun HashtagSearchResultOverlay(
  */
 @Composable
 private fun HashtagResultItem(
-    tag: TagDto,
+    tag: TagItem,
     onClick: () -> Unit
 ) {
     Box(
@@ -211,7 +211,7 @@ private fun HashtagResultItem(
             .padding(horizontal = 13.dp)
     ) {
         Text(
-            text = tag.name,
+            text = "#${tag.name.removePrefix("#")}",
             color = MORUTheme.colors.limeGreen,
             style = MORUTheme.typography.time_R_14
         )

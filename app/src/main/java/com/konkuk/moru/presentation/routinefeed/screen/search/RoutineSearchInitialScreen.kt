@@ -27,12 +27,12 @@ import com.konkuk.moru.ui.theme.MORUTheme
 
 @Composable
 internal fun RoutineSearchInitialScreen(
-    recentSearches: List<String>,
+    recentSearches: List<String>, // VM에서 전달받음
     onPerformSearch: (String) -> Unit,
     onNavigateToTagSearch: () -> Unit,
     onNavigateBack: () -> Unit,
-    onDeleteRecentSearch: (String) -> Unit,
-    onDeleteAllRecentSearches: () -> Unit
+    onDeleteRecentSearch: (String) -> Unit, // VM 통해 처리
+    onDeleteAllRecentSearches: () -> Unit   // VM 통해 처리
 ) {
     var query by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current

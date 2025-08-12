@@ -2,6 +2,7 @@ package com.konkuk.moru.presentation.routinefeed.screen
 
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,6 +47,11 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.time.Duration
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZonedDateTime
+
+private val KST: ZoneId = ZoneId.of("Asia/Seoul") // 변경: KST 고정
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -64,11 +70,16 @@ fun NotificationScreen(
 
     // API가 relativeTime만 주므로, relativeTime 기반으로 섹션 그룹핑
     val grouped = remember(state.items) {
-        state.items.groupBy { item -> parseRelativeToDayBucket(item.relativeTime) }
-        // groupBy는 키의 첫 등장 순서를 유지합니다(리스트가 “최근순”이면 섹션도 그 순서대로).
+        state.items.groupBy { item ->
+            item.createdAt?.let { bucketFromInstant(it) }
+                ?: parseRelativeOrDateToBucket(item.relativeTime) // ✅ 변경: 날짜 문자열도 버킷으로
+        }
     }
 
+
     Scaffold(
+        modifier = Modifier
+            .padding(bottom = 80.dp),
         containerColor = Color.White,
         topBar = {
             BasicTopAppBar(
@@ -98,7 +109,7 @@ fun NotificationScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues( bottom = 80.dp)
+            contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             // 섹션 헤더 + 아이템 렌더링
             grouped.forEach { (sectionTitle, list) ->
@@ -109,16 +120,22 @@ fun NotificationScreen(
                     items = list,
                     key = { it.id }
                 ) { item ->
+
+                    val displayRelative = item.createdAt?.let { relativeFromInstant(it) }
+                        ?: normalizeRelativeForDisplay(item.relativeTime)  // ✅ 변경: 날짜 → "n일 전"으로
+
                     NotificationRow(
                         senderId = item.senderId,
                         nickname = item.senderNickname,
                         profileUrl = item.senderProfileImage,
                         message = item.message,
                         // 표시는 서버가 내려준 relativeTime 그대로 사용
-                        relativeTime = item.relativeTime,
+                        relativeTime = displayRelative,
                         onProfileClick = { uid ->
                             navController.navigate(
-                                com.konkuk.moru.presentation.navigation.Route.UserProfile.createRoute(uid)
+                                com.konkuk.moru.presentation.navigation.Route.UserProfile.createRoute(
+                                    uid
+                                )
                             )
                         }
                     )
@@ -174,18 +191,58 @@ private fun parseRelativeToDayBucket(text: String): String {
     }
 }
 
-// 필요 시 LocalDateTime → 상대표시 포맷(현재는 API 문자열을 그대로 쓰므로 미사용)
-private fun formatTimestamp(timestamp: LocalDateTime): String {
-    val now = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
-    val duration = Duration.between(timestamp, now)
-    val minutes = duration.toMinutes()
+private fun relativeFromInstant(instant: Instant, now: Instant = Instant.now()): String {
+    val diff = Duration.between(instant, now)
+    val minutes = diff.toMinutes()
     return when {
         minutes < 1 -> "방금 전"
         minutes < 60 -> "${minutes}분 전"
-        minutes < 60 * 24 -> "${duration.toHours()}시간 전"
-        minutes < 60 * 24 * 7 -> "${duration.toDays()}일 전"
-        else -> timestamp.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+        minutes < 60 * 24 -> "${diff.toHours()}시간 전"
+        minutes < 60 * 24 * 7 -> "${diff.toDays()}일 전"
+        else -> DateTimeFormatter.ofPattern("yyyy.MM.dd")
+            .format(ZonedDateTime.ofInstant(instant, KST))
     }
+}
+
+private fun bucketFromInstant(instant: Instant, today: LocalDate = LocalDate.now(KST)): String {
+    val date = LocalDateTime.ofInstant(instant, KST).toLocalDate()
+    val days = ChronoUnit.DAYS.between(date, today).toInt()
+    return when {
+        days == 0 -> "오늘"
+        days in 1..7 -> "최근 7일"
+        else -> "오래 전"
+    }
+}
+
+// ✅ relativeTime 문자열이 "yyyy-MM-dd" 또는 ISO면 파싱해서 버킷 생성
+private fun parseRelativeOrDateToBucket(text: String): String {
+    parseAnyDateToInstant(text)?.let { return bucketFromInstant(it) }
+    return parseRelativeToDayBucket(text) // 기존 로직(방금 전/분 전/시간 전/…)
+}
+
+// ✅ relativeTime 문자열이 날짜면 'n일 전/날짜'로 정규화해서 표시
+private fun normalizeRelativeForDisplay(text: String): String {
+    parseAnyDateToInstant(text)?.let { return relativeFromInstant(it) }
+    return text // 이미 "2분 전" 등 상대문자면 그대로 사용
+}
+
+// ✅ 다양한 날짜 포맷 시도
+private fun parseAnyDateToInstant(s: String): Instant? {
+    val t = s.trim()
+    // 1) ISO-8601 with offset/Z
+    runCatching { return OffsetDateTime.parse(t).toInstant() }.onFailure { }
+    // 2) yyyy-MM-dd
+    runCatching {
+        val d = LocalDate.parse(t, DateTimeFormatter.ISO_LOCAL_DATE)
+        return d.atStartOfDay(KST).toInstant()
+    }.onFailure { }
+    // 3) yyyy.MM.dd
+    runCatching {
+        val d = LocalDate.parse(t, DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+        return d.atStartOfDay(KST).toInstant()
+    }.onFailure { }
+    // 필요한 경우 yyyy/MM/dd 등 추가
+    return null
 }
 
 // 섹션 헤더

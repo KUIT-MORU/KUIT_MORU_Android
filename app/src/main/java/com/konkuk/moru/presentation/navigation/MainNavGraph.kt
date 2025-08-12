@@ -209,7 +209,14 @@ fun MainNavGraph(
         }
 
         composable(route = Route.RoutineSearch.route) {
-            RoutineSearchHost(navController = navController)
+            // 변경: SearchViewModel 주입
+            val vm: com.konkuk.moru.presentation.routinefeed.viewmodel.SearchViewModel =
+                androidx.hilt.navigation.compose.hiltViewModel()
+
+            // 변경: Host에 vm 전달
+            com.konkuk.moru.presentation.routinefeed.screen.search.RoutineSearchHost(
+                navController = navController
+            )
         }
 
         composable(
@@ -320,7 +327,7 @@ fun MainNavGraph(
         ) { backStackEntry ->
             val selectedTab = backStackEntry.arguments?.getString("selectedTab")
             FollowScreen(
-                onBackClick = { navController.navigateUpOrHome()},
+                onBackClick = { navController.navigateUpOrHome() },
                 selectedTab = selectedTab,
                 onUserClick = { userId ->
                     navController.navigate(Route.UserProfile.createRoute(userId))
