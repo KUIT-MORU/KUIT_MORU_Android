@@ -98,7 +98,7 @@ fun NotificationScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp)
+            contentPadding = PaddingValues( bottom = 80.dp)
         ) {
             // 섹션 헤더 + 아이템 렌더링
             grouped.forEach { (sectionTitle, list) ->
