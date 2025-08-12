@@ -168,6 +168,7 @@ fun MainNavGraph(
             }
             val shared = viewModel<SharedRoutineViewModel>(parent)
             val currentId by shared.selectedRoutineId.collectAsState()
+            val originalRoutineId by shared.originalRoutineId.collectAsState()
             val title by shared.routineTitle.collectAsState()
             val category by shared.routineCategory.collectAsState()
             val totalDuration by shared.totalDuration.collectAsState()
@@ -175,6 +176,7 @@ fun MainNavGraph(
 
             Log.d("MainNavGraph", "🚀 RoutineSimpleRun 화면 진입!")
             Log.d("MainNavGraph", "   - routineId: $currentId")
+            Log.d("MainNavGraph", "   - originalRoutineId: $originalRoutineId")
             Log.d("MainNavGraph", "   - 제목: $title")
             Log.d("MainNavGraph", "   - 카테고리: $category")
             Log.d("MainNavGraph", "   - 총 소요시간: ${totalDuration}분")
@@ -202,10 +204,11 @@ fun MainNavGraph(
                         }
 
                     },
-                    onFinishConfirmed = { finishedId ->
+                    onFinishConfirmed = { finishedId: String ->
+                        Log.d("MainNavGraph", "🔄 RoutineSimpleRun 완료 처리: originalRoutineId=$originalRoutineId")
                         navController.getBackStackEntry(Route.Home.route)
-                            .savedStateHandle["finishedRoutineId"] = finishedId
-
+                            .savedStateHandle["finishedRoutineId"] = originalRoutineId ?: finishedId
+                        Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}")
                         navController.popBackStack(Route.Home.route, false)
                     }
                 )
@@ -225,12 +228,16 @@ fun MainNavGraph(
             val category by sharedViewModel.routineCategory.collectAsState()
             val totalDuration by sharedViewModel.totalDuration.collectAsState()
             val steps by sharedViewModel.selectedSteps.collectAsState()
+            val originalRoutineId by sharedViewModel.originalRoutineId.collectAsState()
+            val selectedApps by sharedViewModel.selectedApps.collectAsState()
 
             Log.d("MainNavGraph", "🚀 RoutineFocus 화면 진입!")
             Log.d("MainNavGraph", "   - 제목: $title")
             Log.d("MainNavGraph", "   - 카테고리: $category")
             Log.d("MainNavGraph", "   - 총 소요시간: ${totalDuration}분")
             Log.d("MainNavGraph", "   - 선택된 스텝: ${steps.size}개")
+            Log.d("MainNavGraph", "   - originalRoutineId: $originalRoutineId")
+            Log.d("MainNavGraph", "   - 선택된 앱: ${selectedApps.size}개")
 
             RoutineFocusScreenContainer(
                 focusViewModel = routineFocusViewModel,
@@ -247,10 +254,18 @@ fun MainNavGraph(
                         }
                     }
                 },
-                onFinishConfirmed = { finishedId ->
+                onFinishConfirmed = { finishedId: String ->
+                    Log.d("MainNavGraph", "🔄 RoutineFocus 완료 처리: originalRoutineId=$originalRoutineId")
                     navController.getBackStackEntry(Route.Home.route)
-                        .savedStateHandle["finishedRoutineId"] = finishedId
+                        .savedStateHandle["finishedRoutineId"] = originalRoutineId ?: finishedId
+                    Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}")
                     navController.popBackStack(Route.Home.route, false)
+                },
+                onScreenBlockTrigger = {
+                    // 집중 루틴 실행 중 다른 앱으로 이동 시 화면 차단 팝업창 표시
+                    if (category == "집중" && selectedApps.isNotEmpty()) {
+                        routineFocusViewModel.showScreenBlockPopup(selectedApps)
+                    }
                 }
             )
         }
