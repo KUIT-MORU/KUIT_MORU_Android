@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -78,6 +79,7 @@ fun ActScrabScreen(
         if (selectedIndex.value != null) {
             Box(
                 modifier = Modifier
+                    .navigationBarsPadding()
                     .fillMaxWidth()
                     .background(colors.charcoalBlack)
                     .height(80.dp)

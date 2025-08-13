@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.konkuk.moru.R
+import com.konkuk.moru.presentation.home.viewmodel.ActUserViewModel
 import com.konkuk.moru.presentation.myactivity.component.ActMyInfo
 import com.konkuk.moru.presentation.myactivity.component.MyActivityTab
 import com.konkuk.moru.presentation.myactivity.component.MyProfileTitle
@@ -34,8 +36,18 @@ import com.konkuk.moru.ui.theme.MORUTheme.colors
 fun ActMainScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    viewModel: InsightViewModel = hiltViewModel()
+    viewModel: InsightViewModel = hiltViewModel(),
+    viewModelUser: ActUserViewModel = hiltViewModel()
 ) {
+    val nickname by viewModelUser.nickname.collectAsState()
+    val routineCount by viewModelUser.routineCount.collectAsState()
+    val followerCount by viewModelUser.followerCount.collectAsState()
+    val followingCount by viewModelUser.followingCount.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModelUser.loadMe()
+    }
+
     val uiState = viewModel.ui.collectAsState().value
 
     val routineStatus = when (uiState.routineCompletionRate.toFloat()) {
@@ -43,7 +55,6 @@ fun ActMainScreen(
         in 0.3f..0.7f -> "간헐적 루틴러"
         else -> "루틴 페이스 메이커"
     }
-
 
     Column(
         modifier = modifier
@@ -66,7 +77,7 @@ fun ActMainScreen(
                 .fillMaxWidth()
         ) {
             Spacer(modifier = Modifier.height(28.dp))
-            ActMyInfo(4, 628, 221, "정해찬", routineStatus, uiState.routineCompletionRate.toFloat(), navController = navController)
+            ActMyInfo(routineCount, followerCount, followingCount, nickname ?: "알 수 없음", routineStatus, uiState.routineCompletionRate.toFloat(), navController = navController)
             Spacer(modifier = Modifier.height(24.dp))
 
             var selectedTab by remember { mutableStateOf(0) }
