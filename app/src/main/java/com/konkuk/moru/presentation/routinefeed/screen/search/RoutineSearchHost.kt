@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.routinefeed.screen.search
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,24 +31,27 @@ fun RoutineSearchHost(
 
     // 뒤로가기 로직 (시스템/툴바 모두 공통)
     val handleNavigateBack: () -> Unit = {
+        Log.d("RoutineSearchHost", "뒤로가기 실행 - 현재 모드: $searchMode, 선택된 태그: $selectedTags")
+
         when (searchMode) {
             SearchMode.ROUTINE_NAME_RESULT, SearchMode.TAG_SEARCH -> {
                 if (selectedTags.isNotEmpty()) {
+                    Log.d("RoutineSearchHost", "태그 선택됨 → 이전 화면으로 결과 전달 후 popBackStack()")
                     // 선택된 태그를 호출자에게 전달
                     navController.previousBackStackEntry
                         ?.savedStateHandle
-                        ?.set("selectedTagsResult", selectedTags.toList())
+                        ?.set("selectedTagsResult", ArrayList(selectedTags))
 
-                    // ▼▼▼ [변경] navigateUp() 대신 현재 화면만 pop (범용)
-                    val popped = navController.popBackStack() // ← [변경]
+                    val popped = navController.popBackStack() // ← 이전 화면으로
+                    Log.d("RoutineSearchHost", "popBackStack 결과: $popped")
                     if (!popped) {
-                        // 백스택이 없으면 그래프의 startDestination으로 이동 (특정 화면 하드코딩 X)
-                        navController.graph.startDestinationRoute?.let { start -> // ← [추가]
-                            navController.navigate(start)                           // ← [추가]
+                        Log.w("RoutineSearchHost", "백스택 없음 → startDestination 이동")
+                        navController.graph.startDestinationRoute?.let { start ->
+                            navController.navigate(start)
                         }
                     }
                 } else {
-                    // 기존 UX: 초기 화면으로만 이동
+                    Log.d("RoutineSearchHost", "태그 선택 안됨 → 검색 초기 화면으로 전환")
                     searchMode = SearchMode.INITIAL
                     searchQuery = ""
                     selectedTags.clear()
@@ -55,11 +59,13 @@ fun RoutineSearchHost(
             }
 
             SearchMode.INITIAL -> {
-                // ▼▼▼ [변경] INITIAL에서도 동일 정책 적용
-                val popped = navController.popBackStack() // ← [변경]
+                Log.d("RoutineSearchHost", "INITIAL 모드 → 이전 화면으로 popBackStack()")
+                val popped = navController.popBackStack()
+                Log.d("RoutineSearchHost", "popBackStack 결과: $popped")
                 if (!popped) {
-                    navController.graph.startDestinationRoute?.let { start -> // ← [추가]
-                        navController.navigate(start)                           // ← [추가]
+                    Log.w("RoutineSearchHost", "백스택 없음 → startDestination 이동")
+                    navController.graph.startDestinationRoute?.let { start ->
+                        navController.navigate(start)
                     }
                 }
             }
@@ -67,7 +73,10 @@ fun RoutineSearchHost(
     }
 
     // 시스템 뒤로가기 처리
-    BackHandler { handleNavigateBack() }
+    BackHandler {
+        Log.d("RoutineSearchHost", "BackHandler 호출됨")
+        handleNavigateBack()
+    }
 
     when (searchMode) {
         SearchMode.INITIAL -> {
