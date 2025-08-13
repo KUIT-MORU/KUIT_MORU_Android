@@ -62,8 +62,6 @@ import com.konkuk.moru.core.component.routinedetail.RoutineDescriptionField
 import com.konkuk.moru.core.component.routinedetail.RoutineImageSelectBox
 import com.konkuk.moru.core.component.routinedetail.SelectUsedAppSection
 import com.konkuk.moru.core.component.routinedetail.ShowUserCheckbox
-import com.konkuk.moru.core.component.routinedetail.appdisplay.AddAppBox
-import com.konkuk.moru.core.component.routinedetail.appdisplay.SelectedAppNoText
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.routinecreate.component.StepItem
 import com.konkuk.moru.presentation.routinecreate.component.TimePickerDialog

@@ -13,6 +13,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,11 +26,10 @@ import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.routinedetail.MyRoutineTag
 import com.konkuk.moru.core.component.routinedetail.SelectUsedAppSection
 import com.konkuk.moru.data.model.RoutineStepActions
-import com.konkuk.moru.presentation.myroutines.component.RoutineItemCard
 import com.konkuk.moru.core.component.routinedetail.routineStepEditableList
 import com.konkuk.moru.presentation.myroutines.viewmodel.MyRoutineDetailViewModel
+import com.konkuk.moru.presentation.routinecreate.component.TimePickerDialog
 import com.konkuk.moru.ui.theme.MORUTheme
-import kotlinx.coroutines.Job
 
 
 @Composable
@@ -42,19 +44,26 @@ fun MyRoutineDetailContent(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val routine = uiState.routine ?: return
     val isEditMode = uiState.isEditMode
-    //val isEditMode = true
+//    val isEditMode = true
 
     // LazyColumn에서 실제 스텝 리스트가 시작되기 전의 아이템 개수 (Card, Tag, "STEP" 헤더)
     val headerItemCount = 3
 
+    var isTimePickerVisible by remember { mutableStateOf(false) } // [추가]
+    var editingStepIndex by remember { mutableStateOf<Int?>(null) } // [추가]
+
     val routineStepActions = RoutineStepActions(
         onDragStart = viewModel::onDragStart,
         onDrag = viewModel::onDrag,
-        onReorderComplete = viewModel::finalizeStepReorder, // finalizeStepReorder 함수로 변경
-        onReorderCancel = viewModel::cancelDrag,           // cancelDrag 함수로 변경
+        onReorderComplete = viewModel::finalizeStepReorder,
+        onReorderCancel = viewModel::cancelDrag,
         onDeleteStep = viewModel::deleteStep,
         onStepNameChange = viewModel::updateStepName,
-        onAddStep = viewModel::addStep
+        onAddStep = viewModel::addStep,
+        onTimeClick = { index -> // [추가]
+            editingStepIndex = index
+            isTimePickerVisible = true
+        }
     )
 
 
@@ -150,6 +159,27 @@ fun MyRoutineDetailContent(
             backgroundColor = MORUTheme.colors.limeGreen,
             contentColor = MORUTheme.colors.black,
             shape = RoundedCornerShape(size = 0.dp)
+        )
+    }
+    if (isTimePickerVisible) {
+        val init = editingStepIndex?.let { idx -> routine.steps.getOrNull(idx)?.duration } // "HH:MM:SS"
+        TimePickerDialog(
+            initialTime = init,
+            onConfirm = { h, m, s ->
+                val hh = "%02d".format(h)
+                val mm = "%02d".format(m)
+                val ss = "%02d".format(s)
+                val newDuration = "$hh:$mm:$ss"
+                editingStepIndex?.let { idx ->
+                    viewModel.updateStepDuration(idx, newDuration) // [추가]
+                }
+                isTimePickerVisible = false
+                editingStepIndex = null
+            },
+            onDismiss = {
+                isTimePickerVisible = false
+                editingStepIndex = null
+            }
         )
     }
 }

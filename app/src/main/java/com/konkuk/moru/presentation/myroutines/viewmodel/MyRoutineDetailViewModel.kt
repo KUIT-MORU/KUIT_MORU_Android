@@ -208,6 +208,13 @@ class MyRoutineDetailViewModel : ViewModel() {
         }
     }
 
+    fun updateStepDuration(index: Int, newDuration: String) {
+        val current = _uiState.value.routine ?: return
+        if (index < 0 || index >= current.steps.size) return
+        val updatedSteps = current.steps.toMutableList()
+        updatedSteps[index] = updatedSteps[index].copy(duration = newDuration) // [추가]
+        _uiState.update { it.copy(routine = current.copy(steps = updatedSteps)) } // [추가]
+    }
 
     fun onDragStart(index: Int) {
         _uiState.update { it.copy(draggedStepIndex = index) }
