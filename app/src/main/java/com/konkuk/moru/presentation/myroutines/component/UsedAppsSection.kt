@@ -51,13 +51,14 @@ fun UsedAppsSection(
         Spacer(Modifier.height(16.dp))
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(9.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment =Alignment.Top,
         ) {
             items(apps) { app ->
                 Box {
                     Column(
                         modifier = Modifier.width(52.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
+
                     ) {
                         AsyncImage(
                             model = app.iconUrl,
