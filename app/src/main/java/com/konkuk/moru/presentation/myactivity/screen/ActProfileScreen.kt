@@ -258,8 +258,8 @@ fun OutlinedText(title: String, text: String) {
         contentAlignment = Alignment.CenterStart,
         modifier = Modifier
             .fillMaxWidth()
-            .height(45.dp)
-            .border(1.dp, colors.lightGray, RoundedCornerShape(10.5.dp))
+            .height(50.dp)
+            .border(1.dp, colors.lightGray, RoundedCornerShape(4.dp))
             .padding(start = 16.dp)
     ) {
         Text(
