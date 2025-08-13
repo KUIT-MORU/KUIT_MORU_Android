@@ -45,7 +45,7 @@ fun TodayRoutineListBoxItem(
             .width(330.dp)
             .height(120.dp)
             .shadow(
-                elevation = 8.dp,
+                elevation = 2.dp,
                 shape = RoundedCornerShape(12.dp),
             )
             .background(
@@ -126,7 +126,7 @@ fun TodayRoutineListBoxItem(
                     color = Color(0xFF61646B)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
-                
+
                 // 설정 시간대~종료 시간대 표시
                 val timeText = if (routine.scheduledTime != null) {
                     val startTime = routine.scheduledTime
@@ -177,7 +177,7 @@ fun TodayRoutineListBoxItem(
                     } else {
                         null
                     }
-                    
+
                     if (endTime != null) {
                         "${startTime.format(DateTimeFormatter.ofPattern("HH:mm"))}~${endTime.format(DateTimeFormatter.ofPattern("HH:mm"))}"
                     } else {
@@ -186,7 +186,7 @@ fun TodayRoutineListBoxItem(
                 } else {
                     "시간 미설정"
                 }
-                
+
                 Text(
                     text = timeText,
                     style = typography.title_B_12,
