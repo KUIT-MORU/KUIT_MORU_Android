@@ -1,3 +1,4 @@
+/*
 package com.konkuk.moru.presentation.routinefeed.component.notification
 
 
@@ -14,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import com.konkuk.moru.presentation.routinefeed.data.Notification
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NotificationGroup(
     title: String,
@@ -34,10 +34,10 @@ fun NotificationGroup(
         )
 
         itemsToShow.forEach { notification ->
-            NotificationRow(notification = notification)
+            NotificationRow(notification = notification, onProfileClick = {})
             Divider(color = Color.LightGray, thickness = 0.5.dp)
         }
 
         // 그룹 내 '더보기' 버튼 제거
     }
-}
+}*/

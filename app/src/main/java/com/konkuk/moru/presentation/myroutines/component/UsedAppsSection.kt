@@ -10,12 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -25,10 +25,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.konkuk.moru.R
+import com.konkuk.moru.core.component.routinedetail.appdisplay.AddAppBox
 import com.konkuk.moru.data.model.AppInfo
 import com.konkuk.moru.ui.theme.MORUTheme
 
@@ -48,12 +50,16 @@ fun UsedAppsSection(
         Text("사용 앱", style = MORUTheme.typography.title_B_20, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.spacedBy(9.dp),
+            verticalAlignment =Alignment.Top,
         ) {
             items(apps) { app ->
                 Box {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        modifier = Modifier.width(52.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+
+                    ) {
                         AsyncImage(
                             model = app.iconUrl,
                             contentDescription = app.name,
@@ -68,7 +74,12 @@ fun UsedAppsSection(
                             error = painterResource(id = R.drawable.ic_info)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(app.name, style = MORUTheme.typography.time_R_12)
+                        Text(
+                            app.name,
+                            style = MORUTheme.typography.desc_M_12,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                     if (isEditMode) {
                         Icon(
@@ -88,26 +99,49 @@ fun UsedAppsSection(
 
             if (isEditMode) {
                 item {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(
-                                color = MORUTheme.colors.veryLightGray,
-                                shape = RoundedCornerShape(size = 6.dp)
-                            )
-                            .clickable(onClick = onAddApp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            modifier = Modifier.size(24.dp),
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Add App",
-                            tint = MORUTheme.colors.darkGray
-                        )
-                    }
+                    AddAppBox(
+                        onClick = onAddApp
+                    )
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true, name = "사용 앱 - 보기 모드")
+@Composable
+private fun UsedAppsSectionPreview_ViewMode() {
+    val apps = listOf(
+        AppInfo(name = "YouTube", iconUrl = null, packageName = "com.google.android.youtube"),
+        AppInfo(name = "Notion", iconUrl = null, packageName = "so.notion.id"),
+        AppInfo(name = "Spotify", iconUrl = null, packageName = "com.spotify.music"),
+    )
+    MORUTheme {
+        UsedAppsSection(
+            apps = apps,
+            isEditMode = false,
+            onAddApp = {},
+            onDeleteApp = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "사용 앱 - 편집 모드")
+@Composable
+private fun UsedAppsSectionPreview_EditMode() {
+    val apps = listOf(
+        AppInfo(name = "YouTube", iconUrl = null, packageName = "com.google.android.youtube"),
+        AppInfo(name = "Keep 메모", iconUrl = null, packageName = "com.google.android.keep"),
+        AppInfo(name = "To Do", iconUrl = null, packageName = "com.microsoft.todos"),
+        AppInfo(name = "Forest", iconUrl = null, packageName = "cc.forestapp"),
+    )
+    MORUTheme {
+        UsedAppsSection(
+            apps = apps,
+            isEditMode = true,
+            onAddApp = {},
+            onDeleteApp = {}
+        )
     }
 }
 
@@ -115,10 +149,10 @@ fun UsedAppsSection(
 @Composable
 fun UsedAppsSectionPreview() {
     val sampleApps = listOf(
-        AppInfo("app1", "https://example.com/app1.png"),
-        AppInfo("app2", "https://example.com/app2.png"),
-        AppInfo("app3", "https://example.com/app3.png"),
-        AppInfo("app4", "https://example.com/app4.png")
+        AppInfo("app1", "https://example.com/app1.png",packageName = null),
+        AppInfo("app2", "https://example.com/app2.png",packageName = null),
+        AppInfo("app3", "https://example.com/app3.png",packageName = null),
+        AppInfo("app4", "https://example.com/app4.png",packageName = null)
     )
     MORUTheme {
         UsedAppsSection(

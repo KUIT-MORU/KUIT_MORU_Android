@@ -12,7 +12,8 @@ data class FollowUser(
 
 
 data class UserProfileUiState(
-    val userId: String = "user--1",
+    val userId:String?=null,
+    val isMe: Boolean?=false,
     val nickname: String = "",
     val bio: String = "",
     val profileImageUrl: String? = null,
@@ -20,6 +21,7 @@ data class UserProfileUiState(
     val followerCount: Int = 0,
     val followingCount: Int = 0,
     val isFollowing: Boolean = false,
+    val isFollowLoading: Boolean = false,
     val runningRoutines: List<Routine> = emptyList(),
     val userRoutines: List<Routine> = emptyList(),
     val isRunningRoutineExpanded: Boolean = true

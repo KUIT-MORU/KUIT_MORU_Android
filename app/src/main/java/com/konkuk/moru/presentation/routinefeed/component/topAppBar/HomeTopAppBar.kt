@@ -35,7 +35,7 @@ fun HomeTopAppBar(
                 query = "",
                 onQueryChange = {},
                 onSearch = {},
-                onClick = onSearchClick, // ◀◀◀ 수정한 MoruSearchBar를 클릭 모드로 사용
+                onClick = onSearchClick,
                 modifier = Modifier.padding(start = 10.dp, end = 10.dp)
             )
         },
@@ -51,7 +51,7 @@ fun HomeTopAppBar(
             }
         },
         actions = {
-            IconButton(onClick = {}) {
+            IconButton(onClick = onSearchClick) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_search),
                     contentDescription = "검색",

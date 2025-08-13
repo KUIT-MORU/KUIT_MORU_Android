@@ -1,7 +1,7 @@
 package com.konkuk.moru.data.service
 
 import com.konkuk.moru.data.dto.response.RoutinePageResponse
-import com.konkuk.moru.data.dto.response.RoutineDetailResponse
+import com.konkuk.moru.data.dto.response.RoutineDetailResponseV1
 import com.konkuk.moru.data.dto.response.RoutineStepResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -18,7 +18,7 @@ interface RoutineService {
     ): RoutinePageResponse
 
     @GET("/api/routines/{routineId}")
-    suspend fun getRoutineDetail(@Path("routineId") routineId: String): RoutineDetailResponse
+    suspend fun getRoutineDetail(@Path("routineId") routineId: String): RoutineDetailResponseV1
 
     @GET("/api/routines/{routineId}/steps")
     suspend fun getRoutineSteps(@Path("routineId") routineId: String): List<RoutineStepResponse>

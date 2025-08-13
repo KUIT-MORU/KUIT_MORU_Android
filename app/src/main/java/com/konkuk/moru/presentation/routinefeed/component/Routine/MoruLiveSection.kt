@@ -35,6 +35,7 @@ import coil3.size.Size
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
 import com.konkuk.moru.ui.theme.MORUTheme
+
 @Composable
 fun MoruLiveSection(
     modifier: Modifier = Modifier,
@@ -69,7 +70,6 @@ fun MoruLiveSection(
                     // [수정] 기존 ProfileCard와 동일한 UI를 Column과 AsyncImage로 직접 구현
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.clickable { onUserClick(user.userId) }
                     ) {
                         AsyncImage(
@@ -78,7 +78,7 @@ fun MoruLiveSection(
                                 .size(Size(256, 256)) // 64dp보다 큰 적절한 픽셀 크기로 지정 (256px 정도면 충분)
                                 .crossfade(true) // 부드러운 이미지 전환 효과
                                 .build(),
-                            contentDescription = "${user.name}의 프로필 사진",
+                            contentDescription = "${user.nickname}의 프로필 사진",
                             placeholder = painterResource(id = R.drawable.ic_profile_with_background),
                             error = painterResource(id = R.drawable.ic_profile_with_background),
                             contentScale = ContentScale.Crop,
@@ -86,8 +86,9 @@ fun MoruLiveSection(
                                 .size(64.dp)
                                 .clip(CircleShape)
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = if (user.name.length > 6) "${user.name.take(6)}.." else user.name,
+                            text = if (user.nickname.length > 6) "${user.nickname.take(6)}.." else user.nickname,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black
@@ -95,7 +96,7 @@ fun MoruLiveSection(
 
                         // ✅ 수정된 부분: 태그가 8글자 넘으면 말줄임표 처리
                         Text(
-                            text = if (user.tag.length > 6) "${user.tag.take(6)}.." else user.tag,
+                            text = if (user.motivationTag.length > 6) "#${user.motivationTag.take(6)}.." else "#${user.motivationTag}",
                             fontSize = 12.sp,
                             color = Color.Gray
                         )
@@ -115,7 +116,11 @@ fun MoruLiveSection(
                     contentDescription = "No Live",
                     modifier = Modifier.size(48.dp)
                 )
-                Text(text = "진행중인 라이브가 없어요", color = MORUTheme.colors.mediumGray, style= MORUTheme.typography.desc_M_16)
+                Text(
+                    text = "진행중인 라이브가 없어요",
+                    color = MORUTheme.colors.mediumGray,
+                    style = MORUTheme.typography.desc_M_16
+                )
             }
         }
     }
@@ -126,11 +131,31 @@ fun MoruLiveSection(
 @Composable
 private fun MoruLiveSectionPreview() {
     val sampleUsers = listOf(
-        LiveUserInfo("3fa85f64-5717-4562-b3fc-2c963f66afa6", "운동하는 제니--------------", "#오운완", "https://images.unsplash.com/photo-1580489944761-15a19d654956"),
+        LiveUserInfo(
+            "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "운동하는 제니--------------",
+            "#오운완",
+            "https://images.unsplash.com/photo-1580489944761-15a19d654956"
+        ),
         LiveUserInfo("3fa85f64-5717-4562-b3fc-2c963f66afa61", "개발자 모루", "#TIL", null),
-        LiveUserInfo("3fa85f64-5717-4562-b3fc-2c963f66afa62", "요가마스터", "#요가", "https://images.unsplash.com/photo-1552058544-f2b08422138a"),
-        LiveUserInfo("3fa85f64-5717-4562-b3fc-2c963f66afa63", "개발왕", "#코딩", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"),
-        LiveUserInfo("3fa85f64-5717-4562-b3fc-2c963f66afa64", "요리왕 준", "#집밥", "https://images.unsplash.com/photo-1541533267753-bab141444692"),
+        LiveUserInfo(
+            "3fa85f64-5717-4562-b3fc-2c963f66afa62",
+            "요가마스터",
+            "#요가",
+            "https://images.unsplash.com/photo-1552058544-f2b08422138a"
+        ),
+        LiveUserInfo(
+            "3fa85f64-5717-4562-b3fc-2c963f66afa63",
+            "개발왕",
+            "#코딩",
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
+        ),
+        LiveUserInfo(
+            "3fa85f64-5717-4562-b3fc-2c963f66afa64",
+            "요리왕 준",
+            "#집밥",
+            "https://images.unsplash.com/photo-1541533267753-bab141444692"
+        ),
     )
 
     MoruLiveSection(

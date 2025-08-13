@@ -32,12 +32,12 @@ import com.konkuk.moru.ui.theme.MORUTheme
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-public fun RoutineInfoOverlay(
+fun RoutineInfoOverlay(
     modifier: Modifier = Modifier,
     routine: Routine,
     onProfileClick: (authorId: String) -> Unit
 ) {
-    val contentColor = Color.White
+    //val contentColor = Color.White
 
     val displayTitle = if (routine.title.length > 8) {
         "${routine.title.take(8)}..."
@@ -55,7 +55,8 @@ public fun RoutineInfoOverlay(
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.clickable { onProfileClick(routine.authorId) }
+                modifier = Modifier.clickable(enabled = routine.authorId.isNotBlank()) { // 👈 이 부분!
+                    onProfileClick(routine.authorId)}
             ) {
                 AsyncImage(
                     model = routine.authorProfileUrl,

@@ -1,6 +1,10 @@
 package com.konkuk.moru.presentation.routinefeed.screen.userprofile
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -53,6 +58,7 @@ import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.routine.RoutineListItem
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.navigation.Route
+import com.konkuk.moru.presentation.navigation.navigateUpOrHome
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppBar
 import com.konkuk.moru.presentation.routinefeed.data.UserProfileUiState
 import com.konkuk.moru.presentation.routinefeed.viewmodel.UserProfileViewModel
@@ -66,13 +72,21 @@ fun UserProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(uiState.userId) {
+        val key = "follow_result_${uiState.userId}"
+        val handle = navController.currentBackStackEntry?.savedStateHandle ?: return@LaunchedEffect
+        // 초기값은 현재 isFollowing
+        handle.getStateFlow(key, uiState.isFollowing).collect { isFollowing ->
+            viewModel.applyExternalFollow(isFollowing)
+        }
+    }
     Scaffold(
         containerColor = Color.White,
         topBar = {
             BasicTopAppBar(
-                title = "사용자명",
+                title = uiState.nickname.ifBlank { "사용자명" },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
+                    IconButton(onClick = { navController.navigateUpOrHome() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
                     }
                 }
@@ -80,7 +94,10 @@ fun UserProfileScreen(
         }
     ) { paddingValues ->
         UserProfileContent(
-            modifier = Modifier.padding(paddingValues),
+            modifier = Modifier
+                .padding(paddingValues)
+                .padding(bottom = 80.dp)
+                .background(Color.White),
             state = uiState,
             onFollowClick = viewModel::toggleFollow,
             onToggleExpansion = viewModel::toggleRunningRoutineExpansion,
@@ -159,8 +176,7 @@ private fun UserProfileContent(
                     tags = routine.tags,
                     likeCount = routine.likes,
                     isLiked = routine.isLiked,
-                    onLikeClick = { onLikeClick(routine.routineId) },
-                    onItemClick = { onRoutineClick(routine.routineId)}
+                    onItemClick = { onRoutineClick(routine.routineId) }
                 )
             }
         }
@@ -180,7 +196,7 @@ private fun ProfileHeader(
     val backgroundColor = if (state.isFollowing) MORUTheme.colors.veryLightGray else Color.Black
     val contentColor =
         if (state.isFollowing) MORUTheme.colors.mediumGray else MORUTheme.colors.limeGreen
-
+    val showFollowButton = state.isMe == false   // null이면 숨김, false일 때만 노출
     val bottomRoundedCornerShape = RoundedCornerShape(
         topStart = 0.dp,
         topEnd = 0.dp,
@@ -220,18 +236,27 @@ private fun ProfileHeader(
             )
             Spacer(modifier = Modifier.width(24.dp))
             Column(modifier = Modifier.weight(1f)) {
-                MoruButton(
-                    text = buttonText,
-                    onClick = onFollowClick,
-                    backgroundColor = backgroundColor,
-                    contentColor = contentColor,
-                    shape = RoundedCornerShape(140.dp),
-                    textStyle = MORUTheme.typography.title_B_14,
-                    modifier = Modifier
-                        .height(37.dp)
-                        .width(88.dp)
-                )
-                Spacer(modifier = Modifier.height(12.dp))
+
+                AnimatedVisibility(
+                    visible = showFollowButton,
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut()
+                ) {
+                    Column {
+                        MoruButton(
+                            text = if (state.isFollowing) "팔로잉" else "팔로우",
+                            onClick = onFollowClick,
+                            backgroundColor = if (state.isFollowing) MORUTheme.colors.veryLightGray else Color.Black,
+                            contentColor = if (state.isFollowing) MORUTheme.colors.mediumGray else MORUTheme.colors.limeGreen,
+                            shape = RoundedCornerShape(140.dp),
+                            textStyle = MORUTheme.typography.title_B_14,
+                            modifier = Modifier
+                                .height(37.dp)
+                                .width(88.dp)
+                        )
+                        Spacer(Modifier.height(12.dp))
+                    }
+                }
                 ProfileStats(
                     routineCount = state.routineCount,
                     followerCount = state.followerCount,
@@ -350,7 +375,6 @@ private fun ExpandableRoutineSection(
                             tags = routine.tags,
                             likeCount = routine.likes,
                             isLiked = routine.isLiked,
-                            onLikeClick = { onLikeClick(routine.routineId) },
                             onItemClick = { onRoutineClick(routine.routineId) }
                         )
                     }

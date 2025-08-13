@@ -38,7 +38,7 @@ sealed class Route(
     }
 
     object Follow : Route("follow/{userId}/{selectedTab}") { // [수정] userId 추가
-        fun createRoute(userId: String, selectedTab: String) = "follow/$userId/$selectedTab"
+        fun createRoute(userId: String?, selectedTab: String) = "follow/$userId/$selectedTab"
     }
 
     // [추가] UserProfileScreen 경로 정의 (어떤 유저의 프로필인지 'userId' 파라미터 추가)
@@ -46,6 +46,10 @@ sealed class Route(
         fun createRoute(userId: String) = "user_profile/$userId"
     }
 
+    object RoutineDetail {
+        const val route = "routine_detail/{routineId}"
+        fun create(routineId: String) = "routine_detail/$routineId"
+    }
     data object MyRoutine : Route(route = "my_routine")
 
     data object MyRoutineDetail : Route("my_routine_detail/{routineId}") {

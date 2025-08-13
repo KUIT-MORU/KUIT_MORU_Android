@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,15 +29,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.style.TextOverflow
-import com.konkuk.moru.R // 실제 프로젝트의 R 클래스를 임포트하세요.
-import com.konkuk.moru.ui.theme.MORUTheme
+import com.konkuk.moru.R
+import com.konkuk.moru.ui.theme.moruFontMedium
+import com.konkuk.moru.ui.theme.moruFontRegular
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,7 +58,7 @@ fun RoutineCardWithImage(
     tags: List<String>,
     likeCount: Int,
     isLiked: Boolean,
-    onLikeClick: () -> Unit,
+    //onLikeClick: () -> Unit,
     onClick: () -> Unit,
 ) {
     Column(
@@ -82,11 +81,12 @@ fun RoutineCardWithImage(
             //contentScale = ContentScale.Fit
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = routineName,
             fontWeight = FontWeight(500),
+            fontFamily = moruFontMedium,
             fontSize = 12.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -94,6 +94,10 @@ fun RoutineCardWithImage(
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = tags.joinToString(" ") { "#$it" },
+            fontFamily = moruFontRegular,
+            maxLines = 2,                               // 최대 2줄
+            overflow = TextOverflow.Ellipsis,          // 말줄임
+            lineHeight = 12.sp,
             fontSize = 10.sp,
             fontWeight = FontWeight(400),
             color = Color.Gray
@@ -101,12 +105,12 @@ fun RoutineCardWithImage(
         Spacer(modifier = Modifier.height(3.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.clickable { onLikeClick() }
+            //modifier = Modifier.clickable { onLikeClick() }
         ) {
             Icon(
-                imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                imageVector = Icons.Outlined.FavoriteBorder,
                 contentDescription = "좋아요",
-                tint = if (isLiked) Color.Red else Color.Gray,
+                tint =  Color.Gray,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
@@ -185,16 +189,6 @@ fun RoutineListWithImageScreen() {
                             // TODO: 상세 화면으로 이동하는 로직 구현
                             println("${routine.name} 카드 클릭됨!")
                         },
-                        onLikeClick = {
-                            // 로컬 UI 상태를 즉시 업데이트 (Optimistic UI)
-                            val newLikeStatus = !isLiked
-                            likedStates[routine.id] = newLikeStatus
-                            likeCounts[routine.id] =
-                                if (newLikeStatus) currentLikeCount + 1 else currentLikeCount - 1
-
-                            // TODO: ViewModel을 통해 서버에 API 요청을 보내는 로직 구현
-                            println("서버로 '${routine.name}' 좋아요 상태($newLikeStatus) 전송 요청")
-                        }
                     )
                 }
             }
