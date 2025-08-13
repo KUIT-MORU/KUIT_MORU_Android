@@ -29,11 +29,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
 import com.konkuk.moru.core.util.modifier.softShadow
+import com.konkuk.moru.presentation.myactivity.viewmodel.InsightUiState
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import kotlinx.coroutines.launch
 
 @Composable
-fun InsightGraph() {
+fun InsightGraph(
+    insightData: InsightUiState
+) {
     val pagerState = rememberPagerState(pageCount = { 3 })
 
     Column(
@@ -62,19 +65,19 @@ fun InsightGraph() {
                     .background(Color.White, shape = RoundedCornerShape(4.dp))
             ) { page ->
                 when (page) {
-                    0 -> InsightGraphA(70f, 60f)
+                    0 -> InsightGraphA((insightData.globalAverageRoutineCompletionRate*100).toFloat(), (insightData.routineCompletionRate*100).toFloat())
                     1 -> InsightGraphB(
                         userName = "정해찬",
-                        weekdayUser = 0.4f,
-                        weekdayAll = 0.7f,
-                        weekendUser = 0.5f,
-                        weekendAll = 1.0f
+                        weekdayUser = (insightData.weekdayUser.toFloat()),
+                        weekdayAll = (insightData.weekdayOverall.toFloat()),
+                        weekendUser = (insightData.weekendUser.toFloat()),
+                        weekendAll = (insightData.weekendOverall.toFloat())
                     )
                     2 -> InsightGraphC(
-                        morning = 60f,
-                        afternoon = 45f,
-                        night = 100f,
-                        lateNight = 25f
+                        morning = insightData.completionByTimeSlot["MORNING"]?.toFloat() ?: 0f,
+                        afternoon = insightData.completionByTimeSlot["AFTERNOON"]?.toFloat() ?: 0f,
+                        night = insightData.completionByTimeSlot["EVENING"]?.toFloat() ?: 0f,
+                        lateNight = insightData.completionByTimeSlot["NIGHT"]?.toFloat() ?: 0f
                     )
 
                 }
