@@ -42,14 +42,21 @@ object NetworkModule {
             .addInterceptor(loggingInterceptor)
             .build()
 
+    @Provides @Singleton
+    fun provideJson(): Json = Json {
+        coerceInputValues = true
+        ignoreUnknownKeys = true
+    }
+
     @Provides @Singleton @Named("authlessRetrofit")
     fun provideAuthlessRetrofit(
         @Named("authlessOkHttp") ok: OkHttpClient,
-        baseUrl: String
+        baseUrl: String,
+        json: Json
     ): Retrofit = Retrofit.Builder()
         .baseUrl(baseUrl)
         .client(ok)
-        .addConverterFactory(Json.asConverterFactory("application/json".toMediaType()))
+        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
 
     @Provides @Singleton
@@ -68,11 +75,11 @@ object NetworkModule {
             .build()
 
     @Provides @Singleton
-    fun provideRetrofit(baseUrl: String, okHttp: OkHttpClient): Retrofit =
+    fun provideRetrofit(baseUrl: String, okHttp: OkHttpClient, json: Json): Retrofit =
         Retrofit.Builder()
             .baseUrl(baseUrl)
             .client(okHttp)
-            .addConverterFactory(Json.asConverterFactory("application/json".toMediaType()))
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
 
     @Provides @Singleton
@@ -90,7 +97,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideUserService(retrofit: Retrofit): com.konkuk.moru.data.service.UserService =
-        retrofit.create(com.konkuk.moru.data.service.UserService::class.java)
+    fun provideUserService(retrofit: Retrofit): com.konkuk.moru.data.service.HomeUserService =
+        retrofit.create(com.konkuk.moru.data.service.HomeUserService::class.java)
 
 }

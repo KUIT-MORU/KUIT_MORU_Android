@@ -14,7 +14,7 @@ fun RoutineResponse.toDomain(): Routine =
         title = title,
         description = "",                  // 목록 응답에 없으므로 기본값
         imageUrl = imageUrl,               // 서버에서 받은 imageUrl 사용
-        category = "",                     // 서버 응답에 없으므로 기본값
+        category = category ?: "",         // 서버에서 받은 category 사용, 없으면 빈 문자열
         tags = tags,
         authorId = "me",                   // DummyData 제거: 임시 고정값(프로필 연동 시 교체)
         authorName = "",                   // 필요 시 유저 프로필에서 채움
@@ -23,6 +23,8 @@ fun RoutineResponse.toDomain(): Routine =
         isLiked = false,
         isBookmarked = false,
         isRunning = isRunning,             // 서버에서 받은 isRunning 사용
+        isSimple = isSimple,               // 서버에서 받은 isSimple 사용
+        requiredTime = requiredTime ?: "", // 서버에서 받은 requiredTime 사용
         scheduledDays = scheduledDays.mapNotNull { dayString ->
             when (dayString.uppercase()) {
                 "MON" -> DayOfWeek.MONDAY

@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,13 +35,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import android.util.Log
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineHeaderBox
 import com.konkuk.moru.presentation.home.component.RoutineStepItem
+import com.konkuk.moru.presentation.home.viewmodel.HomeRoutinesViewModel
 import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
+import com.konkuk.moru.data.dto.response.RoutineDetailResponse
 
 val sampleSteps = listOf(
     RoutineStepData("샤워하기", 15, true),
@@ -54,45 +59,129 @@ val sampleSteps = listOf(
 fun RoutineFocusIntroScreen(
     modifier: Modifier = Modifier,
     sharedViewModel: SharedRoutineViewModel,
-    onStartClick: (selectedSteps: List<RoutineStepData>, title: String, hashTag: String) -> Unit,
+    onStartClick: (selectedSteps: List<RoutineStepData>, title: String, hashTag: String, category: String, totalDuration: Int) -> Unit,
     onBackClick: () -> Unit,
 ) {
+    Log.d("RoutineFocusIntroScreen", "🚀 RoutineFocusIntroScreen Composable 시작!")
+    Log.d("RoutineFocusIntroScreen", "📱 RoutineFocusIntroScreen이 실행되고 있습니다!")
+    Log.d("RoutineFocusIntroScreen", "🔍 sharedViewModel: $sharedViewModel")
+    Log.d("RoutineFocusIntroScreen", "🔍 onStartClick: $onStartClick")
+    Log.d("RoutineFocusIntroScreen", "🔍 onBackClick: $onBackClick")
+    
+    // HomeRoutinesViewModel 주입
+    val homeViewModel: HomeRoutinesViewModel = hiltViewModel()
+    Log.d("RoutineFocusIntroScreen", "🔍 homeViewModel: $homeViewModel")
+    
     // 받아올 정보들
-    val routineTitle by sharedViewModel.routineTitle.collectAsState()
-    val hashTagList by sharedViewModel.routineTags.collectAsState()
-    val category by sharedViewModel.routineCategory.collectAsState()
-    val steps by sharedViewModel.selectedSteps.collectAsState()
+    val routineTitle = sharedViewModel.routineTitle.collectAsState<String>().value
+    val hashTagList = sharedViewModel.routineTags.collectAsState<List<String>>().value
+    val category = sharedViewModel.routineCategory.collectAsState<String>().value
+    val isSimple = sharedViewModel.isSimple.collectAsState<Boolean>().value
+    val steps = sharedViewModel.selectedSteps.collectAsState<List<RoutineStepData>>().value
+
+    val routineDetail: com.konkuk.moru.data.dto.response.RoutineDetailResponse? =
+        homeViewModel.routineDetail.collectAsState().value
     val hashTag = hashTagList.joinToString(" ") { "#$it" }
-
-    // 각 루틴의 상태를 기억할 수 있또록 상태로 복사해서 관리
-    var stepStates by remember { mutableStateOf(emptyList<RoutineStepData>()) }
-    LaunchedEffect(steps) { stepStates = steps.map { it.copy() } }
-
-    // 스위치가 on인 상태의 루틴의 소요시간만 합해서 총 소요시간 계산에 반영
-    val totalDuration by remember(stepStates, category) {
-        androidx.compose.runtime.derivedStateOf {
-            if (category == "간편") stepStates.sumOf { it.duration }
-            else stepStates.filter { it.isChecked }.sumOf { it.duration }
+    
+    // 로그 추가
+    Log.d("RoutineFocusIntroScreen", "🔄 데이터 수신 상태:")
+    Log.d("RoutineFocusIntroScreen", "   - routineTitle: '$routineTitle'")
+    Log.d("RoutineFocusIntroScreen", "   - category: '$category' (길이: ${category.length})")
+    Log.d("RoutineFocusIntroScreen", "   - isSimple: $isSimple")
+    Log.d("RoutineFocusIntroScreen", "   - hashTagList: $hashTagList")
+    Log.d("RoutineFocusIntroScreen", "   - steps 개수: ${steps.size}")
+    Log.d("RoutineFocusIntroScreen", "   - routineDetail: ${routineDetail?.title ?: "null"}")
+    Log.d("RoutineFocusIntroScreen", "   - routineDetail.category: ${routineDetail?.category ?: "null"}")
+    
+    // 루틴 상세 정보가 로드되면 스텝 정보를 SharedViewModel에 설정
+    LaunchedEffect(routineDetail) {
+        Log.d("RoutineFocusIntroScreen", "🔄 LaunchedEffect(routineDetail) 실행")
+        routineDetail?.let { detail ->
+            Log.d("RoutineFocusIntroScreen", "✅ routineDetail 로드됨:")
+            Log.d("RoutineFocusIntroScreen", "   - 제목: ${detail.title}")
+            Log.d("RoutineFocusIntroScreen", "   - 스텝 개수: ${detail.steps.size}")
+            if (detail.steps.isNotEmpty()) {
+                Log.d("RoutineFocusIntroScreen", "🔄 setStepsFromServer 호출")
+                sharedViewModel.setStepsFromServer(detail.steps)
+            } else {
+                Log.d("RoutineFocusIntroScreen", "⚠️ 스텝이 비어있음")
+            }
+        } ?: run {
+            Log.d("RoutineFocusIntroScreen", "⚠️ routineDetail이 null")
         }
     }
 
+    // 각 루틴의 상태를 기억할 수 있또록 상태로 복사해서 관리
+    var stepStates by remember { mutableStateOf(emptyList<RoutineStepData>()) }
+    LaunchedEffect(steps) { 
+        Log.d("RoutineFocusIntroScreen", "🔄 LaunchedEffect(steps) 실행: steps.size=${steps.size}")
+        stepStates = steps.map { it.copy() }
+        Log.d("RoutineFocusIntroScreen", "✅ stepStates 설정 완료: ${stepStates.size}개")
+    }
+
+    // 스위치가 on인 상태의 루틴의 소요시간만 합해서 총 소요시간 계산에 반영
+    val totalDurationState = remember(stepStates, category, isSimple) {
+        derivedStateOf<Int> {
+            val duration = if (isSimple || category == "간편") stepStates.sumOf { it.duration }
+            else stepStates.filter { it.isChecked }.sumOf { it.duration }
+            Log.d("RoutineFocusIntroScreen", "🔄 totalDuration 계산: category=$category, isSimple=$isSimple, stepStates.size=${stepStates.size}, duration=$duration")
+            duration
+        }
+    }
+
+    val totalDuration = totalDurationState.value
+    Log.d("RoutineFocusIntroScreen", "📊 totalDuration: $totalDuration, stepStates.size: ${stepStates.size}")
+
     // 하나라도 on이 되어 있다면 시작하기 버튼 활성화(총 소요시간으로 판단)
-    val isStartEnabled = totalDuration > 0
+    // 간편 루틴 또는 isSimple=true: 소요시간과 관계없이 활성화
+    // 집중 루틴: 선택된 루틴의 소요시간 > 0일 때만 활성화
+    val isStartEnabled = when {
+        isSimple || category == "간편" -> {
+            Log.d("RoutineFocusIntroScreen", "🔘 간편 루틴 (isSimple=$isSimple): 시작하기 버튼 활성화")
+            true
+        }
+        category == "집중" -> {
+            val enabled = totalDuration > 0
+            Log.d("RoutineFocusIntroScreen", "🔘 집중 루틴: 시작하기 버튼 활성화 = $enabled (totalDuration: $totalDuration)")
+            enabled
+        }
+        category.isBlank() || category.isEmpty() -> {
+            // category가 없으면 스텝이 있고 totalDuration > 0이면 집중 루틴으로 간주
+            val enabled = steps.isNotEmpty() && totalDuration > 0
+            Log.d("RoutineFocusIntroScreen", "⚠️ 카테고리 미정: '$category', 집중 루틴으로 간주, 활성화 = $enabled")
+            enabled
+        }
+        else -> {
+            Log.d("RoutineFocusIntroScreen", "⚠️ 알 수 없는 카테고리: '$category', steps.isNotEmpty() = ${steps.isNotEmpty()}")
+            steps.isNotEmpty() // 카테고리가 없으면 스텝이 있으면 활성화
+        }
+    }
+    Log.d("RoutineFocusIntroScreen", "🔘 최종 시작하기 버튼 활성화: $isStartEnabled")
 
     Scaffold(
         //시작하기 버튼
         bottomBar = {
             Button(
                 onClick = {
-                    val selected = if (category == "간편") {
+                    val selected = if (isSimple || category == "간편") {
                         stepStates
                     } else {
                         stepStates.filter { it.isChecked }
                     }
+                    
+                    Log.d("RoutineFocusIntroScreen", "🚀 시작하기 버튼 클릭!")
+                    Log.d("RoutineFocusIntroScreen", "   - 카테고리: $category")
+                    Log.d("RoutineFocusIntroScreen", "   - 선택된 스텝: ${selected.size}개")
+                    Log.d("RoutineFocusIntroScreen", "   - 총 소요시간: ${totalDuration}분")
+                    Log.d("RoutineFocusIntroScreen", "   - 제목: $routineTitle")
+                    Log.d("RoutineFocusIntroScreen", "   - 태그: $hashTag")
+                    
                     onStartClick(
                         selected,
                         routineTitle,
                         hashTag,
+                        category,
+                        totalDuration
                     )
                 },
                 enabled = isStartEnabled,
@@ -187,8 +276,8 @@ fun RoutineFocusIntroScreen(
                     title = step.name,
                     duration = step.duration,
                     isChecked = step.isChecked,
-                    showSwitch = category == "집중",
-                    showDuration = category == "집중",
+                    showSwitch = !isSimple && category == "집중",
+                    showDuration = !isSimple && category == "집중",
                     onCheckedChange = { checked ->
                         stepStates = stepStates.toMutableList().also { list ->
                             list[index] = list[index].copy(isChecked = checked)
@@ -204,8 +293,8 @@ fun RoutineFocusIntroScreen(
                         .height(1.5.dp)
                 )
             }
-            // TOTAL 소요시간 섹션 (루틴 타입이 "집중"일 경우만)
-            if (category == "집중") {
+            // TOTAL 소요시간 섹션 (루틴 타입이 "집중"이고 간편 루틴이 아닐 경우만)
+            if (category == "집중" && !isSimple) {
                 item {
                     Spacer(modifier = Modifier.height(92.dp))
 
@@ -264,10 +353,12 @@ private fun RoutineFocusIntroScreenPreview() {
 
     RoutineFocusIntroScreen(
         sharedViewModel = dummyViewModel,
-        onStartClick = { selectedSteps, title, hashTag ->
+        onStartClick = { selectedSteps, title, hashTag, category, totalDuration ->
             println("선택된 스텝: $selectedSteps")
             println("루틴 제목: $title")
             println("해시태그: $hashTag")
+            println("카테고리: $category")
+            println("총 소요시간: $totalDuration")
         },
         onBackClick = {}
     )

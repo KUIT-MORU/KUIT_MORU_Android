@@ -26,12 +26,14 @@ data class Routine(
     var isLiked: Boolean,
     var isBookmarked: Boolean,
     val isRunning: Boolean, // 현재 사용자가 이 루틴을 실행 중인지
+    val isSimple: Boolean = false, // 간편/집중 루틴 구분
     var isChecked: Boolean = false, // '내 루틴' 삭제 모드에서 사용
 
     // 시간 정보 (내 루틴)
     val scheduledTime: LocalTime? = null,
     val scheduledDays: Set<DayOfWeek> = emptySet(),
     var isAlarmEnabled: Boolean = false,
+    val requiredTime: String = "", // 총 소요시간 (PT30M 형식)
 
     // 상세 화면용 정보
     val steps: List<RoutineStep> = emptyList(),

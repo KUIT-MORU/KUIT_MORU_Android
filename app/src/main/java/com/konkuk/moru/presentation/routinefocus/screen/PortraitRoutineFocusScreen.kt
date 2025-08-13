@@ -1,5 +1,13 @@
 package com.konkuk.moru.presentation.routinefocus.screen
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
+import android.provider.Settings
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -28,7 +36,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +47,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -47,14 +55,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
-import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.routinefocus.component.RoutineTimelineItem
 import com.konkuk.moru.presentation.routinefocus.component.SettingSwitchGroup
+import com.konkuk.moru.presentation.routinefocus.component.ScreenBlockPopup
+import com.konkuk.moru.presentation.routinefocus.component.FocusOnboardingPopup
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
+import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
@@ -153,6 +164,74 @@ fun formatTime(seconds: Int): String {
     return String.format("%02d:%02d:%02d", hours, minutes, secs)
 }
 
+// 진동 효과 함수
+fun triggerVibration(context: Context) {
+    val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val vibratorManager =
+            context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+        vibratorManager.defaultVibrator
+    } else {
+        @Suppress("DEPRECATION")
+        context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+    } else {
+        @Suppress("DEPRECATION")
+        vibrator.vibrate(500)
+    }
+}
+
+// 방해금지 모드 제어 함수
+fun toggleDoNotDisturb(context: Context, enable: Boolean) {
+    try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // Android 6.0 이상에서는 알림 정책 접근 권한이 필요
+            val notificationManager =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+
+            if (notificationManager.isNotificationPolicyAccessGranted) {
+                if (enable) {
+                    // 방해금지 모드 활성화
+                    notificationManager.setInterruptionFilter(android.app.NotificationManager.INTERRUPTION_FILTER_NONE)
+                } else {
+                    // 방해금지 모드 비활성화
+                    notificationManager.setInterruptionFilter(android.app.NotificationManager.INTERRUPTION_FILTER_ALL)
+                }
+            } else {
+                // 권한이 없으면 설정 화면으로 이동
+                val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                context.startActivity(intent)
+            }
+        }
+    } catch (e: Exception) {
+        // 권한이 없거나 설정할 수 없는 경우
+        e.printStackTrace()
+    }
+}
+
+// 사용앱 정보 데이터 클래스
+data class AppInfo(
+    val packageName: String,
+    val appName: String,
+    val iconResId: Int = R.drawable.ic_default
+)
+
+// 앱 실행 함수
+fun launchApp(context: Context, packageName: String) {
+    try {
+        val intent = context.packageManager.getLaunchIntentForPackage(packageName)
+        if (intent != null) {
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            context.startActivity(intent)
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+}
+
 @Composable
 fun PortraitRoutineFocusScreen(
     focusViewModel: RoutineFocusViewModel = viewModel(),
@@ -160,14 +239,17 @@ fun PortraitRoutineFocusScreen(
     routineId: Int,
     onDismiss: () -> Unit,
     currentStep: Int,
-    onFinishConfirmed: (Int) -> Unit,
+    onFinishConfirmed: (String) -> Unit,
     // Preview용 강제 상태 파라미터 추가
     forceShowFinishPopup: Boolean = false,
     forceShowResultPopup: Boolean = false
 ) {
+    val context = LocalContext.current
+
     // intro에서 데이터값 받아오기
-    val routineTitle by sharedViewModel.routineTitle.collectAsState()
-    val steps by sharedViewModel.selectedSteps.collectAsState()
+    val routineTitle = sharedViewModel.routineTitle.collectAsStateWithLifecycle<String>().value
+    val steps =
+        sharedViewModel.selectedSteps.collectAsStateWithLifecycle<List<RoutineStepData>>().value
 
     val routineItems = steps.map { it.name to "${it.duration}m" }
 
@@ -222,17 +304,37 @@ fun PortraitRoutineFocusScreen(
     // 메모장 팝업 상태 저장
     var showMemoPad by remember { mutableStateOf(false) }
 
-    // 메모장 내용 저장
+    // 메모장 내용 저장 (STEP별로 저장)
     var memoText by remember { mutableStateOf("") }
+
+    // STEP별 메모 저장 (내 기록용)
+    var stepMemos by remember { mutableStateOf(mutableMapOf<Int, String>()) }
 
     // 앱 아이콘 팝업 상태 저장
     val showAppIcons = focusViewModel.isAppIconsVisible
+
+    // 사용앱 리스트 (루틴 생성 시 선택한 앱들)
+    val selectedApps =
+        sharedViewModel.selectedApps.collectAsStateWithLifecycle<List<AppInfo>>().value
 
     //1초마다 시간 증가,시간 초과 판단
     LaunchedEffect(currentstep) {
         val stepLimit = parseTimeToSeconds(routineItems.getOrNull(currentstep - 1)?.second ?: "0m")
         focusViewModel.setStepLimitFromTimeString(stepLimit)
         focusViewModel.startTimer()
+
+        // STEP 변경 시 메모 초기화 (이전 STEP 메모 저장)
+        if (currentstep > 1) {
+            stepMemos[currentstep - 1] = memoText
+        }
+        memoText = stepMemos[currentstep] ?: ""
+    }
+
+    // 시간 초과 시 진동 효과
+    LaunchedEffect(isTimeout) {
+        if (isTimeout && isStepVibration) {
+            triggerVibration(context)
+        }
     }
 
     Box(
@@ -253,22 +355,26 @@ fun PortraitRoutineFocusScreen(
             )
         }
 
-        // 상단 StatusBar, 루틴 타이틀, 타이머, 메모장
-        Column() {
-            // 시간초과시의 영역만 칠하기 위해 또 Column으로 묶음
+        // 메인 컨텐츠 영역
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // 상단 컨텐츠 영역
             Column(
                 modifier = Modifier
-                    .background(if (isDarkMode) colors.black else Color.White),
+                    .background(if (isDarkMode) colors.black else Color.White)
+                    .padding(horizontal = 16.dp)
+                    .weight(1f) // 하단 고정 영역을 제외한 나머지 공간 사용
             ) {
                 // Top Bar: X 버튼, 설정 버튼
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(top = 16.dp, bottom = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // x버튼
+                    // x버튼 - 클릭 시 종료 팝업 표시
                     Icon(
                         painter = painterResource(id = R.drawable.ic_x),
                         contentDescription = "종료",
@@ -279,7 +385,7 @@ fun PortraitRoutineFocusScreen(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
                             ) {
-                                onDismiss()
+                                showFinishPopup = true
                             }
                     )
                     // 설정 버튼
@@ -294,22 +400,22 @@ fun PortraitRoutineFocusScreen(
                             }
                     )
                 }
+
                 // 루틴명
                 Text(
                     text = routineTitle,
                     style = typography.desc_M_16,
                     color = if (isDarkMode) Color.White else colors.black,
-                    modifier = Modifier.padding(start = 16.dp)
+                    modifier = Modifier.padding(bottom = 6.dp)
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+
                 // 현재 루틴 태스크 이름
                 Text(
                     text = currentTitle,
                     style = typography.title_B_20,
                     color = if (isDarkMode && !isTimeout) colors.limeGreen else if (isDarkMode && isTimeout) Color.White else colors.black,
-                    modifier = Modifier.padding(start = 16.dp)
+                    modifier = Modifier.padding(bottom = 9.dp)
                 )
-                Spacer(modifier = Modifier.height(9.dp))
 
                 // 중앙 타이머
                 Text(
@@ -322,7 +428,7 @@ fun PortraitRoutineFocusScreen(
                         .wrapContentSize(Alignment.Center)
                 )
 
-                // 정지 버튼
+                // 정지/재생 버튼
                 Icon(
                     painter = painterResource(id = if (!isUserPaused) R.drawable.ic_pause else R.drawable.baseline_play_arrow_24),
                     contentDescription = if (!isUserPaused) "정지" else "시작",
@@ -339,8 +445,7 @@ fun PortraitRoutineFocusScreen(
                 // 타임라인과 다음 버튼을 포함하는 Row
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // 타임라인 영역 - weight를 사용해서 남은 공간 모두 사용
@@ -398,6 +503,9 @@ fun PortraitRoutineFocusScreen(
                                                 focusViewModel.resumeTimer()
                                             } else {
                                                 focusViewModel.pauseTimer()
+                                                // 루틴 종료 시 사용앱과 메모장 자동으로 끄기
+                                                focusViewModel.hideAppIcons()
+                                                showMemoPad = false
                                                 showFinishPopup = true
                                             }
                                         },
@@ -431,136 +539,148 @@ fun PortraitRoutineFocusScreen(
                     }
                 }
             }
-        }
 
-        // 하단 메뉴 버튼 + TOTAL 영역을 고정하기 위해 따로 Column 씌움
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .wrapContentHeight()
-        ) {
-            // 앱 아이콘 (항상 메모장보다 위에)
-            if (showAppIcons) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(88.dp)
-                        .background(if (isDarkMode) colors.black else Color.White)
-                ) {
-                    Row(
+            // 하단 고정 영역을 하나의 Column으로 통합
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // 앱 아이콘 (조건부 표시)
+                if (showAppIcons) {
+                    Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp, vertical = 20.dp),
-                        horizontalArrangement = Arrangement.spacedBy(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .fillMaxWidth()
+                            .height(88.dp)
+                            .background(if (isDarkMode) colors.black else Color.White)
                     ) {
-                        repeat(3) {
-                            Image(
-                                painter = painterResource(id = R.drawable.ic_default),
-                                contentDescription = "사용앱 ${it + 1}",
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(RoundedCornerShape(6.dp))
-
-                            )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp, vertical = 20.dp),
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // 사용앱 아이콘들 (루틴 생성 시 선택한 앱들)
+                            selectedApps.forEachIndexed { index, appInfo ->
+                                Image(
+                                    painter = painterResource(id = appInfo.iconResId),
+                                    contentDescription = "사용앱 ${appInfo.appName}",
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .clickable {
+                                            // 온보딩 팝업창 표시
+                                            focusViewModel.showOnboardingPopup()
+                                        }
+                                )
+                            }
+                            // 기본 아이콘들 (선택된 앱이 3개 미만인 경우)
+                            repeat(3 - selectedApps.size) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_default),
+                                    contentDescription = "사용앱 ${it + 1}",
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            // 메모장 (항상 사용 앱보다 아래에)
-            if (showMemoPad) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(153.dp)
-                        .background(colors.veryLightGray)
-                ) {
-                    @OptIn(ExperimentalMaterial3Api::class)
-                    TextField(
-                        value = memoText,
-                        onValueChange = { memoText = it },
+                // 메모장 (조건부 표시)
+                if (showMemoPad) {
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(130.dp)
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
-                        placeholder = {
-                            Text(
-                                text = "메모 하기...",
-                                style = typography.desc_M_14,
-                                color = colors.darkGray
+                            .height(153.dp)
+                            .background(colors.veryLightGray)
+                    ) {
+                        @OptIn(ExperimentalMaterial3Api::class)
+                        TextField(
+                            value = memoText,
+                            onValueChange = { memoText = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(130.dp)
+                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                            placeholder = {
+                                Text(
+                                    text = "STEP ${currentstep} 메모 하기...",
+                                    style = typography.desc_M_14,
+                                    color = colors.darkGray
+                                )
+                            },
+                            textStyle = typography.body_SB_16.copy(color = colors.black),
+                            singleLine = false,
+                            maxLines = 5,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                errorContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent,
+                                errorIndicatorColor = Color.Transparent,
+                                cursorColor = colors.black
                             )
-                        },
-                        textStyle = typography.body_SB_16.copy(color = colors.black),
-                        singleLine = false,
-                        maxLines = 5,
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent,
-                            errorContainerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent,
-                            errorIndicatorColor = Color.Transparent,
-                            cursorColor = colors.black
                         )
+                    }
+                }
+
+                // 하단 메뉴 버튼 줄 (항상 표시)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(53.dp)
+                        .background(if (isDarkMode) colors.black else colors.veryLightGray)
+                        .padding(top = 15.dp, bottom = 14.dp, start = 16.dp, end = 14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.menu_icon),
+                        contentDescription = "메뉴 아이콘",
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable {
+                                focusViewModel.toggleAppIcons()
+                            },
+                        colorFilter = ColorFilter.tint(if (isDarkMode) colors.mediumGray else colors.black)
+                    )
+                    Image(
+                        painter = painterResource(id = R.drawable.chatting_icon),
+                        contentDescription = "채팅 아이콘",
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable {
+                                showMemoPad = !showMemoPad
+                            },
+                        colorFilter = ColorFilter.tint(if (isDarkMode) colors.mediumGray else colors.black)
                     )
                 }
-            }
 
-            // 하단 메뉴 버튼 줄
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(53.dp)
-                    .background(if (isDarkMode) colors.black else colors.veryLightGray)
-                    .padding(top = 15.dp, bottom = 14.dp, start = 16.dp, end = 14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.menu_icon),
-                    contentDescription = "메뉴 아이콘",
+                // TOTAL 영역 (항상 표시)
+                Row(
                     modifier = Modifier
-                        .size(24.dp)
-                        .clickable {
-                            focusViewModel.toggleAppIcons()
-                        },
-                    colorFilter = ColorFilter.tint(if (isDarkMode) colors.mediumGray else colors.black)
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.chatting_icon),
-                    contentDescription = "채팅 아이콘",
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clickable {
-                            showMemoPad = !showMemoPad
-                        },
-                    colorFilter = ColorFilter.tint(if (isDarkMode) colors.mediumGray else colors.black)
-                )
-            }
-
-            // TOTAL 영역
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp)
-                    .background(if (isDarkMode) Color(0xFF383838) else colors.black)
-                    .padding(top = 24.dp, bottom = 25.dp, start = 16.dp, end = 18.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "TOTAL",
-                    style = typography.body_SB_16,
-                    color = colors.limeGreen
-                )
-                Text(
-                    text = formatTotalTime(totalElapsedSeconds + elapsedSeconds),
-                    style = typography.body_SB_16,
-                    color = colors.limeGreen
-                )
+                        .fillMaxWidth()
+                        .height(80.dp)
+                        .background(if (isDarkMode) Color(0xFF383838) else colors.black)
+                        .padding(top = 24.dp, bottom = 25.dp, start = 16.dp, end = 18.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "TOTAL",
+                        style = typography.body_SB_16,
+                        color = colors.limeGreen
+                    )
+                    Text(
+                        text = formatTotalTime(totalElapsedSeconds + elapsedSeconds),
+                        style = typography.body_SB_16,
+                        color = colors.limeGreen
+                    )
+                }
             }
         }
 
@@ -570,7 +690,7 @@ fun PortraitRoutineFocusScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color(0x99000000))
-                    .zIndex(1f), // z-index 추가
+                    .zIndex(100f),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -628,6 +748,8 @@ fun PortraitRoutineFocusScreen(
                                     indication = null,
                                     interactionSource = remember { MutableInteractionSource() }
                                 ) {
+                                    // 현재 STEP 메모 저장
+                                    stepMemos[currentstep] = memoText
                                     showResultPopup = true
                                     showFinishPopup = false
                                 }
@@ -648,12 +770,11 @@ fun PortraitRoutineFocusScreen(
 
         // 팝업 2(최종 종료 팝업)
         if (showResultPopup) {
-            //전체 오버레이
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color(0x99000000))
-                    .zIndex(2f),
+                    .zIndex(101f),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -670,28 +791,30 @@ fun PortraitRoutineFocusScreen(
                         style = typography.title_B_20.copy(fontWeight = FontWeight.SemiBold),
                         color = colors.black
                     )
-                    //진행도(spacer도 줘야함)
                     Spacer(modifier = Modifier.height(12.04.dp))
                     RoutineProgressBar(
-                        stepCount = steps.size, //스탭 개수
+                        stepCount = steps.size,
                         color = colors.limeGreen
                     )
                     Spacer(modifier = Modifier.height(12.04.dp))
-                    //루틴 갯수
                     Text(
                         text = "$currentstep/${routineItems.size}",
                         style = typography.desc_M_14,
                         color = colors.black
                     )
                     Spacer(modifier = Modifier.height(9.03.dp))
-                    // 정보 박스
                     Column(
                         modifier = Modifier
                             .width(252.dp)
                             .height(102.35.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(Color.White)
-                            .padding(top = 8.03.dp, bottom = 8.03.dp, start = 15.99.dp, end = 14.dp)
+                            .padding(
+                                top = 8.03.dp,
+                                bottom = 8.03.dp,
+                                start = 15.99.dp,
+                                end = 14.dp
+                            )
                     ) {
                         RoutineResultRow(R.drawable.schedule_icon, "루틴", "주말 아침 루틴")
                         Spacer(modifier = Modifier.height(17.56.dp))
@@ -705,8 +828,6 @@ fun PortraitRoutineFocusScreen(
                     }
                     Spacer(modifier = Modifier.height(9.03.dp))
 
-                    // 내 기록으로 이동
-                    Spacer(modifier = Modifier.width(154.dp))
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -730,7 +851,6 @@ fun PortraitRoutineFocusScreen(
                     }
                     Spacer(modifier = Modifier.height(6.02.dp))
 
-                    //확인 버튼
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -742,7 +862,8 @@ fun PortraitRoutineFocusScreen(
                                 interactionSource = remember { MutableInteractionSource() }
                             ) {
                                 showResultPopup = false
-                                onFinishConfirmed(routineId)
+                                // routineId를 String으로 변환하여 전달
+                                onFinishConfirmed(routineId.toString())
                             }
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
@@ -756,15 +877,14 @@ fun PortraitRoutineFocusScreen(
                 }
             }
         }
+
+        // 설정 팝업
         if (showSettingsPopup) {
-            //반투명 오버레이
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-                    .padding(bottom = 133.dp)
+                    .fillMaxSize()
                     .background(Color(0x33000000))
-                    .zIndex(10f)
+                    .zIndex(102f)
                     .clickable { focusViewModel.closeSettingsPopup() },
                 contentAlignment = Alignment.TopEnd
             ) {
@@ -775,7 +895,6 @@ fun PortraitRoutineFocusScreen(
                         .clip(RoundedCornerShape(4.dp))
                         .background(Color(0xFFFFFF).copy(alpha = 0.75f))
                         .clickable(
-                            // 팝업 내부 클릭 시 팝업이 닫히지 않도록 clickable을 추가하고 아무 동작 안함
                             onClick = { /* Do nothing */ }
                         )
                 ) {
@@ -785,8 +904,13 @@ fun PortraitRoutineFocusScreen(
                                 "다크 모드",
                                 { focusViewModel.isDarkMode },
                                 { focusViewModel.toggleDarkMode() }),
-                            Triple("방해 금지 모드", { isDoNotDisturb }, { isDoNotDisturb = it }),
-                            Triple("스텝 완료 진동", { isStepVibration }, { isStepVibration = it }),
+                            Triple("방해 금지 모드", { isDoNotDisturb }, {
+                                isDoNotDisturb = it
+                                toggleDoNotDisturb(context, it)
+                            }),
+                            Triple("스텝 완료 진동", { isStepVibration }, {
+                                isStepVibration = it
+                            }),
                             Triple(
                                 "가로 모드",
                                 { focusViewModel.isLandscapeMode },
@@ -795,6 +919,35 @@ fun PortraitRoutineFocusScreen(
                     )
                 }
             }
+        }
+
+        // 화면 차단 팝업창
+        if (focusViewModel.isScreenBlockPopupVisible) {
+            ScreenBlockPopup(
+                selectedApps = focusViewModel.selectedApps,
+                onAppClick = { app ->
+                    // 앱 실행 로직 (실제로는 Intent로 앱 실행)
+                    focusViewModel.hideScreenBlockPopup()
+                },
+                onOutsideClick = {
+                    focusViewModel.hideScreenBlockPopup()
+                }
+            )
+        }
+
+        // 온보딩 팝업창
+        if (focusViewModel.isOnboardingPopupVisible) {
+            FocusOnboardingPopup(
+                selectedApps = focusViewModel.selectedApps,
+                onAppClick = { app ->
+                    // 실제 앱 실행
+                    launchApp(context, app.packageName)
+                    focusViewModel.hideOnboardingPopup()
+                },
+                onOutsideClick = {
+                    focusViewModel.hideOnboardingPopup()
+                }
+            )
         }
     }
 }
@@ -816,8 +969,15 @@ private fun PortraitRoutineFocusScreenPreview() {
         RoutineStepData("옷갈아입기", 5, true)
     )
 
+    val dummyApps = listOf(
+        AppInfo("com.example.app1", "앱1"),
+        AppInfo("com.example.app2", "앱2"),
+        AppInfo("com.example.app3", "앱3")
+    )
+
     dummySharedViewModel.setRoutineTitle("주말 아침 루틴")
     dummySharedViewModel.setSelectedSteps(dummySteps)
+    dummySharedViewModel.setSelectedApps(dummyApps)
 
     PortraitRoutineFocusScreen(
         focusViewModel = dummyFocusViewModel,
