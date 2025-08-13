@@ -10,12 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -55,7 +55,10 @@ fun UsedAppsSection(
         ) {
             items(apps) { app ->
                 Box {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        modifier = Modifier.width(52.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         AsyncImage(
                             model = app.iconUrl,
                             contentDescription = app.name,
@@ -72,7 +75,7 @@ fun UsedAppsSection(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             app.name,
-                            style = MORUTheme.typography.time_R_12,
+                            style = MORUTheme.typography.desc_M_12,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -128,26 +131,13 @@ private fun UsedAppsSectionPreview_EditMode() {
     val apps = listOf(
         AppInfo(name = "YouTube", iconUrl = null, packageName = "com.google.android.youtube"),
         AppInfo(name = "Keep 메모", iconUrl = null, packageName = "com.google.android.keep"),
-        AppInfo(name = "Microsoft To Do", iconUrl = null, packageName = "com.microsoft.todos"),
+        AppInfo(name = "To Do", iconUrl = null, packageName = "com.microsoft.todos"),
         AppInfo(name = "Forest", iconUrl = null, packageName = "cc.forestapp"),
     )
     MORUTheme {
         UsedAppsSection(
             apps = apps,
             isEditMode = true,
-            onAddApp = {},
-            onDeleteApp = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "사용 앱 - 비어 있음(편집)")
-@Composable
-private fun UsedAppsSectionPreview_Empty_EditMode() {
-    MORUTheme {
-        UsedAppsSection(
-            apps = emptyList(),
-            isEditMode = true,   // ➜ AddAppBox만 보이는 상태
             onAddApp = {},
             onDeleteApp = {}
         )
