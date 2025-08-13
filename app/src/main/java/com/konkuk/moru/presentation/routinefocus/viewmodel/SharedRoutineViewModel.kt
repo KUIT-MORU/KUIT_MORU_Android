@@ -146,7 +146,7 @@ class SharedRoutineViewModel : ViewModel() {
             RoutineStepData(
                 name = step.name,
                 duration = durationInMinutes,
-                isChecked = false
+                isChecked = true
             )
         }
         
