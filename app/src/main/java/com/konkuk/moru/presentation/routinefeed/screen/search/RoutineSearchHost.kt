@@ -1,5 +1,7 @@
 package com.konkuk.moru.presentation.routinefeed.screen.search
 
+import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -13,9 +15,9 @@ import com.konkuk.moru.ui.theme.MORUTheme
  * 검색 화면의 상태를 정의하는 Enum Class
  */
 internal enum class SearchMode {
-    INITIAL, // 최초 진입 (루틴명 검색)
-    ROUTINE_NAME_RESULT, // 루틴명 검색 결과
-    TAG_SEARCH // 태그 검색/관리
+    INITIAL,            // 최초 진입 (루틴명 검색)
+    ROUTINE_NAME_RESULT,// 루틴명 검색 결과
+    TAG_SEARCH          // 태그 검색/관리
 }
 
 @Composable
@@ -38,19 +40,53 @@ fun RoutineSearchHost(
         selectedTags.addAll(ui.selectedTags)
     }
 
+    // 뒤로가기 로직 (시스템/툴바 모두 공통)
     val handleNavigateBack: () -> Unit = {
+        Log.d("RoutineSearchHost", "뒤로가기 실행 - 현재 모드: $searchMode, 선택된 태그: $selectedTags")
+
         when (searchMode) {
-            // 결과 화면이나 태그 검색 화면에서는 -> 초기 화면으로 이동
             SearchMode.ROUTINE_NAME_RESULT, SearchMode.TAG_SEARCH -> {
-                searchMode = SearchMode.INITIAL
-                searchQuery = ""
-                selectedTags.clear() // ▼▼▼ 상태 초기화 시 선택된 태그도 비워줍니다.
+                if (selectedTags.isNotEmpty()) {
+                    Log.d("RoutineSearchHost", "태그 선택됨 → 이전 화면으로 결과 전달 후 popBackStack()")
+                    // 선택된 태그를 호출자에게 전달
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("selectedTagsResult", ArrayList(selectedTags))
+
+                    val popped = navController.popBackStack() // ← 이전 화면으로
+                    Log.d("RoutineSearchHost", "popBackStack 결과: $popped")
+                    if (!popped) {
+                        Log.w("RoutineSearchHost", "백스택 없음 → startDestination 이동")
+                        navController.graph.startDestinationRoute?.let { start ->
+                            navController.navigate(start)
+                        }
+                    }
+                } else {
+                    Log.d("RoutineSearchHost", "태그 선택 안됨 → 검색 초기 화면으로 전환")
+                    searchMode = SearchMode.INITIAL
+                    searchQuery = ""
+                    selectedTags.clear()
+                }
             }
-            // 초기 화면에서만 -> 이전 스크린(RoutineFeedScreen)으로 이동
+
             SearchMode.INITIAL -> {
-                navController.popBackStack()
+                Log.d("RoutineSearchHost", "INITIAL 모드 → 이전 화면으로 popBackStack()")
+                val popped = navController.popBackStack()
+                Log.d("RoutineSearchHost", "popBackStack 결과: $popped")
+                if (!popped) {
+                    Log.w("RoutineSearchHost", "백스택 없음 → startDestination 이동")
+                    navController.graph.startDestinationRoute?.let { start ->
+                        navController.navigate(start)
+                    }
+                }
             }
         }
+    }
+
+    // 시스템 뒤로가기 처리
+    BackHandler {
+        Log.d("RoutineSearchHost", "BackHandler 호출됨")
+        handleNavigateBack()
     }
 
     when (searchMode) {

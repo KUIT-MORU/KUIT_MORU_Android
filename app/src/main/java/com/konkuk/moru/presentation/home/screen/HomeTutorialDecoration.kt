@@ -150,7 +150,7 @@ fun HomeTutorialDecoration(
             tint = Color.White,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = 21.dp, end = 17.dp)
+                .padding(top = 45.dp, end = 17.dp)
                 .size(14.dp)
                 .clickable { onDismiss() }
         )

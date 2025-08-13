@@ -32,7 +32,8 @@ fun RoutineStepItem(
     isEditMode: Boolean,
     onDeleteClick: () -> Unit,
     onNameChange: (String) -> Unit,
-    dragHandleModifier: Modifier = Modifier // 드래그 핸들 Modifier를 파라미터로 받음
+    dragHandleModifier: Modifier = Modifier, // 드래그 핸들 Modifier를 파라미터로 받음
+    onTimeClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -82,15 +83,12 @@ fun RoutineStepItem(
             )
         }
 
-
-        if (!isEditMode) {
-            Text(
-                modifier = Modifier.padding(end = 88.dp),
-                text = step.duration,
-                style = MORUTheme.typography.body_SB_14,
-                color = Color(0xFF1A1A1A),
-            )
-        }
+        Text(
+            text = step.duration,
+            style = MORUTheme.typography.body_SB_14,
+            color = MORUTheme.colors.darkGray,
+            modifier = if (isEditMode) Modifier.clickable { onTimeClick() } else Modifier // [추가]
+        )
 
         if (isEditMode) {
             Spacer(Modifier.width(16.dp))
@@ -117,7 +115,9 @@ private fun LocalRoutineStepItemPreview_ViewMode() {
             step = sampleStep,
             isEditMode = false,
             onDeleteClick = {},
-            onNameChange = {}
+            onNameChange = {},
+            dragHandleModifier = Modifier,
+            onTimeClick = {},
         )
     }
 }
@@ -133,6 +133,8 @@ private fun LocalRoutineStepItemPreview_EditMode() {
             step = sampleStep,
             isEditMode = true,
             onDeleteClick = {},
+            onTimeClick = {},
+            dragHandleModifier = Modifier,
             onNameChange = {}
         )
     }

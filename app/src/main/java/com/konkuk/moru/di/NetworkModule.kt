@@ -1,9 +1,14 @@
 package com.konkuk.moru.di
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.konkuk.moru.BuildConfig
 import com.konkuk.moru.data.interceptor.AuthInterceptor
+import com.konkuk.moru.data.interceptor.TokenAuthenticator
 import com.konkuk.moru.data.service.AuthService
 import com.konkuk.moru.data.service.InsightService
+import com.konkuk.moru.data.service.RoutineService
 import com.konkuk.moru.data.service.NotificationService
 import com.konkuk.moru.data.service.RoutineFeedService
 import com.konkuk.moru.data.service.RoutineUserService
@@ -15,102 +20,140 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-
 import retrofit2.Retrofit
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
+import javax.inject.Named
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    @Provides
-    @Singleton
-    fun provideBaseUrl(): String {
-        return BuildConfig.BASE_URL
-    }
-
-
-    @Provides
-    @Singleton
-    fun provideAuthService(retrofit: Retrofit): AuthService {
-        return retrofit.create(AuthService::class.java)
-    }
-
-    @Provides
-    @Singleton
-    fun provideAuthInterceptor(authInterceptor: AuthInterceptor): Interceptor {
-        return authInterceptor
-    }
-
-    @Provides
-    @Singleton
-    fun provideOkHttpClient(authInterceptor: Interceptor): OkHttpClient {
-        val logging = HttpLoggingInterceptor().apply {
-            // 바디까지 다 찍기 (개발용)
-            level = HttpLoggingInterceptor.Level.BODY
-            // 기본값은 Authorization 헤더가 마스킹됩니다
-            // logging.redactHeader("Authorization") // 필요시 마스킹 유지
-        }
-
-        return UnsafeHttpClient.getUnsafeOkHttpClient().newBuilder()
-            .addInterceptor(authInterceptor) // 헤더 붙이기
-            .addNetworkInterceptor { chain -> // ★ 응답 코드/URL 즉시 확인용
-                val req = chain.request()
-                android.util.Log.d("HTTP", "--> ${req.method} ${req.url}")
-                val res = chain.proceed(req)
-                android.util.Log.d("HTTP", "<-- ${res.code} ${res.message} ${req.url}")
-                res
-            }
-            .addInterceptor(logging) // ★ BODY까지
-            .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideRetrofit(baseUrl: String, okHttpClient: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl(baseUrl)
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-    }
-
-
-    @Provides
-    @Singleton
-    fun provideInsightService(retrofit: Retrofit): InsightService {
-        return retrofit.create(InsightService::class.java)
-    }
-
-    @Provides
-    @Singleton
-    fun provideRoutineFeedService(retrofit: Retrofit): RoutineFeedService {
-        return retrofit.create(RoutineFeedService::class.java)
-    }
-
-    @Provides
-    @Singleton
-    fun provideUserService(retrofit: Retrofit): RoutineUserService =
-        retrofit.create(RoutineUserService::class.java)
-
-
-    @Provides
-    @Singleton
-    fun provideNotificationService(retrofit: Retrofit): NotificationService =
-        retrofit.create(NotificationService::class.java)
-
-
-    @Provides
-    @Singleton
-    fun provideSocialService(retrofit: Retrofit): SocialService =
-        retrofit.create(SocialService::class.java)
 
 
     @Provides @Singleton
-    fun provideSearchApi(retrofit: Retrofit): SearchService =
-        retrofit.create(SearchService::class.java)
+    fun provideGson(): Gson = GsonBuilder()
+        .setLenient()
+        .create()
+
+    // 2-2. Gson 컨버터 Retrofit (인증 포함)
+    @Provides @Singleton @Named("gsonRetrofit")
+    fun provideGsonRetrofit(
+        baseUrl: String,
+        okHttp: OkHttpClient,
+        gson: Gson
+    ): Retrofit = Retrofit.Builder()
+        .baseUrl(baseUrl)
+        .client(okHttp)
+        .addConverterFactory(GsonConverterFactory.create(gson))
+        .build()
+
+    // 2-3. RoutineFeedService는 Gson Retrofit으로 제공
+    @Provides
+    @Singleton
+    fun provideRoutineFeedService(@Named("gsonRetrofit") retrofit: Retrofit): RoutineFeedService =
+        retrofit.create(RoutineFeedService::class.java)
+
+
+    @Provides @Singleton
+    fun provideBaseUrl(): String = BuildConfig.BASE_URL
+
+    @Provides @Singleton
+    fun provideHttpLoggingInterceptor(): HttpLoggingInterceptor {
+        return HttpLoggingInterceptor().apply {
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
+        }
+    }
+
+    @Provides @Singleton @Named("authlessOkHttp")
+    fun provideAuthlessOkHttp(
+        loggingInterceptor: HttpLoggingInterceptor
+    ): OkHttpClient =
+        UnsafeHttpClient.getUnsafeOkHttpClient().newBuilder()
+            .addInterceptor(loggingInterceptor)
+            .build()
+
+    @Provides @Singleton
+    fun provideJson(): Json = Json {
+        coerceInputValues = true
+        ignoreUnknownKeys = true
+    }
+
+    @Provides @Singleton @Named("authlessRetrofit")
+    fun provideAuthlessRetrofit(
+        @Named("authlessOkHttp") ok: OkHttpClient,
+        baseUrl: String,
+        json: Json
+    ): Retrofit = Retrofit.Builder()
+        .baseUrl(baseUrl)
+        .client(ok)
+        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+        .build()
+
+    @Provides @Singleton
+    fun provideAuthInterceptor(authInterceptor: AuthInterceptor): Interceptor = authInterceptor
+
+    @Provides @Singleton
+    fun provideOkHttpClient(
+        authInterceptor: Interceptor,
+        tokenAuthenticator: TokenAuthenticator,
+        loggingInterceptor: HttpLoggingInterceptor
+    ): OkHttpClient =
+        UnsafeHttpClient.getUnsafeOkHttpClient().newBuilder()
+            .addInterceptor(authInterceptor)
+            .addInterceptor(loggingInterceptor)
+            .authenticator(tokenAuthenticator)
+            .build()
+
+    @Provides @Singleton
+    fun provideRetrofit(baseUrl: String, okHttp: OkHttpClient, json: Json): Retrofit =
+        Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .client(okHttp)
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+            .build()
+
+    @Provides @Singleton
+    fun provideAuthService(retrofit: Retrofit): AuthService =
+        retrofit.create(AuthService::class.java)
+
+    @Provides @Singleton
+    fun provideInsightService(retrofit: Retrofit): InsightService =
+        retrofit.create(InsightService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideRoutineService(retrofit: Retrofit): RoutineService =
+        retrofit.create(RoutineService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideUserService(retrofit: Retrofit): com.konkuk.moru.data.service.HomeUserService =
+        retrofit.create(com.konkuk.moru.data.service.HomeUserService::class.java)
+
+
+
+    @Provides
+    @Singleton
+    fun provideRoutineUserService(@Named("gsonRetrofit") retrofit: Retrofit): RoutineUserService =
+        retrofit.create(RoutineUserService::class.java)
+
+
+    @Provides @Singleton
+    fun provideNotificationService(@Named("gsonRetrofit") r: Retrofit): NotificationService =
+        r.create(NotificationService::class.java)
+
+    @Provides @Singleton
+    fun provideSocialService(@Named("gsonRetrofit") r: Retrofit): SocialService =
+        r.create(SocialService::class.java)
+
+
+    @Provides @Singleton
+    fun provideSearchService(@Named("gsonRetrofit") r: Retrofit): SearchService =
+        r.create(SearchService::class.java)
 
 
 

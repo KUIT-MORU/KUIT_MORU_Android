@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.routinefeed.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.konkuk.moru.core.datastore.RoutineSyncBus
@@ -11,6 +12,7 @@ import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.model.SimilarRoutine
 import com.konkuk.moru.domain.repository.RoutineFeedRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -36,7 +38,8 @@ data class RoutineDetailUiState(
 
 @HiltViewModel
 class RoutineDetailViewModel @Inject constructor(
-    private val repository: RoutineFeedRepository
+    private val repository: RoutineFeedRepository,
+    @ApplicationContext private val appContext: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RoutineDetailUiState())
@@ -54,6 +57,7 @@ class RoutineDetailViewModel @Inject constructor(
         val wantLike: Boolean,
         val mark: TimeMark = TimeSource.Monotonic.markNow()
     )
+
     private val likeStampMap = ConcurrentHashMap<String, LikeStamp>()
 
     private data class ScrapStamp(
@@ -61,6 +65,7 @@ class RoutineDetailViewModel @Inject constructor(
         val wantScrap: Boolean,
         val mark: TimeMark = TimeSource.Monotonic.markNow()
     )
+
     private val scrapStampMap = ConcurrentHashMap<String, ScrapStamp>()
 
     private fun guardAfterLikeToggle(
@@ -119,7 +124,13 @@ class RoutineDetailViewModel @Inject constructor(
         val bumped = (r.likes + if (wantLike) 1 else -1).coerceAtLeast(0)
 
         // 낙관 UI + 메모리 + 스탬프
-        _uiState.update { it.copy(routine = r.copy(isLiked = wantLike, likes = bumped), isLiking = true, errorMessage = null) }
+        _uiState.update {
+            it.copy(
+                routine = r.copy(isLiked = wantLike, likes = bumped),
+                isLiking = true,
+                errorMessage = null
+            )
+        }
         SocialMemory.setLike(r.routineId, wantLike, bumped)
         likeStampMap[r.routineId] = LikeStamp(expectedLikes = bumped, wantLike = wantLike)
 
@@ -130,16 +141,32 @@ class RoutineDetailViewModel @Inject constructor(
                 repository.getRoutineDetail(r.routineId) // 확정값
             }.onSuccess { fresh ->
                 val server = fresh.toRoutineModel(prev = _uiState.value.routine)
-                val (likesMerged, isLikedMerged) = guardAfterLikeToggle(r.routineId, server.likes, server.isLiked)
+                val (likesMerged, isLikedMerged) = guardAfterLikeToggle(
+                    r.routineId,
+                    server.likes,
+                    server.isLiked
+                )
                 val merged = server.copy(likes = likesMerged, isLiked = isLikedMerged)
 
                 SocialMemory.setLike(merged.routineId, merged.isLiked, merged.likes)
                 _uiState.update { it.copy(routine = merged, isLiking = false) }
-                RoutineSyncBus.publish(RoutineSyncBus.Event.Like(merged.routineId, merged.isLiked, merged.likes))
+                RoutineSyncBus.publish(
+                    RoutineSyncBus.Event.Like(
+                        merged.routineId,
+                        merged.isLiked,
+                        merged.likes
+                    )
+                )
             }.onFailure { e ->
                 _uiState.value = before.copy(isLiking = false, errorMessage = e.message)
                 // 메모리 롤백
-                before.routine?.let { rb -> SocialMemory.setLike(rb.routineId, rb.isLiked, rb.likes) }
+                before.routine?.let { rb ->
+                    SocialMemory.setLike(
+                        rb.routineId,
+                        rb.isLiked,
+                        rb.likes
+                    )
+                }
             }.also {
                 likeStampMap.remove(r.routineId)
             }
@@ -156,7 +183,13 @@ class RoutineDetailViewModel @Inject constructor(
         val bumped = (r.scrapCount + if (want) 1 else -1).coerceAtLeast(0)
 
         // 낙관 UI + 메모리 + 스탬프
-        _uiState.update { it.copy(routine = r.copy(isBookmarked = want, scrapCount = bumped), isScrapping = true, errorMessage = null) }
+        _uiState.update {
+            it.copy(
+                routine = r.copy(isBookmarked = want, scrapCount = bumped),
+                isScrapping = true,
+                errorMessage = null
+            )
+        }
         SocialMemory.setScrap(r.routineId, want, bumped)
         scrapStampMap[r.routineId] = ScrapStamp(expectedScrap = bumped, wantScrap = want)
 
@@ -167,16 +200,32 @@ class RoutineDetailViewModel @Inject constructor(
                 repository.getRoutineDetail(r.routineId)
             }.onSuccess { fresh ->
                 val server = fresh.toRoutineModel(prev = _uiState.value.routine)
-                val (scrapMerged, isBookmarkedMerged) = guardAfterScrapToggle(r.routineId, server.scrapCount, server.isBookmarked)
-                val merged = server.copy(scrapCount = scrapMerged, isBookmarked = isBookmarkedMerged)
+                val (scrapMerged, isBookmarkedMerged) = guardAfterScrapToggle(
+                    r.routineId,
+                    server.scrapCount,
+                    server.isBookmarked
+                )
+                val merged =
+                    server.copy(scrapCount = scrapMerged, isBookmarked = isBookmarkedMerged)
 
                 SocialMemory.setScrap(merged.routineId, merged.isBookmarked, merged.scrapCount)
                 _uiState.update { it.copy(routine = merged, isScrapping = false) }
-                RoutineSyncBus.publish(RoutineSyncBus.Event.Scrap(merged.routineId, merged.isBookmarked))
+                RoutineSyncBus.publish(
+                    RoutineSyncBus.Event.Scrap(
+                        merged.routineId,
+                        merged.isBookmarked
+                    )
+                )
             }.onFailure { e ->
                 _uiState.value = before.copy(isScrapping = false, errorMessage = e.message)
                 // 메모리 롤백
-                before.routine?.let { rb -> SocialMemory.setScrap(rb.routineId, rb.isBookmarked, rb.scrapCount) }
+                before.routine?.let { rb ->
+                    SocialMemory.setScrap(
+                        rb.routineId,
+                        rb.isBookmarked,
+                        rb.scrapCount
+                    )
+                }
             }.also {
                 scrapStampMap.remove(r.routineId)
             }
@@ -190,7 +239,8 @@ class RoutineDetailViewModel @Inject constructor(
             runCatching { repository.getRoutineDetail(routineId) }
                 .onSuccess { dto ->
                     val prev = _uiState.value.routine
-                    val server = dto.toRoutineModel(prev = prev)
+                    val pm = appContext.packageManager
+                    val server = dto.toRoutineModel(prev = prev, pm = pm)
 
                     // 로드 시에도 “뒤로 감는” 현상 방지
                     val (mergedLikes, mergedIsLiked) = guardOnLoadLikes(
@@ -218,7 +268,8 @@ class RoutineDetailViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             routine = merged,
-                            similarRoutines = dto.similarRoutines?.map { s -> s.toUiModel() } ?: emptyList(),
+                            similarRoutines = dto.similarRoutines?.map { s -> s.toUiModel() }
+                                ?: emptyList(),
                             canBeAddedToMyRoutines = !dto.isOwner,
                             isLoading = false,
                             errorMessage = null
@@ -226,8 +277,19 @@ class RoutineDetailViewModel @Inject constructor(
                     }
 
                     // 다른 화면과 즉시 일치
-                    RoutineSyncBus.publish(RoutineSyncBus.Event.Like(merged.routineId, merged.isLiked, merged.likes))
-                    RoutineSyncBus.publish(RoutineSyncBus.Event.Scrap(merged.routineId, merged.isBookmarked))
+                    RoutineSyncBus.publish(
+                        RoutineSyncBus.Event.Like(
+                            merged.routineId,
+                            merged.isLiked,
+                            merged.likes
+                        )
+                    )
+                    RoutineSyncBus.publish(
+                        RoutineSyncBus.Event.Scrap(
+                            merged.routineId,
+                            merged.isBookmarked
+                        )
+                    )
                 }
                 .onFailure { e ->
                     _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }

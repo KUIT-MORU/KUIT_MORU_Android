@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.konkuk.moru.presentation.routinefocus.screen.AppInfo
 import com.konkuk.moru.presentation.routinefocus.screen.parseTimeToSeconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -95,12 +96,40 @@ class RoutineFocusViewModel : ViewModel() {
         isSettingsPopupVisible = false
     }
 
+    // 화면 차단 팝업창 관련
+    var isScreenBlockPopupVisible by mutableStateOf(false)
+    var selectedApps by mutableStateOf<List<AppInfo>>(emptyList())
+    
+    fun showScreenBlockPopup(apps: List<AppInfo>) {
+        selectedApps = apps
+        isScreenBlockPopupVisible = true
+    }
+    
+    fun hideScreenBlockPopup() {
+        isScreenBlockPopupVisible = false
+    }
+    
+    // 온보딩 팝업창 관련
+    var isOnboardingPopupVisible by mutableStateOf(false)
+    
+    fun showOnboardingPopup() {
+        isOnboardingPopupVisible = true
+    }
+    
+    fun hideOnboardingPopup() {
+        isOnboardingPopupVisible = false
+    }
+
     // 사용 앱 팝업 상태 저장
     var isAppIconsVisible by mutableStateOf(false)
         private set
 
     fun toggleAppIcons() {
         isAppIconsVisible = !isAppIconsVisible
+    }
+
+    fun hideAppIcons() {
+        isAppIconsVisible = false
     }
 
     // 타이머 시작 함수

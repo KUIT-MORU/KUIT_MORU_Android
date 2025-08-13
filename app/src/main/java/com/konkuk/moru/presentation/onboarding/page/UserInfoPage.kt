@@ -44,12 +44,20 @@ import com.konkuk.moru.core.component.ImageChoiceOptionButtonScreen
 import com.konkuk.moru.core.component.button.MoruButtonTypeA
 import com.konkuk.moru.presentation.onboarding.OnboardingViewModel
 import java.util.Calendar
+import android.Manifest
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun UserInfoPage(
     onNext: () -> Unit,
     viewModel: OnboardingViewModel? = null
-    //viewModel: OnboardingViewModel = hiltViewModel() //Todo: 프리뷰용으로 대체
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -63,6 +71,10 @@ fun UserInfoPage(
     val isFormValid = isNickNameValid && gender.isNotBlank() && birthDay.isNotBlank()
     var isImageOptionVisible by remember { mutableStateOf(false) }
 
+    // [추가] 선택/촬영한 이미지 URI 상태
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) } // ★ 변경 포인트
+
+    // 생년월일
     val calendar = remember { Calendar.getInstance() }
     val datePickerDialog = remember {
         DatePickerDialog(
@@ -77,6 +89,58 @@ fun UserInfoPage(
             calendar.get(Calendar.DAY_OF_MONTH)
         )
     }
+
+    // -------------- [추가] 사진 선택/촬영 런처 세팅 시작 -------------- //
+    // 포토 피커(앨범) — API 33+는 시스템 포토 피커, 이하에선 문서 선택 → 저장소 권한 불필요
+    val pickImageLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            selectedImageUri = uri
+            viewModel?.updateProfileImage(uri.toString()) // ★ 선택 결과를 ViewModel에 전달
+        }
+        isImageOptionVisible = false
+    }
+
+    // 카메라 촬영을 위한 임시 파일 URI
+    var cameraTempUri by remember { mutableStateOf<Uri?>(null) }
+
+    // 사진 촬영 런처
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && cameraTempUri != null) {
+            selectedImageUri = cameraTempUri
+            viewModel?.updateProfileImage(cameraTempUri.toString()) // ★ 촬영 결과 전달
+        }
+        isImageOptionVisible = false
+    }
+
+    // CAMERA 권한 런처
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            // 권한 승인 후 바로 촬영 진행
+            val uri = createTempImageUri(context)
+            cameraTempUri = uri
+            takePictureLauncher.launch(uri)
+        } else {
+            // 권한 거부: 시트만 닫음(필요시 스낵바/다이얼로그 안내 추가 가능)
+            isImageOptionVisible = false
+        }
+    }
+
+    // 이미지 선택/촬영 트리거 함수
+    fun onPickFromGallery() {
+        pickImageLauncher.launch(
+            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+        )
+    }
+    fun onCaptureFromCamera() {
+        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+    }
+    // -------------- [추가 끝] 사진 선택/촬영 런처 세팅 -------------- //
 
     Box(
         modifier = Modifier
@@ -118,7 +182,10 @@ fun UserInfoPage(
                     )
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    ProfileSettingCard() {
+                    // [변경] 프로필 카드에 imageUri 전달
+                    ProfileSettingCard(
+                        imageUri = selectedImageUri // ★ 선택/촬영 이미지 반영
+                    ) {
                         focusManager.clearFocus()
                         isImageOptionVisible = true // 메뉴 띄우기
                     }
@@ -201,22 +268,35 @@ fun UserInfoPage(
                         modifier = Modifier.width(134.dp)
                     )
                     Spacer(modifier = Modifier.height(35.dp))
-                    MoruButtonTypeA(text = "다음", enabled = isFormValid) {onNext()}
+                    MoruButtonTypeA(text = "다음", enabled = isFormValid) { onNext() }
                 }
             }
         }
-        if (isImageOptionVisible){
+        if (isImageOptionVisible) {
             ImageChoiceOptionButtonScreen(
                 onImageSelected = {
-                    //Todo 앨범에서 이미지 선택 로직 구현
+                    onPickFromGallery() // ★ 실제 동작
                 },
                 onCameraSelected = {
-                    //Todo 카메라로 사진 찍는 로직 구현
+                    onCaptureFromCamera() // ★ 실제 동작
                 },
                 onCancel = { isImageOptionVisible = false }
             )
         }
     }
+}
+
+/**
+ * [추가] 촬영 이미지 저장용 임시 파일 URI 생성 (FileProvider 사용)
+ */
+private fun createTempImageUri(context: android.content.Context): Uri {
+    val time = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(System.currentTimeMillis())
+    val imageFile = File.createTempFile("IMG_${time}_", ".jpg", context.cacheDir) // 캐시 폴더 사용
+    return FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.fileprovider",
+        imageFile
+    )
 }
 
 @Preview

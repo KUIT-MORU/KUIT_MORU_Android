@@ -37,9 +37,6 @@ fun DraggableAppSearchBottomSheet(
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val sheetHeight = screenHeight * 0.67f
 
-    // 선택된 앱 목록
-    //var selectedApps by remember { mutableStateOf<List<String>>(emptyList()) }
-
     LaunchedEffect(isVisible) {
         if (isVisible) {
             sheetState.show()
@@ -135,7 +132,9 @@ fun DraggableAppSearchBottomSheetContent(
             if (selectedAppList.isNotEmpty()) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth().padding(horizontal = 25.dp).padding(bottom = 6.dp),
+                        .fillMaxWidth()
+                        .padding(horizontal = 25.dp)
+                        .padding(bottom = 6.dp),
                     horizontalAlignment = Alignment.End
                 ) {
                     Box(
@@ -183,18 +182,26 @@ fun DraggableAppSearchBottomSheetContent(
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            val filteredApps = remember(searchText, appList, selectedAppList) {
+                appList
+                    .filter { it.appName.contains(searchText, ignoreCase = true) }
+                    .filterNot { sel -> selectedAppList.any { it.packageName == sel.packageName } }
+            }
+
             LazyVerticalGrid(
                 columns = GridCells.Fixed(4),
                 verticalArrangement = Arrangement.spacedBy(27.dp),
                 horizontalArrangement = Arrangement.spacedBy(18.dp),
                 contentPadding = PaddingValues(bottom = 16.dp, start = 25.dp, end = 25.dp),
             ) {
-                items(appList) { app ->
+                items(if (searchText.isBlank()) appList else filteredApps) { app ->
                     UnselectedAppInBottomSheet(
                         appIcon = app.appIcon,
                         appName = app.appName
                     ) {
-                        onAddApp(app)
+                        if (selectedAppList.size < 4) {
+                            onAddApp(app)
+                        }
                     }
                 }
             }
@@ -212,14 +219,14 @@ fun DraggableAppSearchBottomSheetContentPreview() {
     ) {
         DraggableAppSearchBottomSheetContent(
             appList = listOf(
-                UsedAppInRoutine("YouTube", ImageBitmap(64, 64)),
-                UsedAppInRoutine("Instagram", ImageBitmap(64, 64)),
-                UsedAppInRoutine("Twitter", ImageBitmap(64, 64)),
-                UsedAppInRoutine("Facebook", ImageBitmap(64, 64))
+                UsedAppInRoutine("YouTube", ImageBitmap(64, 64), ""),
+                UsedAppInRoutine("Instagram", ImageBitmap(64, 64), ""),
+                UsedAppInRoutine("Twitter", ImageBitmap(64, 64), ""),
+                UsedAppInRoutine("Facebook", ImageBitmap(64, 64), "")
             ),
             selectedAppList = listOf(
-                UsedAppInRoutine("WhatsApp", ImageBitmap(64, 64)),
-                UsedAppInRoutine("Telegram", ImageBitmap(64, 64))
+                UsedAppInRoutine("WhatsApp", ImageBitmap(64, 64), ""),
+                UsedAppInRoutine("Telegram", ImageBitmap(64, 64), "")
             ),
             onAddApp = {},
             onRemoveApp = {}

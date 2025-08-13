@@ -59,7 +59,7 @@ android {
 }
 
 dependencies {
-
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -97,6 +97,10 @@ dependencies {
     implementation(libs.retrofit.kotlin.serialization.converter)
     implementation(libs.kotlinx.serialization.json)
 
+    // Gson for local data serialization
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0") // 또는 2.9.0
+    implementation("com.google.code.gson:gson:2.10.1")
+
     // Hilt
     implementation(libs.hilt.android)
     implementation(libs.hilt.core)
@@ -124,6 +128,7 @@ dependencies {
     //스와이프 기능
     implementation(platform("androidx.compose:compose-bom:2024.06.00")) // 쓰는 BOM 버전에 맞춰서
     implementation("androidx.compose.material:material")
+    implementation("io.coil-kt:coil-compose:2.5.0")
 }
 
 configurations.all {

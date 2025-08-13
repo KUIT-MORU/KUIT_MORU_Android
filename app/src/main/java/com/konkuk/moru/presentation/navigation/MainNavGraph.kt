@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.navigation
 
+import android.util.Log
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -16,10 +17,13 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.konkuk.moru.data.model.DummyData.feedRoutines
+import com.konkuk.moru.data.model.Routine
 import com.google.gson.Gson
 import com.konkuk.moru.presentation.home.screen.HomeScreen
 import com.konkuk.moru.presentation.home.screen.RoutineFocusIntroScreen
 import com.konkuk.moru.presentation.home.screen.RoutineSimpleRunScreen
+import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.myactivity.screen.ActFabTagScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActInsightInfoClickScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActMainScreen
@@ -37,11 +41,11 @@ import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetailScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedRec
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedScreen
+import com.konkuk.moru.presentation.routinefeed.screen.search.RoutineSearchHost
 import com.konkuk.moru.presentation.routinefeed.screen.userprofile.UserProfileScreen
 import com.konkuk.moru.presentation.routinefeed.viewmodel.RoutineFeedViewModel
 import com.konkuk.moru.presentation.routinefocus.screen.RoutineFocusScreenContainer
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
-import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
@@ -64,35 +68,39 @@ fun MainNavGraph(
             HomeScreen(
                 navController = navController,
                 sharedViewModel = sharedViewModel,
-                modifier = modifier.padding(innerPadding),
+                modifier = Modifier.padding(innerPadding),
                 fabOffsetY = fabOffsetY,
                 todayTabOffsetY = todayTabOffsetY,
                 onShowOnboarding = onShowOnboarding,
             )
         }
 
-        // 루틴 목록의 카드 클릭 시
-        composable(
-            route = "routine_focus_intro/{routineId}",
-            arguments = listOf(navArgument("routineId") { type = NavType.StringType })
-        ) { backStackEntry ->
-
-            val parentEntry = remember(navController.currentBackStackEntry) {
-                navController.getBackStackEntry(Route.Home.route)
-            }
-            val sharedViewModel = viewModel<SharedRoutineViewModel>(parentEntry)
-
-            RoutineFocusIntroScreen(
-                sharedViewModel = sharedViewModel,
-                onStartClick = { selectedSteps, title, hashTag ->
-                    sharedViewModel.setSelectedSteps(selectedSteps)
-                    sharedViewModel.setRoutineTitle(title)
-                    sharedViewModel.setRoutineTags(hashTag.split(" ").map { it.removePrefix("#") })
-                    navController.navigate("routine_focus")
-                },
-                onBackClick = { navController.popBackStack() }
-            )
-        }
+//        // 루틴 목록의 카드 클릭 시
+//        composable(
+//            route = "routine_focus_intro/{routineId}",
+//            arguments = listOf(navArgument("routineId") { type = NavType.StringType })
+//        ) { backStackEntry ->
+//            val parent = remember(navController.currentBackStackEntry) {
+//                navController.getBackStackEntry(Route.Home.route)
+//            }
+//            val shared = viewModel<SharedRoutineViewModel>(parent)
+//
+//            val rid = backStackEntry.arguments?.getInt("routineId")
+//            if (rid != null) {
+//                shared.setSelectedRoutineId(rid)
+//            }
+//
+//            RoutineFocusIntroScreen(
+//                sharedViewModel = shared,
+//                onStartClick = { selectedSteps, title, hashTag ->
+//                    shared.setSelectedSteps(selectedSteps)
+//                    shared.setRoutineTitle(title)
+//                    shared.setRoutineTags(hashTag.split(" ").map { it.removePrefix("#") })
+//                    navController.navigate("routine_focus")
+//                },
+//                onBackClick = { navController.popBackStack() }
+//            )
+//        }
 
 
 
@@ -108,16 +116,27 @@ fun MainNavGraph(
 
             RoutineFocusIntroScreen(
                 sharedViewModel = sharedViewModel,
-                onStartClick = { selectedSteps, title, hashTag ->
+                onStartClick = { selectedSteps, title, hashTag, category, totalDuration ->
+                    Log.d("MainNavGraph", "🚀 RoutineFocusIntroScreen에서 시작하기 버튼 클릭!")
+                    Log.d("MainNavGraph", "   - 카테고리: $category")
+                    Log.d("MainNavGraph", "   - 선택된 스텝: ${selectedSteps.size}개")
+                    Log.d("MainNavGraph", "   - 총 소요시간: ${totalDuration}분")
+                    Log.d("MainNavGraph", "   - 제목: $title")
+                    Log.d("MainNavGraph", "   - 태그: $hashTag")
+
                     // 루틴 데이터 설정
                     sharedViewModel.setSelectedSteps(selectedSteps)
                     sharedViewModel.setRoutineTitle(title)
                     sharedViewModel.setRoutineTags(hashTag.split(" ").map { it.removePrefix("#") })
+                    sharedViewModel.setRoutineCategory(category)
+                    sharedViewModel.setTotalDuration(totalDuration)
 
                     // 실행 화면 이동
                     if (category == "집중") {
+                        Log.d("MainNavGraph", "🎯 집중 루틴으로 이동: RoutineFocus")
                         navController.navigate(Route.RoutineFocus.route)
                     } else {
+                        Log.d("MainNavGraph", "🎯 간편 루틴으로 이동: RoutineSimpleRun")
                         navController.navigate(Route.RoutineSimpleRun.route)
                     }
                 },
@@ -146,26 +165,56 @@ fun MainNavGraph(
 
 
         composable(route = Route.RoutineSimpleRun.route) {
-            val parentEntry = remember(navController.currentBackStackEntry) {
+            val parent = remember(navController.currentBackStackEntry) {
                 navController.getBackStackEntry(Route.Home.route)
             }
-            val sharedViewModel = viewModel<SharedRoutineViewModel>(parentEntry)
+            val shared = viewModel<SharedRoutineViewModel>(parent)
+            val currentId by shared.selectedRoutineId.collectAsState()
+            val originalRoutineId by shared.originalRoutineId.collectAsState()
+            val title by shared.routineTitle.collectAsState()
+            val category by shared.routineCategory.collectAsState()
+            val totalDuration by shared.totalDuration.collectAsState()
+            val steps by shared.selectedSteps.collectAsState()
 
-            RoutineSimpleRunScreen(
-                sharedViewModel = sharedViewModel,
-                onDismiss = {
-                    navController.popBackStack(
-                        Route.Home.route,
-                        inclusive = false
-                    )
-                    if (navController.currentDestination?.route != Route.Home.route) {
-                        navController.navigate(Route.Home.route) {
-                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                            launchSingleTop = true
+            Log.d("MainNavGraph", "🚀 RoutineSimpleRun 화면 진입!")
+            Log.d("MainNavGraph", "   - routineId: $currentId")
+            Log.d("MainNavGraph", "   - originalRoutineId: $originalRoutineId")
+            Log.d("MainNavGraph", "   - 제목: $title")
+            Log.d("MainNavGraph", "   - 카테고리: $category")
+            Log.d("MainNavGraph", "   - 총 소요시간: ${totalDuration}분")
+            Log.d("MainNavGraph", "   - 선택된 스텝: ${steps.size}개")
+
+            if (currentId != null) {
+                RoutineSimpleRunScreen(
+                    sharedViewModel = shared,
+                    routineId = currentId!!,
+                    onDismiss = {
+                        // 홈으로 돌아갈 때 "진행중 루틴" 알림
+                        navController.getBackStackEntry(Route.Home.route)
+                            .savedStateHandle["runningRoutineId"] = currentId!!
+
+
+                        navController.popBackStack(
+                            Route.Home.route,
+                            inclusive = false
+                        )
+                        if (navController.currentDestination?.route != Route.Home.route) {
+                            navController.navigate(Route.Home.route) {
+                                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                                launchSingleTop = true
+                            }
                         }
+
+                    },
+                    onFinishConfirmed = { finishedId: String ->
+                        Log.d("MainNavGraph", "🔄 RoutineSimpleRun 완료 처리: originalRoutineId=$originalRoutineId")
+                        navController.getBackStackEntry(Route.Home.route)
+                            .savedStateHandle["finishedRoutineId"] = originalRoutineId ?: finishedId
+                        Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}")
+                        navController.popBackStack(Route.Home.route, false)
                     }
-                }
-            )
+                )
+            }
         }
 
 
@@ -177,6 +226,20 @@ fun MainNavGraph(
                 navController.getBackStackEntry(Route.Home.route)
             }
             val sharedViewModel = viewModel<SharedRoutineViewModel>(parentEntry)
+            val title by sharedViewModel.routineTitle.collectAsState()
+            val category by sharedViewModel.routineCategory.collectAsState()
+            val totalDuration by sharedViewModel.totalDuration.collectAsState()
+            val steps by sharedViewModel.selectedSteps.collectAsState()
+            val originalRoutineId by sharedViewModel.originalRoutineId.collectAsState()
+            val selectedApps by sharedViewModel.selectedApps.collectAsState()
+
+            Log.d("MainNavGraph", "🚀 RoutineFocus 화면 진입!")
+            Log.d("MainNavGraph", "   - 제목: $title")
+            Log.d("MainNavGraph", "   - 카테고리: $category")
+            Log.d("MainNavGraph", "   - 총 소요시간: ${totalDuration}분")
+            Log.d("MainNavGraph", "   - 선택된 스텝: ${steps.size}개")
+            Log.d("MainNavGraph", "   - originalRoutineId: $originalRoutineId")
+            Log.d("MainNavGraph", "   - 선택된 앱: ${selectedApps.size}개")
 
             RoutineFocusScreenContainer(
                 focusViewModel = routineFocusViewModel,
@@ -192,17 +255,29 @@ fun MainNavGraph(
                             launchSingleTop = true
                         }
                     }
+                },
+                onFinishConfirmed = { finishedId: String ->
+                    Log.d("MainNavGraph", "🔄 RoutineFocus 완료 처리: originalRoutineId=$originalRoutineId")
+                    navController.getBackStackEntry(Route.Home.route)
+                        .savedStateHandle["finishedRoutineId"] = originalRoutineId ?: finishedId
+                    Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}")
+                    navController.popBackStack(Route.Home.route, false)
+                },
+                onScreenBlockTrigger = {
+                    // 집중 루틴 실행 중 다른 앱으로 이동 시 화면 차단 팝업창 표시
+                    if (category == "집중" && selectedApps.isNotEmpty()) {
+                        routineFocusViewModel.showScreenBlockPopup(selectedApps)
+                    }
                 }
             )
         }
 
 
         composable(route = Route.RoutineFeed.route) {
-            /*val viewModel: RoutineFeedViewModel = viewModel()
-            val uiState by viewModel.uiState.collectAsState()*/
+            val viewModel: RoutineFeedViewModel = hiltViewModel()
+            val uiState by viewModel.uiState.collectAsState()
 
             RoutineFeedScreen(
-                modifier = modifier.padding(innerPadding),
                 navController = navController,
             )
         }
@@ -273,7 +348,6 @@ fun MainNavGraph(
             val viewModel: MyRoutinesViewModel = viewModel()
 
             MyRoutinesScreen(
-                modifier = modifier.padding(innerPadding),
                 viewModel = viewModel, // ViewModel 인스턴스만 전달
                 onNavigateToRoutineFeed = {
                     navController.navigate(Route.RoutineFeed.route)
@@ -296,8 +370,8 @@ fun MainNavGraph(
             if (routineId != null) {
                 MyRoutineDetailScreen(
                     routineId = routineId,
-                    // navController = navController,
                     onBackClick = { navController.popBackStack() },
+                    navController = navController // [추가]
                 )
             } else {
                 navController.popBackStack()
@@ -337,14 +411,12 @@ fun MainNavGraph(
 
         composable(route = Route.MyActivity.route) {
             ActMainScreen(
-                modifier = modifier.padding(innerPadding),
                 navController = navController
             )
         }
 
         composable(route = Route.ActSetting.route) {
             ActSettingScreen(
-                modifier = modifier.padding(innerPadding),
                 navController = navController
             )
         }
@@ -360,7 +432,6 @@ fun MainNavGraph(
 
         composable(route = Route.ActScrab.route) {
             ActScrabScreen(
-                modifier = modifier.padding(innerPadding),
                 navController = navController
             )
         }
@@ -368,21 +439,18 @@ fun MainNavGraph(
 
         composable(route = Route.ActFabTag.route) {
             ActFabTagScreen(
-                modifier = modifier.padding(innerPadding),
                 navController = navController
             )
         }
 
         composable(route = Route.ActRecord.route) {
             ActRecordScreen(
-                modifier = modifier.padding(innerPadding),
                 navController = navController
             )
         }
 
         composable(route = Route.ActProfile.route) {
             ActProfileScreen(
-                modifier = modifier.padding(innerPadding),
                 navController = navController
             )
         }
@@ -398,14 +466,12 @@ fun MainNavGraph(
 
             ActRecordDetailScreen(
                 title = decodedTitle,
-                navController = navController,
-                modifier.padding(innerPadding)
+                navController = navController
             )
         }
 
         composable(route = Route.ActInsightInfo.route) {
             ActInsightInfoClickScreen(
-                modifier = modifier.padding(innerPadding),
                 navController = navController
             )
         }

@@ -3,10 +3,10 @@ package com.konkuk.moru.presentation.routinefeed.data
 import com.google.gson.annotations.SerializedName
 import com.konkuk.moru.data.model.Routine
 
-/*data class RoutineSectionModel(
+data class RoutineSectionModel(
     val title: String,
     val routines: List<Routine>
-)*/
+)
 
 data class LiveUserInfo(
     @SerializedName("userId") //필요시 userId로

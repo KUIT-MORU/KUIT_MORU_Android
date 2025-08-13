@@ -24,7 +24,8 @@ fun RoutineCardItem(
     title: String,
     tags: List<String>,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    isHighlighted: Boolean = false
 ) {
     Box(
         modifier = modifier
@@ -70,7 +71,7 @@ fun RoutineCardItem(
 private fun RoutineCardItemPreview() {
     RoutineCardItem(
         title = "MORU의 스트레칭 루틴",
-        tags = listOf("운동", "건강")
+        tags = listOf("운동", "건강"),
+        isHighlighted = true
     )
-
 }

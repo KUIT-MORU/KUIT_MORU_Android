@@ -1,3 +1,6 @@
+package com.konkuk.moru.presentation.myroutines.component
+
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,36 +24,46 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.routinedetail.MyRoutineTag
+import com.konkuk.moru.core.component.routinedetail.SelectUsedAppSection
 import com.konkuk.moru.data.model.RoutineStepActions
-import com.konkuk.moru.presentation.myroutines.component.RoutineItemCard
-import com.konkuk.moru.presentation.myroutines.component.UsedAppsSection
 import com.konkuk.moru.core.component.routinedetail.routineStepEditableList
 import com.konkuk.moru.presentation.myroutines.viewmodel.MyRoutineDetailViewModel
+import com.konkuk.moru.presentation.routinecreate.component.TimePickerDialog
 import com.konkuk.moru.ui.theme.MORUTheme
 
 
 @Composable
 fun MyRoutineDetailContent(
     viewModel: MyRoutineDetailViewModel,
+    onOpenBottomSheet: () -> Unit,
+    onCardImageClick: () -> Unit,
+    selectedImageUri: Uri?,
+    onAddTagClick: () -> Unit
 ) {
     val listState = rememberLazyListState()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val routine = uiState.routine ?: return
     val isEditMode = uiState.isEditMode
-    val hideUsedApps = uiState.isEditMode && uiState.isQuickMode
-    val isSimpleMode = routine.category == "간편"
+//    val isEditMode = true
 
     // LazyColumn에서 실제 스텝 리스트가 시작되기 전의 아이템 개수 (Card, Tag, "STEP" 헤더)
     val headerItemCount = 3
 
+    var isTimePickerVisible by remember { mutableStateOf(false) } // [추가]
+    var editingStepIndex by remember { mutableStateOf<Int?>(null) } // [추가]
+
     val routineStepActions = RoutineStepActions(
         onDragStart = viewModel::onDragStart,
         onDrag = viewModel::onDrag,
-        onReorderComplete = viewModel::finalizeStepReorder, // finalizeStepReorder 함수로 변경
-        onReorderCancel = viewModel::cancelDrag,           // cancelDrag 함수로 변경
+        onReorderComplete = viewModel::finalizeStepReorder,
+        onReorderCancel = viewModel::cancelDrag,
         onDeleteStep = viewModel::deleteStep,
         onStepNameChange = viewModel::updateStepName,
-        onAddStep = viewModel::addStep
+        onAddStep = viewModel::addStep,
+        onTimeClick = { index -> // [추가]
+            editingStepIndex = index
+            isTimePickerVisible = true
+        }
     )
 
 
@@ -62,10 +76,9 @@ fun MyRoutineDetailContent(
         ) {
             item {
                 RoutineItemCard(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .padding(top = 8.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     imageUrl = routine.imageUrl,
+                    imageUri = selectedImageUri,
                     title = routine.title,
                     isEditMode = isEditMode,
                     onDelete = { viewModel.deleteRoutine(routine.routineId) },
@@ -73,6 +86,7 @@ fun MyRoutineDetailContent(
                     category = routine.category,
                     onDescriptionChange = viewModel::updateDescription,
                     onCategoryChange = viewModel::updateCategory,
+                    onImageClick = onCardImageClick // [변경]
                 )
             }
 
@@ -80,7 +94,7 @@ fun MyRoutineDetailContent(
                 MyRoutineTag(
                     tags = routine.tags,
                     isEditMode = isEditMode,
-                    onAddTag = { viewModel.addTag() }, // ViewModel 함수 직접 호출
+                    onAddTag = onAddTagClick,
                     onDeleteTag = viewModel::deleteTag
                 )
             }
@@ -95,13 +109,35 @@ fun MyRoutineDetailContent(
                 actions = routineStepActions
             )
 
-            if (!isSimpleMode && (routine.usedApps.isNotEmpty() || isEditMode)) {
+//            if (routine.usedApps.isNotEmpty() || isEditMode) {
+//                item {
+//                    Spacer(modifier = Modifier.height(20.dp))
+//                    UsedAppsSection(
+//                        apps = routine.usedApps,
+//                        isEditMode = isEditMode,
+//                        onAddApp = viewModel::addApp,
+//                        onDeleteApp = viewModel::deleteApp
+//                    )
+//                }
+//            }
+            if (routine.usedApps.isNotEmpty()) {
                 item {
-                    UsedAppsSection(
-                        apps = routine.usedApps,
+                    Spacer(modifier = Modifier.height(20.dp))
+//                    UsedAppsSection(
+//                        apps = routine.usedApps,
+//                        isEditMode = isEditMode,
+//                        onAddApp = viewModel::addApp,
+//                        onDeleteApp = viewModel::deleteApp
+//                    )
+                    SelectUsedAppSection(
+                        selectedAppList = routine.usedApps,
                         isEditMode = isEditMode,
-                        onAddApp = viewModel::addApp,
-                        onDeleteApp = viewModel::deleteApp
+                        onRemove = { app ->
+                            viewModel.deleteApp(app)
+                        },
+                        onAddApp = {
+                            onOpenBottomSheet()
+                        }
                     )
                 }
             }
@@ -125,62 +161,64 @@ fun MyRoutineDetailContent(
             shape = RoundedCornerShape(size = 0.dp)
         )
     }
+    if (isTimePickerVisible) {
+        val init = editingStepIndex?.let { idx -> routine.steps.getOrNull(idx)?.duration } // "HH:MM:SS"
+        TimePickerDialog(
+            initialTime = init,
+            onConfirm = { h, m, s ->
+                val hh = "%02d".format(h)
+                val mm = "%02d".format(m)
+                val ss = "%02d".format(s)
+                val newDuration = "$hh:$mm:$ss"
+                editingStepIndex?.let { idx ->
+                    viewModel.updateStepDuration(idx, newDuration) // [추가]
+                }
+                isTimePickerVisible = false
+                editingStepIndex = null
+            },
+            onDismiss = {
+                isTimePickerVisible = false
+                editingStepIndex = null
+            }
+        )
+    }
 }
 
 /**
  * '보기 모드'일 때의 UI를 미리 보여줍니다.
  * 사용자는 루틴 정보를 조회만 할 수 있으며, 수정 관련 UI(삭제 버튼 등)는 보이지 않습니다.
  */
-@Preview(showBackground = true, name = "상세 화면 - 보기 모드")
-@Composable
-private fun MyRoutineDetailContentPreview_ViewMode() {
-    val viewModel: MyRoutineDetailViewModel = viewModel()
-    // '나'의 첫 번째 루틴(ID: 501)을 불러와서 상태를 설정합니다.
-    viewModel.loadRoutine("routine-501")
-
-    MORUTheme {
-        MyRoutineDetailContent(
-            viewModel = viewModel,
-        )
-    }
-}
+//@Preview(showBackground = true, name = "상세 화면 - 보기 모드")
+//@Composable
+//private fun MyRoutineDetailContentPreview_ViewMode() {
+//    val viewModel: MyRoutineDetailViewModel = viewModel()
+//    // '나'의 첫 번째 루틴(ID: 501)을 불러와서 상태를 설정합니다.
+//    viewModel.loadRoutine("routine-501")
+//
+//    MORUTheme {
+//        MyRoutineDetailContent(
+//            viewModel = viewModel,
+//        )
+//    }
+//}
 
 /**
  * '수정 모드'일 때의 UI를 미리 보여줍니다.
  * 정보 수정, 태그/스텝/사용 앱 추가 및 삭제 등 편집과 관련된 UI가 활성화됩니다.
  */
-@Preview(showBackground = true, name = "상세 화면 - 수정 모드")
+@Preview(showBackground = true, name = "상세 화면 - 수정 모드", heightDp = 1000)
 @Composable
 private fun MyRoutineDetailContentPreview_EditMode() {
     val viewModel: MyRoutineDetailViewModel = viewModel()
-    // '나'의 첫 번째 루틴(ID: 501)을 불러와서 상태를 설정합니다.
     viewModel.loadRoutine("routine-501")
 
     MORUTheme {
         MyRoutineDetailContent(
             viewModel = viewModel,
+            onOpenBottomSheet = { },
+            onCardImageClick = {},
+            selectedImageUri = null,
+            onAddTagClick = {  }
         )
-    }
-}
-@Preview(showBackground = true, name = "상세 화면 - 사용앱 표시")
-@Composable
-private fun MyRoutineDetailContentPreview_WithUsedApps() {
-    val viewModel: MyRoutineDetailViewModel = viewModel()
-
-    // 프리뷰 최초 1회만 초기화
-    val initialized = remember { mutableStateOf(false) }
-    if (!initialized.value) {
-        viewModel.loadRoutine("routine-501")   // 더미 루틴 로드
-        viewModel.setEditMode(true)            // 편집 모드 → 섹션 노출 보장
-        viewModel.updateCategory("집중")        // isSimpleMode = false
-
-        // 실제로 보이는 앱 더미 3개 정도 추가
-        repeat(3) { viewModel.addApp() }
-
-        initialized.value = true
-    }
-
-    MORUTheme {
-        MyRoutineDetailContent(viewModel = viewModel)
     }
 }

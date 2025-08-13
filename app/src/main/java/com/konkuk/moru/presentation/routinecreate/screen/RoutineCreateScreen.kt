@@ -1,6 +1,9 @@
 package com.konkuk.moru.presentation.routinecreate.screen
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -45,6 +48,8 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.konkuk.moru.R
@@ -55,15 +60,16 @@ import com.konkuk.moru.core.component.routinedetail.DraggableAppSearchBottomShee
 import com.konkuk.moru.core.component.routinedetail.MyRoutineTagInCreateRoutine
 import com.konkuk.moru.core.component.routinedetail.RoutineDescriptionField
 import com.konkuk.moru.core.component.routinedetail.RoutineImageSelectBox
+import com.konkuk.moru.core.component.routinedetail.SelectUsedAppSection
 import com.konkuk.moru.core.component.routinedetail.ShowUserCheckbox
-import com.konkuk.moru.core.component.routinedetail.appdisplay.AddAppBox
-import com.konkuk.moru.core.component.routinedetail.appdisplay.SelectedAppNoText
+import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.routinecreate.component.StepItem
 import com.konkuk.moru.presentation.routinecreate.component.TimePickerDialog
 import com.konkuk.moru.presentation.routinecreate.viewmodel.RoutineCreateViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 import kotlinx.coroutines.launch
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("DefaultLocale")
@@ -81,6 +87,29 @@ fun RoutineCreateScreen(
 
     var isImageOptionVisible by remember { mutableStateOf(false) }
     var isTimePickerVisible by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val cameraImageUriState = remember { mutableStateOf<Uri?>(null) }
+
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            viewModel.imageUri.value = cameraImageUriState.value
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            val uri = createImageUri(context)
+            cameraImageUriState.value = uri
+            takePictureLauncher.launch(uri)
+        } else {
+            // 권한 거부 시: 따로 안내 필요하면 스낵바/토스트 등 처리
+        }
+    }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -113,10 +142,19 @@ fun RoutineCreateScreen(
 //        UsedAppInRoutine("Twitter", dummyBitmap)
 //    )
 
-    val context = LocalContext.current
-
     LaunchedEffect(Unit) {
         viewModel.loadInstalledApps(context)
+    }
+
+    LaunchedEffect(Unit) {
+        val handle = navController.currentBackStackEntry?.savedStateHandle
+        handle?.getStateFlow<List<String>>("selectedTagsResult", emptyList())
+            ?.collect { result ->
+                if (result.isNotEmpty()) {
+                    viewModel.addTags(result)
+                    handle["selectedTagsResult"] = emptyList<String>()   // ← [중요] 재수신 방지 초기화
+                }
+            }
     }
 
     Box(
@@ -172,7 +210,7 @@ fun RoutineCreateScreen(
                         verticalAlignment = Alignment.Top
                     ) {
                         RoutineImageSelectBox(
-                            selectedImageUri = imageUriState.value,
+                            selectedImageUri = viewModel.imageUri.value,
                             onClick = {
                                 isImageOptionVisible = true
                                 focusManager.clearFocus()
@@ -226,12 +264,12 @@ fun RoutineCreateScreen(
                     // 태그 추가 버튼
                     MyRoutineTagInCreateRoutine(
                         tagList = tagList,
-                        //tagList = listOf("운동", "건강", "루틴"),
                         onAddTag = {
-                            viewModel.addTag("예시태그")
+                            // [변경] 임시 태그 추가 → 검색 화면으로 이동
+                            navController.navigate(Route.RoutineSearch.route)
                         },
-                        onDeleteTag = {
-                            viewModel.removeTag("예시태그")
+                        onDeleteTag = { tag ->
+                            viewModel.removeTag(tag)
                         }
                     )
                 }
@@ -244,6 +282,7 @@ fun RoutineCreateScreen(
                     StepItem(
                         step = step,
                         stepCount = stepList.size,
+                        isFocusingRoutine = isFocusingRoutine,
                         onTitleChange = { newTitle ->
                             viewModel.updateStepTitle(step.id, newTitle)
                         },
@@ -263,40 +302,17 @@ fun RoutineCreateScreen(
             }
 
             if (isFocusingRoutine) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(color = Color.White)
-                        .padding(bottom = 30.dp)
-                ) {
-                    Text(
-                        text = "사용앱",
-                        style = typography.title_B_20,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                    Spacer(modifier = Modifier.height(5.dp))
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(9.dp),
-                        contentPadding = PaddingValues(start = 11.dp),
-                    ) {
-                        items(selectedAppList) { app ->
-                            SelectedAppNoText(
-                                appIcon = app.appIcon,
-                                isRemovable = true
-                            ) { viewModel.removeAppFromSelected(app) }
-                        }
-
-                        if (selectedAppList.size < 4) {
-                            item {
-                                AddAppBox {
-                                    coroutineScope.launch {
-                                        isBottomSheetOpen = true
-                                    }
-                                }
-                            }
+                SelectUsedAppSection(
+                    selectedAppList = selectedAppList,
+                    onRemove = { app ->
+                        viewModel.removeAppFromSelected(app)
+                    },
+                    onAddApp = {
+                        coroutineScope.launch {
+                            isBottomSheetOpen = true
                         }
                     }
-                }
+                )
             }
 
             // 완료하기 버튼
@@ -310,7 +326,9 @@ fun RoutineCreateScreen(
                         indication = null,
                         interactionSource = null
                     ) {
-                        viewModel.submitRoutine()
+                        // TODO: 이미지 업로드하여 imageKey 획득 필요
+                        val imageKey: String? = null // [임시] 서버 업로드 연동 후 실제 키로 치환
+                        viewModel.submitRoutine(imageKey) // [변경] DTO 생성/로그
                         navController.popBackStack()
                     },
                 contentAlignment = Alignment.Center
@@ -331,7 +349,20 @@ fun RoutineCreateScreen(
                     isImageOptionVisible = false
                 },
                 onCameraSelected = {
-                    // TODO: 카메라 구현 필요 (추가 설명 원할 시 말해줘)
+                    // [변경] 실제 카메라 촬영 동작
+                    val permission = Manifest.permission.CAMERA
+                    val isGranted = ContextCompat.checkSelfPermission(
+                        context, permission
+                    ) == PackageManager.PERMISSION_GRANTED
+
+                    if (isGranted) {
+                        val uri = createImageUri(context)
+                        cameraImageUriState.value = uri
+                        takePictureLauncher.launch(uri)
+                    } else {
+                        cameraPermissionLauncher.launch(permission)
+                    }
+                    isImageOptionVisible = false
                 },
                 onCancel = { isImageOptionVisible = false }
             )
@@ -361,6 +392,18 @@ fun RoutineCreateScreen(
         onRemoveApp = { app ->
             viewModel.removeAppFromSelected(app)
         },
+    )
+}
+
+private fun createImageUri(context: Context): Uri {
+    val imageFile = File.createTempFile(
+        "moru_camera_", ".jpg",
+        context.cacheDir // 외부 저장 권한 없이 캐시에 저장
+    )
+    return FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.fileprovider",
+        imageFile
     )
 }
 

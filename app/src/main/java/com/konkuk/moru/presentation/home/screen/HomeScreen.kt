@@ -1,6 +1,6 @@
 package com.konkuk.moru.presentation.home.screen
 
-import android.widget.Toast
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -15,6 +15,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.Divider
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
@@ -23,7 +26,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -39,10 +44,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.konkuk.moru.R
-import com.konkuk.moru.data.model.DummyData
+import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.presentation.home.FabConstants
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.HomeFloatingActionButton
@@ -51,10 +57,21 @@ import com.konkuk.moru.presentation.home.component.RoutineCardList
 import com.konkuk.moru.presentation.home.component.TodayRoutinePager
 import com.konkuk.moru.presentation.home.component.TodayWeekTab
 import com.konkuk.moru.presentation.home.component.WeeklyCalendarView
-import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
+import com.konkuk.moru.presentation.home.viewmodel.HomeRoutinesViewModel
+import com.konkuk.moru.presentation.home.viewmodel.UserViewModel
 import com.konkuk.moru.presentation.navigation.Route
+import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
+import com.konkuk.moru.core.datastore.SchedulePreference
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAdjusters
+import java.util.Locale
+import android.content.Context
+import kotlinx.coroutines.delay
 
 fun convertDurationToMinutes(duration: String): Int {
     val parts = duration.split(":")
@@ -63,6 +80,164 @@ fun convertDurationToMinutes(duration: String): Int {
     return minutes + (seconds / 60)
 }
 
+// 라벨 포맷(루틴 제목을 최대 10글자로 제한하고 4글자씩 줄바꿈, 최대 3줄)
+private fun Routine.toCalendarLabel(): String {
+    val title = this.title.take(10) // 최대 10글자로 제한
+    
+    return when {
+        // 4글자 이하면 그대로 사용
+        title.length <= 4 -> title
+        // 5-8글자면 4글자씩 2줄로 줄바꿈
+        title.length <= 8 -> {
+            val firstLine = title.take(4)
+            val secondLine = title.drop(4)
+            "$firstLine\n$secondLine"
+        }
+        // 9-10글자면 4글자씩 3줄로 줄바꿈
+        else -> {
+            val firstLine = title.take(4)
+            val secondLine = title.take(8).drop(4)
+            val thirdLine = title.drop(8)
+            "$firstLine\n$secondLine\n$thirdLine"
+        }
+    }
+}
+
+// 이번주(월~일) 맵 생성: dayOfMonth -> [라벨, 라벨, ...]
+private fun buildWeeklyMap(routines: List<Routine>): Pair<Map<Int, List<String>>, Int> {
+    val today = LocalDate.now()
+    val startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    val weekDates = (0..6).map { startOfWeek.plusDays(it.toLong()) }
+
+    Log.d("HomeScreen", "buildWeeklyMap 시작: routines.size=${routines.size}")
+    routines.forEach { routine ->
+        Log.d("HomeScreen", "루틴: ${routine.title}, scheduledDays=${routine.scheduledDays}, scheduledTime=${routine.scheduledTime}")
+    }
+
+    val map = weekDates.associate { date ->
+        Log.d("HomeScreen", "🔍 날짜 ${date.dayOfMonth}(${date.dayOfWeek}) 처리 시작")
+        
+        val labels = routines
+            .filter { r ->
+                // 🔸 요일 세팅된 루틴만 주간에 배치
+                val hasScheduledDays = r.scheduledDays.isNotEmpty()
+                val containsDayOfWeek = r.scheduledDays.contains(date.dayOfWeek)
+
+                // 더 많은 루틴을 표시하기 위한 개선된 로직
+                val shouldShow = when {
+                    // 1. 로컬 스케줄에 scheduledDays가 설정되어 있고 해당 요일에 포함되는 경우 (우선순위 1)
+                    hasScheduledDays && containsDayOfWeek -> {
+                        Log.d("HomeScreen", "✅ ${r.title}: 로컬 스케줄에 ${date.dayOfWeek} 포함됨")
+                        true
+                    }
+                    // 2. scheduledDays가 비어있지만 오늘 요일인 경우 (우선순위 2)
+                    !hasScheduledDays && date.dayOfWeek == today.dayOfWeek -> {
+                        Log.d("HomeScreen", "✅ ${r.title}: 오늘 루틴으로 ${date.dayOfWeek}에 배치")
+                        true
+                    }
+                    // 3. scheduledDays가 비어있고, 루틴이 간단한 경우 (우선순위 3 - 임시 분산 배치)
+                    !hasScheduledDays && (r.category == "집중" || r.category == "간편" || r.category.isEmpty()) -> {
+                        // 요일별로 분산 배치 (월요일부터 시작해서 루틴 개수만큼 분산)
+                        val routineIndex = routines.indexOf(r)
+                        val dayIndex = routineIndex % 7
+                        val targetDayValue = dayIndex + 1 // DayOfWeek.MONDAY.value = 1
+                        val matches = date.dayOfWeek.value == targetDayValue
+                        
+                        if (matches) {
+                            Log.d("HomeScreen", "✅ ${r.title}: 임시 분산 배치로 ${date.dayOfWeek}에 배치 (routineIndex=$routineIndex, dayIndex=$dayIndex, category='${r.category}')")
+                        } else {
+                            Log.d("HomeScreen", "❌ ${r.title}: 임시 분산 배치 실패 (routineIndex=$routineIndex, dayIndex=$dayIndex, targetDay=${targetDayValue}, currentDay=${date.dayOfWeek.value}, category='${r.category}')")
+                        }
+                        matches
+                    }
+                    // 4. 그 외의 경우는 표시하지 않음
+                    else -> {
+                        Log.d("HomeScreen", "❌ ${r.title}: 조건에 맞지 않음 (hasScheduledDays=$hasScheduledDays, category=${r.category})")
+                        false
+                    }
+                }
+
+                Log.d("HomeScreen", "📊 날짜 ${date.dayOfMonth}(${date.dayOfWeek}): ${r.title} - scheduledDays=${r.scheduledDays}, hasScheduledDays=$hasScheduledDays, containsDayOfWeek=$containsDayOfWeek, shouldShow=$shouldShow")
+                shouldShow
+            }
+            .sortedBy { it.scheduledTime ?: LocalTime.MAX }
+            .map { it.toCalendarLabel() }
+
+        Log.d("HomeScreen", "📅 날짜 ${date.dayOfMonth}에 최종 표시될 라벨: $labels (${labels.size}개)")
+        date.dayOfMonth to labels
+    }
+
+    Log.d("HomeScreen", "최종 주간 맵: $map")
+    return map to today.dayOfMonth
+}
+
+// requiredTime을 기반으로 간편/집중 루틴 구분
+private fun determineRoutineType(requiredTime: String): Boolean {
+    // requiredTime이 비어있으면 간편 루틴, 있으면 집중 루틴
+    return requiredTime.isBlank()
+}
+
+// ISO 8601 Duration 형식을 분 단위로 변환 (PT30M -> 30분)
+private fun convertRequiredTimeToMinutes(requiredTime: String): Int {
+    return try {
+        when {
+            requiredTime.startsWith("PT") -> {
+                val timePart = requiredTime.substring(2) // "PT" 제거
+                when {
+                    timePart.endsWith("H") -> {
+                        // 시간 단위 (예: PT1H -> 60분)
+                        val hours = timePart.removeSuffix("H").toIntOrNull() ?: 0
+                        hours * 60
+                    }
+                    timePart.endsWith("M") -> {
+                        // 분 단위 (예: PT30M -> 30분)
+                        timePart.removeSuffix("M").toIntOrNull() ?: 0
+                    }
+                    timePart.endsWith("S") -> {
+                        // 초 단위 (예: PT30S -> 1분)
+                        val seconds = timePart.removeSuffix("S").toIntOrNull() ?: 0
+                        (seconds + 59) / 60 // 올림 처리
+                    }
+                    else -> {
+                        // 복합 형식 (예: PT1H30M -> 90분)
+                        var totalMinutes = 0
+                        var currentNumber = ""
+                        
+                        for (char in timePart) {
+                            when (char) {
+                                'H' -> {
+                                    totalMinutes += (currentNumber.toIntOrNull() ?: 0) * 60
+                                    currentNumber = ""
+                                }
+                                'M' -> {
+                                    totalMinutes += currentNumber.toIntOrNull() ?: 0
+                                    currentNumber = ""
+                                }
+                                'S' -> {
+                                    val seconds = currentNumber.toIntOrNull() ?: 0
+                                    totalMinutes += (seconds + 59) / 60
+                                    currentNumber = ""
+                                }
+                                else -> currentNumber += char
+                            }
+                        }
+                        totalMinutes
+                    }
+                }
+            }
+            else -> {
+                // 기존 "MM:SS" 형식 지원 (하위 호환성)
+                val parts = requiredTime.split(":")
+                val minutes = parts.getOrNull(0)?.toIntOrNull() ?: 0
+                val seconds = parts.getOrNull(1)?.toIntOrNull() ?: 0
+                minutes + (seconds / 60)
+            }
+        }
+    } catch (e: Exception) {
+        Log.w("HomeScreen", "⚠️ requiredTime 변환 실패: $requiredTime", e)
+        0
+    }
+}
 
 // 홈 메인 페이지
 @Composable
@@ -74,21 +249,224 @@ fun HomeScreen(
     todayTabOffsetY: MutableState<Float>,
     onShowOnboarding: () -> Unit = {},
 ) {
+    Log.d("HomeScreen", "🚀 HomeScreen Composable 시작!")
+    Log.d("HomeScreen", "📱 앱이 실행되고 있습니다!")
+    Log.d("HomeScreen", "🔍 navController: $navController")
+    Log.d("HomeScreen", "🔍 sharedViewModel: $sharedViewModel")
+
+    val userVm: UserViewModel = hiltViewModel()
+    val nickname by userVm.nickname.collectAsState()
+    LaunchedEffect(Unit) {
+        Log.d("HomeScreen", "🔄 userVm.loadMe() 호출")
+        userVm.loadMe()
+    }
+
+    // Context 가져오기
+    val context = LocalContext.current
+
+    // 오늘 탭 표시용(서버 응답 + 순서 복원/완료 시 뒤로)
+    val todayRoutines = remember { mutableStateListOf<Routine>() }
+
+    // 포커스 화면에서 완료한 루틴을 홈으로 돌려받아 카드 뒤로 보내기
+    val homeEntry = remember(navController) {
+        navController.getBackStackEntry(Route.Home.route)
+    }
+
+    // 진행중 루틴 ID 수신 (Int 안정 ID)
+    val runningId by homeEntry.savedStateHandle
+        .getStateFlow<Int?>("runningRoutineId", null)
+        .collectAsState(initial = null)
+
+    // 하이라이트 대상 보관
+    var highlightId by remember { mutableStateOf<Int?>(null) }
+
+    // X 눌러서 나온 "진행중" 루틴을 맨 앞으로, isRunning=true, 하이라이트 지정
+    LaunchedEffect(runningId) {
+        runningId?.let { id ->
+            val idx = todayRoutines.indexOfFirst { it.routineId.toStableIntId() == id }
+            if (idx >= 0) {
+                val item = todayRoutines.removeAt(idx)
+                val updated = item.copy(isRunning = true) // 정렬에서도 앞으로 오도록
+                todayRoutines.add(0, updated)
+                // 순서 저장
+                homeEntry.savedStateHandle["todayOrderIds"] = todayRoutines.map { it.routineId }
+                // 하이라이트 지정
+                highlightId = id
+            }
+            // 한 번 처리했으면 플래그 비워주기
+            homeEntry.savedStateHandle["runningRoutineId"] = null
+        }
+    }
+
+    // 서버 오늘 루틴
+    val homeVm: HomeRoutinesViewModel = hiltViewModel()
+
+    // ① Today(오늘용)
+    val serverRoutines by homeVm.serverRoutines.collectAsState()
+    // ② 내 루틴 전체(하단 카드용)
+    val myRoutines by homeVm.myRoutines.collectAsState()
+    // ③ 스케줄 정보가 병합된 루틴 (주간 달력용)
+    val scheduledRoutines by homeVm.scheduledRoutines.collectAsState()
+
+    LaunchedEffect(Unit) {
+        Log.d("HomeScreen", "loadTodayRoutines() 호출")
+        homeVm.loadTodayRoutines()
+        // 하단 카드용 전체 목록도 로드
+        homeVm.loadMyRoutines()
+    }
+
+    // 서버 데이터 로드 후 로컬 스케줄 정보와 병합
+    LaunchedEffect(serverRoutines) {
+        if (serverRoutines.isNotEmpty()) {
+            Log.d("HomeScreen", "서버 데이터 로드 완료, 로컬 스케줄 정보와 병합 시작")
+            homeVm.mergeWithLocalSchedule(context)
+
+            // 테스트용: 임시로 스케줄 데이터 설정 (실제로는 시계 아이콘을 통해 설정)
+            if (serverRoutines.isNotEmpty()) {
+                val firstRoutine = serverRoutines.first()
+                val testSchedule = SchedulePreference.ScheduleInfo(
+                    routineId = firstRoutine.routineId,
+                    scheduledDays = SchedulePreference.dayOfWeeksToStrings(setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY)),
+                    scheduledTime = SchedulePreference.localTimeToString(LocalTime.of(9, 0))
+                )
+                SchedulePreference.saveSchedule(context, testSchedule)
+                Log.d("HomeScreen", "테스트 스케줄 설정: ${firstRoutine.title} - ${testSchedule.scheduledDays}, ${testSchedule.scheduledTime}")
+
+                // 스케줄 정보 다시 병합
+                homeVm.mergeWithLocalSchedule(context)
+            }
+        }
+    }
+
+    // 네비게이션 트리거 처리
+    val navigateToRoutineFocus by homeEntry.savedStateHandle
+        .getStateFlow<String?>("navigateToRoutineFocus", null)
+        .collectAsState(initial = null)
+
+    LaunchedEffect(navigateToRoutineFocus) {
+        Log.d("HomeScreen", "🔄 LaunchedEffect(navigateToRoutineFocus) 실행: $navigateToRoutineFocus")
+        navigateToRoutineFocus?.let { routineId ->
+            Log.d("HomeScreen", "✅ 네비게이션 트리거 감지: routineId=$routineId")
+            // 스텝 정보 로드 완료 후 네비게이션
+            kotlinx.coroutines.delay(500)
+            Log.d("HomeScreen", "🔄 500ms 딜레이 완료, 네비게이션 시작")
+            navController.navigate(Route.RoutineFocusIntro.route)
+            Log.d("HomeScreen", "✅ RoutineFocusIntro로 네비게이션 완료")
+            // 트리거 초기화
+            homeEntry.savedStateHandle["navigateToRoutineFocus"] = null
+            Log.d("HomeScreen", "🔄 네비게이션 트리거 초기화 완료")
+        }
+    }
+
+    // routineDetail이 로드되면 스텝 정보를 SharedRoutineViewModel에 설정
+    LaunchedEffect(homeVm.routineDetail.value) {
+        val detail = homeVm.routineDetail.value
+        if (detail != null) {
+            Log.d("HomeScreen", "✅ LaunchedEffect(routineDetail): 스텝 정보 설정")
+            // requiredTime을 함께 전달
+            val currentRoutine = todayRoutines.find { it.routineId == detail.id }
+            val requiredTime = currentRoutine?.requiredTime ?: ""
+            Log.d("HomeScreen", "📱 requiredTime 전달: $requiredTime")
+            sharedViewModel.setStepsFromServer(detail.steps, requiredTime)
+
+            // category도 함께 설정
+            if (detail.category?.isNotBlank() == true && detail.category != "없음") {
+                Log.d("HomeScreen", "🔄 routineDetail에서 category 설정: ${detail.category}")
+                sharedViewModel.setRoutineCategory(detail.category)
+            }
+        }
+    }
+
     //탭 선택 상태(오늘,이번주)
     var selectedTab by remember { mutableStateOf(0) }
 
-    // 루틴 샘플 데이터(오늘 탭 선택 시 보여줄 박스의 내용들)
-    val sampleRoutines =
-        DummyData.feedRoutines.filter {
-            it.routineId in listOf(
-                "routine-501",
-                "routine-502",
-                "routine-503",
-                "routine-504"
-            )
+    val finishedId by homeEntry.savedStateHandle
+        .getStateFlow<String?>("finishedRoutineId", null)
+        .collectAsState(initial = null)
+
+    val savedOrderIds by homeEntry.savedStateHandle
+        .getStateFlow<List<String>>("todayOrderIds", emptyList())
+        .collectAsState(initial = emptyList())
+
+    // 서버 응답이 들어오면: 저장된 순서(todayOrderIds)로 복원, 없으면 시간순 정렬
+    LaunchedEffect(serverRoutines, savedOrderIds) {
+        if (serverRoutines.isEmpty()) {
+            Log.d("HomeScreen", "serverRoutines 비어있음 → 오늘 루틴 없음(서버)")
+            todayRoutines.clear()
+            homeEntry.savedStateHandle["todayOrderIds"] = emptyList<String>()
+            return@LaunchedEffect
         }
 
-    // 루틴 태그 샘플(이번주 탭 선택 시 달력 날짜에 들어갈 것들)
+        Log.d(
+            "HomeScreen",
+            "serverRoutines size=${serverRoutines.size}, savedOrderIds=${savedOrderIds.size}"
+        )
+        Log.d("HomeScreen", "server IDs=" + serverRoutines.joinToString { it.routineId })
+
+        val ordered = if (savedOrderIds.isNotEmpty()) {
+            val byId: Map<String, Routine> = serverRoutines.associateBy { it.routineId }
+            val inSaved: List<Routine> = savedOrderIds.mapNotNull { byId[it] }
+            val remaining: List<Routine> =
+                serverRoutines.filter { it.routineId !in savedOrderIds.toSet() }
+            inSaved + remaining
+        } else {
+            // 저장된 순서가 없으면 현재 시간 기준으로 가장 가까운 시간대부터 정렬
+            serverRoutines.sortByNearestTime()
+        }
+
+        Log.d("HomeScreen", "ordered IDs=" + ordered.joinToString { it.routineId })
+
+        todayRoutines.clear()
+        todayRoutines.addAll(ordered)
+
+        // 첫 진입이면 현재 순서를 저장해 둔다 (복원용)
+        if (savedOrderIds.isEmpty()) {
+            val ids = ordered.map { it.routineId }
+            homeEntry.savedStateHandle["todayOrderIds"] = ids
+            Log.d("HomeScreen", "save todayOrderIds=" + ids.joinToString())
+        }
+    }
+
+    // 완료 루틴 맨 뒤로 이동 + 순서 저장
+    LaunchedEffect(finishedId) {
+        finishedId?.let { id ->
+            Log.d(
+                "HomeScreen",
+                "🔄 finishedId 수신 = $id"
+            )
+            Log.d(
+                "HomeScreen",
+                "📋 현재 todayRoutines: " + todayRoutines.joinToString { "${it.title}(${it.routineId})" }
+            )
+            
+            val idx = todayRoutines.indexOfFirst { it.routineId == id }
+            Log.d("HomeScreen", "🔍 찾은 인덱스: $idx (routineId=$id)")
+            
+            if (idx >= 0) {
+                val finished = todayRoutines.removeAt(idx)
+                todayRoutines.add(finished)
+                Log.d("HomeScreen", "✅ 완료된 루틴을 맨 뒤로 이동: ${finished.title}")
+                Log.d(
+                    "HomeScreen",
+                    "📋 이동 후 todayRoutines: " + todayRoutines.joinToString { "${it.title}(${it.routineId})" }
+                )
+                
+                // 순서 저장
+                val newOrderIds = todayRoutines.map { it.routineId }
+                homeEntry.savedStateHandle["todayOrderIds"] = newOrderIds
+                Log.d("HomeScreen", "💾 새로운 순서 저장: " + newOrderIds.joinToString())
+            } else {
+                Log.w("HomeScreen", "❌ finishedId=$id 가 현재 리스트에 없음")
+                Log.w("HomeScreen", "🔍 todayRoutines의 routineId들: " + todayRoutines.map { it.routineId }.joinToString())
+            }
+            
+            // finishedId 초기화
+            homeEntry.savedStateHandle["finishedRoutineId"] = null
+            Log.d("HomeScreen", "🔄 finishedRoutineId 초기화 완료")
+        }
+    }
+
+    // 루틴 태그 샘플(이번주 탭 선택 시 달력 날짜에 들어갈 것들) — 기존 주석/구조 유지
     val sampleRoutineTags = mapOf(
         8 to listOf("아침 운동", "회의"),
         10 to listOf("아침 운동"),
@@ -98,6 +476,7 @@ fun HomeScreen(
     )
 
     Scaffold(
+        modifier = modifier,
         containerColor = Color.White,
         // FAB
         floatingActionButton = {
@@ -113,28 +492,26 @@ fun HomeScreen(
                 onClick = { navController.navigate(Route.RoutineCreate.route) }
             )
         },
-        floatingActionButtonPosition = FabPosition.End, // ← 이걸 추가
+        floatingActionButtonPosition = FabPosition.End,
     ) { innerPadding ->
 
-        val isTodayTabMeasured = remember { mutableStateOf(false) }
-
         LaunchedEffect(todayTabOffsetY.value, fabOffsetY.value) {
-            // 두 값이 모두 측정되었을 때만 온보딩 시작
             if (todayTabOffsetY.value > 0f && fabOffsetY.value > 0f) {
+                Log.d(
+                    "HomeScreen",
+                    "온보딩 트리거: todayTabY=${todayTabOffsetY.value}, fabY=${fabOffsetY.value}"
+                )
                 onShowOnboarding()
-            } else {
             }
         }
 
         LazyColumn(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(innerPadding),
+            contentPadding = PaddingValues(bottom = 100.dp), // 하단 여유 공간 추가
+            verticalArrangement = Arrangement.spacedBy(8.dp) // 아이템 간 간격 추가
         ) {
-//            item {
-//                // 상단 상태 바
-//                StatusBarMock(isDarkMode = true)
-//            }
             item {
                 //로고와 MORU
                 HomeTopAppBar()
@@ -146,39 +523,30 @@ fun HomeScreen(
                         .height(111.dp)
                 ) {
                     // 1.인삿말
+                    val displayName = nickname ?: "XX"
                     Text(
-                        text = "XX님,\n오늘은 어떤 루틴을 시작할까요?",
-                        style = typography.title_B_20.copy(
-                            lineHeight = 30.sp
-                        ),
+                        text = "${displayName}님,\n오늘은 어떤 루틴을 시작할까요?",
+                        style = typography.title_B_20.copy(lineHeight = 30.sp),
                         color = colors.black,
                         modifier = Modifier
                             .align(Alignment.TopStart)
-                            .padding(
-                                start = 16.dp,
-                                top = 26.dp,
-                                bottom = 25.dp
-                            )
+                            .padding(start = 16.dp, top = 26.dp, bottom = 25.dp)
                     )
                 }
             }
             item {
                 Divider(
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     color = colors.lightGray,
                     thickness = 1.dp
                 )
             }
-            item {
-                Spacer(Modifier.height(8.dp))
-            }
+            item { Spacer(Modifier.height(8.dp)) }
             item {
                 Column(
-                    modifier = Modifier
-                        .onGloballyPositioned { coordinates ->
-                            val boundsInRoot = coordinates.boundsInRoot()
-                        }
+                    modifier = Modifier.onGloballyPositioned { coordinates ->
+                        val boundsInRoot = coordinates.boundsInRoot()
+                    }
                 ) {
                     // 2. TODAY 텍스트
                     Text(
@@ -196,27 +564,39 @@ fun HomeScreen(
                     )
 
                     // 3. 월 일 요일
+                    val currentDate = LocalDate.now()
+                    val monthDay =
+                        currentDate.format(DateTimeFormatter.ofPattern("M월 d일", Locale.KOREAN))
+                    val dayOfWeek = when (currentDate.dayOfWeek.value) {
+                        1 -> "월"
+                        2 -> "화"
+                        3 -> "수"
+                        4 -> "목"
+                        5 -> "금"
+                        6 -> "토"
+                        7 -> "일"
+                        else -> ""
+                    }
+                    val todayText = "$monthDay $dayOfWeek"
                     Text(
                         modifier = Modifier
                             .padding(horizontal = 16.dp)
                             .onGloballyPositioned { coordinates ->
                                 val boundsInRoot = coordinates.boundsInRoot()
                             },
-                        text = "5월 10일 토",
-                        style = typography.head_EB_24.copy(
-                            lineHeight = 24.sp
-                        ),
+                        text = todayText,
+                        style = typography.head_EB_24.copy(lineHeight = 24.sp),
                         color = colors.black
                     )
 
-                    // 4. 상태 텍스트
+                    // 4. 상태 텍스트 (서버 오늘 루틴 기준)
                     Text(
                         modifier = Modifier
                             .padding(horizontal = 16.dp)
                             .onGloballyPositioned { coordinates ->
                                 val boundsInRoot = coordinates.boundsInRoot()
                             },
-                        text = if (sampleRoutines.isNotEmpty()) "정기 루틴이 있는 날이에요" else "정기 루틴이 없는 날이에요",
+                        text = if (todayRoutines.isNotEmpty()) "정기 루틴이 있는 날이에요" else "정기 루틴이 없는 날이에요",
                         style = typography.desc_M_16.copy(
                             fontWeight = FontWeight.Bold,
                             lineHeight = 24.sp
@@ -240,61 +620,94 @@ fun HomeScreen(
                                 }
                             }
                     ) {
-                        // 원래 TodayWeekTab 사용
                         TodayWeekTab(
                             selectedTabIndex = selectedTab,
-                            onTabSelected = { selectedTab = it }
+                            onTabSelected = {
+                                Log.d("HomeScreen", "탭 변경: $selectedTab -> $it")
+                                selectedTab = it
+                            }
                         )
                     }
-
 
                     // 선택된 탭에 따라 콘텐츠 분기
                     when (selectedTab) {
                         // 오늘 탭 선택 시
-                        0 -> if (sampleRoutines.isNotEmpty()) {
+                        0 -> if (todayRoutines.isNotEmpty()) {
+                            Log.d("HomeScreen", "TODAY 탭 노출, count=${todayRoutines.size}")
                             TodayRoutinePager(
-                                routines = sampleRoutines,
-                                onRoutineClick = { routine, index ->
-                                    // Step 리스트 변환
-                                    val stepDataList = routine.steps.map {
-                                        RoutineStepData(
-                                            name = it.name,
-                                            duration = convertDurationToMinutes(it.duration),
-                                            isChecked = false
-                                        )
-                                    }
-                                    sharedViewModel.setSelectedSteps(stepDataList)
+                                routines = todayRoutines,
+                                onRoutineClick = { routine, _ ->
+                                    Log.d("HomeScreen", "🔄 Pager 루틴 클릭:")
+                                    Log.d("HomeScreen", "   - routineId: ${routine.routineId}")
+                                    Log.d("HomeScreen", "   - title: ${routine.title}")
+                                    Log.d("HomeScreen", "   - category: ${routine.category}")
+                                    Log.d("HomeScreen", "   - tags: ${routine.tags}")
+                                    val stableId = routine.routineId.toStableIntId()
+                                    Log.d("HomeScreen", "   - stableId: $stableId")
+                                    sharedViewModel.setSelectedRoutineId(stableId)
+                                    sharedViewModel.setOriginalRoutineId(routine.routineId)
+                                    Log.d("HomeScreen", "🔄 setRoutineInfo 호출")
+                                    // requiredTime 기반으로 간편/집중 구분
+                                    val isSimple = determineRoutineType(routine.requiredTime)
+                                    val actualCategory = if (isSimple) "간편" else "집중"
+                                    Log.d("HomeScreen", "📱 루틴 카테고리 설정: ${routine.title} -> $actualCategory (isSimple=$isSimple, requiredTime=${routine.requiredTime})")
+                                    sharedViewModel.setRoutineInfo(title = routine.title, category = actualCategory, tags = routine.tags, isSimple = isSimple)
 
-                                    // 루틴 기본 정보 설정
-                                    sharedViewModel.setRoutineInfo(
-                                        title = routine.title,
-                                        category = routine.category,
-                                        tags = routine.tags
-                                    )
+                                    // 루틴 상세 정보 로드 (스텝 포함) 후 SharedRoutineViewModel에 직접 설정
+                                    Log.d("HomeScreen", "🔄 loadRoutineDetail 호출")
+                                    homeVm.loadRoutineDetail(routine.routineId)
 
-                                    // 네비게이션
-                                    navController.navigate(Route.RoutineFocusIntro.route)
+                                    // 네비게이션 트리거 설정
+                                    Log.d("HomeScreen", "🔄 네비게이션 트리거 설정")
+                                    homeEntry.savedStateHandle["navigateToRoutineFocus"] = routine.routineId
                                 }
                             )
+                        } else {
+                            // 오늘 루틴 없을 때도 Divider가 밀려 오지 않도록 고정 높이 확보
+                            Spacer(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(184.dp) // TodayRoutinePager의 전체 높이와 동일
+                            )
+                            Log.d("HomeScreen", "TODAY 탭이지만 todayRoutines 비어있음 → Pager 미노출")
                         }
 
                         // 이번주 탭 선택 시
                         1 -> {
+                            // 주간 데이터 만들기 (scheduledRoutines 사용 - 이미 로컬 스케줄 정보가 병합됨)
+                            val mergedRoutines = scheduledRoutines
+                            
+                            Log.d("HomeScreen", "🔍 이번주 탭 선택됨: mergedRoutines.size=${mergedRoutines.size}")
+                            
+                            // mergedRoutines 상세 정보 로깅
+                            mergedRoutines.forEachIndexed { index, routine ->
+                                val routineTyped: Routine = routine
+                                Log.d("HomeScreen", "🔍 mergedRoutines[$index]: ${routineTyped.title}, category=${routineTyped.category}, isSimple=${routineTyped.isSimple}, scheduledDays=${routineTyped.scheduledDays}, scheduledTime=${routineTyped.scheduledTime}, requiredTime=${routineTyped.requiredTime}")
+                            }
+                            
+                            val (routinesPerDate, todayDom) = buildWeeklyMap(mergedRoutines)
+                            Log.d("HomeScreen", "✅ 주간 데이터 생성 완료: routinesPerDate=$routinesPerDate, todayDom=$todayDom")
+                            
+                            // 각 날짜별 루틴 개수 로깅
+                            routinesPerDate.forEach { (date, labels) ->
+                                Log.d("HomeScreen", "📅 ${date}일: ${labels.size}개 루틴 - $labels")
+                            }
+                            
                             WeeklyCalendarView(
-                                routinesPerDate = sampleRoutineTags,
-                                today = 13
+                                routinesPerDate = routinesPerDate,
+                                today = todayDom
                             )
                         }
                     }
 
                     HorizontalDivider(
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         thickness = 7.dp,
                         color = colors.lightGray
                     )
                     Spacer(modifier = Modifier.height(3.dp))
-                    //루틴 목록
+
+                    //루틴 목록 (오늘 루틴들 그대로 노출)
                     Row(
                         modifier = Modifier.padding(top = 3.dp, start = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -311,58 +724,111 @@ fun HomeScreen(
                         Image(
                             painter = painterResource(id = R.drawable.ic_arrow_c),
                             contentDescription = "오른쪽 화살표",
-                            modifier = Modifier
-                                .size(width = 8.dp, height = 12.dp)
+                            modifier = Modifier.size(width = 8.dp, height = 12.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    // 후에 실제 데이터로 오늘 루틴이 있는지 확인
-                    if (sampleRoutines.isNotEmpty()) {
-                        val context = LocalContext.current
 
-                        // 내 루틴만 필터링
-                        val myRoutineIds = listOf(501, 502, 503, 504)
-                        val myRoutines = DummyData.feedRoutines.filter {
-                            it.routineId in listOf(
-                                "routine-501",
-                                "routine-502",
-                                "routine-503",
-                                "routine-504"
-                            )
-                        }
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // ⬇️ 하단 카드는 "내 루틴 전체" 사용 + 우선순위 정렬
+                    if (myRoutines.isNotEmpty()) {
+                        val context = LocalContext.current
+                        val list = myRoutines.sortedForList()   // 이미 정렬된 리스트
 
                         RoutineCardList(
-                            routines = myRoutines,
-                            onRoutineClick = { routineId ->
-                                val routine = myRoutines.find { it.routineId == routineId }
-                                if (routine != null) {
-                                    val stepDataList = routine.steps.map {
-                                        RoutineStepData(
-                                            name = it.name,
-                                            duration = convertDurationToMinutes(it.duration),
-                                            isChecked = false
-                                        )
-                                    }
+                            routines = list,
+                            onRoutineClick = { routineId: String ->
+                                Log.d("HomeScreen", "카드 클릭: id=$routineId")
 
-                                    sharedViewModel.setSelectedSteps(stepDataList)
-                                    sharedViewModel.setRoutineInfo(
-                                        title = routine.title,
-                                        category = routine.category,
-                                        tags = routine.tags
-                                    )
-
-                                    navController.navigate("routine_focus_intro/${routine.routineId}")
-                                } else {
-                                    Toast.makeText(context, "루틴 정보를 찾을 수 없습니다", Toast.LENGTH_SHORT)
-                                        .show()
+                                // 정렬된 리스트에서 클릭된 루틴 찾기
+                                val routine = list.firstOrNull { it.routineId == routineId }
+                                if (routine == null) {
+                                    Log.w("HomeScreen", "루틴 정보를 찾을 수 없습니다")
+                                    return@RoutineCardList
                                 }
+
+                                // 기존 Int API와 호환
+                                sharedViewModel.setSelectedRoutineId(routine.routineId.toStableIntId())
+                                sharedViewModel.setOriginalRoutineId(routine.routineId)
+                                // requiredTime 기반으로 간편/집중 구분
+                                val isSimple = determineRoutineType(routine.requiredTime)
+                                val actualCategory = if (isSimple) "간편" else "집중"
+                                Log.d("HomeScreen", "📱 루틴 카테고리 설정: ${routine.title} -> $actualCategory (isSimple=$isSimple, requiredTime=${routine.requiredTime})")
+                                sharedViewModel.setRoutineInfo(
+                                    title = routine.title,
+                                    category = actualCategory,
+                                    tags = routine.tags,
+                                    isSimple = isSimple
+                                )
+
+                                // 루틴 상세 정보 로드 (스텝 포함) 후 네비게이션
+                                homeVm.loadRoutineDetail(routine.routineId)
+
+                                // 네비게이션 트리거 설정
+                                homeEntry.savedStateHandle["navigateToRoutineFocus"] = routine.routineId
+                            },
+                            runningHighlightId = highlightId?.takeIf { id ->
+                                list.any { it.routineId.toStableIntId() == id }
                             }
                         )
+                    } else {
+                        Log.d("HomeScreen", "내 루틴 목록이 비어있음")
                     }
+
+                    // 하단 여유 공간 추가 (스크롤이 제대로 작동하도록)
+                    Spacer(modifier = Modifier.height(120.dp))
                 }
             }
         }
     }
+}
+
+// String ID → 안정적인 Int 키 (기존 Int API/콜백용)
+private fun String.toStableIntId(): Int {
+    this.toLongOrNull()?.let {
+        val mod = (it % Int.MAX_VALUE).toInt()
+        return if (mod >= 0) mod else -mod
+    }
+    var h = 0
+    for (ch in this) h = (h * 31) + ch.code
+    return h
+}
+
+// 오늘 "루틴 목록" 전용 정렬:
+// 1) 진행중(간편) 우선 → 2) 시간 미설정 → 3) 시간 설정(오름차순)
+private fun List<Routine>.sortedForList(): List<Routine> =
+    this.sortedWith(
+        compareByDescending<Routine> { it.isRunning && it.category == "간편" }
+            .thenByDescending { it.scheduledTime == null }
+            .thenBy { it.scheduledTime ?: java.time.LocalTime.MAX }
+    )
+
+// 현재 시간을 기준으로 가장 가까운 시간대의 루틴부터 정렬 (오늘 탭용)
+private fun List<Routine>.sortByNearestTime(): List<Routine> {
+    val now = LocalTime.now()
+    return this.sortedWith(
+        compareBy<Routine> { routine ->
+            when {
+                // 1. 진행중인 루틴 우선
+                routine.isRunning -> -1
+                // 2. 시간이 설정되지 않은 루틴은 맨 뒤로
+                routine.scheduledTime == null -> 1
+                // 3. 시간이 설정된 루틴은 현재 시간과의 차이로 정렬
+                else -> {
+                    val timeDiff = kotlin.math.abs(
+                        java.time.Duration.between(now, routine.scheduledTime).toMinutes()
+                    )
+                    // 오늘 이미 지난 시간은 내일로 계산
+                    val adjustedDiff = if (routine.scheduledTime < now) {
+                        timeDiff + 24 * 60 // 24시간(1440분) 추가
+                    } else {
+                        timeDiff
+                    }
+                    adjustedDiff
+                }
+            }
+        }
+    )
 }
 
 @Preview(
@@ -374,8 +840,8 @@ fun HomeScreen(
 private fun HomeScreenPreview() {
     val fakeNavController = rememberNavController()
     val previewSharedViewModel = SharedRoutineViewModel()
-    val previewFabOffsetY = remember { mutableStateOf(0f) } // 🔹 추가
-    val todayTabOffsetY = remember { mutableStateOf(0f) } // 🔹 추가
+    val previewFabOffsetY = remember { mutableStateOf(0f) }
+    val todayTabOffsetY = remember { mutableStateOf(0f) }
 
     HomeScreen(
         navController = fakeNavController,

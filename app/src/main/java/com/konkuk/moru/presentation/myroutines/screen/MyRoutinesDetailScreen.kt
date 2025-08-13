@@ -1,7 +1,5 @@
 package com.konkuk.moru.presentation.myroutines.screen
 
-import MyRoutineDetailContent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -12,24 +10,40 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.konkuk.moru.R
+import com.konkuk.moru.core.component.routinedetail.DraggableAppSearchBottomSheet
 import com.konkuk.moru.presentation.myroutines.viewmodel.MyRoutineDetailViewModel
 import com.konkuk.moru.presentation.routinefeed.component.topAppBar.BasicTopAppBar
 import com.konkuk.moru.ui.theme.MORUTheme
+import androidx.activity.compose.BackHandler
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import androidx.navigation.NavHostController
+import java.io.File
+import com.konkuk.moru.core.component.ImageChoiceOptionButtonScreen
+import com.konkuk.moru.presentation.myroutines.component.MyRoutineDetailContent
+import com.konkuk.moru.presentation.navigation.Route
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,12 +51,59 @@ fun MyRoutineDetailScreen(
     routineId: String,
     onBackClick: () -> Unit,
     viewModel: MyRoutineDetailViewModel = viewModel(),
+    navController: NavHostController
 ) {
     // ✨ ViewModel의 UiState를 구독하여 단일 진실 공급원 원칙을 따름
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
-    LaunchedEffect(key1 = routineId) {
+    var isBottomSheetOpen by remember { mutableStateOf(false) }
+    val allApps by viewModel.availableApps.collectAsStateWithLifecycle()
+    val selectedAppList = uiState.routine?.usedApps ?: emptyList()
+
+    var isImageOptionVisible by remember { mutableStateOf(false) }
+    val selectedImageUri by viewModel.localImageUri.collectAsStateWithLifecycle()
+
+    // [변경] 카메라 촬영 준비 상태
+    val cameraImageUriState = remember { mutableStateOf<Uri?>(null) }
+
+    // [변경] 카메라 촬영 런처
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            viewModel.updateLocalImage(cameraImageUriState.value) // ★ 여기
+        }
+    }
+
+    // [변경] 카메라 권한 런처
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            val uri = createImageUri(context)
+            cameraImageUriState.value = uri
+            takePictureLauncher.launch(uri)
+        } else {
+            // 권한 거부 시 안내 필요하면 토스트/스낵바 처리
+        }
+    }
+
+    // [변경] 갤러리 선택 런처
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        viewModel.updateLocalImage(uri) // ★ 여기
+    }
+
+
+    LaunchedEffect(Unit) {
         viewModel.loadRoutine(routineId)
+        viewModel.loadInstalledApps(context)
+    }
+
+    BackHandler(enabled = uiState.isEditMode) {
+        viewModel.cancelEdits()
     }
 
     LaunchedEffect(Unit) {
@@ -51,21 +112,31 @@ fun MyRoutineDetailScreen(
         }
     }
 
+    // (LaunchedEffect) 검색 결과 수신
+    LaunchedEffect(Unit) {
+        // [추가] 태그 검색 화면에서 되돌아올 때 결과를 받는다.
+        val handle = navController.currentBackStackEntry?.savedStateHandle
+        handle?.getStateFlow<List<String>>("selectedTagsResult", emptyList())
+            ?.collect { result ->
+                if (result.isNotEmpty()) {
+                    // '#'(있으면) 제거 + 중복 방지 후 추가
+                    viewModel.addTags(result.map { it.removePrefix("#") })
+                    // 재수신 방지 초기화 (핵심)
+                    handle["selectedTagsResult"] = emptyList<String>()
+                }
+            }
+    }
+
     Scaffold(
         topBar = {
             // uiState.routine이 null이 아닐 때만 TopAppBar를 보여줍니다.
             uiState.routine?.let {
                 BasicTopAppBar(
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFFF1F3F5)
-                    ),
-                    modifier = Modifier.background(MORUTheme.colors.mediumGray),
                     title = if (uiState.isEditMode) "루틴 수정" else "내 루틴",
                     navigationIcon = {
                         IconButton(onClick = {
                             if (uiState.isEditMode) {
-                                viewModel.restoreRoutine()
-                                viewModel.setEditMode(false) // ✨ ViewModel에 모드 변경 요청
+                                viewModel.cancelEdits()
                             } else {
                                 onBackClick()
                             }
@@ -99,13 +170,69 @@ fun MyRoutineDetailScreen(
 
                 else -> {
                     // ✨ Content에는 UiState와 ViewModel만 전달하여 구조를 단순화
-                    MyRoutineDetailContent(viewModel = viewModel)
+                    MyRoutineDetailContent(
+                        viewModel = viewModel,
+                        onOpenBottomSheet = { isBottomSheetOpen = true },
+                        onCardImageClick = { isImageOptionVisible = true },
+                        selectedImageUri = selectedImageUri,
+                        onAddTagClick = { // [추가]
+                            if (uiState.isEditMode) {
+                                navController.navigate(Route.RoutineSearch.route)
+                            }
+                        }
+                    )
                 }
             }
         }
     }
+    // [변경] 생성 화면과 동일한 이미지 선택 팝업 재사용
+    if (isImageOptionVisible) {
+        ImageChoiceOptionButtonScreen(
+            onImageSelected = {
+                imagePickerLauncher.launch("image/*")
+                isImageOptionVisible = false
+            },
+            onCameraSelected = {
+                val permission = Manifest.permission.CAMERA
+                val isGranted = ContextCompat.checkSelfPermission(
+                    context, permission
+                ) == PackageManager.PERMISSION_GRANTED
+
+                if (isGranted) {
+                    val uri = createImageUri(context)
+                    cameraImageUriState.value = uri
+                    takePictureLauncher.launch(uri)
+                } else {
+                    cameraPermissionLauncher.launch(permission)
+                }
+                isImageOptionVisible = false
+            },
+            onCancel = { isImageOptionVisible = false }
+        )
+    }
+    DraggableAppSearchBottomSheet(
+        isVisible = isBottomSheetOpen,
+        onDismiss = { isBottomSheetOpen = false },
+        appList = allApps,
+        selectedAppList = selectedAppList,
+        onAddApp = { app -> viewModel.addApp(app) },
+        onRemoveApp = { app -> viewModel.deleteApp(app) }
+    )
 }
 
+
+// [변경] 유틸: 카메라 파일용 Uri 생성
+private fun createImageUri(context: Context): Uri {
+    val imageFile = File.createTempFile(
+        "moru_camera_", ".jpg",
+        context.cacheDir
+    )
+    return FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.fileprovider",
+        imageFile
+    )
+}
 
 @Preview(showBackground = true, name = "상세 화면 - 보기 모드")
 @Composable
@@ -114,10 +241,13 @@ private fun MyRoutineDetailScreenPreview_ViewMode() {
         val viewModel: MyRoutineDetailViewModel = viewModel()
         viewModel.loadRoutine("routine-501")
 
+        val navController = NavHostController(LocalContext.current)
+
         MyRoutineDetailScreen(
             routineId = "routine-501",
             onBackClick = {},
-            viewModel = viewModel
+            viewModel = viewModel,
+            navController = navController
         )
     }
 }
@@ -129,13 +259,13 @@ private fun MyRoutineDetailScreenPreview_EditMode() {
         val viewModel: MyRoutineDetailViewModel = viewModel()
         viewModel.loadRoutine("routine-501")
         viewModel.setEditMode(true) // 프리뷰를 위해 수정 모드로 설정
+        val navController = NavHostController(LocalContext.current)
 
         MyRoutineDetailScreen(
             routineId = "routine-501",
             onBackClick = {},
-            viewModel = viewModel
+            viewModel = viewModel,
+            navController = navController
         )
     }
 }
-
-

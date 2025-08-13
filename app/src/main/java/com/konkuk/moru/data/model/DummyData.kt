@@ -135,16 +135,24 @@ object DummyData {
                 RoutineStep(name = "마무리 스트레칭", duration = "00:30")
             ),
             usedApps = listOf(
-                AppInfo(
-                    name = "Calm",
-                    iconUrl = "https://i.pinimg.com/originals/31/28/90/312890339947b7294633999d1c03387c.png",
-                    packageName = ""
+//                AppInfo(
+//                    name = "Calm",
+//                    iconUrl = "https://i.pinimg.com/originals/31/28/90/312890339947b7294633999d1c03387c.png"
+//                ),
+//                AppInfo(
+//                    name = "Youtube",
+//                    iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/youtube-logotype-icon.png"
+//                )
+                UsedAppInRoutine(
+                    appName = "카카오톡",
+                    appIcon = placeholderIcon(),
+                    packageName = "com.kakao.talk"
                 ),
-                AppInfo(
-                    name = "Youtube",
-                    iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/youtube-logotype-icon.png",
-                    packageName = ""
-                )
+                UsedAppInRoutine(
+                    appName = "인스타그램",
+                    appIcon = placeholderIcon(),
+                    packageName = "com.instagram.android"
+                ),
             )
         ),
         Routine(
@@ -170,12 +178,11 @@ object DummyData {
                 RoutineStep(name = "물걸레질 하기", duration = "20:00")
             ),
             usedApps = listOf(
-                AppInfo(
-                    name = "정리 앱",
-                    iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/house-and-home/dustpan-icon.png",
-                    packageName = ""
-
-                )
+                UsedAppInRoutine(
+                    appName = "유튜브",
+                    appIcon = placeholderIcon(),
+                    packageName = "com.google.android.youtube"
+                ),
             )
         ),
         Routine(
@@ -221,10 +228,14 @@ object DummyData {
                 RoutineStep(name = "25분 집중, 5분 휴식 (x4)", duration = "120:00")
             ),
             usedApps = listOf(
-                AppInfo(
-                    name = "Github",
-                    iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/github-icon.png",
-                    packageName = ""
+//                AppInfo(
+//                    name = "Github",
+//                    iconUrl = "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/github-icon.png"
+//                )
+                UsedAppInRoutine(
+                    appName = "GitHub",
+                    appIcon = placeholderIcon(),
+                    packageName = "com.github.android"
                 )
             )
         ),
@@ -327,15 +338,23 @@ object DummyData {
                 RoutineStep(name = "메인 요리 조리", duration = "90:00")
             ),
             usedApps = listOf(
-                AppInfo(
-                    name = "오늘의집",
-                    iconUrl = "https://i.pinimg.com/736x/87/a7/9e/87a79e09cc92f802c114325a1215f913.jpg",
-                    packageName= ""
+//                AppInfo(
+//                    name = "오늘의집",
+//                    iconUrl = "https://i.pinimg.com/736x/87/a7/9e/87a79e09cc92f802c114325a1215f913.jpg"
+//                ),
+//                AppInfo(
+//                    name = "마켓컬리",
+//                    iconUrl = "https://play-lh.googleusercontent.com/F9p-8L9H_nS2z24x6d-L5Z99i5c81NP0yD-cK5Gf_T22mw_s2gT2jCqC-w=w240-h480-rw"
+//                )
+                UsedAppInRoutine(
+                    appName = "오늘의집",
+                    appIcon = placeholderIcon(),
+                    packageName = "com.ohou.android"
                 ),
-                AppInfo(
-                    name = "마켓컬리",
-                    iconUrl = "https://play-lh.googleusercontent.com/F9p-8L9H_nS2z24x6d-L5Z99i5c81NP0yD-cK5Gf_T22mw_s2gT2jCqC-w=w240-h480-rw",
-                    packageName = ""
+                UsedAppInRoutine(
+                    appName = "마켓컬리",
+                    appIcon = placeholderIcon(),
+                    packageName = "com.kurly.android"
                 )
             )
         )

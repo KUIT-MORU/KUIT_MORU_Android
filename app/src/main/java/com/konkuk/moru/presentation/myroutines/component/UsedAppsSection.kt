@@ -144,3 +144,22 @@ private fun UsedAppsSectionPreview_EditMode() {
         )
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun UsedAppsSectionPreview() {
+    val sampleApps = listOf(
+        AppInfo("app1", "https://example.com/app1.png",packageName = null),
+        AppInfo("app2", "https://example.com/app2.png",packageName = null),
+        AppInfo("app3", "https://example.com/app3.png",packageName = null),
+        AppInfo("app4", "https://example.com/app4.png",packageName = null)
+    )
+    MORUTheme {
+        UsedAppsSection(
+            apps = sampleApps,
+            isEditMode = true,
+            onAddApp = { /* TODO: Add app logic */ },
+            onDeleteApp = { /* TODO: Delete app logic */ }
+        )
+    }
+}

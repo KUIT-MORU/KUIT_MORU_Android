@@ -1,12 +1,18 @@
 package com.konkuk.moru.data.mapper
 
 
+import android.content.pm.PackageManager
+import androidx.compose.ui.graphics.ImageBitmap
 import com.konkuk.moru.core.datastore.SocialMemory
+import com.konkuk.moru.core.util.getAppIconImageBitmap
+import com.konkuk.moru.core.util.getAppLabel
 import com.konkuk.moru.data.dto.response.RoutineDetailResponse
 import com.konkuk.moru.data.model.AppInfo
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.model.RoutineStep
 import com.konkuk.moru.data.model.SimilarRoutine
+import com.konkuk.moru.data.model.UsedAppInRoutine
+import com.konkuk.moru.data.model.placeholderIcon
 import com.konkuk.moru.presentation.routinefeed.data.AppDto
 
 import com.konkuk.moru.presentation.routinefeed.data.RoutineStepDto
@@ -18,7 +24,10 @@ private fun firstNonBlank(vararg s: String?): String? =
     s.firstOrNull { !it.isNullOrBlank() }
 
 // RoutineDetailResponse -> Routine
-fun RoutineDetailResponse.toRoutineModel(prev: Routine? = null): Routine {
+fun RoutineDetailResponse.toRoutineModel(
+    prev: Routine? = null,
+    pm: PackageManager? = null
+): Routine {
     val base = prev ?: emptyRoutine(id)
 
     val resolvedAuthorId = firstNonBlank(author?.id, base.authorId) ?: ""
@@ -51,7 +60,7 @@ fun RoutineDetailResponse.toRoutineModel(prev: Routine? = null): Routine {
         steps = steps.orEmpty()
             .sortedBy { it.stepOrder }
             .map { it.toStepModel() },
-        usedApps = apps.orEmpty().map { it.toAppModel() },
+        usedApps = apps.orEmpty().map { it.toUsedApp(pm) },
 
         authorId = resolvedAuthorId,
         authorName = resolvedAuthorName,
@@ -116,6 +125,19 @@ private fun AppDto.toAppModel(): AppInfo {
         packageName = packageName
     )
 }
+
+private fun AppDto.toUsedApp(pm: PackageManager?): UsedAppInRoutine {
+    val icon: ImageBitmap =
+        pm?.let { getAppIconImageBitmap(it, packageName) } ?: placeholderIcon(96)
+    val label: String =
+        pm?.let { getAppLabel(it, packageName) } ?: name
+    return UsedAppInRoutine(
+        appName = label,
+        appIcon = icon,
+        packageName = packageName
+    )
+}
+
 
 // "PT50M" / "PT5M30S" -> "MM:SS" (예: 50:00 / 05:30)
 private fun parseIsoDurationToClock(iso: String?): String {
