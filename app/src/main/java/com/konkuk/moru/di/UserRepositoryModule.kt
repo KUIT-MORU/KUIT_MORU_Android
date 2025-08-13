@@ -1,6 +1,6 @@
 package com.konkuk.moru.di
 
-import com.konkuk.moru.data.repositoryimpl.UserRepositoryImpl
+import com.konkuk.moru.data.repositoryimpl.HomeUserRepositoryImpl
 import com.konkuk.moru.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
@@ -15,6 +15,6 @@ abstract class UserRepositoryModule {
     @Binds
     @Singleton
     abstract fun bindUserRepository(
-        impl: UserRepositoryImpl
+        impl: HomeUserRepositoryImpl
     ): UserRepository
 }

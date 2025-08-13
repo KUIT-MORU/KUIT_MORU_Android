@@ -97,7 +97,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideUserService(retrofit: Retrofit): com.konkuk.moru.data.service.UserService =
-        retrofit.create(com.konkuk.moru.data.service.UserService::class.java)
+    fun provideUserService(retrofit: Retrofit): com.konkuk.moru.data.service.HomeUserService =
+        retrofit.create(com.konkuk.moru.data.service.HomeUserService::class.java)
 
 }
