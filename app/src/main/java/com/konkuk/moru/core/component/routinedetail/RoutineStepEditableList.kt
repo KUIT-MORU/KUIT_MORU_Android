@@ -123,7 +123,8 @@ fun LazyListScope.routineStepEditableList(
                 isEditMode = isEditMode,
                 onDeleteClick = { actions.onDeleteStep(index) },
                 onNameChange = { newName -> actions.onStepNameChange(index, newName) },
-                dragHandleModifier = dragHandleModifier
+                dragHandleModifier = dragHandleModifier,
+                onTimeClick = { actions.onTimeClick(index) } // [추가]
             )
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -181,7 +182,8 @@ private fun RoutineStepEditableListPreview_EditMode() {
             onStepNameChange = { _, _ -> },
             onReorderCancel = {},
             onAddStep = {},
-            onReorderComplete = { _, _ -> }
+            onReorderComplete = { _, _ -> },
+            onTimeClick = {} // [추가]
         )
         val listState = rememberLazyListState()
 
@@ -220,7 +222,8 @@ private fun RoutineStepEditableListPreview_ViewMode() {
             onStepNameChange = { _, _ -> },
             onReorderCancel = {},
             onAddStep = {},
-            onReorderComplete = { _, _ -> }
+            onReorderComplete = { _, _ -> },
+            onTimeClick = {} // [추가]
         )
         val listState = rememberLazyListState()
 

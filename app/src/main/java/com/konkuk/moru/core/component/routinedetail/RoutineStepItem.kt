@@ -24,7 +24,6 @@ import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.RoutineStep
 import com.konkuk.moru.ui.theme.MORUTheme
 
-
 @Composable
 fun RoutineStepItem(
     stepNumber: Int,
@@ -32,7 +31,8 @@ fun RoutineStepItem(
     isEditMode: Boolean,
     onDeleteClick: () -> Unit,
     onNameChange: (String) -> Unit,
-    dragHandleModifier: Modifier = Modifier // 드래그 핸들 Modifier를 파라미터로 받음
+    dragHandleModifier: Modifier = Modifier, // 드래그 핸들 Modifier를 파라미터로 받음
+    onTimeClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -86,6 +86,7 @@ fun RoutineStepItem(
             text = step.duration,
             style = MORUTheme.typography.body_SB_14,
             color = MORUTheme.colors.darkGray,
+            modifier = if (isEditMode) Modifier.clickable { onTimeClick() } else Modifier // [추가]
         )
 
         if (isEditMode) {
@@ -113,7 +114,9 @@ private fun LocalRoutineStepItemPreview_ViewMode() {
             step = sampleStep,
             isEditMode = false,
             onDeleteClick = {},
-            onNameChange = {}
+            onNameChange = {},
+            dragHandleModifier = Modifier,
+            onTimeClick = {},
         )
     }
 }
@@ -129,6 +132,8 @@ private fun LocalRoutineStepItemPreview_EditMode() {
             step = sampleStep,
             isEditMode = true,
             onDeleteClick = {},
+            onTimeClick = {},
+            dragHandleModifier = Modifier,
             onNameChange = {}
         )
     }

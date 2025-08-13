@@ -10,5 +10,6 @@ data class RoutineStepActions(
     val onReorderCancel: () -> Unit,                     // 취소 시
     val onDeleteStep: (Int) -> Unit,
     val onStepNameChange: (index: Int, newName: String) -> Unit,
-    val onAddStep: () -> Unit
+    val onAddStep: () -> Unit,
+    val onTimeClick: (Int) -> Unit
 )
