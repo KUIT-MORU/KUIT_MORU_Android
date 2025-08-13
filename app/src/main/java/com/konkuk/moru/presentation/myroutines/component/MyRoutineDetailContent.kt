@@ -10,6 +10,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -60,7 +62,9 @@ fun MyRoutineDetailContent(
         ) {
             item {
                 RoutineItemCard(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 8.dp),
                     imageUrl = routine.imageUrl,
                     title = routine.title,
                     isEditMode = isEditMode,
@@ -93,7 +97,6 @@ fun MyRoutineDetailContent(
 
             if (!isSimpleMode && (routine.usedApps.isNotEmpty() || isEditMode)) {
                 item {
-                    Spacer(modifier = Modifier.height(20.dp))
                     UsedAppsSection(
                         apps = routine.usedApps,
                         isEditMode = isEditMode,
@@ -157,5 +160,27 @@ private fun MyRoutineDetailContentPreview_EditMode() {
         MyRoutineDetailContent(
             viewModel = viewModel,
         )
+    }
+}
+@Preview(showBackground = true, name = "상세 화면 - 사용앱 표시")
+@Composable
+private fun MyRoutineDetailContentPreview_WithUsedApps() {
+    val viewModel: MyRoutineDetailViewModel = viewModel()
+
+    // 프리뷰 최초 1회만 초기화
+    val initialized = remember { mutableStateOf(false) }
+    if (!initialized.value) {
+        viewModel.loadRoutine("routine-501")   // 더미 루틴 로드
+        viewModel.setEditMode(true)            // 편집 모드 → 섹션 노출 보장
+        viewModel.updateCategory("집중")        // isSimpleMode = false
+
+        // 실제로 보이는 앱 더미 3개 정도 추가
+        repeat(3) { viewModel.addApp() }
+
+        initialized.value = true
+    }
+
+    MORUTheme {
+        MyRoutineDetailContent(viewModel = viewModel)
     }
 }

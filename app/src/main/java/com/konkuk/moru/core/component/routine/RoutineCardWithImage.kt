@@ -36,6 +36,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.konkuk.moru.R
+import com.konkuk.moru.ui.theme.moruFontMedium
+import com.konkuk.moru.ui.theme.moruFontRegular
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,11 +81,12 @@ fun RoutineCardWithImage(
             //contentScale = ContentScale.Fit
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = routineName,
             fontWeight = FontWeight(500),
+            fontFamily = moruFontMedium,
             fontSize = 12.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -91,6 +94,10 @@ fun RoutineCardWithImage(
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = tags.joinToString(" ") { "#$it" },
+            fontFamily = moruFontRegular,
+            maxLines = 2,                               // 최대 2줄
+            overflow = TextOverflow.Ellipsis,          // 말줄임
+            lineHeight = 12.sp,
             fontSize = 10.sp,
             fontWeight = FontWeight(400),
             color = Color.Gray

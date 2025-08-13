@@ -49,13 +49,13 @@ fun RoutineStepItem(
                 modifier = Modifier
                     .size(24.dp)
                     .then(dragHandleModifier),
-                tint = MORUTheme.colors.darkGray
+                tint = MORUTheme.colors.lightGray
             )
         } else {
             Text(
-                text = "%02d".format(stepNumber),
-                style = MORUTheme.typography.title_B_12,
-                color = MORUTheme.colors.darkGray,
+                text = "%2d".format(stepNumber),
+                style = MORUTheme.typography.body_SB_14,
+                color = Color(0xFF1A1A1A),
                 modifier = Modifier.width(24.dp),
                 textAlign = TextAlign.Center
             )
@@ -69,7 +69,7 @@ fun RoutineStepItem(
                 value = step.name,
                 onValueChange = onNameChange, // 타이핑할 때마다 onNameChange 콜백 호출
                 modifier = Modifier.weight(1f),
-                textStyle = MORUTheme.typography.body_SB_14.copy(color = MORUTheme.colors.black),
+                textStyle = MORUTheme.typography.body_SB_14.copy(color = Color(0xFF1A1A1A)),
                 singleLine = true // 한 줄 입력 필드로 설정
             )
         } else {
@@ -77,16 +77,20 @@ fun RoutineStepItem(
             Text(
                 text = step.name,
                 style = MORUTheme.typography.body_SB_14,
-                color = MORUTheme.colors.black,
+                color = Color(0xFF1A1A1A),
                 modifier = Modifier.weight(1f),
             )
         }
 
-        Text(
-            text = step.duration,
-            style = MORUTheme.typography.body_SB_14,
-            color = MORUTheme.colors.darkGray,
-        )
+
+        if (!isEditMode) {
+            Text(
+                modifier = Modifier.padding(end = 88.dp),
+                text = step.duration,
+                style = MORUTheme.typography.body_SB_14,
+                color = Color(0xFF1A1A1A),
+            )
+        }
 
         if (isEditMode) {
             Spacer(Modifier.width(16.dp))

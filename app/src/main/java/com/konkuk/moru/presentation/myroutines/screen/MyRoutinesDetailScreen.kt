@@ -1,6 +1,7 @@
 package com.konkuk.moru.presentation.myroutines.screen
 
 import MyRoutineDetailContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -11,9 +12,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,6 +56,10 @@ fun MyRoutineDetailScreen(
             // uiState.routine이 null이 아닐 때만 TopAppBar를 보여줍니다.
             uiState.routine?.let {
                 BasicTopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color(0xFFF1F3F5)
+                    ),
+                    modifier = Modifier.background(MORUTheme.colors.mediumGray),
                     title = if (uiState.isEditMode) "루틴 수정" else "내 루틴",
                     navigationIcon = {
                         IconButton(onClick = {
@@ -99,7 +107,6 @@ fun MyRoutineDetailScreen(
 }
 
 
-
 @Preview(showBackground = true, name = "상세 화면 - 보기 모드")
 @Composable
 private fun MyRoutineDetailScreenPreview_ViewMode() {
@@ -130,3 +137,5 @@ private fun MyRoutineDetailScreenPreview_EditMode() {
         )
     }
 }
+
+

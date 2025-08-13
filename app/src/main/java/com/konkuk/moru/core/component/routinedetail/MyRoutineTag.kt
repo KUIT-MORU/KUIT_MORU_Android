@@ -37,10 +37,10 @@ fun MyRoutineTag(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 17.dp, end = 17.dp, top = 25.dp, bottom = 30.dp),
+            .padding(start = 17.dp, end = 17.dp, top = 20.dp, bottom = 30.dp),
     ) {
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             items(tags) { tag ->
@@ -93,7 +93,6 @@ fun MyRoutineTag(
                 }
             }
         }
-        Spacer(Modifier.height(8.dp))
     }
 }
 

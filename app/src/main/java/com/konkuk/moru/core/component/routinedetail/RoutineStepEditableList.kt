@@ -138,7 +138,7 @@ fun LazyListScope.routineStepEditableList(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(start=16.dp,end=16.dp),
                 horizontalArrangement = Arrangement.Start
             ) {
                 IconButton(onClick = actions.onAddStep) {
