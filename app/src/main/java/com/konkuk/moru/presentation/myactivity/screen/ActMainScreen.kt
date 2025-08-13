@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -23,13 +22,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.konkuk.moru.R
-import com.konkuk.moru.presentation.home.viewmodel.ActUserViewModel
 import com.konkuk.moru.presentation.myactivity.component.ActMyInfo
 import com.konkuk.moru.presentation.myactivity.component.MyActivityTab
 import com.konkuk.moru.presentation.myactivity.component.MyProfileTitle
-import com.konkuk.moru.presentation.myactivity.component.RoutinePaceCard
 import com.konkuk.moru.presentation.myactivity.viewmodel.InsightViewModel
+import com.konkuk.moru.presentation.myactivity.viewmodel.ActUserViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 
 @Composable
