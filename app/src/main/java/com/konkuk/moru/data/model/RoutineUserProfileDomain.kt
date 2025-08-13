@@ -1,7 +1,7 @@
 package com.konkuk.moru.data.model
 
 
-data class UserProfileDomain(
+data class RoutineUserProfileDomain(
     val id: String,
     val isMe: Boolean,
     val nickname: String,

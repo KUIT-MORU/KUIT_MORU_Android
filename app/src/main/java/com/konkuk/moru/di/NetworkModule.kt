@@ -6,9 +6,9 @@ import com.konkuk.moru.data.service.AuthService
 import com.konkuk.moru.data.service.InsightService
 import com.konkuk.moru.data.service.NotificationService
 import com.konkuk.moru.data.service.RoutineFeedService
+import com.konkuk.moru.data.service.RoutineUserService
 import com.konkuk.moru.data.service.SearchService
 import com.konkuk.moru.data.service.SocialService
-import com.konkuk.moru.data.service.UserService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -92,8 +92,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideUserService(retrofit: Retrofit): UserService =
-        retrofit.create(UserService::class.java)
+    fun provideUserService(retrofit: Retrofit): RoutineUserService =
+        retrofit.create(RoutineUserService::class.java)
 
 
     @Provides

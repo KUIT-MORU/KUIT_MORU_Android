@@ -9,7 +9,7 @@ import com.konkuk.moru.data.dto.response.FollowCursorDto
 import com.konkuk.moru.data.mapper.toUi
 import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.domain.repository.SocialRepository
-import com.konkuk.moru.domain.repository.UserRepository
+import com.konkuk.moru.domain.repository.RoutineUserRepository
 import com.konkuk.moru.presentation.routinefeed.data.FollowUser
 import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,7 +30,7 @@ import kotlin.time.TimeSource
 @HiltViewModel
 class FollowViewModel @Inject constructor(
     private val socialRepository: SocialRepository,
-    private val userRepository: UserRepository,
+    private val userRepository: RoutineUserRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 

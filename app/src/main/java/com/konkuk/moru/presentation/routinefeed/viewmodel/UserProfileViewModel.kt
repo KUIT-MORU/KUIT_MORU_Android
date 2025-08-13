@@ -9,7 +9,7 @@ import com.konkuk.moru.data.mapper.toRoutineModel
 import com.konkuk.moru.data.mapper.toUiRoutine
 import com.konkuk.moru.domain.repository.RoutineFeedRepository
 import com.konkuk.moru.domain.repository.SocialRepository
-import com.konkuk.moru.domain.repository.UserRepository
+import com.konkuk.moru.domain.repository.RoutineUserRepository
 import com.konkuk.moru.presentation.routinefeed.data.UserProfileUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -23,7 +23,7 @@ import kotlin.time.TimeSource
 @HiltViewModel
 class UserProfileViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    private val userRepository: UserRepository,
+    private val userRepository: RoutineUserRepository,
     private val socialRepository: SocialRepository,
     private val routineFeedRepository: RoutineFeedRepository
 ) : ViewModel() {
