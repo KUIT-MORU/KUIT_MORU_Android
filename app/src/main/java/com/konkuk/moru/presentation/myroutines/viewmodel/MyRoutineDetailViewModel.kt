@@ -25,6 +25,10 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import android.net.Uri
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
 
 class MyRoutineDetailViewModel : ViewModel() {
@@ -39,6 +43,11 @@ class MyRoutineDetailViewModel : ViewModel() {
     val deleteCompleted = _deleteCompleted.asSharedFlow()
 
     private var originalRoutine: Routine? = null
+
+    private val _localImageUri = MutableStateFlow<Uri?>(null)
+    val localImageUri = _localImageUri.asStateFlow()
+
+    fun updateLocalImage(uri: Uri?) { _localImageUri.value = uri }
 
     /**
      * 특정 routineId를 가진 '내 루틴'을 불러옵니다.
@@ -65,8 +74,13 @@ class MyRoutineDetailViewModel : ViewModel() {
      */
     fun restoreRoutine() {
         _uiState.update { it.copy(routine = originalRoutine) }
+        _localImageUri.value = null              // [변경] 임시 이미지 버리기 (원복)
     }
 
+    fun cancelEdits() {
+        restoreRoutine()                         // 원본으로 되돌림 + 임시 이미지 초기화
+        setEditMode(false)                       // 편집모드 종료
+    }
 
     fun deleteRoutine(routineId: String) {
         viewModelScope.launch {
@@ -91,12 +105,35 @@ class MyRoutineDetailViewModel : ViewModel() {
     }
 
     fun saveChanges() {
-        val updatedRoutine = uiState.value.routine ?: return
-        val index = DummyData.feedRoutines.indexOfFirst { it.routineId == updatedRoutine.routineId }
-        if (index != -1) {
-            DummyData.feedRoutines[index] = updatedRoutine
+        viewModelScope.launch {
+            val current = uiState.value.routine ?: return@launch
+
+            // [추가] 편집 중 이미지가 있으면 서버 업로드 → routine 반영
+            val pending = _localImageUri.value
+            val withImageApplied = if (pending != null) {
+                val uploadedUrl = uploadImageToServer(pending) // [추가] 업로드
+                current.copy(imageUrl = uploadedUrl)          // 필요 시 imageKey 필드에 넣어도 됨
+            } else {
+                current
+            }
+
+            val index = DummyData.feedRoutines.indexOfFirst { it.routineId == withImageApplied.routineId }
+            if (index != -1) {
+                DummyData.feedRoutines[index] = withImageApplied
+            }
+            // [추가] 화면 상태/원본 스냅샷 업데이트 & 임시 이미지 초기화
+            _uiState.update { it.copy(routine = withImageApplied) }
+            originalRoutine = withImageApplied.copy()
+            _localImageUri.value = null
         }
-        originalRoutine = updatedRoutine.copy() // 저장 후 원본 데이터도 갱신
+    }
+
+    // [추가] 실제 서버 연동 자리 (샘플 구현)
+    private suspend fun uploadImageToServer(uri: Uri): String = withContext(Dispatchers.IO) {
+        // TODO: 실제 업로드 로직으로 교체 (Retrofit/Multipart 등)
+        delay(300) // 업로드 대기 시뮬레이션
+        // 서버가 반환한 이미지 접근 URL(or imageKey)을 반환한다고 가정
+        "https://cdn.moru.app/uploads/${System.currentTimeMillis()}.jpg"
     }
 
     fun updateDescription(newDescription: String) {

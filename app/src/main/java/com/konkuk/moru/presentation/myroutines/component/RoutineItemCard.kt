@@ -1,6 +1,6 @@
 package com.konkuk.moru.presentation.myroutines.component
 
-import android.net.Uri
+import android.R.attr.contentDescription
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -41,18 +41,24 @@ import com.konkuk.moru.R
 import com.konkuk.moru.core.component.Switch.RoutineSimpleFocusSwitch
 import com.konkuk.moru.core.component.chip.MoruChip
 import com.konkuk.moru.core.component.routinedetail.RoutineDescriptionField
-import com.konkuk.moru.core.component.routinedetail.RoutineImageSelectBox
 import com.konkuk.moru.core.component.routinedetail.ShowUserCheckbox
 import com.konkuk.moru.presentation.routinefeed.component.modale.CenteredInfoDialog
 import com.konkuk.moru.presentation.routinefeed.component.modale.CustomDialog
 import com.konkuk.moru.ui.theme.MORUTheme
 import com.konkuk.moru.ui.theme.moruFontBold
 import kotlinx.coroutines.delay
+import android.net.Uri
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 
 @Composable
 fun RoutineItemCard(
     modifier: Modifier = Modifier,
     imageUrl: String? = null,
+    imageUri: Uri? = null,
     title: String,
     isEditMode: Boolean,
     onDelete: () -> Unit,
@@ -60,6 +66,7 @@ fun RoutineItemCard(
     category: String,
     onDescriptionChange: (String) -> Unit,
     onCategoryChange: (String) -> Unit,
+    onImageClick: () -> Unit,
 ) {
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var showDeleteCompleteDialog by remember { mutableStateOf(false) }
@@ -107,15 +114,20 @@ fun RoutineItemCard(
         horizontalArrangement = Arrangement.Center
     ) {
         AsyncImage(
-            model = imageUrl,
-            contentDescription = "루틴 대표 이미지",
-            modifier = Modifier
-                .width(105.dp)
-                .height(140.dp)
-                .clip(RoundedCornerShape(4.dp)),
-            contentScale = ContentScale.Crop,
-            placeholder = painterResource(id = R.drawable.ic_routine_card_basic),
-            error = painterResource(id = R.drawable.ic_routine_card_basic)
+        model = imageUri ?: imageUrl,
+        contentDescription = "루틴 대표 이미지",
+        modifier = Modifier
+            .width(105.dp)
+            .height(140.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .clickable(
+                enabled = isEditMode,
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) { onImageClick() },
+        contentScale = ContentScale.Crop,
+        placeholder = painterResource(id = R.drawable.ic_routine_card_basic),
+        error = painterResource(id = R.drawable.ic_routine_card_basic)
         )
 
         Spacer(modifier = Modifier.width(16.dp))
@@ -236,7 +248,11 @@ private fun RoutineItemCardPreview() {
         category = "집중",
         description = "설명",
         isEditMode = true,
+        imageUrl = null,
+        imageUri = null,
         onDelete = {},
         onCategoryChange = { _ -> },
-        onDescriptionChange = { _ -> })
+        onDescriptionChange = { _ -> },
+        onImageClick = {}
+    )
 }

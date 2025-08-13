@@ -1,3 +1,6 @@
+package com.konkuk.moru.presentation.myroutines.component
+
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -31,6 +34,10 @@ import kotlinx.coroutines.Job
 fun MyRoutineDetailContent(
     viewModel: MyRoutineDetailViewModel,
     onOpenBottomSheet: () -> Unit,
+    // [변경] 카드 이미지 클릭 콜백
+    onCardImageClick: () -> Unit,
+    // [변경] 로컬 선택 이미지 반영
+    selectedImageUri: Uri?,
 ) {
     val listState = rememberLazyListState()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -63,6 +70,7 @@ fun MyRoutineDetailContent(
                 RoutineItemCard(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     imageUrl = routine.imageUrl,
+                    imageUri = selectedImageUri,
                     title = routine.title,
                     isEditMode = isEditMode,
                     onDelete = { viewModel.deleteRoutine(routine.routineId) },
@@ -70,6 +78,7 @@ fun MyRoutineDetailContent(
                     category = routine.category,
                     onDescriptionChange = viewModel::updateDescription,
                     onCategoryChange = viewModel::updateCategory,
+                    onImageClick = onCardImageClick // [변경]
                 )
             }
 
@@ -172,13 +181,14 @@ fun MyRoutineDetailContent(
 @Composable
 private fun MyRoutineDetailContentPreview_EditMode() {
     val viewModel: MyRoutineDetailViewModel = viewModel()
-    // '나'의 첫 번째 루틴(ID: 501)을 불러와서 상태를 설정합니다.
     viewModel.loadRoutine("routine-501")
 
     MORUTheme {
         MyRoutineDetailContent(
             viewModel = viewModel,
-            onOpenBottomSheet = {  }
+            onOpenBottomSheet = {  },
+            onCardImageClick = {},
+            selectedImageUri = null
         )
     }
 }

@@ -25,12 +25,13 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
 fun ImageChoiceOptionButtonScreen(
+    modifier: Modifier = Modifier,
     onImageSelected: () -> Unit,
     onCameraSelected: () -> Unit,
     onCancel: () -> Unit
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.5f))
             .clickable(
