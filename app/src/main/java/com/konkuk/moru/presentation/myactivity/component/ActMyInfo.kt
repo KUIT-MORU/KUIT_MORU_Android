@@ -109,21 +109,21 @@ fun ActMyInfo(
                 .padding(horizontal = 59.dp)
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "루틴", style = typography.body_SB_16)
+                Text(text = routineCount.toString(), color = colors.black, style = typography.body_SB_16)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = routineCount.toString(), style = typography.time_R_12)
+                Text(text = "루틴", color = colors.mediumGray, style = typography.time_R_12)
             }
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "팔로워", style = typography.body_SB_16)
+                Text(text = followerCount.toString(), color = colors.black, style = typography.body_SB_16)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = followerCount.toString(), style = typography.time_R_12)
+                Text(text = "팔로워", color = colors.mediumGray, style = typography.time_R_12)
             }
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "팔로잉", style = typography.body_SB_16)
+                Text(text = followingCount.toString(), color = colors.black, style = typography.body_SB_16)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = followingCount.toString(), style = typography.time_R_12)
+                Text(text = "팔로잉", color = colors.mediumGray, style = typography.time_R_12)
             }
         }
     }
