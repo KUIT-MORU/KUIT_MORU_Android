@@ -39,9 +39,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.navigation.NavHostController
 import java.io.File
 import com.konkuk.moru.core.component.ImageChoiceOptionButtonScreen
 import com.konkuk.moru.presentation.myroutines.component.MyRoutineDetailContent
+import com.konkuk.moru.presentation.navigation.Route
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +51,7 @@ fun MyRoutineDetailScreen(
     routineId: String,
     onBackClick: () -> Unit,
     viewModel: MyRoutineDetailViewModel = viewModel(),
+    navController: NavHostController
 ) {
     // ✨ ViewModel의 UiState를 구독하여 단일 진실 공급원 원칙을 따름
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -109,6 +112,21 @@ fun MyRoutineDetailScreen(
         }
     }
 
+    // (LaunchedEffect) 검색 결과 수신
+    LaunchedEffect(Unit) {
+        // [추가] 태그 검색 화면에서 되돌아올 때 결과를 받는다.
+        val handle = navController.currentBackStackEntry?.savedStateHandle
+        handle?.getStateFlow<List<String>>("selectedTagsResult", emptyList())
+            ?.collect { result ->
+                if (result.isNotEmpty()) {
+                    // '#'(있으면) 제거 + 중복 방지 후 추가
+                    viewModel.addTags(result.map { it.removePrefix("#") })
+                    // 재수신 방지 초기화 (핵심)
+                    handle["selectedTagsResult"] = emptyList<String>()
+                }
+            }
+    }
+
     Scaffold(
         topBar = {
             // uiState.routine이 null이 아닐 때만 TopAppBar를 보여줍니다.
@@ -156,7 +174,12 @@ fun MyRoutineDetailScreen(
                         viewModel = viewModel,
                         onOpenBottomSheet = { isBottomSheetOpen = true },
                         onCardImageClick = { isImageOptionVisible = true },
-                        selectedImageUri = selectedImageUri
+                        selectedImageUri = selectedImageUri,
+                        onAddTagClick = { // [추가]
+                            if (uiState.isEditMode) {
+                                navController.navigate(Route.RoutineSearch.route)
+                            }
+                        }
                     )
                 }
             }
@@ -218,10 +241,13 @@ private fun MyRoutineDetailScreenPreview_ViewMode() {
         val viewModel: MyRoutineDetailViewModel = viewModel()
         viewModel.loadRoutine("routine-501")
 
+        val navController = NavHostController(LocalContext.current)
+
         MyRoutineDetailScreen(
             routineId = "routine-501",
             onBackClick = {},
-            viewModel = viewModel
+            viewModel = viewModel,
+            navController = navController
         )
     }
 }
@@ -233,11 +259,13 @@ private fun MyRoutineDetailScreenPreview_EditMode() {
         val viewModel: MyRoutineDetailViewModel = viewModel()
         viewModel.loadRoutine("routine-501")
         viewModel.setEditMode(true) // 프리뷰를 위해 수정 모드로 설정
+        val navController = NavHostController(LocalContext.current)
 
         MyRoutineDetailScreen(
             routineId = "routine-501",
             onBackClick = {},
-            viewModel = viewModel
+            viewModel = viewModel,
+            navController = navController
         )
     }
 }

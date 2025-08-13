@@ -34,10 +34,9 @@ import kotlinx.coroutines.Job
 fun MyRoutineDetailContent(
     viewModel: MyRoutineDetailViewModel,
     onOpenBottomSheet: () -> Unit,
-    // [변경] 카드 이미지 클릭 콜백
     onCardImageClick: () -> Unit,
-    // [변경] 로컬 선택 이미지 반영
     selectedImageUri: Uri?,
+    onAddTagClick: () -> Unit
 ) {
     val listState = rememberLazyListState()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -86,7 +85,7 @@ fun MyRoutineDetailContent(
                 MyRoutineTag(
                     tags = routine.tags,
                     isEditMode = isEditMode,
-                    onAddTag = { viewModel.addTag() }, // ViewModel 함수 직접 호출
+                    onAddTag = onAddTagClick,
                     onDeleteTag = viewModel::deleteTag
                 )
             }
@@ -186,9 +185,10 @@ private fun MyRoutineDetailContentPreview_EditMode() {
     MORUTheme {
         MyRoutineDetailContent(
             viewModel = viewModel,
-            onOpenBottomSheet = {  },
+            onOpenBottomSheet = { },
             onCardImageClick = {},
-            selectedImageUri = null
+            selectedImageUri = null,
+            onAddTagClick = {  }
         )
     }
 }

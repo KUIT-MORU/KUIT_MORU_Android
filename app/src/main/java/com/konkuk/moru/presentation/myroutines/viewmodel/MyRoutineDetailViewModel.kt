@@ -164,6 +164,17 @@ class MyRoutineDetailViewModel : ViewModel() {
         }
     }
 
+    // [추가] 여러 태그를 한 번에 추가 (중복 제거)
+    fun addTags(tags: List<String>) {
+        if (tags.isEmpty()) return
+        _uiState.update { state ->
+            val current = state.routine?.tags.orEmpty()
+            val normalized = tags.map { it.trim() }.filter { it.isNotBlank() }
+            val merged = (current + normalized).distinct()
+            state.copy(routine = state.routine?.copy(tags = merged))
+        }
+    }
+
     fun deleteStep(index: Int) {
         _uiState.update { state ->
             val currentSteps = state.routine?.steps?.toMutableList()
