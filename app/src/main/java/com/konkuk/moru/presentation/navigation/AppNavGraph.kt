@@ -33,6 +33,7 @@ import com.konkuk.moru.presentation.auth.AuthCheckScreen
 import com.konkuk.moru.presentation.home.component.HomeTutorialOverlayContainer
 import com.konkuk.moru.presentation.home.screen.HomeOnboardingScreen
 import com.konkuk.moru.presentation.login.LoginScreen
+import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.onboarding.OnboardingScreen
 import com.konkuk.moru.presentation.signup.SignUpScreen
 
@@ -212,6 +213,10 @@ fun AppNavGraph(
                 .zIndex(10f),
             onDismiss = { showOverlay = false },
             onFabClick = { showOverlay = false },
+            onCreateImmediatelyClick = {
+                showOverlay = false
+                navController.navigate(Route.RoutineCreate.route)
+            },
             fabOffsetY = fabOffsetY.value,
             todayTabOffsetY = todayTabOffsetY.value,
             bottomIconCenters = bottomIconCenters
