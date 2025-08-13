@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
 import com.konkuk.moru.ui.theme.MORUTheme
@@ -80,3 +81,14 @@ internal fun RoutineSearchTopAppBar(
     )
 }
 
+@Preview
+@Composable
+private fun RoutineSearchTopAppBarPreview() {
+    RoutineSearchTopAppBar(
+        query = "",
+        onQueryChange = {},
+        onSearch = {},
+        onNavigateBack = {},
+        placeholderText = "루틴명을 검색해보세요"
+    )
+}

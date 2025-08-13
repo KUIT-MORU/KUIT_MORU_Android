@@ -64,6 +64,7 @@ import com.konkuk.moru.core.component.routinedetail.SelectUsedAppSection
 import com.konkuk.moru.core.component.routinedetail.ShowUserCheckbox
 import com.konkuk.moru.core.component.routinedetail.appdisplay.AddAppBox
 import com.konkuk.moru.core.component.routinedetail.appdisplay.SelectedAppNoText
+import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.routinecreate.component.StepItem
 import com.konkuk.moru.presentation.routinecreate.component.TimePickerDialog
 import com.konkuk.moru.presentation.routinecreate.viewmodel.RoutineCreateViewModel
@@ -145,6 +146,17 @@ fun RoutineCreateScreen(
 
     LaunchedEffect(Unit) {
         viewModel.loadInstalledApps(context)
+    }
+
+    LaunchedEffect(Unit) {
+        val handle = navController.currentBackStackEntry?.savedStateHandle
+        handle?.getStateFlow<List<String>>("selectedTagsResult", emptyList())
+            ?.collect { result ->
+                if (result.isNotEmpty()) {
+                    viewModel.addTags(result)
+                    handle["selectedTagsResult"] = emptyList<String>()   // ← [중요] 재수신 방지 초기화
+                }
+            }
     }
 
     Box(
@@ -254,12 +266,12 @@ fun RoutineCreateScreen(
                     // 태그 추가 버튼
                     MyRoutineTagInCreateRoutine(
                         tagList = tagList,
-                        //tagList = listOf("운동", "건강", "루틴"),
                         onAddTag = {
-                            viewModel.addTag("예시태그")
+                            // [변경] 임시 태그 추가 → 검색 화면으로 이동
+                            navController.navigate(Route.RoutineSearch.route)
                         },
-                        onDeleteTag = {
-                            viewModel.removeTag("예시태그")
+                        onDeleteTag = { tag ->
+                            viewModel.removeTag(tag)
                         }
                     )
                 }

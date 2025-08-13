@@ -370,8 +370,8 @@ fun MainNavGraph(
             if (routineId != null) {
                 MyRoutineDetailScreen(
                     routineId = routineId,
-                    // navController = navController,
                     onBackClick = { navController.popBackStack() },
+                    navController = navController // [추가]
                 )
             } else {
                 navController.popBackStack()

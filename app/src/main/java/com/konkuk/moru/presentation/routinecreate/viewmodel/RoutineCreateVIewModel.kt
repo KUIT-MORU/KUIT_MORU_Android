@@ -69,6 +69,18 @@ class RoutineCreateViewModel : ViewModel() {
         tagList.add(tag) // TODO: 중복 체크 로직 추가 필요
     }
 
+    fun addTags(tags: List<String>) {
+        // 해시(#) 제거 및 공백 트리밍으로 정규화
+        val normalized = tags.map { it.removePrefix("#").trim() }
+            .filter { it.isNotBlank() }
+
+        normalized.forEach { t ->
+            if (!tagList.contains(t) && tagList.size < 3) {
+                tagList.add(t)
+            }
+        }
+    }
+
     fun removeTag(tag: String) {
         tagList.remove(tag)
     }
