@@ -317,6 +317,11 @@ fun PortraitRoutineFocusScreen(
     val selectedApps =
         sharedViewModel.selectedApps.collectAsStateWithLifecycle<List<AppInfo>>().value
 
+    // 집중 루틴 시작
+    LaunchedEffect(Unit) {
+        focusViewModel.startFocusRoutine()
+    }
+
     //1초마다 시간 증가,시간 초과 판단
     LaunchedEffect(currentstep) {
         val stepLimit = parseTimeToSeconds(routineItems.getOrNull(currentstep - 1)?.second ?: "0m")
@@ -860,11 +865,13 @@ fun PortraitRoutineFocusScreen(
                             .clickable(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
-                            ) {
-                                showResultPopup = false
-                                // routineId를 String으로 변환하여 전달
-                                onFinishConfirmed(routineId.toString())
-                            }
+                                                            ) {
+                                    showResultPopup = false
+                                    // 집중 루틴 종료
+                                    focusViewModel.endFocusRoutine()
+                                    // routineId를 String으로 변환하여 전달
+                                    onFinishConfirmed(routineId.toString())
+                                }
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -939,11 +946,13 @@ fun PortraitRoutineFocusScreen(
         if (focusViewModel.isOnboardingPopupVisible) {
             FocusOnboardingPopup(
                 selectedApps = focusViewModel.selectedApps,
-                onAppClick = { app ->
-                    // 실제 앱 실행
-                    launchApp(context, app.packageName)
-                    focusViewModel.hideOnboardingPopup()
-                },
+                                    onAppClick = { app ->
+                        // 허용된 앱 실행 플래그 설정
+                        focusViewModel.setPermittedAppLaunch(true)
+                        // 실제 앱 실행
+                        launchApp(context, app.packageName)
+                        focusViewModel.hideOnboardingPopup()
+                    },
                 onOutsideClick = {
                     focusViewModel.hideOnboardingPopup()
                 }

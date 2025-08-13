@@ -120,6 +120,34 @@ class RoutineFocusViewModel : ViewModel() {
         isOnboardingPopupVisible = false
     }
 
+    // 집중 루틴 활성화 상태
+    var _isFocusRoutineActive by mutableStateOf(false)
+        private set
+
+    // 허용된 앱 실행 플래그
+    var _isPermittedAppLaunch by mutableStateOf(false)
+        private set
+
+    fun startFocusRoutine() {
+        _isFocusRoutineActive = true
+    }
+
+    fun endFocusRoutine() {
+        _isFocusRoutineActive = false
+        _isPermittedAppLaunch = false
+    }
+
+    fun setPermittedAppLaunch(permitted: Boolean) {
+        _isPermittedAppLaunch = permitted
+    }
+
+    // 외부에서 읽기 전용으로 접근할 수 있는 프로퍼티
+    val isPermittedAppLaunch: Boolean
+        get() = _isPermittedAppLaunch
+
+    val isFocusRoutineActive: Boolean
+        get() = _isFocusRoutineActive
+
     // 사용 앱 팝업 상태 저장
     var isAppIconsVisible by mutableStateOf(false)
         private set
