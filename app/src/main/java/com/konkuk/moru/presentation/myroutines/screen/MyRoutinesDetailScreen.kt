@@ -100,8 +100,7 @@ fun MyRoutineDetailScreen(
     }
 
     BackHandler(enabled = uiState.isEditMode) {
-        viewModel.restoreRoutine()
-        viewModel.setEditMode(false)
+        viewModel.cancelEdits()
     }
 
     LaunchedEffect(Unit) {
@@ -119,8 +118,7 @@ fun MyRoutineDetailScreen(
                     navigationIcon = {
                         IconButton(onClick = {
                             if (uiState.isEditMode) {
-                                viewModel.restoreRoutine()
-                                viewModel.setEditMode(false) // ✨ ViewModel에 모드 변경 요청
+                                viewModel.cancelEdits()
                             } else {
                                 onBackClick()
                             }

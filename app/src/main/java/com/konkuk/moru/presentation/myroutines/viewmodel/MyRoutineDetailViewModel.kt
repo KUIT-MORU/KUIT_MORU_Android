@@ -45,12 +45,9 @@ class MyRoutineDetailViewModel : ViewModel() {
     private var originalRoutine: Routine? = null
 
     private val _localImageUri = MutableStateFlow<Uri?>(null)
-    val localImageUri = _localImageUri.asStateFlow() // 화면에서 미리보기 용으로 구독
+    val localImageUri = _localImageUri.asStateFlow()
 
-    // [추가] 선택/촬영된 이미지 갱신
-    fun updateLocalImage(uri: Uri?) {
-        _localImageUri.value = uri
-    }
+    fun updateLocalImage(uri: Uri?) { _localImageUri.value = uri }
 
     /**
      * 특정 routineId를 가진 '내 루틴'을 불러옵니다.
@@ -77,8 +74,13 @@ class MyRoutineDetailViewModel : ViewModel() {
      */
     fun restoreRoutine() {
         _uiState.update { it.copy(routine = originalRoutine) }
+        _localImageUri.value = null              // [변경] 임시 이미지 버리기 (원복)
     }
 
+    fun cancelEdits() {
+        restoreRoutine()                         // 원본으로 되돌림 + 임시 이미지 초기화
+        setEditMode(false)                       // 편집모드 종료
+    }
 
     fun deleteRoutine(routineId: String) {
         viewModelScope.launch {
