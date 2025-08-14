@@ -370,7 +370,7 @@ private fun ExpandableRoutineSection(
                 Column {
                     routines.forEach { routine ->
                         RoutineListItem(
-                            isRunning = routine.isRunning,
+                            isRunning = true,//routine.isRunning,
                             routineName = routine.title,
                             tags = routine.tags,
                             likeCount = routine.likes,
