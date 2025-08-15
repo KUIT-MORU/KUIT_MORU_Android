@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.konkuk.moru.core.datastore.SchedulePreference
 import com.konkuk.moru.data.dto.response.RoutineDetailResponseV1
+import com.konkuk.moru.data.dto.response.HomeScheduleResponse
 import com.konkuk.moru.data.mapper.toDomain
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.repositoryimpl.RoutineRepository
@@ -13,6 +14,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -49,19 +51,27 @@ class HomeRoutinesViewModel @Inject constructor(
         Log.d(TAG, "🌐 네트워크 연결 테스트 시작...")
         
         viewModelScope.launch {
+            Log.d(TAG, "🚀 코루틴 시작됨!")
             Log.d(TAG, "🔄 loadTodayRoutines 코루틴 시작")
             try {
                 Log.d(TAG, "🔗 서버 연결 시도 중...")
+                Log.d(TAG, "🌐 API 엔드포인트: /api/routines/today (page=$page, size=$size)")
+                
                 val pageRes = repo.getMyRoutinesToday(page, size)
-                    Log.d(TAG, "✅ loadTodayRoutines 성공!")
-                    Log.d(TAG, "loadTodayRoutines success: " +
-                            "total=${pageRes.totalElements}, page=${pageRes.number}, size=${pageRes.size}, " +
-                            "contentSize=${pageRes.content.size}"
-                    )
-                    Log.d(TAG, "server IDs=" + pageRes.content.joinToString { it.routineId })
+                Log.d(TAG, "✅ loadTodayRoutines 성공!")
+                Log.d(TAG, "📊 서버 응답: total=${pageRes.totalElements}, page=${pageRes.number}, size=${pageRes.size}, contentSize=${pageRes.content.size}")
+                
+                if (pageRes.content.isNotEmpty()) {
+                    Log.d(TAG, "🎯 루틴 목록:")
+                    pageRes.content.forEachIndexed { index, routine ->
+                        Log.d(TAG, "   [$index] ID: ${routine.routineId}, 제목: ${routine.title}")
+                    }
+                } else {
+                    Log.w(TAG, "⚠️ 서버에서 루틴 데이터가 비어있음")
+                }
 
-                    _serverRoutines.value = pageRes.content.map { it.toDomain() }
-                    Log.d(TAG, "✅ _serverRoutines StateFlow 업데이트 완료")
+                _serverRoutines.value = pageRes.content.map { it.toDomain() }
+                Log.d(TAG, "✅ _serverRoutines StateFlow 업데이트 완료: ${_serverRoutines.value.size}개")
             } catch (e: Exception) {
                     Log.e(TAG, "❌ loadTodayRoutines 실패!", e)
                 Log.e(TAG, "🔍 예외 타입: ${e.javaClass.simpleName}")
@@ -199,6 +209,74 @@ class HomeRoutinesViewModel @Inject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "로컬 스케줄 정보 가져오기 실패: routineId=$routineId", e)
             null
+        }
+    }
+
+    // 서버에서 스케줄 정보 가져오기
+    suspend fun getRoutineSchedules(routineId: String): List<HomeScheduleResponse> {
+        return try {
+            Log.d(TAG, "🔄 getRoutineSchedules 호출: routineId=$routineId")
+            Log.d(TAG, "🌐 API 엔드포인트: /api/routines/$routineId/schedules")
+            
+            val schedules = repo.getRoutineSchedules(routineId)
+            Log.d(TAG, "✅ 스케줄 정보 가져오기 성공: ${schedules.size}개")
+            
+            if (schedules.isEmpty()) {
+                Log.w(TAG, "⚠️ 스케줄이 비어있음 - 서버에 스케줄 데이터가 없을 수 있음")
+            } else {
+                Log.d(TAG, "✅ 스케줄 데이터 발견: ${schedules.size}개")
+                schedules.forEachIndexed { index, schedule ->
+                    Log.d(TAG, "   스케줄[$index]: id=${schedule.id}, dayOfWeek=${schedule.dayOfWeek}, time=${schedule.time}, alarmEnabled=${schedule.alarmEnabled}, repeatType=${schedule.repeatType}, daysToCreate=${schedule.daysToCreate}")
+                }
+            }
+            schedules
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ 스케줄 정보 가져오기 실패: routineId=$routineId", e)
+            Log.e(TAG, "❌ 에러 상세: ${e.message}")
+            
+            // HTTP 오류인 경우 응답 본문 출력
+            if (e is retrofit2.HttpException) {
+                val response = e.response()
+                val errorBody = response?.errorBody()?.string()
+                Log.e(TAG, "HTTP ${response?.code()} 응답: $errorBody")
+                
+                when (response?.code()) {
+                    404 -> Log.e(TAG, "🚨 API 엔드포인트를 찾을 수 없음 (404) - 서버에 해당 엔드포인트가 구현되지 않았을 수 있음")
+                    403 -> Log.e(TAG, "🚨 접근 권한 없음 (403) - 인증 토큰 문제일 수 있음")
+                    500 -> Log.e(TAG, "🚨 서버 내부 오류 (500) - 서버 점검 중일 수 있음")
+                    else -> Log.e(TAG, "🚨 기타 HTTP 오류: ${response?.code()}")
+                }
+            }
+            
+            // JSON 파싱 오류인 경우 상세 정보 출력
+            if (e.message?.contains("JsonDecodingException") == true || e.message?.contains("Unexpected JSON token") == true) {
+                Log.e(TAG, "🚨 JSON 파싱 오류 발생")
+                Log.e(TAG, "   - 오류 메시지: ${e.message}")
+                Log.e(TAG, "   - 오류 타입: ${e.javaClass.simpleName}")
+                
+                // 메시지에서 상세 정보 추출
+                e.message?.let { message ->
+                    if (message.contains("at offset")) {
+                        val offset = message.substringAfter("at offset ").substringBefore(":")
+                        Log.e(TAG, "   - 오류 위치: $offset")
+                    }
+                    if (message.contains("Expected")) {
+                        val expected = message.substringAfter("Expected ").substringBefore(" but")
+                        Log.e(TAG, "   - 예상 타입: $expected")
+                    }
+                    if (message.contains("but '") && message.contains("' literal")) {
+                        val actual = message.substringAfter("but '").substringBefore("' literal")
+                        Log.e(TAG, "   - 실제 값: $actual")
+                    }
+                    if (message.contains("at path:")) {
+                        val path = message.substringAfter("at path: ").substringBefore(" ")
+                        Log.e(TAG, "   - 필드 경로: $path")
+                    }
+                }
+            }
+            
+            e.printStackTrace()
+            emptyList()
         }
     }
 

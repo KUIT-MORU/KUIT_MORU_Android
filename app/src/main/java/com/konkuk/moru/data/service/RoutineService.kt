@@ -3,6 +3,7 @@ package com.konkuk.moru.data.service
 import com.konkuk.moru.data.dto.response.RoutinePageResponse
 import com.konkuk.moru.data.dto.response.RoutineDetailResponseV1
 import com.konkuk.moru.data.dto.response.RoutineStepResponse
+import com.konkuk.moru.data.dto.response.HomeScheduleResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -22,4 +23,7 @@ interface RoutineService {
 
     @GET("/api/routines/{routineId}/steps")
     suspend fun getRoutineSteps(@Path("routineId") routineId: String): List<RoutineStepResponse>
+
+    @GET("/api/routines/{routineId}/schedules")
+    suspend fun getRoutineSchedules(@Path("routineId") routineId: String): List<HomeScheduleResponse>
 }

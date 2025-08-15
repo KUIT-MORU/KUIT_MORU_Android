@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.data.model.Routine
+import java.time.DayOfWeek
 
 @Composable
 fun RoutineCardList(
@@ -36,6 +37,7 @@ fun RoutineCardList(
             RoutineCardItem(
                 title = routine.title,
                 tags = routine.tags,
+                scheduledDays = routine.scheduledDays,
                 onClick = { onRoutineClick(routine.routineId) },
                 isHighlighted = isHighlighted
             )
@@ -70,7 +72,8 @@ private fun RoutineCardListPreview() {
             likes = 10,
             isLiked = false,
             isBookmarked = false,
-            isRunning = false
+            isRunning = false,
+            scheduledDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY)
         ),
         Routine(
             routineId = "routine-2",
@@ -85,7 +88,8 @@ private fun RoutineCardListPreview() {
             likes = 8,
             isLiked = true,
             isBookmarked = false,
-            isRunning = false
+            isRunning = false,
+            scheduledDays = setOf(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY, DayOfWeek.SATURDAY)
         ),
         Routine(
             routineId = "routine-3",
@@ -100,7 +104,8 @@ private fun RoutineCardListPreview() {
             likes = 5,
             isLiked = false,
             isBookmarked = true,
-            isRunning = false
+            isRunning = false,
+            scheduledDays = setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
         )
     )
 
