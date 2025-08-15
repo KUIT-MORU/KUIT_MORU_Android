@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.routinefeed.viewmodel
 
+
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,8 +8,8 @@ import com.konkuk.moru.core.datastore.RoutineSyncBus
 import com.konkuk.moru.core.datastore.SocialMemory
 import com.konkuk.moru.data.dto.response.Follow.FollowCursorDto
 import com.konkuk.moru.data.mapper.toUi
-import com.konkuk.moru.domain.repository.SocialRepository
 import com.konkuk.moru.domain.repository.RoutineUserRepository
+import com.konkuk.moru.domain.repository.SocialRepository
 import com.konkuk.moru.presentation.routinefeed.data.FollowUser
 import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,8 +24,6 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
-
-
 
 @HiltViewModel
 class FollowViewModel @Inject constructor(
@@ -45,80 +44,162 @@ class FollowViewModel @Inject constructor(
 
     private val ownerUserId: String = savedStateHandle["userId"] ?: ""
 
-    // 비동기로 채우는 내 아이디 캐시
+    // 내 아이디 캐시
     private var myId: String? = null
 
-    // === 낙관 팔로우 TTL 가드 ===
-    private data class FollowStamp(val wantFollow: Boolean, val mark: TimeMark = TimeSource.Monotonic.markNow())
+    // ===== TTL 가드 =====
+    private data class FollowStamp(
+        val wantFollow: Boolean,
+        val mark: TimeMark = TimeSource.Monotonic.markNow()
+    )
+
     private val followStampMap = ConcurrentHashMap<String, FollowStamp>()
     private val PROTECT_TTL = 2.seconds
 
-    /** 서버값 받았을 때, TTL 내 토글 대상이면 낙관값을 우선시 */
+    /** 서버 isFollow 값에 낙관값(TTL 내)을 오버레이 */
     private fun guardFollow(userId: String, serverIsFollowing: Boolean): Boolean {
         val s = followStampMap[userId] ?: return serverIsFollowing
         return if (s.mark.elapsedNow() <= PROTECT_TTL) s.wantFollow else serverIsFollowing
     }
 
+    // ===== in-flight 가드(중복 요청 차단) =====
+    private val inFlightSet = ConcurrentHashMap.newKeySet<String>()
+
     init {
-        // 내 아이디 먼저 확보 → UI에 전달
         viewModelScope.launch {
             ensureMeId()
-            // 첫 페이지 로드
             loadFollowers(refresh = true)
             loadFollowings(refresh = true)
         }
+
+        // ✅ 팔로우 이벤트 수신 → 내 팔로잉 화면이면 즉시 추가/제거
+        viewModelScope.launch {
+            RoutineSyncBus.events.collect { e ->
+                if (e is RoutineSyncBus.Event.Follow) {
+                    val me = myId ?: ensureMeId()
+                    // 항상 현재 목록에 있는 항목은 즉시 isFollowing 덮어쓰기
+                    _uiState.update { s ->
+                        s.copy(
+                            followers = s.followers.map { u ->
+                                if (u.id == e.userId) u.copy(isFollowing = e.isFollowing) else u
+                            },
+                            followings = s.followings.map { u ->
+                                if (u.id == e.userId) u.copy(isFollowing = e.isFollowing) else u
+                            }
+                        )
+                    }
+
+                    // ⬇️ 내 팔로잉 화면일 때만 “없던 유저 추가 / 언팔 제거”
+                    if (me != null && ownerUserId == me) {
+                        if (e.isFollowing) {
+                            val already = _uiState.value.followings.any { it.id == e.userId }
+                            if (!already) {
+                                // 프로필 한 번 떠서 카드 정보 생성
+                                val ui = fetchFollowUserUi(e.userId)
+                                _uiState.update { s ->
+                                    s.copy(followings = listOf(ui) + s.followings)
+                                }
+                            }
+                        } else {
+                            // 언팔이면 목록에서 제거
+                            _uiState.update { s ->
+                                s.copy(followings = s.followings.filterNot { it.id == e.userId })
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    /** 필요 시 한 번만 내 아이디를 조회해서 캐시 + uiState 반영 */
+    /** 한 번만 내 ID 조회 후 UI에 반영 */
     private suspend fun ensureMeId(): String? {
         if (myId != null) return myId
         myId = runCatching { userRepository.getMe().id }.getOrNull()
-        _uiState.update { it.copy(myId = myId) } // FollowUiState에 meId 필드가 있다고 가정
+        _uiState.update { it.copy(myId = myId) }
         return myId
+    }
+
+    /** SocialMemory/TTL/자기자신 숨김 고려한 오버레이 */
+    private fun overlayFollowFlags(base: List<FollowUser>): List<FollowUser> {
+        val me = myId
+        return base.map { u ->
+            val local = SocialMemory.getFollow(u.id)
+            val guarded = guardFollow(u.id, u.isFollowing)
+            val fixed = local ?: guarded
+            val finalIsFollow = if (me != null && u.id == me) false else fixed
+            u.copy(isFollowing = finalIsFollow)
+        }
     }
 
     fun loadFollowers(refresh: Boolean = false) {
         viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingFollowers = true) }
+
             val lastNick = if (refresh) null else followersCursor?.nickname
             val lastId = if (refresh) null else followersCursor?.userId
 
             runCatching { socialRepository.getFollowers(ownerUserId, lastNick, lastId, limit = 10) }
                 .onSuccess { res ->
                     val mapped = res.content.map { it.toUi() }
-                    val items = mapped.map { it.copy(isFollowing = guardFollow(it.id, it.isFollowing)) }
-                    _uiState.update { it.copy(followers = if (refresh) items else it.followers + items) }
+                    val overlaid = overlayFollowFlags(mapped)
+                    _uiState.update {
+                        it.copy(
+                            followers = if (refresh) overlaid else it.followers + overlaid,
+                            isLoadingFollowers = false
+                        )
+                    }
                     followersCursor = res.nextCursor
+                }
+                .onFailure {
+                    _uiState.update { it.copy(isLoadingFollowers = false) }
                 }
         }
     }
 
     fun loadFollowings(refresh: Boolean = false) {
         viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingFollowings = true) }
+
             val lastNick = if (refresh) null else followingsCursor?.nickname
             val lastId = if (refresh) null else followingsCursor?.userId
 
             runCatching { socialRepository.getFollowing(ownerUserId, lastNick, lastId, limit = 10) }
                 .onSuccess { res ->
                     val base = res.content.map { it.toUi() }
-                    val me = ensureMeId()
-
-                    // 내가 내 페이지를 볼 땐 팔로잉 목록의 isFollowing을 강제로 true
+                    val me = myId // ⚠️ suspend 호출 금지(이미 init에서 확보)
+                    // 내가 내 페이지를 볼 땐 팔로잉 목록은 강제로 true
                     val forced = if (me != null && ownerUserId == me) {
                         base.map { it.copy(isFollowing = true) }
                     } else base
+                    val overlaid = overlayFollowFlags(forced)
 
-                    val items = forced.map { it.copy(isFollowing = guardFollow(it.id, it.isFollowing)) }
-                    _uiState.update { it.copy(followings = if (refresh) items else it.followings + items) }
+                    _uiState.update {
+                        it.copy(
+                            followings = if (refresh) overlaid else it.followings + overlaid,
+                            isLoadingFollowings = false
+                        )
+                    }
                     followingsCursor = res.nextCursor
+                }
+                .onFailure {
+                    _uiState.update { it.copy(isLoadingFollowings = false) }
                 }
         }
     }
 
     fun toggleFollow(clickedUser: FollowUser) {
+        val me = myId
+        if (clickedUser.id == me) return   // ✅ 자기 자신 보호
+
+        // ✅ 중복 요청 가드
+        if (!inFlightSet.add(clickedUser.id)) return
+        _uiState.update { it.copy(inFlight = it.inFlight + clickedUser.id) }
+
         val before = _uiState.value
         val wantFollow = !clickedUser.isFollowing
 
-        // 낙관 UI
+        // ✅ 낙관 UI
         _uiState.update { current ->
             current.copy(
                 followers = current.followers.map {
@@ -133,7 +214,7 @@ class FollowViewModel @Inject constructor(
             )
         }
 
-        // 메모리 즉시 반영 + 스탬프
+        // ✅ 메모리/스탬프
         SocialMemory.setFollow(clickedUser.id, wantFollow)
         followStampMap[clickedUser.id] = FollowStamp(wantFollow)
 
@@ -149,14 +230,39 @@ class FollowViewModel @Inject constructor(
                         isFollowing = wantFollow
                     )
                 )
-                // 성공 후에도 TTL 동안 스탬프 유지 (서버 지연 덮어쓰기 방지)
             }.onFailure {
                 // 롤백
                 _uiState.value = before
                 val rb = before.followers.find { it.id == clickedUser.id }?.isFollowing ?: false
                 SocialMemory.setFollow(clickedUser.id, rb)
                 followStampMap.remove(clickedUser.id)
+            }.also {
+                inFlightSet.remove(clickedUser.id)
+                _uiState.update { st -> st.copy(inFlight = st.inFlight - clickedUser.id) }
             }
         }
     }
+
+    private suspend fun fetchFollowUserUi(targetUserId: String): FollowUser {
+        val d = runCatching { userRepository.getUserProfile(targetUserId) }.getOrNull()
+        return if (d != null) {
+            FollowUser(
+                id = d.id,
+                profileImageUrl = d.profileImageUrl ?: "",
+                username = d.nickname,
+                bio = d.bio ?: "",
+                isFollowing = true
+            )
+        } else {
+            // 프로필 실패 시 최소 정보로라도 추가(이름은 나중에 갱신돼도 OK)
+            FollowUser(
+                id = targetUserId,
+                profileImageUrl = "",
+                username = "",
+                bio = "",
+                isFollowing = true
+            )
+        }
+    }
+
 }

@@ -15,5 +15,26 @@ fun DayOfWeek.toMyApiString(): String = when (this) {
     DayOfWeek.SUNDAY -> "SUN"
 }
 
-fun String?.toMyMinutesOrNull(): Long? = try { this?.let { Duration.parse(it).toMinutes() } } catch (_: Exception) { null }
-fun String?.toMyLocalTimeOrNull(): LocalTime? = try { this?.let { LocalTime.parse(it) } } catch (_: Exception) { null }
+fun String?.toMyMinutesOrNull(): Long? = try {
+    this?.let { Duration.parse(it).toMinutes() }
+} catch (_: Exception) {
+    null
+}
+
+fun String?.toMyLocalTimeOrNull(): LocalTime? = try {
+    this?.let { LocalTime.parse(it) }
+} catch (_: Exception) {
+    null
+}
+
+
+fun String.toDayOfWeekOrNull(): DayOfWeek? = when (this.uppercase()) {
+    "MON" -> DayOfWeek.MONDAY
+    "TUE" -> DayOfWeek.TUESDAY
+    "WED" -> DayOfWeek.WEDNESDAY
+    "THU" -> DayOfWeek.THURSDAY
+    "FRI" -> DayOfWeek.FRIDAY
+    "SAT" -> DayOfWeek.SATURDAY
+    "SUN" -> DayOfWeek.SUNDAY
+    else -> null
+}

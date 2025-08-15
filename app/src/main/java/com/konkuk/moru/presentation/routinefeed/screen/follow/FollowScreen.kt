@@ -127,6 +127,8 @@ private fun FollowScreenPreview() {
             onUserClick = { userId ->
                 // Preview에서는 클릭 시 userId를 출력하는 정도로 테스트
                 println("User clicked: $userId")
-            })
+            }
+
+        )
     }
 }

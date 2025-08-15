@@ -4,9 +4,12 @@ import com.konkuk.moru.data.dto.response.MyRoutine.MyPageResponse
 import com.konkuk.moru.data.dto.response.MyRoutine.MyRoutineDetailDto
 import com.konkuk.moru.data.dto.response.MyRoutine.MyRoutineScheduleDto
 import com.konkuk.moru.data.dto.response.MyRoutine.MyRoutineSummaryDto
+import com.konkuk.moru.data.dto.response.MyRoutine.UpdateScheduleRequest
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -41,4 +44,12 @@ interface MyRoutineService {
         @Path("routineId") routineId: String,
         @Path("schId") schId: String
     ): Response<Unit>
+
+    @PATCH("api/routines/{routineId}/schedules/{schId}")
+    suspend fun patchSchedule(
+        @Path("routineId") routineId: String,
+        @Path("schId") schId: String,
+        @Body body: UpdateScheduleRequest
+    ): List<MyRoutineScheduleDto>
+
 }

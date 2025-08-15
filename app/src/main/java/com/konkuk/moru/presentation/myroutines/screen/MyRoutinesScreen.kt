@@ -52,6 +52,7 @@ import com.konkuk.moru.ui.theme.moruFontLight
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
+import java.time.LocalTime
 
 enum class SortOption { BY_TIME, LATEST, POPULAR }
 
@@ -62,7 +63,14 @@ data class MyRoutinesUiState(
     val showDeleteDialog: Boolean = false,
     val showInfoTooltip: Boolean = false,
     val editingRoutineId: String? = null,
-    val showDeleteSuccessDialog: Boolean = false
+    val showDeleteSuccessDialog: Boolean = false,
+
+    // ✅ TimePicker 초기화용
+    val editingScheduleId: String? = null,
+    val initialTimeForSheet: LocalTime? = null,
+    val initialDaysForSheet: Set<DayOfWeek> = emptySet(),
+    val initialAlarmForSheet: Boolean = true,
+
 )
 
 /**
@@ -228,13 +236,13 @@ fun MyRoutinesScreen(
             sheetState = sheetState
         ) {
             TimePickerSheetContent(
+                initialTime = uiState.initialTimeForSheet,          // ✅ 추가
+                initialDays = uiState.initialDaysForSheet,          // ✅ 추가
+                initialAlarm = uiState.initialAlarmForSheet,        // ✅ 추가
                 onConfirm = { time, days, alarm ->
-                    // 🎨 2. 이제 컴파일러는 editingId가 null이 아님을 확신합니다.
                     viewModel.onConfirmTimeSet(editingId, time, days, alarm)
                     scope.launch { sheetState.hide() }.invokeOnCompletion {
-                        if (!sheetState.isVisible) {
-                            viewModel.closeTimePicker()
-                        }
+                        if (!sheetState.isVisible) viewModel.closeTimePicker()
                     }
                 }
             )

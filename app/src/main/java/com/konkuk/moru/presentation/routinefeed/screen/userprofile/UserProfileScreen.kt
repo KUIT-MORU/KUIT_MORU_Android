@@ -32,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -50,6 +51,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
@@ -71,14 +75,21 @@ fun UserProfileScreen(
     viewModel: UserProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    LaunchedEffect(uiState.userId) {
-        val key = "follow_result_${uiState.userId}"
-        val handle = navController.currentBackStackEntry?.savedStateHandle ?: return@LaunchedEffect
-        // 초기값은 현재 isFollowing
-        handle.getStateFlow(key, uiState.isFollowing).collect { isFollowing ->
-            viewModel.applyExternalFollow(isFollowing)
+    DisposableEffect(lifecycleOwner, uiState.userId) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                val key = "follow_result_${uiState.userId}"
+                val handle = navController.currentBackStackEntry?.savedStateHandle
+                val saved = handle?.remove<Boolean>(key) // 있으면 꺼내고 지움
+                if (saved != null) {
+                    viewModel.applyExternalFollow(saved)
+                }
+            }
         }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
     Scaffold(
         containerColor = Color.White,
@@ -252,7 +263,8 @@ private fun ProfileHeader(
                             textStyle = MORUTheme.typography.title_B_14,
                             modifier = Modifier
                                 .height(37.dp)
-                                .width(88.dp)
+                                .width(88.dp),
+                            enabled = !state.isFollowLoading
                         )
                         Spacer(Modifier.height(12.dp))
                     }

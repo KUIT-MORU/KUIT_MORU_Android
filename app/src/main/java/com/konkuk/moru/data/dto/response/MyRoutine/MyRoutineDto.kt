@@ -121,3 +121,11 @@ data class MyRoutineScheduleDto(
     val repeatType: String? = null,
     val daysToCreate: List<String>? = null
 )
+
+@Serializable
+data class UpdateScheduleRequest(
+    val repeatType: String = "CUSTOM",
+    val daysToCreate: List<String>,
+    val time: String,            // "HH:mm:ss"
+    val alarmEnabled: Boolean
+)

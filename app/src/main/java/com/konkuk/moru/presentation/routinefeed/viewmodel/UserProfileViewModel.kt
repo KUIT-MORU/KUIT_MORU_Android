@@ -39,6 +39,8 @@ class UserProfileViewModel @Inject constructor(
     private val likeStampMap = ConcurrentHashMap<String, LikeStamp>()
     private val PROTECT_TTL = 2.seconds
 
+    private val followGate = java.util.concurrent.atomic.AtomicBoolean(false)
+
     init {
         val userId: String? = savedStateHandle["userId"]
         viewModelScope.launch {
@@ -170,14 +172,13 @@ class UserProfileViewModel @Inject constructor(
     }
 
     fun toggleFollow() {
+        if (!followGate.compareAndSet(false, true)) return  // ✅ 동시 재진입 차단
         val before = _uiState.value
-        val targetUserId: String = before.userId ?: return
-        if (targetUserId.isBlank() || before.isMe == true) return
-        if (before.isFollowLoading) return
+        val targetUserId: String = before.userId ?: run { followGate.set(false); return }
+        if (targetUserId.isBlank() || before.isMe == true) { followGate.set(false); return }
 
         val wantFollow = !before.isFollowing
 
-        // 낙관 UI + 카운트
         _uiState.update {
             it.copy(
                 isFollowLoading = true,
@@ -186,23 +187,22 @@ class UserProfileViewModel @Inject constructor(
             )
         }
 
-        // 메모리 + 스탬프
         SocialMemory.setFollow(targetUserId, wantFollow)
         followStampMap[targetUserId] = FollowStamp(wantFollow)
 
         viewModelScope.launch {
             runCatching {
-                if (wantFollow) socialRepository.follow(targetUserId)
-                else socialRepository.unfollow(targetUserId)
+                if (wantFollow) socialRepository.follow(targetUserId) else socialRepository.unfollow(targetUserId)
             }.onSuccess {
                 _uiState.update { it.copy(isFollowLoading = false) }
                 RoutineSyncBus.publish(RoutineSyncBus.Event.Follow(userId = targetUserId, isFollowing = wantFollow))
-                // 성공 후 스탬프는 굳이 지우지 않아도 TTL 만료 시 무력화되지만, 바로 정리해도 OK
                 followStampMap.remove(targetUserId)
             }.onFailure {
                 _uiState.value = before.copy(isFollowLoading = false)
                 SocialMemory.setFollow(targetUserId, before.isFollowing)
                 followStampMap.remove(targetUserId)
+            }.also {
+                followGate.set(false)  // ✅ 해제
             }
         }
     }

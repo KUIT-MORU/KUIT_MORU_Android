@@ -3,6 +3,8 @@ package com.konkuk.moru.presentation.myroutines.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.konkuk.moru.data.dto.response.MyRoutine.MyRoutineUi
+import com.konkuk.moru.data.mapper.toDayOfWeekOrNull
+import com.konkuk.moru.data.mapper.toMyLocalTimeOrNull
 import com.konkuk.moru.domain.repository.MyRoutineRepository
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesUiState
 import com.konkuk.moru.presentation.myroutines.screen.SortOption
@@ -20,6 +22,7 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
@@ -83,39 +86,39 @@ class MyRoutinesViewModel @Inject constructor(
     fun deleteCheckedRoutines() {
         viewModelScope.launch {
             val targets = _sourceRoutines.value.filter { it.isChecked }.map { it.routineId }
-            targets.forEach { id -> repo.deleteRoutine(id) }
+
+            val succeed = mutableListOf<String>()
+            val failed = mutableListOf<String>()
+
+            for (id in targets) {
+                val ok = repo.deleteRoutineSafe(id)
+                if (ok) succeed += id else failed += id
+            }
+
+            // 성공한 것만 즉시 제거(낙관적)
+            if (succeed.isNotEmpty()) {
+                _sourceRoutines.update { list -> list.filterNot { it.routineId in succeed } }
+            }
+
+            // UI 피드백
             _uiState.update {
                 it.copy(
                     isDeleteMode = false,
                     showDeleteDialog = false,
-                    showDeleteSuccessDialog = true
+                    showDeleteSuccessDialog = failed.isEmpty()
                 )
             }
+
+            // 실패 안내 토스트/스낵바가 필요하면 여기에 호출
+            if (failed.isNotEmpty()) {
+                // e.g. sendEvent(Snackbar("일부 루틴을 삭제하지 못했습니다. 잠시 후 다시 시도해 주세요."))
+            }
+
+            // 최신 서버 상태 재조회
             refreshRoutines()
         }
     }
 
-    fun openTimePicker(routineId: String) {
-        _uiState.update { it.copy(editingRoutineId = routineId) }
-    }
-
-    fun closeTimePicker() {
-        _uiState.update { it.copy(editingRoutineId = null) }
-    }
-
-    fun onConfirmTimeSet(routineId: String, time: LocalTime, days: Set<DayOfWeek>, alarm: Boolean) {
-        _sourceRoutines.update { list ->
-            list.map {
-                if (it.routineId == routineId) it.copy(
-                    scheduledTime = time,
-                    scheduledDays = days,
-                    isAlarmEnabled = alarm
-                )
-                else it
-            }
-        }
-        closeTimePicker()
-    }
 
     fun onShowInfoTooltip() {
         _uiState.update { it.copy(showInfoTooltip = true) }
@@ -172,8 +175,8 @@ class MyRoutinesViewModel @Inject constructor(
                 )
                 when (sortType) {
                     "POPULAR" -> dayFiltered.sortedByDescending { it.likes }
-                    "LATEST"  -> dayFiltered.sortedByDescending { it.createdAt } // ISO-8601 기준
-                    else      -> dayFiltered.sortedBy { it.scheduledTime ?: LocalTime.MAX }
+                    "LATEST" -> dayFiltered.sortedByDescending { it.createdAt } // ISO-8601 기준
+                    else -> dayFiltered.sortedBy { it.scheduledTime ?: LocalTime.MAX }
                 }
             }
         } catch (e: Exception) {
@@ -195,57 +198,72 @@ class MyRoutinesViewModel @Inject constructor(
 
     fun refreshRoutines() = loadRoutines()
 
-    // -------- 프리뷰용 더미 --------
-    @Suppress("unused")
-    constructor() : this(
-        repo = object : MyRoutineRepository {
-            override suspend fun getMyRoutines(
-                sortType: String,
-                dayOfWeek: DayOfWeek?,
-                page: Int,
-                size: Int
-            ): List<MyRoutineUi> {
-                val mine = com.konkuk.moru.data.model.DummyData.feedRoutines
-                    .filter { it.authorId == com.konkuk.moru.data.model.DummyData.MY_USER_ID }
-                    .map {
-                        MyRoutineUi(
-                            routineId = it.routineId,
-                            title = it.title,
-                            imageUrl = it.imageUrl,
-                            tags = it.tags,
-                            likes = it.likes,
-                            isLiked = it.isLiked,
-                            isRunning = it.isRunning,
-                            scheduledTime = it.scheduledTime,
-                            scheduledDays = it.scheduledDays,
-                            isAlarmEnabled = false,
-                            isChecked = false,
-                            authorId = it.authorId
-                        )
-                    }
 
-                // ✅ 요일 교집합(선택 시에만)
-                val filtered = if (dayOfWeek != null) {
-                    mine.filter { it.scheduledDays.contains(dayOfWeek) }
-                } else mine
+    private val HH_MM_SS = DateTimeFormatter.ofPattern("HH:mm:ss")
 
-                // ✅ 정렬 적용
-                return when (sortType) {
-                    "POPULAR" -> filtered.sortedByDescending { it.likes }
-                    "LATEST" -> filtered.reversed() // 더미라 createdAt 없어서 역순으로 대체
-                    else -> filtered.sortedBy { it.scheduledTime ?: java.time.LocalTime.MAX }
+
+    //스케줄 관련 로직
+    fun openTimePicker(routineId: String) {
+        viewModelScope.launch {
+            // 서버 스케줄 조회
+            val schedules = repo.getSchedules(routineId)
+
+            // 초기값 구성
+            val initTime = schedules.firstOrNull()?.time?.toMyLocalTimeOrNull()
+            val initDays = schedules.mapNotNull { it.dayOfWeek.toDayOfWeekOrNull() }.toSet()
+            val initAlarm = schedules.any { it.alarmEnabled }
+            val firstSchId = schedules.firstOrNull()?.id
+
+            _uiState.update {
+                it.copy(
+                    editingRoutineId = routineId,
+                    editingScheduleId = firstSchId,
+                    initialTimeForSheet = initTime,
+                    initialDaysForSheet = initDays,
+                    initialAlarmForSheet = initAlarm
+                )
+            }
+        }
+    }
+
+    fun closeTimePicker() {
+        _uiState.update {
+            it.copy(
+                editingRoutineId = null,
+                editingScheduleId = null,
+                initialTimeForSheet = null,
+                initialDaysForSheet = emptySet(),
+                initialAlarmForSheet = true
+            )
+        }
+    }
+
+    fun onConfirmTimeSet(routineId: String, time: LocalTime, days: Set<DayOfWeek>, alarm: Boolean) {
+        viewModelScope.launch {
+            // 서버 PATCH (스케줄이 하나라도 있을 때)
+            val schId = _uiState.value.editingScheduleId
+            if (schId != null) {
+                repo.updateSchedule(
+                    routineId = routineId,
+                    schId = schId,
+                    time = time.format(HH_MM_SS),
+                    days = days,
+                    alarm = alarm
+                )
+            }
+            // 로컬 UI 갱신
+            _sourceRoutines.update { list ->
+                list.map {
+                    if (it.routineId == routineId) it.copy(
+                        scheduledTime = time,
+                        scheduledDays = days,
+                        isAlarmEnabled = alarm
+                    ) else it
                 }
             }
-
-            override suspend fun getRoutineDetail(routineId: String) =
-                throw UnsupportedOperationException("Preview only")
-
-            override suspend fun deleteRoutine(routineId: String) = Unit
-            override suspend fun getSchedules(routineId: String) =
-                emptyList<com.konkuk.moru.domain.repository.MyRoutineSchedule>()
-
-            override suspend fun deleteAllSchedules(routineId: String) = Unit
-            override suspend fun deleteSchedule(routineId: String, scheduleId: String) = Unit
+            closeTimePicker()
         }
-    )
+    }
+
+
 }
