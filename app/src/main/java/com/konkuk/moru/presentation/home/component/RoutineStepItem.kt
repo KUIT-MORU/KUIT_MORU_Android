@@ -69,7 +69,7 @@ fun RoutineStepItem(
                     checked = isChecked,
                     onCheckedChange = onCheckedChange,
                     modifier = Modifier
-                        .scale(scaleX = 0.7f, scaleY = 0.6f), // 가로 70%, 세로 50%로 슬림하게
+                        .scale(scaleX = 0.7f, scaleY = 0.7f), // 가로 70%, 세로 50%로 슬림하게
                     colors = SwitchDefaults.colors(
                         uncheckedThumbColor = colors.mediumGray,
                         uncheckedTrackColor = colors.lightGray,
