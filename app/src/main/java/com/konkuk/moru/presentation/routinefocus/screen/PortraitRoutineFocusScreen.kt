@@ -2,7 +2,6 @@ package com.konkuk.moru.presentation.routinefocus.screen
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -19,14 +18,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,10 +57,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
-import com.konkuk.moru.presentation.routinefocus.component.RoutineTimelineItem
-import com.konkuk.moru.presentation.routinefocus.component.SettingSwitchGroup
-import com.konkuk.moru.presentation.routinefocus.component.ScreenBlockPopup
 import com.konkuk.moru.presentation.routinefocus.component.FocusOnboardingPopup
+import com.konkuk.moru.presentation.routinefocus.component.RoutineTimelineItem
+import com.konkuk.moru.presentation.routinefocus.component.ScreenBlockPopup
+import com.konkuk.moru.presentation.routinefocus.component.SettingSwitchGroup
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
 import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
@@ -405,7 +402,7 @@ fun PortraitRoutineFocusScreen(
                             }
                     )
                 }
-
+                Spacer(modifier = Modifier.height(16.dp))
                 // 루틴명
                 Text(
                     text = routineTitle,
@@ -450,15 +447,15 @@ fun PortraitRoutineFocusScreen(
                 // 타임라인과 다음 버튼을 포함하는 Row
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxWidth()
+                        .height(275.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     // 타임라인 영역 - weight를 사용해서 남은 공간 모두 사용
                     Column(
-                        modifier = Modifier
-                            .weight(1f) // 남은 공간 모두 사용
-                            .height(275.dp)
-                            .padding(top = 18.dp)
+                        verticalArrangement = Arrangement.Center, // 선택된 아이템들을 세로 중앙 정렬
+                        horizontalAlignment = Alignment.Start
                     ) {
                         routineItems.forEachIndexed { rawIndex, (title, time) ->
                             val index = rawIndex + 1
@@ -481,7 +478,10 @@ fun PortraitRoutineFocusScreen(
                             .size(width = 100.dp, height = 123.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
                             // 마지막 step 도달 조건
                             val isFinalStep = currentstep == routineItems.size
 
@@ -791,6 +791,7 @@ fun PortraitRoutineFocusScreen(
                         .padding(5.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Spacer(modifier=Modifier.height(14.07.dp))
                     Text(
                         text = "루틴 종료!",
                         style = typography.title_B_20.copy(fontWeight = FontWeight.SemiBold),
@@ -865,13 +866,13 @@ fun PortraitRoutineFocusScreen(
                             .clickable(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
-                                                            ) {
-                                    showResultPopup = false
-                                    // 집중 루틴 종료
-                                    focusViewModel.endFocusRoutine()
-                                    // routineId를 String으로 변환하여 전달
-                                    onFinishConfirmed(routineId.toString())
-                                }
+                            ) {
+                                showResultPopup = false
+                                // 집중 루틴 종료
+                                focusViewModel.endFocusRoutine()
+                                // routineId를 String으로 변환하여 전달
+                                onFinishConfirmed(routineId.toString())
+                            }
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -946,13 +947,13 @@ fun PortraitRoutineFocusScreen(
         if (focusViewModel.isOnboardingPopupVisible) {
             FocusOnboardingPopup(
                 selectedApps = focusViewModel.selectedApps,
-                                    onAppClick = { app ->
-                        // 허용된 앱 실행 플래그 설정
-                        focusViewModel.setPermittedAppLaunch(true)
-                        // 실제 앱 실행
-                        launchApp(context, app.packageName)
-                        focusViewModel.hideOnboardingPopup()
-                    },
+                onAppClick = { app ->
+                    // 허용된 앱 실행 플래그 설정
+                    focusViewModel.setPermittedAppLaunch(true)
+                    // 실제 앱 실행
+                    launchApp(context, app.packageName)
+                    focusViewModel.hideOnboardingPopup()
+                },
                 onOutsideClick = {
                     focusViewModel.hideOnboardingPopup()
                 }
