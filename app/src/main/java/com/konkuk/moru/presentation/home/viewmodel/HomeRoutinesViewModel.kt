@@ -46,10 +46,13 @@ class HomeRoutinesViewModel @Inject constructor(
 
     fun loadTodayRoutines(page: Int = 0, size: Int = 20) {
         Log.d(TAG, "🔄 loadTodayRoutines 호출됨: page=$page, size=$size")
+        Log.d(TAG, "🌐 네트워크 연결 테스트 시작...")
+        
         viewModelScope.launch {
             Log.d(TAG, "🔄 loadTodayRoutines 코루틴 시작")
-            runCatching { repo.getMyRoutinesToday(page, size) }
-                .onSuccess { pageRes ->
+            try {
+                Log.d(TAG, "🔗 서버 연결 시도 중...")
+                val pageRes = repo.getMyRoutinesToday(page, size)
                     Log.d(TAG, "✅ loadTodayRoutines 성공!")
                     Log.d(TAG, "loadTodayRoutines success: " +
                             "total=${pageRes.totalElements}, page=${pageRes.number}, size=${pageRes.size}, " +
@@ -59,27 +62,44 @@ class HomeRoutinesViewModel @Inject constructor(
 
                     _serverRoutines.value = pageRes.content.map { it.toDomain() }
                     Log.d(TAG, "✅ _serverRoutines StateFlow 업데이트 완료")
-                }
-                .onFailure { e ->
+            } catch (e: Exception) {
                     Log.e(TAG, "❌ loadTodayRoutines 실패!", e)
-                    if (e is retrofit2.HttpException) {
+                Log.e(TAG, "🔍 예외 타입: ${e.javaClass.simpleName}")
+                Log.e(TAG, "🔍 예외 메시지: ${e.message}")
+                
+                when (e) {
+                    is retrofit2.HttpException -> {
                         val code = e.code()
                         val err = e.response()?.errorBody()?.string()
-                        android.util.Log.e("HomeRoutinesVM", "HTTP $code errorBody=$err")
+                        Log.e(TAG, "HTTP $code errorBody=$err")
                         
-                        // HTTP 500 오류 시 사용자에게 친화적인 메시지
                         if (code == 500) {
                             Log.e(TAG, "🚨 서버 내부 오류 (500) - 서버 점검 중일 수 있습니다")
-                            Log.d(TAG, "💡 서버 점검 완료까지 잠시 기다려주세요")
+                        } else if (code == 404) {
+                            Log.e(TAG, "🚨 서버 엔드포인트를 찾을 수 없습니다 (404)")
+                        } else if (code == 403) {
+                            Log.e(TAG, "🚨 접근 권한이 없습니다 (403)")
                         }
-                    } else {
-                        android.util.Log.e(TAG, "loadTodayRoutines failed", e)
+                    }
+                    is java.net.SocketTimeoutException -> {
+                        Log.e(TAG, "🚨 네트워크 타임아웃 발생")
+                    }
+                    is java.net.UnknownHostException -> {
+                        Log.e(TAG, "🚨 서버 호스트를 찾을 수 없습니다")
+                    }
+                    is javax.net.ssl.SSLHandshakeException -> {
+                        Log.e(TAG, "🚨 SSL 인증서 문제 발생")
+                    }
+                    is java.net.ConnectException -> {
+                        Log.e(TAG, "🚨 서버 연결 실패")
+                    }
+                    else -> {
+                        Log.e(TAG, "🚨 기타 네트워크 오류: ${e.javaClass.simpleName}")
+                    }
                     }
                     
                     // 서버 오류 시 빈 리스트로 설정 (UI가 깨지지 않도록)
                     _serverRoutines.value = emptyList()
-                    
-                    // TODO: 향후 로컬 캐시 데이터를 사용하도록 개선
                     Log.d(TAG, "💡 서버 오류로 인해 빈 리스트로 설정됨. 서버 상태를 확인해주세요.")
                 }
         }
