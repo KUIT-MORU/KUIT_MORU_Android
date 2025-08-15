@@ -153,7 +153,7 @@ fun LandscapeRoutineFocusScreen(
         Row(
             modifier = Modifier.fillMaxSize()
         ) {
-            // 왼쪽 영역: 타이머와 컨트롤
+            // 왼쪽 영역: 타임라인
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -161,7 +161,7 @@ fun LandscapeRoutineFocusScreen(
                     .background(if (isDarkMode) colors.black else Color.White)
                     .padding(16.dp)
             ) {
-                // Top Bar: X 버튼, 설정 버튼
+                // Top Bar: X 버튼, 루틴명, 설정 버튼
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -183,6 +183,14 @@ fun LandscapeRoutineFocusScreen(
                                 onDismiss()
                             }
                     )
+                    
+                    // 루틴명
+                    Text(
+                        text = routineTitle,
+                        style = typography.desc_M_16,
+                        color = if (isDarkMode) Color.White else colors.black
+                    )
+                    
                     // 설정 버튼
                     Icon(
                         painter = painterResource(id = R.drawable.ic_gear),
@@ -196,188 +204,19 @@ fun LandscapeRoutineFocusScreen(
                     )
                 }
 
-                // 루틴명
-                Text(
-                    text = routineTitle,
-                    style = typography.desc_M_16,
-                    color = if (isDarkMode) Color.White else colors.black,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                // 현재 루틴 태스크 이름
-                Text(
-                    text = currentTitle,
-                    style = typography.title_B_20,
-                    color = if (isDarkMode && !isTimeout) colors.limeGreen else if (isDarkMode && isTimeout) Color.White else colors.black,
-                    modifier = Modifier.padding(bottom = 24.dp)
-                )
-
-                // 중앙 타이머
-                Text(
-                    text = formatTime(elapsedSeconds),
-                    fontSize = 48.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (!isDarkMode && isTimeout) colors.oliveGreen else if (isDarkMode) Color.White else Color.Black,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentSize(Alignment.Center)
-                        .padding(bottom = 16.dp)
-                )
-
-                // 정지/재생 버튼
-                Icon(
-                    painter = painterResource(id = if (!isUserPaused) R.drawable.ic_pause else R.drawable.baseline_play_arrow_24),
-                    contentDescription = if (!isUserPaused) "정지" else "시작",
-                    tint = if (isDarkMode) Color.White else colors.black,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentSize(Alignment.Center)
-                        .size(40.dp)
-                        .clickable {
-                            viewModel.togglePause()
-                        }
-                        .padding(bottom = 24.dp)
-                )
-
-                // 다음 버튼
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                ) {
-                    // 마지막 step 도달 조건
-                    val isFinalStep = currentstep == routineItems.size
-
-                    // 다음 버튼
-                    Box(
-                        modifier = Modifier.size(60.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(id = if (isFinalStep) R.drawable.enable_check_icon else R.drawable.ic_next_in_circle),
-                            contentDescription = if (isFinalStep) "완료됨" else "다음 루틴으로",
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clickable(
-                                    indication = null,
-                                    interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-                                ) {
-                                    // 다음 step으로 가는 기능
-                                    if (!isFinalStep) {
-                                        val nextStepTimeString =
-                                            routineItems.getOrNull(currentstep)?.second ?: "0m"
-                                        viewModel.nextStep(nextStepTimeString)
-                                        viewModel.resumeTimer()
-                                    } else {
-                                        viewModel.pauseTimer()
-                                        showFinishPopup = true
-                                    }
-                                },
-                            tint = if (!isDarkMode && isTimeout) colors.oliveGreen else if (!isDarkMode && !isTimeout) colors.limeGreen else Color.White
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // 버튼 아래 텍스트
-                    when {
-                        isFinalStep -> {
-                            Text(
-                                text = "FINISH !",
-                                style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
-                                color = when {
-                                    isDarkMode -> Color.White
-                                    isFinalStep && isTimeout -> colors.oliveGreen
-                                    else -> colors.black
-                                }
-                            )
-                        }
-                        isTimeout -> {
-                            Text(
-                                text = "NEXT STEP",
-                                style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
-                                color = if (isDarkMode) Color.White else colors.oliveGreen
-                            )
-                        }
-                        else -> {
-                            Text(
-                                text = "NEXT STEP",
-                                style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
-                                color = if (isDarkMode) Color.White else colors.black
-                            )
-                        }
-                    }
-                }
-
-                // 하단 메뉴 버튼
+                // 총 시간 표시
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.menu_icon),
-                        contentDescription = "메뉴 아이콘",
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clickable {
-                                showAppIcons = !showAppIcons
-                            },
-                        colorFilter = ColorFilter.tint(if (isDarkMode) colors.mediumGray else colors.black)
-                    )
-                    Image(
-                        painter = painterResource(id = R.drawable.chatting_icon),
-                        contentDescription = "채팅 아이콘",
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clickable {
-                                showMemoPad = !showMemoPad
-                            },
-                        colorFilter = ColorFilter.tint(if (isDarkMode) colors.mediumGray else colors.black)
-                    )
-                }
-
-                // TOTAL 영역
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (isDarkMode) Color(0xFF383838) else colors.black)
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "TOTAL",
-                        style = typography.body_SB_16,
-                        color = colors.limeGreen
-                    )
                     Text(
                         text = formatTotalTime(totalElapsedSeconds + elapsedSeconds),
                         style = typography.body_SB_16,
                         color = colors.limeGreen
                     )
                 }
-            }
-
-            // 오른쪽 영역: 타임라인
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .background(if (isDarkMode) colors.black else Color.White)
-                    .padding(16.dp)
-            ) {
-                // 타임라인 제목
-                Text(
-                    text = "루틴 진행도",
-                    style = typography.title_B_20,
-                    color = if (isDarkMode) Color.White else colors.black,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
 
                 // 타임라인 아이템들
                 Column(
@@ -399,50 +238,221 @@ fun LandscapeRoutineFocusScreen(
                         )
                     }
                 }
+            }
 
-                // 앱 아이콘 (메모장보다 위에)
-                if (showAppIcons) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(88.dp)
-                            .background(if (isDarkMode) colors.black else Color.White)
-                    ) {
-                        Row(
+            // 중앙 영역: 타이머
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .background(if (isDarkMode) colors.black else Color.White)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                // 중앙 타이머
+                Text(
+                    text = formatTime(elapsedSeconds),
+                    fontSize = 48.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (!isDarkMode && isTimeout) colors.oliveGreen else if (isDarkMode) Color.White else Color.Black,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                // 정지/재생 버튼
+                Icon(
+                    painter = painterResource(id = if (!isUserPaused) R.drawable.ic_pause else R.drawable.baseline_play_arrow_24),
+                    contentDescription = if (!isUserPaused) "정지" else "시작",
+                    tint = if (isDarkMode) Color.White else colors.black,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clickable {
+                            viewModel.togglePause()
+                        }
+                )
+            }
+
+                         // 오른쪽 영역: NEXT STEP 버튼과 하단 메뉴
+             Column(
+                 modifier = Modifier
+                     .weight(1f)
+                     .fillMaxHeight()
+                     .background(if (isDarkMode) colors.black else Color.White)
+                     .padding(16.dp),
+                 horizontalAlignment = Alignment.CenterHorizontally,
+                 verticalArrangement = Arrangement.SpaceBetween
+             ) {
+                 // 상단 여백
+                 Spacer(modifier = Modifier.height(60.dp))
+                 
+                 // 다음 버튼
+                 Column(
+                     horizontalAlignment = Alignment.CenterHorizontally
+                 ) {
+                     // 마지막 step 도달 조건
+                     val isFinalStep = currentstep == routineItems.size
+
+                     // 다음 버튼
+                     Box(
+                         modifier = Modifier.size(60.dp),
+                         contentAlignment = Alignment.Center
+                     ) {
+                         Icon(
+                             painter = painterResource(id = if (isFinalStep) R.drawable.enable_check_icon else R.drawable.ic_next_in_circle),
+                             contentDescription = if (isFinalStep) "완료됨" else "다음 루틴으로",
+                             modifier = Modifier
+                                 .fillMaxSize()
+                                 .clickable(
+                                     indication = null,
+                                     interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+                                 ) {
+                                     // 다음 step으로 가는 기능
+                                     if (!isFinalStep) {
+                                         val nextStepTimeString =
+                                             routineItems.getOrNull(currentstep)?.second ?: "0m"
+                                         viewModel.nextStep(nextStepTimeString)
+                                         viewModel.resumeTimer()
+                                     } else {
+                                         viewModel.pauseTimer()
+                                         showFinishPopup = true
+                                     }
+                                 },
+                             tint = if (!isDarkMode && isTimeout) colors.oliveGreen else if (!isDarkMode && !isTimeout) colors.limeGreen else Color.White
+                         )
+                     }
+
+                     Spacer(modifier = Modifier.height(8.dp))
+
+                     // 버튼 아래 텍스트
+                     when {
+                         isFinalStep -> {
+                             Text(
+                                 text = "FINISH !",
+                                 style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
+                                 color = when {
+                                     isDarkMode -> Color.White
+                                     isFinalStep && isTimeout -> colors.oliveGreen
+                                     else -> colors.black
+                                 },
+                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                             )
+                         }
+                         isTimeout -> {
+                             Text(
+                                 text = "NEXT STEP",
+                                 style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
+                                 color = if (isDarkMode) Color.White else colors.oliveGreen,
+                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                             )
+                         }
+                         else -> {
+                             Text(
+                                 text = "NEXT STEP",
+                                 style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold),
+                                 color = if (isDarkMode) Color.White else colors.black,
+                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                             )
+                         }
+                     }
+                 }
+
+                // 하단 영역
+                Column {
+                    // 앱 아이콘 (메모장보다 위에)
+                    if (showAppIcons) {
+                        Box(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 16.dp, vertical = 20.dp),
-                            horizontalArrangement = Arrangement.spacedBy(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .fillMaxWidth()
+                                .height(88.dp)
+                                .background(if (isDarkMode) colors.black else Color.White)
                         ) {
-                            repeat(3) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.ic_default),
-                                    contentDescription = "사용앱 ${it + 1}",
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .clip(RoundedCornerShape(6.dp))
-                                )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 16.dp, vertical = 20.dp),
+                                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                repeat(3) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.ic_default),
+                                        contentDescription = "사용앱 ${it + 1}",
+                                        modifier = Modifier
+                                            .size(48.dp)
+                                            .clip(RoundedCornerShape(6.dp))
+                                    )
+                                }
                             }
                         }
                     }
-                }
 
-                // 메모장
-                if (showMemoPad) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Box(
+                    // 메모장
+                    if (showMemoPad) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                                .background(colors.veryLightGray)
+                                .padding(16.dp)
+                        ) {
+                            Text(
+                                text = "메모 하기...",
+                                style = typography.desc_M_14,
+                                color = colors.darkGray
+                            )
+                        }
+                    }
+
+                    // 하단 메뉴 버튼
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(120.dp)
-                            .background(colors.veryLightGray)
-                            .padding(16.dp)
+                            .padding(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.menu_icon),
+                            contentDescription = "메뉴 아이콘",
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clickable {
+                                    showAppIcons = !showAppIcons
+                                },
+                            colorFilter = ColorFilter.tint(if (isDarkMode) colors.mediumGray else colors.black)
+                        )
+                        Image(
+                            painter = painterResource(id = R.drawable.chatting_icon),
+                            contentDescription = "채팅 아이콘",
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clickable {
+                                    showMemoPad = !showMemoPad
+                                },
+                            colorFilter = ColorFilter.tint(if (isDarkMode) colors.mediumGray else colors.black)
+                        )
+                    }
+
+                    // TOTAL 영역
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isDarkMode) Color(0xFF383838) else colors.black)
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "메모 하기...",
-                            style = typography.desc_M_14,
-                            color = colors.darkGray
+                            text = "TOTAL",
+                            style = typography.body_SB_16,
+                            color = colors.limeGreen
+                        )
+                        Text(
+                            text = formatTotalTime(totalElapsedSeconds + elapsedSeconds),
+                            style = typography.body_SB_16,
+                            color = colors.limeGreen
                         )
                     }
                 }
@@ -687,10 +697,10 @@ private fun LandscapeRoutineFocusScreenPreview() {
     val dummySharedViewModel = remember { SharedRoutineViewModel() }
 
     val dummySteps = listOf(
-        RoutineStepData("샤워하기", 3, true),
-        RoutineStepData("청소하기", 10, true),
-        RoutineStepData("밥먹기", 7, true),
-        RoutineStepData("옷갈아입기", 5, true)
+        RoutineStepData("샤워하기", 3, true), // 3분
+        RoutineStepData("청소하기", 10, true), // 10분
+        RoutineStepData("밥먹기", 7, true), // 7분
+        RoutineStepData("옷갈아입기", 5, true) // 5분
     )
 
     dummySharedViewModel.setRoutineCategory("주말 아침 루틴")

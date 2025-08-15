@@ -354,7 +354,7 @@ fun PortraitRoutineFocusScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 24.dp, bottom = 133.dp) // 하단 영역 제외
+                    .padding(bottom = 133.dp) // 하단 영역만 제외
                     .background(colors.limeGreen.copy(alpha = 0.5f))
                     .zIndex(1f)
             )
@@ -975,10 +975,10 @@ private fun PortraitRoutineFocusScreenPreview() {
     val dummySharedViewModel = remember { SharedRoutineViewModel() }
 
     val dummySteps = listOf(
-        RoutineStepData("샤워하기", 3, true),
-        RoutineStepData("청소하기", 10, true),
-        RoutineStepData("밥먹기", 7, true),
-        RoutineStepData("옷갈아입기", 5, true)
+        RoutineStepData("샤워하기", 1, true), // 3분
+        RoutineStepData("청소하기", 10, true), // 10분
+        RoutineStepData("밥먹기", 7, true), // 7분
+        RoutineStepData("옷갈아입기", 5, true) // 5분
     )
 
     val dummyApps = listOf(
