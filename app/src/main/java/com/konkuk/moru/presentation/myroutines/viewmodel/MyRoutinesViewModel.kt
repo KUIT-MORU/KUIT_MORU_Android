@@ -22,12 +22,11 @@ import java.time.LocalTime
 import java.time.ZoneId
 import javax.inject.Inject
 
-@HiltViewModel // [추가]
-class MyRoutinesViewModel @Inject constructor( // [추가] Hilt로 레포 주입
+@HiltViewModel
+class MyRoutinesViewModel @Inject constructor(
     private val repo: MyRoutineRepository
 ) : ViewModel() {
 
-    // [유지] 서버에서 내려받은 "내 루틴(My*)" 전용 모델
     private val _sourceRoutines = MutableStateFlow<List<MyRoutineUi>>(emptyList())
     val routinesToDisplay: StateFlow<List<MyRoutineUi>> =
         _sourceRoutines.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -36,10 +35,7 @@ class MyRoutinesViewModel @Inject constructor( // [추가] Hilt로 레포 주입
     val uiState: StateFlow<MyRoutinesUiState> = _uiState.asStateFlow()
 
     init {
-        // 최초 로드
         refreshRoutines()
-
-        // [추가] 정렬 옵션/요일이 바뀔 때마다 서버 재조회
         viewModelScope.launch {
             uiState
                 .map { it.selectedSortOption to it.selectedDay }
@@ -48,9 +44,8 @@ class MyRoutinesViewModel @Inject constructor( // [추가] Hilt로 레포 주입
         }
     }
 
-    // --- 이벤트 핸들러 ---
-
     fun onSortOptionSelected(option: SortOption) {
+        // ✅ 요일 선택값은 건드리지 않음 (정렬과 독립)
         _uiState.update { it.copy(selectedSortOption = option) }
     }
 
@@ -62,9 +57,7 @@ class MyRoutinesViewModel @Inject constructor( // [추가] Hilt로 레포 주입
     fun onTrashClick() {
         val currentMode = _uiState.value.isDeleteMode
         _uiState.update { it.copy(isDeleteMode = !currentMode) }
-        if (currentMode) {
-            uncheckAllRoutines()
-        }
+        if (currentMode) uncheckAllRoutines()
     }
 
     fun onDismissInfoTooltip() {
@@ -72,15 +65,11 @@ class MyRoutinesViewModel @Inject constructor( // [추가] Hilt로 레포 주입
     }
 
     fun onCheckRoutine(routineId: String, isChecked: Boolean) {
-        _sourceRoutines.update { currentList ->
-            currentList.map { if (it.routineId == routineId) it.copy(isChecked = isChecked) else it }
-        }
+        _sourceRoutines.update { list -> list.map { if (it.routineId == routineId) it.copy(isChecked = isChecked) else it } }
     }
 
     fun showDeleteDialog() {
-        if (routinesToDisplay.value.any { it.isChecked }) {
-            _uiState.update { it.copy(showDeleteDialog = true) }
-        }
+        if (routinesToDisplay.value.any { it.isChecked }) _uiState.update { it.copy(showDeleteDialog = true) }
     }
 
     fun dismissDeleteDialog() {
@@ -93,7 +82,6 @@ class MyRoutinesViewModel @Inject constructor( // [추가] Hilt로 레포 주입
 
     fun deleteCheckedRoutines() {
         viewModelScope.launch {
-            // [변경] 서버 삭제 호출 후 재조회
             val targets = _sourceRoutines.value.filter { it.isChecked }.map { it.routineId }
             targets.forEach { id -> repo.deleteRoutine(id) }
             _uiState.update {
@@ -116,43 +104,45 @@ class MyRoutinesViewModel @Inject constructor( // [추가] Hilt로 레포 주입
     }
 
     fun onConfirmTimeSet(routineId: String, time: LocalTime, days: Set<DayOfWeek>, alarm: Boolean) {
-        // [보류] 스케줄 생성/수정 API 스펙 나오면 여기서 repo 호출 추가
-        _sourceRoutines.update { currentList ->
-            currentList.map {
+        _sourceRoutines.update { list ->
+            list.map {
                 if (it.routineId == routineId) it.copy(
                     scheduledTime = time,
                     scheduledDays = days,
                     isAlarmEnabled = alarm
-                ) else it
+                )
+                else it
             }
         }
         closeTimePicker()
     }
 
+    fun onShowInfoTooltip() {
+        _uiState.update { it.copy(showInfoTooltip = true) }
+    }
+
     fun onLikeClick(routineId: String) {
-        // [임시] 좋아요 토글 API 스펙 없어서 낙관적 UI만
-        _sourceRoutines.update { currentList ->
-            currentList.map { routine ->
-                if (routine.routineId == routineId) {
-                    routine.copy(
-                        isLiked = !routine.isLiked,
-                        likes = if (routine.isLiked) routine.likes - 1 else routine.likes + 1
+        _sourceRoutines.update { list ->
+            list.map { r ->
+                if (r.routineId == routineId)
+                    r.copy(
+                        isLiked = !r.isLiked,
+                        likes = if (r.isLiked) r.likes - 1 else r.likes + 1
                     )
-                } else routine
+                else r
             }
         }
     }
 
-    fun onShowInfoTooltip() { _uiState.update { it.copy(showInfoTooltip = true) } }
-
     private fun uncheckAllRoutines() {
-        _sourceRoutines.update { currentList ->
-            currentList.map { it.copy(isChecked = false) }
-        }
+        _sourceRoutines.update { list -> list.map { it.copy(isChecked = false) } }
     }
 
-    // [변경] DummyData 제거 → 서버 호출
-    // [변경] DummyData 제거 → 서버 호출
+    /** ✅ 요구사항 반영:
+     *  - dayParam = 사용자가 탭에서 고른 요일(없으면 null)
+     *  - 항상 sortType과 함께 서버로 전달 → 서버가 정렬 + (선택시)요일 필터를 함께 적용
+     *  - 서버가 TIME+null을 아직 막아 에러면, 오늘 요일로 1회 폴백
+     */
     private suspend fun fetchFromServer() {
         val state = _uiState.value
         val sortType = when (state.selectedSortOption) {
@@ -160,42 +150,49 @@ class MyRoutinesViewModel @Inject constructor( // [추가] Hilt로 레포 주입
             SortOption.LATEST -> "LATEST"
             SortOption.POPULAR -> "POPULAR"
         }
+        val dayParam: DayOfWeek? = state.selectedDay // ✅ sortType과 무관하게 그대로 전달
 
-        // [변경] TIME인데 선택 요일이 없으면 '오늘 요일'로 기본 세팅
-        val dayForServer = if (sortType == "TIME") {
-            state.selectedDay ?: LocalDate.now(ZoneId.systemDefault()).dayOfWeek
-        } else null
-
-        val result = repo.getMyRoutines(
-            sortType = sortType,
-            dayOfWeek = dayForServer,  // [변경]
-            page = 0,
-            size = 50
-        )
-        _sourceRoutines.value = result
-    }
-
-    fun loadRoutines() {
-        viewModelScope.launch {
-            fetchFromServer() // [변경] 더미 삭제 → 서버로 대체
+        try {
+            val result = repo.getMyRoutines(
+                sortType = sortType,
+                dayOfWeek = dayParam,
+                page = 0,
+                size = 50
+            )
+            _sourceRoutines.value = result
+        } catch (e: Exception) {
+            val needFallback = (sortType == "TIME" && dayParam == null)
+            if (needFallback) {
+                val today = LocalDate.now(ZoneId.systemDefault()).dayOfWeek
+                val fallback = repo.getMyRoutines(
+                    sortType = "TIME",
+                    dayOfWeek = today,
+                    page = 0,
+                    size = 50
+                )
+                _sourceRoutines.value = fallback
+            } else {
+                throw e
+            }
         }
     }
 
-    fun refreshRoutines() {
-        loadRoutines()
+    fun loadRoutines() {
+        viewModelScope.launch { fetchFromServer() }
     }
 
-// MyRoutineScreenPreview
-    @Suppress("unused") // 프리뷰에서만 사용
+    fun refreshRoutines() = loadRoutines()
+
+    // -------- 프리뷰용 더미 --------
+    @Suppress("unused")
     constructor() : this(
         repo = object : MyRoutineRepository {
             override suspend fun getMyRoutines(
                 sortType: String,
-                dayOfWeek: java.time.DayOfWeek?,
+                dayOfWeek: DayOfWeek?,
                 page: Int,
                 size: Int
             ): List<MyRoutineUi> {
-                // [추가] DummyData → MyRoutineUi 간단 매핑 (내 루틴만)
                 val mine = com.konkuk.moru.data.model.DummyData.feedRoutines
                     .filter { it.authorId == com.konkuk.moru.data.model.DummyData.MY_USER_ID }
                     .map {
@@ -215,13 +212,15 @@ class MyRoutinesViewModel @Inject constructor( // [추가] Hilt로 레포 주입
                         )
                     }
 
-                val filtered = if (sortType == "TIME" && dayOfWeek != null) {
+                // ✅ 요일 교집합(선택 시에만)
+                val filtered = if (dayOfWeek != null) {
                     mine.filter { it.scheduledDays.contains(dayOfWeek) }
                 } else mine
 
+                // ✅ 정렬 적용
                 return when (sortType) {
                     "POPULAR" -> filtered.sortedByDescending { it.likes }
-                    "LATEST" -> filtered.reversed() // 더미이므로 뒤집어서 최신 흉내
+                    "LATEST" -> filtered.reversed() // 더미라 createdAt 없어서 역순으로 대체
                     else -> filtered.sortedBy { it.scheduledTime ?: java.time.LocalTime.MAX }
                 }
             }
@@ -230,11 +229,11 @@ class MyRoutinesViewModel @Inject constructor( // [추가] Hilt로 레포 주입
                 throw UnsupportedOperationException("Preview only")
 
             override suspend fun deleteRoutine(routineId: String) = Unit
-            override suspend fun getSchedules(routineId: String) = emptyList<com.konkuk.moru.domain.repository.MyRoutineSchedule>()
+            override suspend fun getSchedules(routineId: String) =
+                emptyList<com.konkuk.moru.domain.repository.MyRoutineSchedule>()
+
             override suspend fun deleteAllSchedules(routineId: String) = Unit
             override suspend fun deleteSchedule(routineId: String, scheduleId: String) = Unit
         }
     )
 }
-
-
