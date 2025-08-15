@@ -53,7 +53,7 @@ fun TodayRoutineListBoxItem(
             .width(330.dp)
             .height(120.dp)
             .shadow(
-                elevation = 2.dp,
+                elevation = 5.dp,
                 shape = RoundedCornerShape(12.dp),
             )
             .background(
