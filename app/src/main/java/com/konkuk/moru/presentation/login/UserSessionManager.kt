@@ -1,6 +1,6 @@
 package com.konkuk.moru.presentation.login
 
-import com.konkuk.moru.data.dto.response.UserProfileResponse
+import com.konkuk.moru.data.dto.response.UserProfile.UserProfileResponse
 import com.konkuk.moru.data.token.TokenManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

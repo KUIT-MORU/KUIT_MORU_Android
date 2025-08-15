@@ -8,6 +8,7 @@ import com.konkuk.moru.data.interceptor.AuthInterceptor
 import com.konkuk.moru.data.interceptor.TokenAuthenticator
 import com.konkuk.moru.data.service.AuthService
 import com.konkuk.moru.data.service.InsightService
+import com.konkuk.moru.data.service.MyRoutineService
 import com.konkuk.moru.data.service.RoutineService
 import com.konkuk.moru.data.service.NotificationService
 import com.konkuk.moru.data.service.RoutineFeedService
@@ -128,6 +129,11 @@ object NetworkModule {
     @Singleton
     fun provideRoutineService(retrofit: Retrofit): RoutineService =
         retrofit.create(RoutineService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideMyRoutineService(retrofit: Retrofit): MyRoutineService =
+        retrofit.create(MyRoutineService::class.java)
 
     @Provides
     @Singleton

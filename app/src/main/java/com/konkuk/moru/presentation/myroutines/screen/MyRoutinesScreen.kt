@@ -352,7 +352,7 @@ private fun MyRoutinesScreenDeleteModePreview() {
     }
     MORUTheme {
         MyRoutinesScreen(
-            viewModel = previewViewModel,
+            viewModel = viewModel(),
             onNavigateToCreateRoutine = {},
             onNavigateToRoutineFeed = {},
             onNavigateToDetail = {}
@@ -373,10 +373,11 @@ private fun MyRoutinesScreenEmptyPreview() {
     }
     MORUTheme {
         MyRoutinesScreen(
-            viewModel = previewViewModel,
+            viewModel = viewModel(),
             onNavigateToCreateRoutine = {},
             onNavigateToRoutineFeed = {},
             onNavigateToDetail = {}
         )
     }
 }
+

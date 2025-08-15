@@ -1,8 +1,8 @@
 package com.konkuk.moru.data.mapper
 
 
-import com.konkuk.moru.data.dto.response.RoutineSummaryDto
-import com.konkuk.moru.data.dto.response.RoutineUserProfileResponse
+import com.konkuk.moru.data.dto.response.UserProfile.RoutineSummaryDto
+import com.konkuk.moru.data.dto.response.UserProfile.RoutineUserProfileResponse
 import com.konkuk.moru.data.model.RoutineCardDomain
 import com.konkuk.moru.data.model.RoutineUserProfileDomain
 import com.konkuk.moru.presentation.routinefeed.data.UserMeResponse

@@ -2,6 +2,7 @@ package com.konkuk.moru.di
 
 import com.konkuk.moru.data.repositoryimpl.AuthRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.InsightRepositoryImpl
+import com.konkuk.moru.data.repositoryimpl.MyRoutineRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.NotificationRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.RoutineFeedRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.RoutineUserRepositoryImpl
@@ -9,6 +10,7 @@ import com.konkuk.moru.data.repositoryimpl.SearchRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.SocialRepositoryImpl
 import com.konkuk.moru.domain.repository.AuthRepository
 import com.konkuk.moru.domain.repository.InsightRepository
+import com.konkuk.moru.domain.repository.MyRoutineRepository
 import com.konkuk.moru.domain.repository.NotificationRepository
 import com.konkuk.moru.domain.repository.RoutineFeedRepository
 import com.konkuk.moru.domain.repository.RoutineUserRepository
@@ -47,6 +49,12 @@ abstract class RepositoryModule {
     abstract fun bindRoutineUserRepository(
         impl: RoutineUserRepositoryImpl
     ): RoutineUserRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMyRoutineRepository(impl: MyRoutineRepositoryImpl): MyRoutineRepository
+
+
 
     @Binds
     @Singleton

@@ -1,6 +1,6 @@
 package com.konkuk.moru.domain.repository
 
-import com.konkuk.moru.data.dto.response.FollowListResponseDto
+import com.konkuk.moru.data.dto.response.Follow.FollowListResponseDto
 
 
 interface SocialRepository {

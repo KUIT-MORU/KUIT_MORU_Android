@@ -1,10 +1,10 @@
 package com.konkuk.moru.data.mapper
 
-import com.konkuk.moru.data.dto.response.FavoriteTagItemResponse
-import com.konkuk.moru.data.dto.response.PageResponse
-import com.konkuk.moru.data.dto.response.RoutineSummaryResponse
-import com.konkuk.moru.data.dto.response.SearchHistoryResponse
-import com.konkuk.moru.data.dto.response.TagAllResponse
+import com.konkuk.moru.data.dto.response.Search.FavoriteTagItemResponse
+import com.konkuk.moru.data.dto.response.Search.PageResponse
+import com.konkuk.moru.data.dto.response.Search.RoutineSummaryResponse
+import com.konkuk.moru.data.dto.response.Search.SearchHistoryResponse
+import com.konkuk.moru.data.dto.response.Search.TagAllResponse
 import com.konkuk.moru.data.model.FavoriteTag
 import com.konkuk.moru.data.model.Page
 import com.konkuk.moru.data.model.RoutineSummary

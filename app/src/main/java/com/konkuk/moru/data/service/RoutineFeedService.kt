@@ -1,6 +1,6 @@
 package com.konkuk.moru.data.service
 
-import com.konkuk.moru.data.dto.response.RoutineDetailResponse
+import com.konkuk.moru.data.dto.response.Routine.RoutineDetailResponse
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
 import com.konkuk.moru.presentation.routinefeed.data.RoutineFeedResponse
 import retrofit2.http.DELETE

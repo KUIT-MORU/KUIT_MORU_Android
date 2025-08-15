@@ -1,7 +1,7 @@
 package com.konkuk.moru.data.repositoryimpl
 
-import com.konkuk.moru.data.dto.response.FavoriteTagAddRequest
-import com.konkuk.moru.data.dto.response.RoutineSearchRequest
+import com.konkuk.moru.data.dto.response.Search.FavoriteTagAddRequest
+import com.konkuk.moru.data.dto.response.Search.RoutineSearchRequest
 import com.konkuk.moru.data.mapper.*
 import com.konkuk.moru.data.model.FavoriteTag
 import com.konkuk.moru.data.model.Page
