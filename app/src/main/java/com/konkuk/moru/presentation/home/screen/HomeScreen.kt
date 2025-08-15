@@ -128,9 +128,9 @@ private fun buildWeeklyMap(routines: List<Routine>): Pair<Map<Int, List<String>>
 
                 // 더 많은 루틴을 표시하기 위한 개선된 로직
                 val shouldShow = when {
-                    // 1. 로컬 스케줄에 scheduledDays가 설정되어 있고 해당 요일에 포함되는 경우 (우선순위 1)
+                    // 1. 서버 스케줄에 scheduledDays가 설정되어 있고 해당 요일에 포함되는 경우 (우선순위 1)
                     hasScheduledDays && containsDayOfWeek -> {
-                        Log.d("HomeScreen", "✅ ${r.title}: 로컬 스케줄에 ${date.dayOfWeek} 포함됨")
+                        Log.d("HomeScreen", "✅ ${r.title}: 서버 스케줄에 ${date.dayOfWeek} 포함됨")
                         true
                     }
                     // 2. scheduledDays가 비어있지만 오늘 요일인 경우 (우선순위 2)
@@ -138,24 +138,9 @@ private fun buildWeeklyMap(routines: List<Routine>): Pair<Map<Int, List<String>>
                         Log.d("HomeScreen", "✅ ${r.title}: 오늘 루틴으로 ${date.dayOfWeek}에 배치")
                         true
                     }
-                    // 3. scheduledDays가 비어있고, 루틴이 간단한 경우 (우선순위 3 - 임시 분산 배치)
-                    !hasScheduledDays && (r.category == "집중" || r.category == "간편" || r.category.isEmpty()) -> {
-                        // 요일별로 분산 배치 (월요일부터 시작해서 루틴 개수만큼 분산)
-                        val routineIndex = routines.indexOf(r)
-                        val dayIndex = routineIndex % 7
-                        val targetDayValue = dayIndex + 1 // DayOfWeek.MONDAY.value = 1
-                        val matches = date.dayOfWeek.value == targetDayValue
-                        
-                        if (matches) {
-                            Log.d("HomeScreen", "✅ ${r.title}: 임시 분산 배치로 ${date.dayOfWeek}에 배치 (routineIndex=$routineIndex, dayIndex=$dayIndex, category='${r.category}')")
-                        } else {
-                            Log.d("HomeScreen", "❌ ${r.title}: 임시 분산 배치 실패 (routineIndex=$routineIndex, dayIndex=$dayIndex, targetDay=${targetDayValue}, currentDay=${date.dayOfWeek.value}, category='${r.category}')")
-                        }
-                        matches
-                    }
-                    // 4. 그 외의 경우는 표시하지 않음
+                    // 3. 그 외의 경우는 표시하지 않음 (임시 분산 배치 제거)
                     else -> {
-                        Log.d("HomeScreen", "❌ ${r.title}: 조건에 맞지 않음 (hasScheduledDays=$hasScheduledDays, category=${r.category})")
+                        Log.d("HomeScreen", "❌ ${r.title}: 조건에 맞지 않음 (hasScheduledDays=$hasScheduledDays, containsDayOfWeek=$containsDayOfWeek)")
                         false
                     }
                 }
@@ -751,15 +736,15 @@ fun HomeScreen(
 
                         // 이번주 탭 선택 시
                         1 -> {
-                            // 주간 데이터 만들기 (scheduledRoutines 사용 - 이미 로컬 스케줄 정보가 병합됨)
-                            val mergedRoutines = scheduledRoutines
+                            // 주간 데이터 만들기 (todayRoutines 사용 - 서버 스케줄 정보가 포함됨)
+                            val mergedRoutines = todayRoutines.toList()
                             
                             Log.d("HomeScreen", "🔍 이번주 탭 선택됨: mergedRoutines.size=${mergedRoutines.size}")
                             
                             // mergedRoutines 상세 정보 로깅
                             mergedRoutines.forEachIndexed { index, routine ->
                                 val routineTyped: Routine = routine
-                                Log.d("HomeScreen", "🔍 mergedRoutines[$index]: ${routineTyped.title}, category=${routineTyped.category}, isSimple=${routineTyped.isSimple}, scheduledDays=${routineTyped.scheduledDays}, scheduledTime=${routineTyped.scheduledTime}, requiredTime=${routineTyped.requiredTime}")
+                                Log.d("HomeScreen", "🔍 mergedRoutines[$index]: ${routineTyped.title}, category=${routineTyped.category}, scheduledDays=${routineTyped.scheduledDays}, scheduledTime=${routineTyped.scheduledTime}, requiredTime=${routineTyped.requiredTime}")
                             }
                             
                             val (routinesPerDate, todayDom) = buildWeeklyMap(mergedRoutines)
