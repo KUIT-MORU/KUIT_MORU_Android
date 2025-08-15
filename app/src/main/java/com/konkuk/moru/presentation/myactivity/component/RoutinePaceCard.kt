@@ -90,7 +90,7 @@ fun RoutinePaceCard(
                 MovingIconProgressBar(progress)
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(5.dp))
 
             Box(
                 modifier = Modifier,

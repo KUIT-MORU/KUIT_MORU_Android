@@ -40,7 +40,7 @@ fun MyBirthInputField(modifier: Modifier = Modifier) {
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .border(1.dp, colors.lightGray, RoundedCornerShape(10.5.dp))
+                .border(1.dp, colors.lightGray, RoundedCornerShape(4.dp))
                 .clip(RoundedCornerShape(10.5.dp))
                 .height(45.dp)
                 .clickable {
