@@ -1,12 +1,13 @@
 package com.konkuk.moru.presentation.routinefocus.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.konkuk.moru.presentation.routinefocus.screen.AppInfo
+import com.konkuk.moru.data.model.AppInfo
 import com.konkuk.moru.presentation.routinefocus.screen.parseTimeToSeconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -96,12 +97,34 @@ class RoutineFocusViewModel : ViewModel() {
         isSettingsPopupVisible = false
     }
 
-    // 화면 차단 팝업창 관련
+    // 화면 차단 오버레이 관련
+    var isScreenBlockOverlayVisible by mutableStateOf(false)
+    private val _selectedApps = mutableStateOf<List<AppInfo>>(emptyList())
+    val selectedApps: List<AppInfo>
+        get() = _selectedApps.value
+    
+    fun showScreenBlockOverlay(apps: List<AppInfo>) {
+        Log.d("RoutineFocusViewModel", "🛡️ showScreenBlockOverlay 호출: apps.size=${apps.size}")
+        _selectedApps.value = apps
+        isScreenBlockOverlayVisible = true
+        Log.d("RoutineFocusViewModel", "🛡️ isScreenBlockOverlayVisible = $isScreenBlockOverlayVisible")
+    }
+    
+    fun hideScreenBlockOverlay() {
+        Log.d("RoutineFocusViewModel", "🛡️ hideScreenBlockOverlay 호출")
+        isScreenBlockOverlayVisible = false
+        Log.d("RoutineFocusViewModel", "🛡️ isScreenBlockOverlayVisible = $isScreenBlockOverlayVisible")
+    }
+    
+    fun setSelectedApps(apps: List<AppInfo>) {
+        _selectedApps.value = apps
+    }
+    
+    // 기존 팝업 관련 (하위 호환성 유지)
     var isScreenBlockPopupVisible by mutableStateOf(false)
-    var selectedApps by mutableStateOf<List<AppInfo>>(emptyList())
     
     fun showScreenBlockPopup(apps: List<AppInfo>) {
-        selectedApps = apps
+        _selectedApps.value = apps
         isScreenBlockPopupVisible = true
     }
     

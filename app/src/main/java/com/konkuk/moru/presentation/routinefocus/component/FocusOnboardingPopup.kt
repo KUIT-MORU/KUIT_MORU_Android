@@ -16,7 +16,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.konkuk.moru.presentation.routinefocus.screen.AppInfo
+import com.konkuk.moru.data.model.AppInfo
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
@@ -102,7 +102,7 @@ private fun AppIcon(
             // 실제 앱에서는 앱 아이콘을 가져와야 함
             // 여기서는 임시로 기본 아이콘 사용
             Text(
-                text = app.appName.take(1),
+                text = app.name.take(1),
                 style = typography.title_B_14,
                 color = colors.black
             )

@@ -3,7 +3,7 @@ package com.konkuk.moru.presentation.routinefocus.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.konkuk.moru.presentation.home.RoutineStepData
-import com.konkuk.moru.presentation.routinefocus.screen.AppInfo
+import com.konkuk.moru.data.model.AppInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.time.DayOfWeek

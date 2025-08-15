@@ -57,6 +57,7 @@ fun MainNavGraph(
     fabOffsetY: MutableState<Float>,
     todayTabOffsetY: MutableState<Float>,
     onShowOnboarding: () -> Unit,
+    routineFocusViewModel: RoutineFocusViewModel? = null,
 ) {
 
     NavHost(
@@ -230,7 +231,8 @@ fun MainNavGraph(
 
 
         composable(route = Route.RoutineFocus.route) {
-            val routineFocusViewModel: RoutineFocusViewModel = viewModel()
+            // 전달받은 RoutineFocusViewModel 사용
+            val routineFocusViewModel: RoutineFocusViewModel = routineFocusViewModel ?: viewModel()
 
             // Home NavGraph의 ViewModel을 공유
             val parentEntry = remember(navController.currentBackStackEntry) {
@@ -252,10 +254,17 @@ fun MainNavGraph(
             Log.d("MainNavGraph", "   - originalRoutineId: $originalRoutineId")
             Log.d("MainNavGraph", "   - 선택된 앱: ${selectedApps.size}개")
 
+            // 집중 루틴 화면 진입 시 선택된 앱들을 설정하고 집중 루틴 시작
+            LaunchedEffect(selectedApps) {
+                routineFocusViewModel.setSelectedApps(selectedApps)
+                routineFocusViewModel.startFocusRoutine()
+            }
+
             RoutineFocusScreenContainer(
                 focusViewModel = routineFocusViewModel,
                 sharedViewModel = sharedViewModel,
                 onDismiss = {
+                    routineFocusViewModel.endFocusRoutine()
                     navController.popBackStack(
                         Route.Home.route,
                         inclusive = false
@@ -268,17 +277,27 @@ fun MainNavGraph(
                     }
                 },
                 onFinishConfirmed = { finishedId: String ->
+                    routineFocusViewModel.endFocusRoutine()
                     Log.d("MainNavGraph", "🔄 RoutineFocus 완료 처리: originalRoutineId=$originalRoutineId")
                     navController.getBackStackEntry(Route.Home.route)
                         .savedStateHandle["finishedRoutineId"] = originalRoutineId ?: finishedId
                     Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}")
                     navController.popBackStack(Route.Home.route, false)
                 },
-                onScreenBlockTrigger = {
-                    // 집중 루틴 실행 중 다른 앱으로 이동 시 화면 차단 팝업창 표시
-                    if (category == "집중" && selectedApps.isNotEmpty()) {
-                        routineFocusViewModel.showScreenBlockPopup(selectedApps)
+                onNavigateToMyActivity = {
+                    // 완료된 루틴 데이터를 ActRecord 화면으로 전달
+                    val title = sharedViewModel.routineTitle.value
+                    val tags = sharedViewModel.routineTags.value
+                    val totalDuration = sharedViewModel.totalDuration.value
+                    
+                    // 데이터를 savedStateHandle에 저장
+                    navController.currentBackStackEntry?.savedStateHandle?.apply {
+                        set("completedRoutineTitle", title)
+                        set("completedRoutineTime", totalDuration)
+                        set("completedRoutineTags", tags)
                     }
+                    
+                    navController.navigate(Route.ActRecord.route)
                 }
             )
         }

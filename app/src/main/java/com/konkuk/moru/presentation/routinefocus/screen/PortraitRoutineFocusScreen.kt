@@ -59,8 +59,8 @@ import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
 import com.konkuk.moru.presentation.routinefocus.component.FocusOnboardingPopup
 import com.konkuk.moru.presentation.routinefocus.component.RoutineTimelineItem
-import com.konkuk.moru.presentation.routinefocus.component.ScreenBlockPopup
 import com.konkuk.moru.presentation.routinefocus.component.SettingSwitchGroup
+import com.konkuk.moru.data.model.AppInfo
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
 import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
@@ -185,13 +185,6 @@ fun triggerVibration(context: Context) {
         @Suppress("DEPRECATION")
         context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
     }
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
-    } else {
-        @Suppress("DEPRECATION")
-        vibrator.vibrate(500)
-    }
 }
 
 // 방해금지 모드 제어 함수
@@ -223,12 +216,7 @@ fun toggleDoNotDisturb(context: Context, enable: Boolean) {
     }
 }
 
-// 사용앱 정보 데이터 클래스
-data class AppInfo(
-    val packageName: String,
-    val appName: String,
-    val iconResId: Int = R.drawable.ic_default
-)
+
 
 // 앱 실행 함수
 fun launchApp(context: Context, packageName: String) {
@@ -327,8 +315,7 @@ fun PortraitRoutineFocusScreen(
     val showAppIcons = focusViewModel.isAppIconsVisible
 
     // 사용앱 리스트 (루틴 생성 시 선택한 앱들)
-    val selectedApps =
-        sharedViewModel.selectedApps.collectAsStateWithLifecycle<List<AppInfo>>().value
+    val selectedApps = focusViewModel.selectedApps
 
     // 집중 루틴 시작
     LaunchedEffect(Unit) {
@@ -583,20 +570,20 @@ fun PortraitRoutineFocusScreen(
                             horizontalArrangement = Arrangement.spacedBy(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // 사용앱 아이콘들 (루틴 생성 시 선택한 앱들)
-                            selectedApps.forEachIndexed { index, appInfo ->
-                                Image(
-                                    painter = painterResource(id = appInfo.iconResId),
-                                    contentDescription = "사용앱 ${appInfo.appName}",
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .clickable {
-                                            // 온보딩 팝업창 표시
-                                            focusViewModel.showOnboardingPopup()
-                                        }
-                                )
-                            }
+                                                         // 사용앱 아이콘들 (루틴 생성 시 선택한 앱들)
+                             selectedApps.forEachIndexed { index, appInfo ->
+                                 Image(
+                                     painter = painterResource(id = R.drawable.ic_default),
+                                     contentDescription = "사용앱 ${appInfo.name}",
+                                     modifier = Modifier
+                                         .size(48.dp)
+                                         .clip(RoundedCornerShape(6.dp))
+                                         .clickable {
+                                             // 온보딩 팝업창 표시
+                                             focusViewModel.showOnboardingPopup()
+                                         }
+                                 )
+                             }
                             // 기본 아이콘들 (선택된 앱이 3개 미만인 경우)
                             repeat(3 - selectedApps.size) {
                                 Image(
@@ -956,16 +943,6 @@ fun PortraitRoutineFocusScreen(
 
         // 화면 차단 팝업창
         if (focusViewModel.isScreenBlockPopupVisible) {
-            ScreenBlockPopup(
-                selectedApps = focusViewModel.selectedApps,
-                onAppClick = { app ->
-                    // 앱 실행 로직 (실제로는 Intent로 앱 실행)
-                    focusViewModel.hideScreenBlockPopup()
-                },
-                onOutsideClick = {
-                    focusViewModel.hideScreenBlockPopup()
-                }
-            )
         }
 
         // 온보딩 팝업창
@@ -975,8 +952,8 @@ fun PortraitRoutineFocusScreen(
                 onAppClick = { app ->
                     // 허용된 앱 실행 플래그 설정
                     focusViewModel.setPermittedAppLaunch(true)
-                    // 실제 앱 실행
-                    launchApp(context, app.packageName)
+                                         // 실제 앱 실행
+                     launchApp(context, app.packageName ?: "")
                     focusViewModel.hideOnboardingPopup()
                 },
                 onOutsideClick = {
@@ -1005,9 +982,9 @@ private fun PortraitRoutineFocusScreenPreview() {
     )
 
     val dummyApps = listOf(
-        AppInfo("com.example.app1", "앱1"),
-        AppInfo("com.example.app2", "앱2"),
-        AppInfo("com.example.app3", "앱3")
+        AppInfo("앱1", null, "com.example.app1"),
+        AppInfo("앱2", null, "com.example.app2"),
+        AppInfo("앱3", null, "com.example.app3")
     )
 
     dummySharedViewModel.setRoutineTitle("주말 아침 루틴")
