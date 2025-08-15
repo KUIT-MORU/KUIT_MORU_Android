@@ -1,6 +1,8 @@
 package com.konkuk.moru.presentation.home.component
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,10 +10,13 @@ import com.google.accompanist.flowlayout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,23 +38,42 @@ fun RoutineCardItem(
     isHighlighted: Boolean = false
 ) {
     // 디버깅용 로그 추가
-    LaunchedEffect(scheduledDays) {
-        android.util.Log.d("RoutineCardItem", "🔍 루틴: $title, scheduledDays=$scheduledDays, isEmpty=${scheduledDays.isEmpty()}")
+    LaunchedEffect(scheduledDays, isHighlighted) {
+        android.util.Log.d("RoutineCardItem", "🔍 루틴: $title, scheduledDays=$scheduledDays, isHighlighted=$isHighlighted")
     }
     Box(
         modifier = modifier
             .width(98.dp)
             .height(190.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color.White, shape = RoundedCornerShape(8.dp))
             .clickable { onClick() }
     ) {
         Column {
-            Image(
-                painter = painterResource(id = R.drawable.group_208),
-                contentDescription = "루틴 썸네일",
+            // 이미지에만 하이라이트 적용
+            Box(
                 modifier = Modifier
                     .width(98.dp)
                     .height(130.dp)
-            )
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(
+                        color = if (isHighlighted) Color(0xFFE8F5E8) else Color.Transparent,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .border(
+                        width = if (isHighlighted) 2.dp else 0.dp,
+                        color = if (isHighlighted) colors.limeGreen else Color.Transparent,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.group_208),
+                    contentDescription = "루틴 썸네일",
+                    modifier = Modifier
+                        .width(98.dp)
+                        .height(130.dp)
+                )
+            }
             Spacer(modifier = modifier.height(8.dp))
             Text(
                 text = title,

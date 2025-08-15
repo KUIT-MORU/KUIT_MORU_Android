@@ -190,9 +190,16 @@ fun MainNavGraph(
                     routineId = currentId!!,
                     onDismiss = {
                         // 홈으로 돌아갈 때 "진행중 루틴" 알림
+                        android.util.Log.d("MainNavGraph", "🔄 간편 루틴 X 버튼 클릭: routineId=$currentId")
+                        
+                        // originalRoutineId를 stableIntId로 변환해서 설정
+                        val stableId = originalRoutineId?.toStableIntId()
+                        android.util.Log.d("MainNavGraph", "🎯 runningRoutineId 설정: originalRoutineId=$originalRoutineId, stableId=$stableId")
+                        
                         navController.getBackStackEntry(Route.Home.route)
-                            .savedStateHandle["runningRoutineId"] = currentId!!
+                            .savedStateHandle["runningRoutineId"] = stableId
 
+                        // 간편 루틴은 실천율에 반영되지만 내 기록에는 표시되지 않음
 
                         navController.popBackStack(
                             Route.Home.route,
@@ -208,6 +215,10 @@ fun MainNavGraph(
                     },
                     onFinishConfirmed = { finishedId: String ->
                         Log.d("MainNavGraph", "🔄 RoutineSimpleRun 완료 처리: originalRoutineId=$originalRoutineId")
+                        
+                        // 간편 루틴 완료 시 실천율 업데이트 (RoutineSimpleRunScreen에서 처리됨)
+                        // 내 기록에는 표시되지 않음
+                        
                         navController.getBackStackEntry(Route.Home.route)
                             .savedStateHandle["finishedRoutineId"] = originalRoutineId ?: finishedId
                         Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}")
@@ -481,4 +492,15 @@ fun MainNavGraph(
             RoutineCreateScreen(navController)
         }
     }
+}
+
+// String ID → 안정적인 Int 키 (기존 Int API/콜백용)
+private fun String.toStableIntId(): Int {
+    this.toLongOrNull()?.let {
+        val mod = (it % Int.MAX_VALUE).toInt()
+        return if (mod >= 0) mod else -mod
+    }
+    var h = 0
+    for (ch in this) h = (h * 31) + ch.code
+    return h
 }

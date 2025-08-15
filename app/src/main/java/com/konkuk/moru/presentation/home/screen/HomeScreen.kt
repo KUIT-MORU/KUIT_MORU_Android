@@ -268,22 +268,11 @@ fun HomeScreen(
     // 하이라이트 대상 보관
     var highlightId by remember { mutableStateOf<Int?>(null) }
 
-    // X 눌러서 나온 "진행중" 루틴을 맨 앞으로, isRunning=true, 하이라이트 지정
-    LaunchedEffect(runningId) {
-        runningId?.let { id ->
-            val idx = todayRoutines.indexOfFirst { it.routineId.toStableIntId() == id }
-            if (idx >= 0) {
-                val item = todayRoutines.removeAt(idx)
-                val updated = item.copy(isRunning = true) // 정렬에서도 앞으로 오도록
-                todayRoutines.add(0, updated)
-                // 순서 저장
-                homeEntry.savedStateHandle["todayOrderIds"] = todayRoutines.map { it.routineId }
-                // 하이라이트 지정
-                highlightId = id
-            }
-            // 한 번 처리했으면 플래그 비워주기
-            homeEntry.savedStateHandle["runningRoutineId"] = null
-        }
+
+    
+    // 하이라이트 ID 변경 시 로그 추가
+    LaunchedEffect(highlightId) {
+        Log.d("HomeScreen", "🎯 하이라이트 ID 변경됨: $highlightId")
     }
 
     // 서버 오늘 루틴
@@ -298,6 +287,8 @@ fun HomeScreen(
     val myRoutines by homeVm.myRoutines.collectAsState()
     // ③ 스케줄 정보가 병합된 루틴 (주간 달력용)
     val scheduledRoutines by homeVm.scheduledRoutines.collectAsState()
+    
+
 
     LaunchedEffect(Unit) {
         Log.d("HomeScreen", "🔄 LaunchedEffect(Unit) 실행 시작")
@@ -397,6 +388,34 @@ fun HomeScreen(
                     Log.e("HomeScreen", "❌ 스케줄 정보 가져오기 실패: ${routine.title}", e)
                 }
             }
+            
+                         // 서버 데이터 로드 후 runningId가 있으면 myRoutines에서만 해당 루틴을 isRunning=true로 설정하고 맨 앞으로 이동 (TODAY 탭은 제외)
+             runningId?.let { id ->
+                 Log.d("HomeScreen", "🔄 서버 데이터 로드 후 runningId 처리: $id")
+                 
+                 // myRoutines에서만 진행중인 루틴을 맨 앞으로 이동 (TODAY 탭은 하이라이트/이동 없음)
+                 val myRoutinesList = myRoutines.toList()
+                 val myIdx = myRoutinesList.indexOfFirst { it.routineId.toStableIntId() == id }
+                 if (myIdx >= 0) {
+                     Log.d("HomeScreen", "✅ myRoutines에서 진행중 루틴 발견: ${myRoutinesList[myIdx].title}")
+                     
+                     val updatedRoutines = myRoutinesList.toMutableList()
+                     val runningRoutine = updatedRoutines.removeAt(myIdx)
+                     val updatedRunningRoutine = runningRoutine.copy(isRunning = true)
+                     updatedRoutines.add(0, updatedRunningRoutine)
+                     
+                     Log.d("HomeScreen", "🔄 myRoutines 업데이트: ${updatedRunningRoutine.title}를 맨 앞으로 이동")
+                     homeVm.updateMyRoutines(updatedRoutines)
+                     
+                     // 하이라이트 설정 (하단 루틴 목록용)
+                     if (highlightId != id) {
+                         highlightId = id
+                         Log.d("HomeScreen", "🎯 서버 데이터 로드 후 하이라이트 ID 설정: $highlightId")
+                     }
+                 } else {
+                     Log.w("HomeScreen", "⚠️ myRoutines에서 runningId=$id 를 찾을 수 없음")
+                 }
+             }
         }
     }
 
@@ -796,6 +815,10 @@ fun HomeScreen(
                     if (myRoutines.isNotEmpty()) {
                         val context = LocalContext.current
                         val list = myRoutines.sortedForList()   // 이미 정렬된 리스트
+                        
+                        Log.d("HomeScreen", "🔄 하단 카드 렌더링: myRoutines.size=${myRoutines.size}, sortedList.size=${list.size}")
+                        Log.d("HomeScreen", "📋 정렬된 리스트: " + list.joinToString { "${it.title}(isRunning=${it.isRunning})" })
+                        Log.d("HomeScreen", "🔍 정렬된 리스트 첫 번째: ${list.firstOrNull()?.title} (isRunning=${list.firstOrNull()?.isRunning})")
 
                         RoutineCardList(
                             routines = list,
@@ -829,9 +852,7 @@ fun HomeScreen(
                                 // 네비게이션 트리거 설정
                                 homeEntry.savedStateHandle["navigateToRoutineFocus"] = routine.routineId
                             },
-                            runningHighlightId = highlightId?.takeIf { id ->
-                                list.any { it.routineId.toStableIntId() == id }
-                            }
+                            runningHighlightId = highlightId
                         )
                     } else {
                         Log.d("HomeScreen", "내 루틴 목록이 비어있음")
@@ -857,13 +878,22 @@ private fun String.toStableIntId(): Int {
 }
 
 // 오늘 "루틴 목록" 전용 정렬:
-// 1) 진행중(간편) 우선 → 2) 시간 미설정 → 3) 시간 설정(오름차순)
-private fun List<Routine>.sortedForList(): List<Routine> =
-    this.sortedWith(
-        compareByDescending<Routine> { it.isRunning && it.category == "간편" }
+// 1) 진행중 루틴 우선 → 2) 시간 미설정 → 3) 시간 설정(오름차순)
+private fun List<Routine>.sortedForList(): List<Routine> {
+    Log.d("HomeScreen", "🔄 sortedForList() 호출: ${this.size}개 루틴")
+    this.forEach { routine ->
+        Log.d("HomeScreen", "   - ${routine.title}: isRunning=${routine.isRunning}, category=${routine.category}")
+    }
+    
+    val sorted = this.sortedWith(
+        compareByDescending<Routine> { it.isRunning }  // 진행중인 루틴을 맨 앞으로 (카테고리 상관없이)
             .thenByDescending { it.scheduledTime == null }
             .thenBy { it.scheduledTime ?: java.time.LocalTime.MAX }
     )
+    
+    Log.d("HomeScreen", "✅ 정렬 완료: " + sorted.joinToString { "${it.title}(isRunning=${it.isRunning})" })
+    return sorted
+}
 
 // 현재 시간을 기준으로 가장 가까운 시간대의 루틴부터 정렬 (오늘 탭용)
 private fun List<Routine>.sortByNearestTime(): List<Routine> {

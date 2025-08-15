@@ -29,10 +29,19 @@ fun RoutineCardList(
         horizontalArrangement = Arrangement.spacedBy(17.dp)
     ) {
         //나중에 진짜 루틴들 받아올 것
-        routines.forEach { routine ->
+        android.util.Log.d("RoutineCardList", "🔄 RoutineCardList 렌더링: routines.size=${routines.size}, runningHighlightId=$runningHighlightId")
+        
+        routines.forEachIndexed { index, routine ->
+            val stableId = routine.routineId.toStableIntId()
             val isHighlighted =
                 runningHighlightId != null &&
-                        runningHighlightId == routine.routineId.toStableIntId()
+                        runningHighlightId == stableId
+
+            android.util.Log.d("RoutineCardList", "🔍 루틴[$index]: ${routine.title}, routineId=${routine.routineId}, stableId=$stableId, isHighlighted=$isHighlighted, isRunning=${routine.isRunning}")
+
+            if (isHighlighted) {
+                android.util.Log.d("RoutineCardList", "🎯 하이라이트 적용: ${routine.title} (ID: ${routine.routineId})")
+            }
 
             RoutineCardItem(
                 title = routine.title,

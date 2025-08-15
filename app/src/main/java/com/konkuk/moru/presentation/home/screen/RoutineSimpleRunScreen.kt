@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,17 +31,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
 import com.konkuk.moru.presentation.home.component.RoutineSelectItem
+import com.konkuk.moru.presentation.myactivity.viewmodel.InsightViewModel
 import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
@@ -62,6 +66,9 @@ fun RoutineSimpleRunScreen(
     onDismiss: () -> Unit, // x버튼 눌렀을 시
     onFinishConfirmed: (String) -> Unit
 ) {
+    // InsightViewModel 주입 (실천율 업데이트용)
+    val insightViewModel: InsightViewModel = hiltViewModel()
+    val originalRoutineId = sharedViewModel.originalRoutineId.collectAsStateWithLifecycle<String?>().value
     // intro에서 받아올 값들
     val routineTitle = sharedViewModel.routineTitle.collectAsStateWithLifecycle<String>().value
     val hashTagList = sharedViewModel.routineTags.collectAsStateWithLifecycle<List<String>>().value
@@ -359,6 +366,14 @@ fun RoutineSimpleRunScreen(
                                 interactionSource = remember { MutableInteractionSource() }
                             ) {
                                 showResultPopup = false
+                                
+                                // 간편 루틴 완료 시 실천율 업데이트
+                                originalRoutineId?.let { routineId ->
+                                    android.util.Log.d("RoutineSimpleRunScreen", "🔄 간편 루틴 완료: routineId=$routineId")
+                                    // 실천율 업데이트 API 호출
+                                    insightViewModel.completeRoutine(routineId)
+                                }
+                                
                                 onFinishConfirmed(routineId.toString())
                             }
                             .padding(vertical = 8.dp),

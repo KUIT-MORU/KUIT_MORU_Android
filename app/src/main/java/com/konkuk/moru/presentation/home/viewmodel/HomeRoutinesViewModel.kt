@@ -211,6 +211,18 @@ class HomeRoutinesViewModel @Inject constructor(
             null
         }
     }
+    
+    // myRoutines 업데이트 (진행중인 루틴을 맨 앞으로 이동할 때 사용)
+    fun updateMyRoutines(updatedRoutines: List<Routine>) {
+        Log.d(TAG, "🔄 updateMyRoutines 호출: ${updatedRoutines.size}개 루틴")
+        Log.d(TAG, "📋 업데이트 전 myRoutines: " + _myRoutines.value.joinToString { "${it.title}(isRunning=${it.isRunning})" })
+        Log.d(TAG, "📋 업데이트할 루틴들: " + updatedRoutines.joinToString { "${it.title}(isRunning=${it.isRunning})" })
+        
+        _myRoutines.value = updatedRoutines
+        
+        Log.d(TAG, "✅ _myRoutines StateFlow 업데이트 완료")
+        Log.d(TAG, "📋 업데이트 후 myRoutines: " + _myRoutines.value.joinToString { "${it.title}(isRunning=${it.isRunning})" })
+    }
 
     // 서버에서 스케줄 정보 가져오기
     suspend fun getRoutineSchedules(routineId: String): List<HomeScheduleResponse> {

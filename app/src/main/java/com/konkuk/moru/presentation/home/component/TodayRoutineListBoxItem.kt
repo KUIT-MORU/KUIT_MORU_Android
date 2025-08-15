@@ -2,6 +2,7 @@ package com.konkuk.moru.presentation.home.component
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -57,7 +58,12 @@ fun TodayRoutineListBoxItem(
                 shape = RoundedCornerShape(12.dp),
             )
             .background(
-                color = Color.White,  // 원하는 배경색
+                color = if (routine.isRunning) Color(0xFFE8F5E8) else Color.White,  // 진행중인 루틴은 연한 초록색 배경
+                shape = RoundedCornerShape(12.dp)
+            )
+            .border(
+                width = if (routine.isRunning) 2.dp else 0.dp,
+                color = if (routine.isRunning) colors.limeGreen else Color.Transparent,
                 shape = RoundedCornerShape(12.dp)
             )
             .clickable(
