@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.home.screen
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,8 +36,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import android.util.Log
 import com.konkuk.moru.R
+import com.konkuk.moru.data.dto.response.Routine.RoutineDetailResponseV1
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineHeaderBox
 import com.konkuk.moru.presentation.home.component.RoutineStepItem
@@ -44,7 +45,6 @@ import com.konkuk.moru.presentation.home.viewmodel.HomeRoutinesViewModel
 import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
-import com.konkuk.moru.data.dto.response.Routine.RoutineDetailResponseV1
 
 val sampleSteps = listOf(
     RoutineStepData("샤워하기", 15, true),

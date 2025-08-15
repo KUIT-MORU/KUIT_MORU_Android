@@ -10,10 +10,10 @@ import com.konkuk.moru.data.mapper.toDomain
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.repositoryimpl.RoutineRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class HomeRoutinesViewModel @Inject constructor(

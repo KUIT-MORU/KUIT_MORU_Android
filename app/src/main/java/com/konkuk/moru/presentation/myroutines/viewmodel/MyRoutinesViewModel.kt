@@ -188,18 +188,18 @@ class MyRoutinesViewModel @Inject constructor( // [추가] Hilt로 레포 주입
 // MyRoutineScreenPreview
     @Suppress("unused") // 프리뷰에서만 사용
     constructor() : this(
-        repo = object : com.konkuk.moru.domain.repository.MyRoutineRepository {
+        repo = object : MyRoutineRepository {
             override suspend fun getMyRoutines(
                 sortType: String,
                 dayOfWeek: java.time.DayOfWeek?,
                 page: Int,
                 size: Int
-            ): List<com.konkuk.moru.data.dto.response.MyRoutine.MyRoutineUi> {
+            ): List<MyRoutineUi> {
                 // [추가] DummyData → MyRoutineUi 간단 매핑 (내 루틴만)
                 val mine = com.konkuk.moru.data.model.DummyData.feedRoutines
                     .filter { it.authorId == com.konkuk.moru.data.model.DummyData.MY_USER_ID }
                     .map {
-                        com.konkuk.moru.data.dto.response.MyRoutine.MyRoutineUi(
+                        MyRoutineUi(
                             routineId = it.routineId,
                             title = it.title,
                             imageUrl = it.imageUrl,

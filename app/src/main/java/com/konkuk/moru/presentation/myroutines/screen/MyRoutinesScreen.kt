@@ -99,6 +99,7 @@ fun MyRoutinesScreen(
 
     Box(modifier = modifier.fillMaxSize()) {
         Scaffold(
+            modifier=Modifier.padding(bottom=80.dp),
             topBar = {
                 MyRoutineTopAppBar(
                     onInfoClick = viewModel::onShowInfoTooltip,
@@ -360,7 +361,6 @@ private fun MyRoutinesScreenDeleteModePreview() {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, name = "내 루틴 - 비어있을 때")
 @Composable
 private fun MyRoutinesScreenEmptyPreview() {
