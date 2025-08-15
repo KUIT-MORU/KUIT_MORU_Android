@@ -49,6 +49,7 @@ import com.konkuk.moru.presentation.routinefocus.component.SettingSwitchGroup
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
 import com.konkuk.moru.presentation.routinefocus.screen.formatTotalTime
 import com.konkuk.moru.presentation.routinefocus.screen.formatTime
+import com.konkuk.moru.presentation.routinefocus.screen.calculateVisibleSteps
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
@@ -381,12 +382,15 @@ fun LandscapeRoutineFocusScreen(
                     modifier = Modifier.fillMaxHeight(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    routineItems.forEachIndexed { rawIndex, (title, time) ->
-                        val index = rawIndex + 1
+                    // 현재 step에 따라 보여줄 step들을 동적으로 계산
+                    val visibleSteps = calculateVisibleSteps(currentstep, routineItems.size)
+                    
+                    visibleSteps.forEach { stepIndex ->
+                        val (title, time) = routineItems[stepIndex - 1] // stepIndex는 1부터 시작하므로 -1
                         RoutineTimelineItem(
                             time = time,
                             title = title,
-                            index = index,
+                            index = stepIndex,
                             currentStep = currentstep,
                             isTimeout = isTimeout,
                             isDarkMode = isDarkMode

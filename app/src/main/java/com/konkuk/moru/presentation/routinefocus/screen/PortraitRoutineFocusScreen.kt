@@ -73,6 +73,20 @@ fun formatTotalTime(seconds: Int): String {
     return String.format("%02dm %02ds", minutes, secs)
 }
 
+// 현재 step에 따라 보여줄 step들을 계산하는 함수
+fun calculateVisibleSteps(currentStep: Int, totalSteps: Int): List<Int> {
+    return when {
+        // step이 1~4일 때는 1,2,3,4를 보여줌
+        currentStep <= 4 -> (1..4).takeWhile { it <= totalSteps }
+        // step이 5 이상일 때는 currentStep-3부터 currentStep까지 보여줌 (최대 4개)
+        else -> {
+            val startStep = maxOf(1, currentStep - 3)
+            val endStep = minOf(totalSteps, currentStep)
+            (startStep..endStep).toList()
+        }
+    }
+}
+
 // 스탭 개수에 따라 타임라인을 그리는 함수
 @Composable
 fun RoutineProgressBar(
@@ -457,12 +471,15 @@ fun PortraitRoutineFocusScreen(
                         verticalArrangement = Arrangement.Center, // 선택된 아이템들을 세로 중앙 정렬
                         horizontalAlignment = Alignment.Start
                     ) {
-                        routineItems.forEachIndexed { rawIndex, (title, time) ->
-                            val index = rawIndex + 1
+                        // 현재 step에 따라 보여줄 step들을 동적으로 계산
+                        val visibleSteps = calculateVisibleSteps(currentstep, routineItems.size)
+                        
+                        visibleSteps.forEach { stepIndex ->
+                            val (title, time) = routineItems[stepIndex - 1] // stepIndex는 1부터 시작하므로 -1
                             RoutineTimelineItem(
                                 time = time,
                                 title = title,
-                                index = index,
+                                index = stepIndex,
                                 currentStep = currentstep,
                                 isTimeout = isTimeout,
                                 isDarkMode = isDarkMode
