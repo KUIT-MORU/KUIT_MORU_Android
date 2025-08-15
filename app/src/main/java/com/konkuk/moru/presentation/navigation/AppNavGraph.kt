@@ -132,7 +132,8 @@ fun AppNavGraph(
             Scaffold(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .statusBarsPadding(),
+                    .statusBarsPadding()
+                    .navigationBarsPadding(),
                 contentWindowInsets = WindowInsets(0),
                 bottomBar = {
                     if (
