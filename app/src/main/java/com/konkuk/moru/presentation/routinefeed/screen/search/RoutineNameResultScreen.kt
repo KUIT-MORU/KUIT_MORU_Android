@@ -1,47 +1,43 @@
 package com.konkuk.moru.presentation.routinefeed.screen.search
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.konkuk.moru.core.component.routine.RoutineListItem
-import com.konkuk.moru.data.model.DummyData
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.konkuk.moru.R
+import com.konkuk.moru.domain.repository.SortType
 import com.konkuk.moru.presentation.routinefeed.component.search.RoutineSearchTopAppBar
 import com.konkuk.moru.presentation.routinefeed.component.search.SelectedTagChip
 import com.konkuk.moru.presentation.routinefeed.component.search.SortButtons
+import com.konkuk.moru.presentation.routinefeed.viewmodel.SearchViewModel
 import com.konkuk.moru.ui.theme.MORUTheme
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
-import com.konkuk.moru.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,27 +51,19 @@ internal fun RoutineNameResultScreen(
     onNavigateToTagSearch: () -> Unit,
     onDeleteTag: (String) -> Unit
 ) {
-    var sortOption by remember { mutableStateOf("최신순") }
 
-    val searchResults by remember(query, selectedTags, sortOption) {
-        mutableStateOf(
-            DummyData.feedRoutines.filter { routine ->
-                val titleMatches =
-                    query.isBlank() || routine.title.contains(query, ignoreCase = true)
-                val tagsMatch = selectedTags.all { selectedTag ->
-                    val cleanSelectedTag = selectedTag.removePrefix("#")
-                    routine.tags.any { it.equals(cleanSelectedTag, ignoreCase = true) }
-                }
-                titleMatches && tagsMatch
-            }.let { filteredList ->
-                when (sortOption) {
-                    "최신순" -> filteredList.sortedByDescending { it.routineId }
-                    "인기순" -> filteredList.sortedByDescending { it.likes }
-                    else -> filteredList
-                }
-            }
-        )
+
+    // 변경: ViewModel 상태로 결과/정렬 제어
+    val vm: SearchViewModel = hiltViewModel()
+    val ui by vm.uiState.collectAsState()
+
+    // 변경: sortOption -> VM의 sortType과 동기
+    val sortOption = when (ui.sortType) {
+        SortType.LATEST -> "최신순"
+        SortType.POPULAR -> "인기순"
     }
+
+
 
     Scaffold(
         containerColor = Color.White,
@@ -99,8 +87,11 @@ internal fun RoutineNameResultScreen(
             item {
                 SelectedTagsSection(
                     modifier = Modifier.padding(16.dp),
-                    selectedTags = selectedTags,
-                    onDeleteTag = onDeleteTag,
+                    selectedTags = ui.selectedTags,                 // ← 변경
+                    onDeleteTag = { tag ->
+                        vm.removeTag(tag)                           // ← 변경: VM에 반영
+                        vm.performSearch(resetPage = true)          // ← 변경: 즉시 재검색
+                    },
                     onNavigateToTagSearch = onNavigateToTagSearch
                 )
             }
@@ -110,25 +101,37 @@ internal fun RoutineNameResultScreen(
                 Column(Modifier.padding(horizontal = 16.dp)) {
                     SortButtons(
                         selectedOption = sortOption,
-                        onOptionSelected = { sortOption = it }
+                        onOptionSelected = { text ->
+                            // 변경: 정렬 변경 -> 서버 sortType으로 매핑
+                            val newSort = if (text == "인기순") SortType.POPULAR else SortType.LATEST
+                            vm.setSort(newSort)
+                        }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
 
             // 4️⃣. 검색 결과 목록
-            items(searchResults) { routine ->
-                RoutineListItem(
+            items(ui.results) { routine ->
+                com.konkuk.moru.core.component.routine.RoutineListItem(
                     modifier = Modifier.padding(horizontal = 16.dp),
                     isRunning = routine.isRunning,
                     routineName = routine.title,
                     tags = routine.tags,
-                    likeCount = routine.likes,
+                    likeCount = routine.likeCount,
                     isLiked = routine.isLiked,
-                    onLikeClick = { /* 좋아요 로직 */ },
                     onItemClick = { onRoutineClick(routine.routineId) }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // (옵션) 페이징 로드 모어 트리거
+            if (ui.canLoadMore) {
+                item {
+                    androidx.compose.runtime.LaunchedEffect(ui.page) {
+                        vm.loadMore() // 스크롤 끝에서 자동 호출하려면 LazyColumn state와 연동해도 좋음
+                    }
+                }
             }
         }
     }

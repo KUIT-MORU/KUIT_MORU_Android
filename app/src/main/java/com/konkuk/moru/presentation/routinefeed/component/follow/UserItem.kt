@@ -28,6 +28,7 @@ import com.konkuk.moru.ui.theme.moruFontMedium
 @Composable
 fun UserItem(
     user: FollowUser,
+    showFollowButton: Boolean,
     onFollowClick: (FollowUser) -> Unit,
     onUserClick: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -86,19 +87,22 @@ fun UserItem(
         val contentColor =
             if (user.isFollowing) MORUTheme.colors.mediumGray else MORUTheme.colors.limeGreen
 
-        MoruButton(
-            text = buttonText,
-            onClick = { onFollowClick(user) },
-            backgroundColor = backgroundColor,
-            contentColor = contentColor,
-            shape = RoundedCornerShape(140.dp),
-            textStyle = MORUTheme.typography.title_B_14,
-            modifier = Modifier
-                .wrapContentWidth() // 텍스트 크기에 따라 폭 조정
-                .defaultMinSize(minWidth = 64.dp, minHeight = 32.dp)
+        if (showFollowButton) {
+            MoruButton(
+                text = buttonText,
+                onClick = { onFollowClick(user) },
+                backgroundColor = backgroundColor,
+                contentColor = contentColor,
+                shape = RoundedCornerShape(140.dp),
+                textStyle = MORUTheme.typography.title_B_14,
+                modifier = Modifier
+                    .wrapContentWidth() // 텍스트 크기에 따라 폭 조정
+                    .defaultMinSize(minWidth = 64.dp, minHeight = 32.dp)
 
 
-        )
+            )
+        }
+
     }
 }
 
@@ -108,14 +112,16 @@ private fun UserItemPreview() {
     MORUTheme {
         Column {
             UserItem(
-                user = FollowUser("", "사용자명1", "사용자명 1","자기소개입니다. 잘 부탁드립니다.", false),
+                user = FollowUser("", "사용자명1", "사용자명 1", "자기소개입니다. 잘 부탁드립니다.", false),
                 onFollowClick = {},
-                onUserClick = {}
+                onUserClick = {},
+                showFollowButton = true,
             )
             UserItem(
                 user = FollowUser("", "", "사용자명2", "안녕하세요!", true),
                 onFollowClick = {},
-                onUserClick = {}
+                onUserClick = {},
+                showFollowButton = true,
             )
         }
     }

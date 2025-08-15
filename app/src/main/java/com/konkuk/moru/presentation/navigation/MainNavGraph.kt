@@ -10,6 +10,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -18,6 +19,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.konkuk.moru.data.model.DummyData.feedRoutines
 import com.konkuk.moru.data.model.Routine
+import com.google.gson.Gson
 import com.konkuk.moru.presentation.home.screen.HomeScreen
 import com.konkuk.moru.presentation.home.screen.RoutineFocusIntroScreen
 import com.konkuk.moru.presentation.home.screen.RoutineSimpleRunScreen
@@ -272,21 +274,23 @@ fun MainNavGraph(
 
 
         composable(route = Route.RoutineFeed.route) {
-            val viewModel: RoutineFeedViewModel = viewModel()
+            val viewModel: RoutineFeedViewModel = hiltViewModel()
             val uiState by viewModel.uiState.collectAsState()
 
             RoutineFeedScreen(
                 navController = navController,
-                uiState = uiState,
-                onNotificationClick = {
-                    viewModel.onNotificationViewed() // ViewModel의 함수 호출
-                    navController.navigate(Route.Notification.route)
-                }
             )
         }
 
         composable(route = Route.RoutineSearch.route) {
-            RoutineSearchHost(navController = navController)
+            // 변경: SearchViewModel 주입
+            val vm: com.konkuk.moru.presentation.routinefeed.viewmodel.SearchViewModel =
+                androidx.hilt.navigation.compose.hiltViewModel()
+
+            // 변경: Host에 vm 전달
+            com.konkuk.moru.presentation.routinefeed.screen.search.RoutineSearchHost(
+                navController = navController
+            )
         }
 
         composable(
@@ -297,7 +301,7 @@ fun MainNavGraph(
             if (routineId != null) {
                 RoutineDetailScreen(
                     routineId = routineId,
-                    onBackClick = { navController.popBackStack() },
+                    onBackClick = { navController.navigateUpOrHome() },
                     navController = navController
                 )
             } else {
@@ -313,32 +317,28 @@ fun MainNavGraph(
             val encodedTitle = backStackEntry.arguments?.getString("title") ?: ""
             val title = URLDecoder.decode(encodedTitle, StandardCharsets.UTF_8.toString())
 
-            val routinesToShow = when {
-                title.startsWith("#") -> {
-                    val tags = title.removePrefix("#").split("#").filter { it.isNotEmpty() }
-                    feedRoutines.filter { routine ->
-                        tags.all { tagToFind ->
-                            routine.tags.contains(
-                                tagToFind
-                            )
-                        }
-                    }
-                }
-
-                title == "지금 가장 핫한 루틴은?" -> feedRoutines.filter { it.likes > 70 }
-                title == "MORU님과 딱 맞는 루틴" -> feedRoutines.filter { it.authorName == "MORU" }
-                title == "이 루틴과 비슷한 루틴" -> {
-                    feedRoutines.filter { it.tags.contains("운동") || it.tags.contains("명상") }
-                }
-
-                else -> emptyList()
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(Route.RoutineFeed.route)
             }
+            val feedViewModel: RoutineFeedViewModel = hiltViewModel(parentEntry) // ✅ [추가]
+            val uiState by feedViewModel.uiState.collectAsState()
+
+            val routinesToShow = remember(uiState, title) {
+                uiState.routineSections.firstOrNull { it.title == title }?.routines.orEmpty()
+            }
+
+
 
             RoutineFeedRec(
                 title = title,
                 routines = routinesToShow,
-                onBack = { navController.popBackStack() },
+                onBack = { navController.navigateUpOrHome() },
                 onRoutineClick = { routineId ->
+                    routinesToShow.firstOrNull { it.routineId == routineId }?.let { selected ->
+                        navController.currentBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("selectedRoutineJson", Gson().toJson(selected))
+                    }
                     navController.navigate(Route.RoutineFeedDetail.createRoute(routineId))
                 }
             )
@@ -381,7 +381,10 @@ fun MainNavGraph(
 
         composable(
             route = Route.UserProfile.route,
-            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+            arguments = listOf(navArgument("userId") {
+                type = NavType.StringType
+                nullable = true
+            })
         ) { backStackEntry ->
             // userId는 현재 더미 데이터로만 사용되므로 ViewModel에서 직접 로드합니다.
             // 실제 앱에서는 hiltViewModel에 userId를 전달하여 해당 유저 데이터를 불러옵니다.
@@ -397,11 +400,12 @@ fun MainNavGraph(
         ) { backStackEntry ->
             val selectedTab = backStackEntry.arguments?.getString("selectedTab")
             FollowScreen(
-                onBackClick = { navController.popBackStack() },
+                onBackClick = { navController.navigateUpOrHome() },
                 selectedTab = selectedTab,
                 onUserClick = { userId ->
                     navController.navigate(Route.UserProfile.createRoute(userId))
                 },
+                navController = navController
             )
         }
 
@@ -421,7 +425,8 @@ fun MainNavGraph(
             NotificationScreen(
                 onNavigateBack = {
                     navController.popBackStack()
-                }
+                },
+                navController = navController
             )
         }
 

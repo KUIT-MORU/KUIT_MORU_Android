@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,7 +37,6 @@ fun RoutineListItem(
     showCheckbox: Boolean = false,
     isChecked: Boolean = false,
     onCheckedChange: (Boolean) -> Unit = {},
-    onLikeClick: () -> Unit,
     onItemClick: () -> Unit
 ) {
     Row(
@@ -62,13 +60,13 @@ fun RoutineListItem(
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable { onLikeClick() } // 좋아요 클릭 영역 유지
+                // 좋아요 클릭 영역 유지
             ) {
                 Icon(
-                    imageVector = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    imageVector = Icons.Default.FavoriteBorder,
                     contentDescription = "좋아요",
                     modifier = Modifier.size(16.dp),
-                    tint = if (isLiked) Color.Red else Color.Gray // 원본 색상 유지
+                    tint = Color.Gray // 원본 색상 유지
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
@@ -108,7 +106,6 @@ private fun RoutineListItemPreview() {
             isLiked = true,
             showCheckbox = true,
             isChecked = true,
-            onLikeClick = {},
             onItemClick = {}
         )
         RoutineListItem(
@@ -119,7 +116,6 @@ private fun RoutineListItemPreview() {
             isLiked = false,
             showCheckbox = true,
             isChecked = false,
-            onLikeClick = {},
             onItemClick = {}
         )
     }

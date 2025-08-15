@@ -169,7 +169,6 @@ fun MyRoutinesScreen(
                                     onCheckedChange = { isChecked ->
                                         viewModel.onCheckRoutine(routine.routineId, isChecked)
                                     },
-                                    onLikeClick = { viewModel.onLikeClick(routine.routineId) },
                                     onItemClick = { viewModel.onCheckRoutine(routine.routineId, !routine.isChecked) }
                                 )
                             } else {

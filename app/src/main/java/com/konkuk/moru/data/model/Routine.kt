@@ -13,7 +13,7 @@ data class Routine(
     val title: String,
     val description: String,
     val imageUrl: String?,
-    val category: String,
+    val category: String, // 집중, 간편
     val tags: List<String>,
 
     // 사용자 관련 정보
@@ -28,6 +28,8 @@ data class Routine(
     val isRunning: Boolean, // 현재 사용자가 이 루틴을 실행 중인지
     val isSimple: Boolean = false, // 간편/집중 루틴 구분
     var isChecked: Boolean = false, // '내 루틴' 삭제 모드에서 사용
+    var scrapCount: Int = 0, // [추가]
+
 
     // 시간 정보 (내 루틴)
     val scheduledTime: LocalTime? = null,

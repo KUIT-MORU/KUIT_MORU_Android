@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.konkuk.moru.core.datastore.SchedulePreference
-import com.konkuk.moru.data.dto.response.RoutineDetailResponse
+import com.konkuk.moru.data.dto.response.RoutineDetailResponseV1
 import com.konkuk.moru.data.mapper.toDomain
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.repositoryimpl.RoutineRepository
@@ -41,8 +41,8 @@ class HomeRoutinesViewModel @Inject constructor(
     val scheduledRoutines: StateFlow<List<Routine>> = _scheduledRoutines
 
     // 루틴 상세 정보 (스텝 포함)
-    private val _routineDetail = MutableStateFlow<RoutineDetailResponse?>(null)
-    val routineDetail: StateFlow<RoutineDetailResponse?> = _routineDetail
+    private val _routineDetail = MutableStateFlow<RoutineDetailResponseV1?>(null)
+    val routineDetail: StateFlow<RoutineDetailResponseV1?> = _routineDetail
 
     fun loadTodayRoutines(page: Int = 0, size: Int = 20) {
         Log.d(TAG, "🔄 loadTodayRoutines 호출됨: page=$page, size=$size")

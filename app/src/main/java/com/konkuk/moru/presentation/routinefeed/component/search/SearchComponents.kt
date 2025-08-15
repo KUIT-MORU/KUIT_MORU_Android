@@ -74,12 +74,6 @@ internal fun TagChip(
         Text(text = text, style = MORUTheme.typography.time_R_14, color = textColor)
         if (showCloseIcon) {
             Spacer(modifier = Modifier.width(4.dp))
-            /*Icon(
-                //painter = painterResource(id = R.drawable.ic_info),
-                contentDescription = "Remove Tag",
-                modifier = Modifier.size(12.dp),
-                tint = MORUTheme.colors.mediumGray
-            )*/
         }
     }
 }
