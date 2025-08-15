@@ -19,7 +19,8 @@ data class MyRoutineUi(
     val scheduledDays: Set<DayOfWeek>,  // 스케줄 조회/편집 시 사용
     val isAlarmEnabled: Boolean,        // 스케줄 조회/편집 시 사용
     val isChecked: Boolean,             // 삭제 모드용 체크박스 UI 상태
-    val authorId: String?               // 상세에서 주입
+    val authorId: String?,               // 상세에서 주입
+    val createdAt: String? = null // ISO-8601라면 문자열 정렬도 안전
 )
 
 

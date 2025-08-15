@@ -19,7 +19,9 @@ fun MyRoutineSummaryDto.toMyUi(): MyRoutineUi = MyRoutineUi(
     scheduledDays = emptySet(),
     isAlarmEnabled = false,
     isChecked = false,
-    authorId = null
+    authorId = null,
+    createdAt = createdAt // ▼ 추가
+
 )
 
 // [추가] 상세 DTO → UI(상세 화면에서 사용)

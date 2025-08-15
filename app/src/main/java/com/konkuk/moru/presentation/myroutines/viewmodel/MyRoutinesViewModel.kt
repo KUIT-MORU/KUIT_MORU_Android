@@ -143,6 +143,8 @@ class MyRoutinesViewModel @Inject constructor(
      *  - 항상 sortType과 함께 서버로 전달 → 서버가 정렬 + (선택시)요일 필터를 함께 적용
      *  - 서버가 TIME+null을 아직 막아 에러면, 오늘 요일로 1회 폴백
      */
+
+
     private suspend fun fetchFromServer() {
         val state = _uiState.value
         val sortType = when (state.selectedSortOption) {
@@ -150,31 +152,41 @@ class MyRoutinesViewModel @Inject constructor(
             SortOption.LATEST -> "LATEST"
             SortOption.POPULAR -> "POPULAR"
         }
-        val dayParam: DayOfWeek? = state.selectedDay // ✅ sortType과 무관하게 그대로 전달
+        val selectedDay = state.selectedDay
 
-        try {
-            val result = repo.getMyRoutines(
-                sortType = sortType,
-                dayOfWeek = dayParam,
-                page = 0,
-                size = 50
-            )
-            _sourceRoutines.value = result
-        } catch (e: Exception) {
-            val needFallback = (sortType == "TIME" && dayParam == null)
-            if (needFallback) {
-                val today = LocalDate.now(ZoneId.systemDefault()).dayOfWeek
-                val fallback = repo.getMyRoutines(
-                    sortType = "TIME",
-                    dayOfWeek = today,
-                    page = 0,
-                    size = 50
+        val result: List<MyRoutineUi> = try {
+            if (selectedDay == null) {
+                // 날짜 미선택 → sortType만으로 전체
+                repo.getMyRoutines(
+                    sortType = sortType,
+                    dayOfWeek = null,
+                    page = 0, size = 50
                 )
-                _sourceRoutines.value = fallback
+            } else {
+                // 날짜 선택됨 → 먼저 요일 교집합 집합을 확보
+                // 서버가 TIME에서만 요일 필터를 보장하므로 TIME으로 가져온 뒤, 원하는 정렬로 재정렬
+                val dayFiltered = repo.getMyRoutines(
+                    sortType = "TIME",
+                    dayOfWeek = selectedDay,
+                    page = 0, size = 50
+                )
+                when (sortType) {
+                    "POPULAR" -> dayFiltered.sortedByDescending { it.likes }
+                    "LATEST"  -> dayFiltered.sortedByDescending { it.createdAt } // ISO-8601 기준
+                    else      -> dayFiltered.sortedBy { it.scheduledTime ?: LocalTime.MAX }
+                }
+            }
+        } catch (e: Exception) {
+            // 서버가 TIME+null을 아직 막아놨을 때 대비(이 경로는 selectedDay==null && sortType=="TIME"일 때만 의미 있음)
+            if (sortType == "TIME" && selectedDay == null) {
+                val today = LocalDate.now(ZoneId.systemDefault()).dayOfWeek
+                repo.getMyRoutines("TIME", today, 0, 50)
             } else {
                 throw e
             }
         }
+
+        _sourceRoutines.value = result
     }
 
     fun loadRoutines() {
