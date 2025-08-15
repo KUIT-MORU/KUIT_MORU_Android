@@ -12,7 +12,8 @@ fun RoutineFocusScreenContainer(
     sharedViewModel: SharedRoutineViewModel,
     onDismiss: () -> Unit,
     onFinishConfirmed: (String) -> Unit,
-    onScreenBlockTrigger: () -> Unit = {}
+    onScreenBlockTrigger: () -> Unit = {},
+    onNavigateToMyActivity: () -> Unit = {}
 ){
     val selectedIdState by sharedViewModel.selectedRoutineId.collectAsState(initial = null)
     val selectedId: Int = selectedIdState ?: 0
@@ -24,7 +25,8 @@ fun RoutineFocusScreenContainer(
             routineId = selectedId,
             onDismiss = onDismiss,
             currentStep = focusViewModel.currentStep,
-            onFinishConfirmed = onFinishConfirmed
+            onFinishConfirmed = onFinishConfirmed,
+            onNavigateToMyActivity = onNavigateToMyActivity
         )
     } else {
         PortraitRoutineFocusScreen(
@@ -33,7 +35,8 @@ fun RoutineFocusScreenContainer(
             routineId = selectedId,
             onDismiss = onDismiss,
             currentStep = focusViewModel.currentStep,
-            onFinishConfirmed = onFinishConfirmed
+            onFinishConfirmed = onFinishConfirmed,
+            onNavigateToMyActivity = onNavigateToMyActivity
         )
     }
 

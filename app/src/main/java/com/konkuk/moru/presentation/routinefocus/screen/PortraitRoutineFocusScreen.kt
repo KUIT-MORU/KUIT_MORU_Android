@@ -253,7 +253,9 @@ fun PortraitRoutineFocusScreen(
     onFinishConfirmed: (String) -> Unit,
     // Preview용 강제 상태 파라미터 추가
     forceShowFinishPopup: Boolean = false,
-    forceShowResultPopup: Boolean = false
+    forceShowResultPopup: Boolean = false,
+    // 내 기록으로 이동을 위한 네비게이션 콜백 추가
+    onNavigateToMyActivity: () -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -851,27 +853,33 @@ fun PortraitRoutineFocusScreen(
                     }
                     Spacer(modifier = Modifier.height(9.03.dp))
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 5.dp),
-                        horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(width = 100.dp, height = 14.05.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "내 기록으로 이동",
-                                style = typography.time_R_12.copy(
-                                    textDecoration = TextDecoration.Underline
-                                ),
-                                color = colors.mediumGray
-                            )
-                        }
-                    }
+                                         Row(
+                         modifier = Modifier
+                             .fillMaxWidth()
+                             .padding(horizontal = 5.dp),
+                         horizontalArrangement = Arrangement.End,
+                         verticalAlignment = Alignment.CenterVertically
+                     ) {
+                         Box(
+                             modifier = Modifier
+                                 .size(width = 100.dp, height = 14.05.dp)
+                                 .clickable(
+                                     indication = null,
+                                     interactionSource = remember { MutableInteractionSource() }
+                                 ) {
+                                     onNavigateToMyActivity()
+                                 },
+                             contentAlignment = Alignment.Center
+                         ) {
+                             Text(
+                                 text = "내 기록으로 이동",
+                                 style = typography.time_R_12.copy(
+                                     textDecoration = TextDecoration.Underline
+                                 ),
+                                 color = colors.mediumGray
+                             )
+                         }
+                     }
                     Spacer(modifier = Modifier.height(6.02.dp))
 
                     Box(

@@ -191,11 +191,11 @@ fun MainNavGraph(
                     onDismiss = {
                         // 홈으로 돌아갈 때 "진행중 루틴" 알림
                         android.util.Log.d("MainNavGraph", "🔄 간편 루틴 X 버튼 클릭: routineId=$currentId")
-                        
+
                         // originalRoutineId를 stableIntId로 변환해서 설정
                         val stableId = originalRoutineId?.toStableIntId()
                         android.util.Log.d("MainNavGraph", "🎯 runningRoutineId 설정: originalRoutineId=$originalRoutineId, stableId=$stableId")
-                        
+
                         navController.getBackStackEntry(Route.Home.route)
                             .savedStateHandle["runningRoutineId"] = stableId
 
@@ -215,10 +215,10 @@ fun MainNavGraph(
                     },
                     onFinishConfirmed = { finishedId: String ->
                         Log.d("MainNavGraph", "🔄 RoutineSimpleRun 완료 처리: originalRoutineId=$originalRoutineId")
-                        
+
                         // 간편 루틴 완료 시 실천율 업데이트 (RoutineSimpleRunScreen에서 처리됨)
                         // 내 기록에는 표시되지 않음
-                        
+
                         navController.getBackStackEntry(Route.Home.route)
                             .savedStateHandle["finishedRoutineId"] = originalRoutineId ?: finishedId
                         Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}")

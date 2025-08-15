@@ -62,7 +62,9 @@ fun LandscapeRoutineFocusScreen(
     currentStep: Int,
     onFinishConfirmed: (String) -> Unit,
     forceShowFinishPopup: Boolean = false,
-    forceShowResultPopup: Boolean = false
+    forceShowResultPopup: Boolean = false,
+    // 내 기록으로 이동을 위한 네비게이션 콜백 추가
+    onNavigateToMyActivity: () -> Unit = {}
 ) {
     // intro 화면에서 넘기는 데이터들
     val steps = sharedViewModel.selectedSteps.collectAsStateWithLifecycle<List<RoutineStepData>>().value
@@ -579,27 +581,33 @@ fun LandscapeRoutineFocusScreen(
                     }
                     Spacer(modifier = Modifier.height(9.03.dp))
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 5.dp),
-                        horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(width = 100.dp, height = 14.05.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "내 기록으로 이동",
-                                style = typography.time_R_12.copy(
-                                    textDecoration = TextDecoration.Underline
-                                ),
-                                color = colors.mediumGray
-                            )
-                        }
-                    }
+                                         Row(
+                         modifier = Modifier
+                             .fillMaxWidth()
+                             .padding(horizontal = 5.dp),
+                         horizontalArrangement = Arrangement.End,
+                         verticalAlignment = Alignment.CenterVertically
+                     ) {
+                         Box(
+                             modifier = Modifier
+                                 .size(width = 100.dp, height = 14.05.dp)
+                                 .clickable(
+                                     indication = null,
+                                     interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+                                 ) {
+                                     onNavigateToMyActivity()
+                                 },
+                             contentAlignment = Alignment.Center
+                         ) {
+                             Text(
+                                 text = "내 기록으로 이동",
+                                 style = typography.time_R_12.copy(
+                                     textDecoration = TextDecoration.Underline
+                                 ),
+                                 color = colors.mediumGray
+                             )
+                         }
+                     }
                     Spacer(modifier = Modifier.height(6.02.dp))
 
                     Box(
