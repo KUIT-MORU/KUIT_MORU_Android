@@ -19,12 +19,14 @@ fun RoutineFocusScreenContainer(
 
     if (focusViewModel.isLandscapeMode) {
         LandscapeRoutineFocusScreen(
-            viewModel = focusViewModel,
+            focusViewModel = focusViewModel,
             sharedViewModel = sharedViewModel,
             routineId = selectedId,
             onDismiss = onDismiss,
             currentStep = focusViewModel.currentStep,
             onFinishConfirmed = onFinishConfirmed,
+            forceShowFinishPopup = false,
+            forceShowResultPopup = false,
             onNavigateToMyActivity = onNavigateToMyActivity
         )
     } else {
@@ -35,6 +37,8 @@ fun RoutineFocusScreenContainer(
             onDismiss = onDismiss,
             currentStep = focusViewModel.currentStep,
             onFinishConfirmed = onFinishConfirmed,
+            forceShowFinishPopup = false,
+            forceShowResultPopup = false,
             onNavigateToMyActivity = onNavigateToMyActivity
         )
     }
