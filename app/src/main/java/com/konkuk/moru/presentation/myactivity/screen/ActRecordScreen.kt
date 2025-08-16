@@ -1,20 +1,38 @@
 package com.konkuk.moru.presentation.myactivity.screen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.konkuk.moru.presentation.myactivity.component.BackTitle
 import com.konkuk.moru.presentation.myactivity.component.RecordCard
+import com.konkuk.moru.presentation.myactivity.viewmodel.MyActRecordUi
+import com.konkuk.moru.presentation.myactivity.viewmodel.MyActRecordViewModel
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
@@ -22,38 +40,26 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate
 
-data class RecordUi(
-    val id: String,
-    val title: String,
-    val tags: List<String>,
-    val isComplete: Boolean,
-    val startedAt: LocalDate
-)
-
 @Composable
 fun ActRecordScreen(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    vm: MyActRecordViewModel = hiltViewModel()
 ) {
-    val today = LocalDate.now()
-    val all = remember {
-        listOf(
-            RecordUi("1","루틴 이름 1", listOf("공부","운동"), false, today),
-            RecordUi("2","루틴 이름 2", listOf("자기계발","아침루틴"), true,  today),
-            RecordUi("3","루틴 이름 3", listOf("영어","책읽기"), true,  today.minusDays(1)),
-            RecordUi("4","루틴 이름 4", listOf("일기쓰기","스트레칭"), false, today.minusDays(2)),
-            RecordUi("5","루틴 이름 5", listOf("명상","감사일기"), true,  today.minusDays(6)),
-            RecordUi("6","루틴 이름 6", listOf("저녁루틴","복습"), false, today.minusDays(7)),
-            RecordUi("7","루틴 이름 7", listOf("알고리즘","CS공부"), true,  today.minusDays(10))
-        )
+    val todayList by vm.today.collectAsState()
+    val recentList by vm.recent.collectAsState()
+    val allList by vm.all.collectAsState()
+
+    LaunchedEffect(Unit) {
+        vm.loadToday()
+        vm.loadRecent()
+        vm.loadAllFirst()
     }
 
-    val todayList by remember(all, today) {
-        derivedStateOf { all.filter { it.startedAt == today } }
-    }
-    val last7List by remember(all, today) {
+    val today = remember { LocalDate.now() }
+    val last7List by remember(allList, today) {
         derivedStateOf {
-            all.filter { (today.toEpochDay() - it.startedAt.toEpochDay()) in 1..6 }
+            allList.filter { (today.toEpochDay() - it.startedAt.toEpochDay()) in 1..6 }
         }
     }
 
@@ -80,13 +86,12 @@ fun ActRecordScreen(
                     text = "오늘",
                     color = colors.black,
                     style = typography.body_SB_14,
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
             items(
                 items = todayList,
-                key = { rec -> "today-${rec.id}" }
+                key = { rec: MyActRecordUi -> "today-${rec.id}" }
             ) { rec ->
                 val safe = URLEncoder.encode(rec.title, StandardCharsets.UTF_8.toString())
                 RecordCard(
@@ -96,7 +101,7 @@ fun ActRecordScreen(
                     title = rec.title,
                     tags = rec.tags,
                     completeFlag = rec.isComplete,
-                    time = "00:00:00",
+                    time = rec.durationSec.toHms(),
                     onClick = { navController.navigate(Route.ActRecordDetail.createRoute(safe)) }
                 )
             }
@@ -106,14 +111,10 @@ fun ActRecordScreen(
                     text = "최근 7일",
                     color = colors.black,
                     style = typography.body_SB_14,
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
-            items(
-                items = last7List,
-                key = { rec -> "last7-${rec.id}" }
-            ) { rec ->
+            items(items = recentList, key = { rec: MyActRecordUi -> "recent-${rec.id}" }) { rec ->
                 val safe = URLEncoder.encode(rec.title, StandardCharsets.UTF_8.toString())
                 RecordCard(
                     modifier = Modifier
@@ -122,7 +123,7 @@ fun ActRecordScreen(
                     title = rec.title,
                     tags = rec.tags,
                     completeFlag = rec.isComplete,
-                    time = "00:00:00",
+                    time = rec.durationSec.toHms(),
                     onClick = { navController.navigate(Route.ActRecordDetail.createRoute(safe)) }
                 )
             }
@@ -132,14 +133,13 @@ fun ActRecordScreen(
                     text = "전체",
                     color = colors.black,
                     style = typography.body_SB_14,
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
-            items(
-                items = all,
-                key = { rec -> "all-${rec.id}" }
-            ) { rec ->
+            itemsIndexed(allList, key = { idx, rec -> "all-${rec.id}-$idx" }) { index, rec ->
+                if (index >= allList.lastIndex - 4) {
+                    vm.loadAllNext()
+                }
                 val safe = URLEncoder.encode(rec.title, StandardCharsets.UTF_8.toString())
                 RecordCard(
                     modifier = Modifier
@@ -148,10 +148,17 @@ fun ActRecordScreen(
                     title = rec.title,
                     tags = rec.tags,
                     completeFlag = rec.isComplete,
-                    time = "00:00:00",
+                    time = rec.durationSec.toHms(),
                     onClick = { navController.navigate(Route.ActRecordDetail.createRoute(safe)) }
                 )
             }
         }
     }
+}
+
+private fun Long.toHms(): String {
+    val h = this / 3600
+    val m = (this % 3600) / 60
+    val s = this % 60
+    return "%02d:%02d:%02d".format(h, m, s)
 }
