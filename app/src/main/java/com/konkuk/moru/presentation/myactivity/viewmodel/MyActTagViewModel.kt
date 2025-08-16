@@ -40,4 +40,35 @@ class MyActTagViewModel @Inject constructor(
                 }
         }
     }
+
+    fun loadAllTagsAndFavorites() {
+        viewModelScope.launch {
+            runCatching { repo.getAllTags() }
+                .onSuccess { all ->
+                    val uiAll = all.mapIndexed { index, t ->
+                        TagDto(
+                            id = index,
+                            name = "#${t.name}",
+                            isSelected = false,
+                            serverId = t.id
+                        )
+                    }
+                    _allTags.value = uiAll
+
+                    runCatching { repo.getMyFavoriteTags() }
+                        .onSuccess { favs ->
+                            val favIdSet = favs.map { it.id }.toSet()
+                            _allTags.value = _allTags.value.map { dto ->
+                                if (favIdSet.contains(dto.serverId)) dto.copy(isSelected = true) else dto
+                            }
+                        }
+                        .onFailure { e ->
+                            _error.value = e.message ?: "관심 태그 불러오기 실패"
+                        }
+                }
+                .onFailure { e ->
+                    _error.value = e.message ?: "전체 태그 불러오기 실패"
+                }
+        }
+    }
 }

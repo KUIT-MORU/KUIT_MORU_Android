@@ -50,7 +50,8 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 data class TagDto(
     val id: Int,
     val name: String,
-    val isSelected: Boolean = false
+    val isSelected: Boolean = false,
+    val serverId: String = ""
 )
 
 @Composable
@@ -74,7 +75,7 @@ fun ActFabTagScreen(
     }
 
     androidx.compose.runtime.LaunchedEffect(Unit) {
-        vm.loadAllTags()
+        vm.loadAllTagsAndFavorites()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -184,17 +185,17 @@ fun ActFabTagScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-//                        interestedTags.forEach { tag ->
-//                            TagChip(
-//                                text = tag.name,
-//                                selected = false,
+                        interestedTags.forEach { tag ->
+                            TagChip(
+                                text = tag.name,
+                                selected = false,
 //                                onClick = {
 //                                    allTags = allTags.map {
 //                                        if (it.id == tag.id) it.copy(isSelected = false) else it
 //                                    }
 //                                }
-//                            )
-//                        }
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(42.dp))

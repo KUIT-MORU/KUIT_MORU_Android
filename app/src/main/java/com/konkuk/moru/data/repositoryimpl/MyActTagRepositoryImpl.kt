@@ -12,4 +12,7 @@ class MyActTagRepositoryImpl @Inject constructor(
 
     override suspend fun getAllTags(): List<MyActTag> =
         service.getAllTags().map { it.toDomain() }
+
+    override suspend fun getMyFavoriteTags(): List<MyActTag> =
+        service.getFavoriteTags().map { it.toDomain() }
 }
