@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.collectAsState
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
@@ -309,14 +310,18 @@ fun PortraitRoutineFocusScreen(
     // 가로 모드 on/off 상태 저장
     var isLandscapeMode by remember { mutableStateOf(false) }
 
-    // 메모장 팝업 상태 저장
-    var showMemoPad by remember { mutableStateOf(false) }
+    // 메모장 팝업 상태 저장 - focusViewModel에서 가져오기
+    val showMemoPad = focusViewModel.showMemoPad
 
-    // 메모장 내용 저장 (STEP별로 저장)
+    // 메모장 내용 저장 - focusViewModel에서 실시간으로 가져오기
     var memoText by remember { mutableStateOf("") }
+    
+    // currentstep이 변경될 때마다 memoText를 업데이트
+    LaunchedEffect(currentstep) {
+        memoText = focusViewModel.getStepMemo(currentstep)
+    }
 
-    // STEP별 메모 저장 (내 기록용)
-    var stepMemos by remember { mutableStateOf(mutableMapOf<Int, String>()) }
+    // STEP별 메모는 focusViewModel에서 관리
 
     // 앱 아이콘 팝업 상태 저장
     val showAppIcons = focusViewModel.isAppIconsVisible
@@ -334,12 +339,6 @@ fun PortraitRoutineFocusScreen(
         val stepLimit = parseTimeToSeconds(routineItems.getOrNull(currentstep - 1)?.second ?: "0m")
         focusViewModel.setStepLimitFromTimeString(stepLimit)
         focusViewModel.startTimer()
-
-        // STEP 변경 시 메모 초기화 (이전 STEP 메모 저장)
-        if (currentstep > 1) {
-            stepMemos[currentstep - 1] = memoText
-        }
-        memoText = stepMemos[currentstep] ?: ""
     }
 
     // 시간 초과 시 진동 효과
@@ -536,7 +535,7 @@ fun PortraitRoutineFocusScreen(
                                                 focusViewModel.pauseTimer()
                                                 // 루틴 종료 시 사용앱과 메모장 자동으로 끄기
                                                 focusViewModel.hideAppIcons()
-                                                showMemoPad = false
+                                                focusViewModel.hideMemoPad()
                                                 showFinishPopup = true
                                             }
                                         },
@@ -629,7 +628,12 @@ fun PortraitRoutineFocusScreen(
                         @OptIn(ExperimentalMaterial3Api::class)
                         TextField(
                             value = memoText,
-                            onValueChange = { memoText = it },
+                            onValueChange = { newText ->
+                                // 로컬 상태와 ViewModel 상태 모두 업데이트
+                                memoText = newText
+                                focusViewModel.saveStepMemo(currentstep, newText)
+                                android.util.Log.d("PortraitRoutineFocusScreen", "📝 메모 입력: $newText")
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(130.dp)
@@ -685,7 +689,7 @@ fun PortraitRoutineFocusScreen(
                         modifier = Modifier
                             .size(24.dp)
                             .clickable {
-                                showMemoPad = !showMemoPad
+                                focusViewModel.toggleMemoPad()
                             },
                         colorFilter = ColorFilter.tint(if (isDarkMode) colors.mediumGray else colors.black)
                     )
@@ -778,12 +782,12 @@ fun PortraitRoutineFocusScreen(
                                 .clickable(
                                     indication = null,
                                     interactionSource = remember { MutableInteractionSource() }
-                                ) {
-                                    // 현재 STEP 메모 저장
-                                    stepMemos[currentstep] = memoText
-                                    showResultPopup = true
-                                    showFinishPopup = false
-                                }
+                                                                 ) {
+                                     // 현재 STEP 메모 저장
+                                     focusViewModel.saveStepMemo(currentstep, memoText)
+                                     showResultPopup = true
+                                     showFinishPopup = false
+                                 }
                                 .width(123.dp)
                                 .height(40.55.dp),
                             contentAlignment = Alignment.Center

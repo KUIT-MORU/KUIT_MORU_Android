@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.foundation.layout.imePadding
@@ -28,6 +29,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -48,6 +50,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.util.Log
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.layout.onGloballyPositioned
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
@@ -133,8 +138,19 @@ fun LandscapeRoutineFocusScreen(
     // 메모장 팝업 상태 저장 - focusViewModel에서 가져오기
     val showMemoPad = focusViewModel.showMemoPad
 
-    // 메모장 내용 저장
-    var memoText by remember { mutableStateOf("") }
+    // 메모장 내용 저장 - focusViewModel에서 실시간으로 가져오기
+    var memoText by remember { 
+        val initialMemo = focusViewModel.getStepMemo(currentstep)
+        Log.d("LandscapeRoutineFocusScreen", "📝 memoText 초기화: '$initialMemo' (스텝: $currentstep)")
+        mutableStateOf(initialMemo) 
+    }
+    
+    // currentstep이 변경될 때마다 memoText를 업데이트
+    LaunchedEffect(currentstep) {
+        val savedMemo = focusViewModel.getStepMemo(currentstep)
+        memoText = savedMemo
+        Log.d("LandscapeRoutineFocusScreen", "🔄 스텝 $currentstep 변경: 메모 업데이트 '$savedMemo'")
+    }
 
     // 앱 아이콘 팝업 상태 저장 - focusViewModel에서 가져오기
     val showAppIcons = focusViewModel.showAppIcons
@@ -151,9 +167,10 @@ fun LandscapeRoutineFocusScreen(
         focusViewModel.startTimer()
     }
 
-    // 현재 스텝이 변경될 때마다 해당 스텝의 메모 불러오기
+    // 현재 스텝이 변경될 때마다 해당 스텝의 메모 불러오기 (디버깅용)
     LaunchedEffect(currentstep) {
-        memoText = focusViewModel.getStepMemo(currentstep)
+        val savedMemo = focusViewModel.getStepMemo(currentstep)
+        Log.d("LandscapeRoutineFocusScreen", "📖 스텝 $currentstep 메모 불러오기: $savedMemo")
     }
 
     Box(
@@ -434,60 +451,57 @@ fun LandscapeRoutineFocusScreen(
                     }
                 }
 
-                // 메모장 (사용앱 아래에 표시 - 조건부)
-                if (showMemoPad) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(80.dp) // 높이를 80dp로 늘려서 hint text가 잘 보이도록
-                            .background(colors.veryLightGray)
-                            .zIndex(10f) // 메모장이 다른 요소들 위에 표시되도록 zIndex 설정
-                            .imePadding() // 키보드가 열릴 때만 메모장을 위로 밀림
-                            .padding(bottom = 20.dp) // 키보드 위에 적절한 간격 유지
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp)
-                        ) {
-                            // 힌트 텍스트
-                            Text(
-                                text = "step $currentstep 메모 하기...",
-                                style = typography.desc_M_14,
-                                color = colors.darkGray
+                                 // 메모장 (사용앱 아래에 표시 - 조건부)
+                 if (showMemoPad) {
+                     Box(
+                         modifier = Modifier
+                             .fillMaxWidth()
+                             .height(120.dp) // 높이를 120dp로 늘려서 더 많은 텍스트 표시
+                             .background(colors.veryLightGray)
+                             .zIndex(10f) // 메모장이 다른 요소들 위에 표시되도록 zIndex 설정
+                             .imePadding() // 키보드가 열릴 때만 메모장을 위로 밀림
+                     ) {
+                        @OptIn(ExperimentalMaterial3Api::class)
+                        androidx.compose.material3.TextField(
+                            value = memoText.also { 
+                                Log.d("LandscapeRoutineFocusScreen", "📝 TextField value: '$it'")
+                            },
+                            onValueChange = { newText ->
+                                // 로컬 상태와 ViewModel 상태 모두 업데이트
+                                Log.d("LandscapeRoutineFocusScreen", "📝 onValueChange 호출: '$newText' (이전: '$memoText')")
+                                memoText = newText
+                                focusViewModel.saveStepMemo(currentstep, newText)
+                                Log.d("LandscapeRoutineFocusScreen", "📝 메모 입력 완료: $newText")
+                            },
+                            placeholder = {
+                                Text(
+                                    text = "step $currentstep 메모 하기...",
+                                    style = typography.desc_M_14,
+                                    color = colors.darkGray
+                                )
+                            },
+                                                         modifier = Modifier
+                                 .fillMaxWidth()
+                                 .height(100.dp) // 높이를 늘려서 더 많은 텍스트 표시
+                                 .padding(16.dp)
+                                 .onGloballyPositioned { coordinates ->
+                                     Log.d("LandscapeRoutineFocusScreen", "📝 TextField 위치: ${coordinates.size}")
+                                 },
+                            textStyle = typography.body_SB_16.copy(color = colors.black),
+                                                         singleLine = false, // 여러 줄 입력 가능
+                             maxLines = 6, // 최대 6줄까지 입력 가능
+                            colors = androidx.compose.material3.TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                errorContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent,
+                                errorIndicatorColor = Color.Transparent,
+                                cursorColor = colors.black
                             )
-                            
-                            Spacer(modifier = Modifier.height(4.dp))
-                            
-                            // 메모 입력 필드
-                            androidx.compose.material3.TextField(
-                                value = memoText,
-                                onValueChange = { newText ->
-                                    memoText = newText
-                                    // 현재 스텝에 메모 저장
-                                    focusViewModel.saveStepMemo(currentstep, newText)
-                                },
-                                placeholder = {
-                                    Text(
-                                        text = "메모를 입력하세요...",
-                                        style = typography.desc_M_12,
-                                        color = colors.mediumGray
-                                    )
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(24.dp),
-                                textStyle = typography.desc_M_12,
-                                colors = androidx.compose.material3.TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedContainerColor = Color.Transparent,
-                                    focusedIndicatorColor = colors.limeGreen,
-                                    unfocusedIndicatorColor = colors.lightGray
-                                ),
-                                singleLine = false, // 여러 줄 입력 가능
-                                maxLines = 2 // 최대 2줄까지 입력 가능
-                            )
-                        }
+                        )
                     }
                 }
 

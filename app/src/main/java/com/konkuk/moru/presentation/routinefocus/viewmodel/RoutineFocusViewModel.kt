@@ -11,8 +11,18 @@ import com.konkuk.moru.data.model.AppInfo
 import com.konkuk.moru.presentation.routinefocus.screen.parseTimeToSeconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class RoutineFocusViewModel : ViewModel() {
+
+    // ViewModel에 추가해야 할 메서드들
+    fun getMemoText(stepNumber: Int): String {
+        return _stepMemos.value[stepNumber] ?: ""
+    }
+
+
     // 시간이 흐르고 있는지 유무
     var isTimerRunning by mutableStateOf(false)
         private set
@@ -42,9 +52,22 @@ class RoutineFocusViewModel : ViewModel() {
     var isLandscapeMode by mutableStateOf(false)
         private set
 
+    fun updateMemoText(stepNumber: Int, text: String) {
+        _stepMemos.value = _stepMemos.value.toMutableMap().apply {
+            put(stepNumber, text)
+        }
+    }
+
     // 가로 모드 토글 함수
     fun toggleLandscapeMode() {
+        Log.d("RoutineFocusViewModel", "🔄 가로모드 토글: ${if (isLandscapeMode) "가로" else "세로"} → ${if (!isLandscapeMode) "가로" else "세로"}")
+        Log.d("RoutineFocusViewModel", "📱 토글 전 팝업 상태 - showAppIcons: $showAppIcons, showMemoPad: $showMemoPad")
+        Log.d("RoutineFocusViewModel", "📝 토글 전 메모 상태: $_stepMemos")
+        
         isLandscapeMode = !isLandscapeMode
+        
+        Log.d("RoutineFocusViewModel", "📱 토글 후 팝업 상태 - showAppIcons: $showAppIcons, showMemoPad: $showMemoPad")
+        Log.d("RoutineFocusViewModel", "📝 토글 후 메모 상태: $_stepMemos")
     }
 
     fun setLandscapeModeOn() {
@@ -216,6 +239,7 @@ class RoutineFocusViewModel : ViewModel() {
         get() = isAppIconsVisible
 
     fun toggleAppIcons() {
+        Log.d("RoutineFocusViewModel", "📱 앱 아이콘 팝업 토글: $isAppIconsVisible → ${!isAppIconsVisible}")
         isAppIconsVisible = !isAppIconsVisible
     }
 
@@ -228,11 +252,11 @@ class RoutineFocusViewModel : ViewModel() {
         private set
 
     // 스텝별 메모 저장
-    private val _stepMemos = mutableStateOf<Map<Int, String>>(emptyMap())
-    val stepMemos: Map<Int, String>
-        get() = _stepMemos.value
+    private val _stepMemos = MutableStateFlow<Map<Int, String>>(emptyMap())
+    val stepMemos: StateFlow<Map<Int, String>> = _stepMemos.asStateFlow()
 
     fun toggleMemoPad() {
+        Log.d("RoutineFocusViewModel", "📝 메모장 팝업 토글: $showMemoPad → ${!showMemoPad}")
         showMemoPad = !showMemoPad
     }
 
@@ -242,15 +266,27 @@ class RoutineFocusViewModel : ViewModel() {
 
     // 특정 스텝의 메모 저장
     fun saveStepMemo(step: Int, memo: String) {
+        Log.d("RoutineFocusViewModel", "📝 saveStepMemo 호출: step=$step, memo='$memo'")
+        Log.d("RoutineFocusViewModel", "📝 저장 전 메모 상태: ${_stepMemos.value}")
+        
         _stepMemos.value = _stepMemos.value.toMutableMap().apply {
             put(step, memo)
         }
-        Log.d("RoutineFocusViewModel", "📝 스텝 $step 메모 저장: $memo")
+        
+        Log.d("RoutineFocusViewModel", "📝 저장 후 메모 상태: ${_stepMemos.value}")
+        Log.d("RoutineFocusViewModel", "📝 스텝 $step 메모 저장 완료: $memo")
     }
 
     // 특정 스텝의 메모 가져오기
     fun getStepMemo(step: Int): String {
-        return _stepMemos.value[step] ?: ""
+        val memo = _stepMemos.value[step] ?: ""
+        Log.d("RoutineFocusViewModel", "📖 스텝 $step 메모 불러오기: $memo")
+        return memo
+    }
+    
+    // 특정 스텝의 메모를 StateFlow로 제공
+    fun getStepMemoFlow(step: Int): StateFlow<String> {
+        return MutableStateFlow(_stepMemos.value[step] ?: "").asStateFlow()
     }
 
     // 타이머 시작 함수
