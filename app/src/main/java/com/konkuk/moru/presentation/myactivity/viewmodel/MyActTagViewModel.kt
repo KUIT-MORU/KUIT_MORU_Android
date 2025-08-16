@@ -71,4 +71,24 @@ class MyActTagViewModel @Inject constructor(
                 }
         }
     }
+
+    fun submitFavoriteTags(selectedUiIds: List<Int>) {
+        val before = _allTags.value
+        val selectedDtos = before.filter { selectedUiIds.contains(it.id) }
+        val serverIds = selectedDtos.map { it.serverId }.filter { it.isNotBlank() }
+        if (serverIds.isEmpty()) return
+
+        val optimistic = before.map { dto ->
+            if (selectedUiIds.contains(dto.id)) dto.copy(isSelected = true) else dto
+        }
+        _allTags.value = optimistic
+
+        viewModelScope.launch {
+            runCatching { repo.setMyFavoriteTags(serverIds) }
+                .onFailure { e ->
+                    _allTags.value = before
+                    _error.value = e.message ?: "관심 태그 저장 실패"
+                }
+        }
+    }
 }

@@ -109,10 +109,9 @@ fun ActFabTagScreen(
                             .clip(RoundedCornerShape(10.dp))
                             .background(if (hasSelection) Color.Black else colors.mediumGray)
                             .clickable(enabled = hasSelection) {
-//                                allTags = allTags.map {
-//                                    if (selectedTagIds.contains(it.id)) it.copy(isSelected = true) else it
-//                                }
-//                                selectedTagIds.clear()
+                                vm.submitFavoriteTags(selectedTagIds.toList())
+
+                                selectedTagIds.clear()
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -251,29 +250,27 @@ fun ActFabTagScreen(
                         .padding(start = 8.65.dp)
                         .verticalScroll(rememberScrollState())
                 ) {
-//                    hashtagFilteredTags.forEach { tag ->
-//                        Box(
-//                            contentAlignment = Alignment.Center,
-//                            modifier = Modifier
-//                                .height(32.dp)
-//                                .clip(RoundedCornerShape(100.dp))
-//                                .background(Color.Black)
-//                                .clickable {
-//                                    allTags = allTags.map {
-//                                        if (it.id == tag.id) it.copy(isSelected = true) else it
-//                                    }
-//                                    query = ""
-//                                }
-//                                .padding(horizontal = 13.dp)
-//                        ) {
-//                            Text(
-//                                text = tag.name,
-//                                color = colors.limeGreen,
-//                                style = typography.time_R_14
-//                            )
-//                        }
-//                        Spacer(modifier = Modifier.height(10.dp))
-//                    }
+                    hashtagFilteredTags.forEach { tag ->
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .height(32.dp)
+                                .clip(RoundedCornerShape(100.dp))
+                                .background(Color.Black)
+                                .clickable {
+                                    vm.submitFavoriteTags(listOf(tag.id))
+                                    query = ""
+                                }
+                                .padding(horizontal = 13.dp)
+                        ) {
+                            Text(
+                                text = tag.name,
+                                color = colors.limeGreen,
+                                style = typography.time_R_14
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
                 }
             }
         }
