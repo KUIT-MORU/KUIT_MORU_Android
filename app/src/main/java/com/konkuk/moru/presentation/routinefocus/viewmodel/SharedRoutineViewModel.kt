@@ -3,7 +3,7 @@ package com.konkuk.moru.presentation.routinefocus.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.konkuk.moru.presentation.home.RoutineStepData
-import com.konkuk.moru.data.model.AppInfo
+import com.konkuk.moru.presentation.routinefeed.data.AppDto
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.time.DayOfWeek
@@ -71,11 +71,31 @@ class SharedRoutineViewModel : ViewModel() {
     }
 
     // 사용앱 리스트 (루틴 생성 시 선택한 앱들)
-    private val _selectedApps = MutableStateFlow<List<AppInfo>>(emptyList())
-    val selectedApps: StateFlow<List<AppInfo>> = _selectedApps
-    fun setSelectedApps(apps: List<AppInfo>) {
-        Log.d("SharedRoutineViewModel", "🔄 setSelectedApps: $apps")
+    private val _selectedApps = MutableStateFlow<List<AppDto>>(emptyList())
+    val selectedApps: StateFlow<List<AppDto>> = _selectedApps
+    fun setSelectedApps(apps: List<AppDto>) {
+        // 강제 테스트 로그
+        android.util.Log.e("TEST_LOG", "🔥 SharedRoutineViewModel.setSelectedApps 호출됨!")
+        android.util.Log.e("TEST_LOG", "🔥 받은 앱 개수: ${apps.size}개")
+        apps.forEachIndexed { index, app ->
+            android.util.Log.e("TEST_LOG", "🔥 앱 ${index + 1}: ${app.name} (${app.packageName})")
+        }
+        System.out.println("🔥 System.out: setSelectedApps 호출됨! 앱 ${apps.size}개")
+        
+        Log.d("SharedRoutineViewModel", "🔄 setSelectedApps 호출됨")
+        Log.d("SharedRoutineViewModel", "📱 전달받은 앱 개수: ${apps.size}")
+        Log.d("SharedRoutineViewModel", "📱 앱 상세 정보:")
+        apps.forEachIndexed { index, app ->
+            Log.d("SharedRoutineViewModel", "   ${index + 1}. 이름: ${app.name}, 패키지: ${app.packageName}")
+        }
         _selectedApps.value = apps
+        Log.d("SharedRoutineViewModel", "✅ selectedApps 설정 완료: ${_selectedApps.value.size}개")
+        
+        // 추가 로그: 업데이트 후 상태 확인
+        Log.d("SharedRoutineViewModel", "🔍 업데이트 후 selectedApps 확인: ${_selectedApps.value.size}개")
+        _selectedApps.value.forEachIndexed { index, app ->
+            Log.d("SharedRoutineViewModel", "   - 업데이트 후 앱 ${index + 1}: ${app.name} (${app.packageName})")
+        }
     }
 
     // 제목, 카테고리, 태그, 간편 루틴 여부 한꺼번에 설정

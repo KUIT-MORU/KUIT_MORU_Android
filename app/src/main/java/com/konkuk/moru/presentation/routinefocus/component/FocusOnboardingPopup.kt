@@ -16,14 +16,14 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.konkuk.moru.data.model.AppInfo
+import com.konkuk.moru.presentation.routinefeed.data.AppDto
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
 fun FocusOnboardingPopup(
-    selectedApps: List<AppInfo>,
-    onAppClick: (AppInfo) -> Unit,
+    selectedApps: List<AppDto>,
+    onAppClick: (AppDto) -> Unit,
     onOutsideClick: () -> Unit
 ) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -69,10 +69,17 @@ fun FocusOnboardingPopup(
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                selectedApps.forEach { app ->
+                // 로그 추가: 온보딩 팝업에서 사용앱 데이터가 표시되는지 확인
+                android.util.Log.d("FocusOnboardingPopup", "📱 온보딩 팝업에서 사용앱 표시")
+                android.util.Log.d("FocusOnboardingPopup", "📱 selectedApps 개수: ${selectedApps.size}")
+                selectedApps.forEachIndexed { index, app ->
+                    android.util.Log.d("FocusOnboardingPopup", "   ${index + 1}. 앱 표시: ${app.name} (${app.packageName})")
                     AppIcon(
                         app = app,
-                        onClick = { onAppClick(app) }
+                        onClick = { 
+                            android.util.Log.d("FocusOnboardingPopup", "🚀 앱 클릭: ${app.name} (${app.packageName})")
+                            onAppClick(app)
+                        }
                     )
                 }
             }
@@ -82,7 +89,7 @@ fun FocusOnboardingPopup(
 
 @Composable
 private fun AppIcon(
-    app: AppInfo,
+    app: AppDto,
     onClick: () -> Unit
 ) {
     Column(

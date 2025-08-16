@@ -7,6 +7,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.provider.Settings
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -65,9 +66,11 @@ import com.konkuk.moru.R
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
 import com.konkuk.moru.presentation.routinefocus.component.FocusOnboardingPopup
+import com.konkuk.moru.presentation.routinefocus.component.AppIcon
 import com.konkuk.moru.presentation.routinefocus.component.RoutineTimelineItem
 import com.konkuk.moru.presentation.routinefocus.component.SettingSwitchGroup
-import com.konkuk.moru.data.model.AppInfo
+import com.konkuk.moru.presentation.routinefeed.data.AppDto
+import com.konkuk.moru.presentation.routinefocus.component.ScreenBlockOverlay
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
 import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
@@ -257,6 +260,14 @@ fun PortraitRoutineFocusScreen(
     // 내 기록으로 이동을 위한 네비게이션 콜백 추가
     onNavigateToMyActivity: () -> Unit = {}
 ) {
+    // 강제 테스트 로그
+    android.util.Log.e("TEST_LOG", "🔥 PortraitRoutineFocusScreen 시작됨! routineId=$routineId")
+    System.out.println("🔥 System.out: PortraitRoutineFocusScreen 시작됨!")
+
+    // 기본 로그 추가
+    android.util.Log.d("PortraitRoutineFocusScreen", "🚀 PortraitRoutineFocusScreen 시작됨!")
+    android.util.Log.d("PortraitRoutineFocusScreen", "📱 routineId: $routineId, currentStep: $currentStep")
+
     val context = LocalContext.current
 
     // intro에서 데이터값 받아오기
@@ -319,7 +330,7 @@ fun PortraitRoutineFocusScreen(
 
     // 메모장 내용 저장 - focusViewModel에서 실시간으로 가져오기
     var memoText by remember { mutableStateOf("") }
-    
+
     // currentstep이 변경될 때마다 memoText를 업데이트
     LaunchedEffect(currentstep) {
         memoText = focusViewModel.getStepMemo(currentstep)
@@ -333,6 +344,43 @@ fun PortraitRoutineFocusScreen(
     // 사용앱 리스트 (루틴 생성 시 선택한 앱들)
     val selectedApps = focusViewModel.selectedApps
 
+    // 강제 테스트 로그
+    android.util.Log.e("TEST_LOG", "🔥 PortraitRoutineFocusScreen - selectedApps 상태: ${selectedApps.size}개")
+    selectedApps.forEachIndexed { index, app ->
+        android.util.Log.e("TEST_LOG", "🔥 앱 ${index + 1}: ${app.name} (${app.packageName})")
+    }
+    System.out.println("🔥 System.out: selectedApps 상태 - ${selectedApps.size}개")
+
+    // 사용앱 데이터 로깅
+    android.util.Log.d("PortraitRoutineFocusScreen", "🔍 selectedApps 초기값: ${selectedApps.size}개")
+    selectedApps.forEachIndexed { index, app ->
+        android.util.Log.d("PortraitRoutineFocusScreen", "   - 초기 앱 ${index + 1}: ${app.name} (${app.packageName})")
+    }
+
+    // 테스트용 더미 데이터 (selectedApps가 비어있을 때)
+    val testApps = if (selectedApps.isEmpty()) {
+        listOf(
+            com.konkuk.moru.presentation.routinefeed.data.AppDto("카카오톡", "com.kakao.talk"),
+            com.konkuk.moru.presentation.routinefeed.data.AppDto("유튜브", "com.google.android.youtube"),
+            com.konkuk.moru.presentation.routinefeed.data.AppDto("인스타그램", "com.instagram.android")
+        ).also {
+            android.util.Log.d("PortraitRoutineFocusScreen", "🧪 테스트용 더미 앱 데이터 사용: ${it.size}개")
+        }
+    } else {
+        selectedApps.also {
+            android.util.Log.d("PortraitRoutineFocusScreen", "✅ 서버에서 받은 사용앱 데이터 사용: ${it.size}개")
+        }
+    }
+
+    // 강제로 더미 데이터 사용 (테스트용)
+    val forceTestApps = listOf(
+        com.konkuk.moru.presentation.routinefeed.data.AppDto("카카오톡", "com.kakao.talk"),
+        com.konkuk.moru.presentation.routinefeed.data.AppDto("유튜브", "com.google.android.youtube"),
+        com.konkuk.moru.presentation.routinefeed.data.AppDto("인스타그램", "com.instagram.android")
+    )
+
+    android.util.Log.d("PortraitRoutineFocusScreen", "🧪 강제 테스트 앱 데이터: ${forceTestApps.size}개")
+
     // 집중 루틴 시작
     LaunchedEffect(Unit) {
         focusViewModel.startFocusRoutine()
@@ -344,13 +392,13 @@ fun PortraitRoutineFocusScreen(
         focusViewModel.setStepLimitFromTimeString(stepLimit)
         focusViewModel.startTimer()
     }
-    
+
          // 타임라인 스크롤 상태 관리
      val timelineListState = rememberLazyListState()
-     
+
      // 코루틴 스코프 생성
      val coroutineScope = rememberCoroutineScope()
-     
+
           // 현재 스텝이 변경될 때마다 타임라인을 해당 스텝으로 스크롤
       LaunchedEffect(currentstep) {
          // 스크롤 상태가 준비된 후에 스크롤 실행
@@ -492,7 +540,7 @@ fun PortraitRoutineFocusScreen(
                      ) {
                         // 모든 스텝을 표시하여 스크롤 가능하게 함
                         val allSteps = getAllSteps(routineItems.size)
-                        
+
                         items(allSteps) { stepIndex ->
                             val (title, time) = routineItems[stepIndex - 1] // stepIndex는 1부터 시작하므로 -1
                             RoutineTimelineItem(
@@ -552,7 +600,7 @@ fun PortraitRoutineFocusScreen(
                                                         ?: "0m"
                                                 focusViewModel.nextStep(nextStepTimeString)
                                                 focusViewModel.resumeTimer()
-                                                
+
                                                                                                  // 현재 step으로 타임라인 스크롤
                                                  coroutineScope.launch {
                                                      timelineListState.animateScrollToItem(currentstep - 1)
@@ -615,20 +663,31 @@ fun PortraitRoutineFocusScreen(
                             horizontalArrangement = Arrangement.spacedBy(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                                                         // 사용앱 아이콘들 (루틴 생성 시 선택한 앱들)
-                             selectedApps.forEachIndexed { index, appInfo ->
-                                 Image(
-                                     painter = painterResource(id = R.drawable.ic_default),
-                                     contentDescription = "사용앱 ${appInfo.name}",
-                                     modifier = Modifier
-                                         .size(48.dp)
-                                         .clip(RoundedCornerShape(6.dp))
-                                         .clickable {
-                                             // 온보딩 팝업창 표시
-                                             focusViewModel.showOnboardingPopup()
-                                         }
-                                 )
-                             }
+                            // 사용앱 아이콘들 (루틴 생성 시 선택한 앱들) - 앱 이름에 맞는 아이콘 표시
+                            selectedApps.forEachIndexed { index, appInfo ->
+                                android.util.Log.e("TEST_LOG", "🔥 렌더링 중: 앱 ${index + 1} - ${appInfo.name} (${appInfo.packageName})")
+                                
+                                // 앱 이름에 따라 적절한 아이콘 선택
+                                val iconResource = when (appInfo.name.lowercase()) {
+                                    "카카오톡" -> R.drawable.kakaotalk_icon
+                                    "네이버" -> R.drawable.naver_icon
+                                    "인스타그램" -> R.drawable.instagram_icon
+                                    "유튜브" -> R.drawable.youtube_icon
+                                    else -> R.drawable.ic_default
+                                }
+                                
+                                Image(
+                                    painter = painterResource(id = iconResource),
+                                    contentDescription = "사용앱 ${appInfo.name}",
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .clickable {
+                                            // 앱 바로 실행
+                                            launchApp(context, appInfo.packageName)
+                                        }
+                                )
+                            }
                             // 기본 아이콘들 (선택된 앱이 3개 미만인 경우)
                             repeat(3 - selectedApps.size) {
                                 Image(
@@ -993,24 +1052,30 @@ fun PortraitRoutineFocusScreen(
 
         // 화면 차단 팝업창
         if (focusViewModel.isScreenBlockPopupVisible) {
+            ScreenBlockOverlay(
+                selectedApps = selectedApps,
+                onDismiss = { focusViewModel.hideScreenBlockPopup() }
+            )
         }
 
         // 온보딩 팝업창
         if (focusViewModel.isOnboardingPopupVisible) {
             FocusOnboardingPopup(
                 selectedApps = focusViewModel.selectedApps,
-                onAppClick = { app ->
-                    // 허용된 앱 실행 플래그 설정
-                    focusViewModel.setPermittedAppLaunch(true)
-                                         // 실제 앱 실행
-                     launchApp(context, app.packageName ?: "")
-                    focusViewModel.hideOnboardingPopup()
-                },
+                                 onAppClick = { app ->
+                     // 허용된 앱 실행 플래그 설정
+                     focusViewModel.setPermittedAppLaunch(true)
+                                          // 실제 앱 실행
+                      launchApp(context, app.packageName)
+                     focusViewModel.hideOnboardingPopup()
+                 },
                 onOutsideClick = {
                     focusViewModel.hideOnboardingPopup()
                 }
             )
         }
+
+
     }
 }
 
@@ -1032,9 +1097,9 @@ private fun PortraitRoutineFocusScreenPreview() {
     )
 
     val dummyApps = listOf(
-        AppInfo("앱1", null, "com.example.app1"),
-        AppInfo("앱2", null, "com.example.app2"),
-        AppInfo("앱3", null, "com.example.app3")
+        AppDto("앱1", "com.example.app1"),
+        AppDto("앱2", "com.example.app2"),
+        AppDto("앱3", "com.example.app3")
     )
 
     dummySharedViewModel.setRoutineTitle("주말 아침 루틴")

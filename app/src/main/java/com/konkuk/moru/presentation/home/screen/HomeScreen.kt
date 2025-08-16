@@ -281,6 +281,12 @@ fun HomeScreen(
     Log.d("HomeScreen", "🔍 homeVm 인스턴스: $homeVm")
     Log.d("HomeScreen", "🔍 homeVm 클래스: ${homeVm.javaClass.simpleName}")
 
+    // SharedRoutineViewModel을 HomeRoutinesViewModel에 설정
+    LaunchedEffect(Unit) {
+        homeVm.setSharedRoutineViewModel(sharedViewModel)
+        Log.d("HomeScreen", "✅ SharedRoutineViewModel을 HomeRoutinesViewModel에 설정 완료")
+    }
+
     // ① Today(오늘용)
     val serverRoutines by homeVm.serverRoutines.collectAsState()
     // ② 내 루틴 전체(하단 카드용)
@@ -735,8 +741,8 @@ fun HomeScreen(
                                     sharedViewModel.setRoutineInfo(title = routine.title, category = actualCategory, tags = routine.tags, isSimple = isSimple)
 
                                     // 루틴 상세 정보 로드 (스텝 포함) 후 SharedRoutineViewModel에 직접 설정
-                                    Log.d("HomeScreen", "🔄 loadRoutineDetail 호출")
-                                    homeVm.loadRoutineDetail(routine.routineId)
+                                    Log.d("HomeScreen", "🔄 loadMyRoutineDetail 호출 (사용앱 정보 포함)")
+                                    homeVm.loadMyRoutineDetail(routine.routineId)
 
                                     // 네비게이션 트리거 설정
                                     Log.d("HomeScreen", "🔄 네비게이션 트리거 설정")
@@ -847,7 +853,7 @@ fun HomeScreen(
                                 )
 
                                 // 루틴 상세 정보 로드 (스텝 포함) 후 네비게이션
-                                homeVm.loadRoutineDetail(routine.routineId)
+                                homeVm.loadMyRoutineDetail(routine.routineId)
 
                                 // 네비게이션 트리거 설정
                                 homeEntry.savedStateHandle["navigateToRoutineFocus"] = routine.routineId

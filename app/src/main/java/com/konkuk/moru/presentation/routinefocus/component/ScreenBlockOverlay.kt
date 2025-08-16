@@ -1,5 +1,7 @@
 package com.konkuk.moru.presentation.routinefocus.component
 
+import android.content.Context
+import android.content.pm.PackageManager
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -9,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,6 +20,9 @@ import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -26,17 +32,62 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.core.graphics.createBitmap
 import com.konkuk.moru.R
-import com.konkuk.moru.data.model.AppInfo
+import com.konkuk.moru.presentation.routinefeed.data.AppDto
 import com.konkuk.moru.ui.theme.MORUTheme
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 
+// Drawable을 Bitmap으로 변환하는 함수
+private fun drawableToBitmap(drawable: android.graphics.drawable.Drawable): android.graphics.Bitmap {
+    return when (drawable) {
+        is android.graphics.drawable.BitmapDrawable -> drawable.bitmap
+        is android.graphics.drawable.AdaptiveIconDrawable -> {
+            val bmp = createBitmap(
+                drawable.intrinsicWidth.coerceAtLeast(1),
+                drawable.intrinsicHeight.coerceAtLeast(1)
+            )
+            val canvas = android.graphics.Canvas(bmp)
+            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.draw(canvas)
+            bmp
+        }
+        else -> {
+            val bmp = createBitmap(
+                drawable.intrinsicWidth.coerceAtLeast(1),
+                drawable.intrinsicHeight.coerceAtLeast(1)
+            )
+            val canvas = android.graphics.Canvas(bmp)
+            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.draw(canvas)
+            bmp
+        }
+    }
+}
+
+// 앱 실행 함수
+private fun launchApp(context: Context, packageName: String) {
+    try {
+        val intent = context.packageManager.getLaunchIntentForPackage(packageName)
+        if (intent != null) {
+            intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+            context.startActivity(intent)
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+}
+
 @Composable
 fun ScreenBlockOverlay(
-    selectedApps: List<AppInfo> = emptyList(),
+    selectedApps: List<AppDto> = emptyList(),
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    // 화면 방향에 따른 위치와 크기 조정
+    val isLandscape = LocalConfiguration.current.screenWidthDp > LocalConfiguration.current.screenHeightDp
+    
     // 어두운 회색 배경에 연두색 테두리 말풍선
     Box(
         modifier = modifier
@@ -52,7 +103,7 @@ fun ScreenBlockOverlay(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .fillMaxWidth()
-                .offset(y = (-140).dp) // 앱 아이콘들을 더 위로 배치
+                .offset(y = if (isLandscape) (-52).dp else (-133).dp) // 화면 방향에 따라 위치 조정 (가로모드: 사용앱 팝업과 동일한 높이)
                 .zIndex(1001f), // 오버레이보다 위에 표시
             horizontalAlignment = Alignment.Start
         ) {
@@ -69,27 +120,42 @@ fun ScreenBlockOverlay(
                 )
             }
             
-            // 앱 아이콘들
+            // 앱 아이콘들 (화면 방향에 따라 크기 조정)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(88.dp)
+                    .height(if (isLandscape) 60.dp else 88.dp) // 가로모드: 60dp, 세로모드: 88dp
                     .background(Color.Transparent)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 16.dp, vertical = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        .padding(
+                            horizontal = 16.dp, 
+                            vertical = if (isLandscape) 12.dp else 20.dp // 가로모드: 12dp, 세로모드: 20dp
+                        ),
+                    horizontalArrangement = Arrangement.spacedBy(if (isLandscape) 14.dp else 14.dp), // 가로모드와 세로모드 동일한 간격
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                selectedApps.forEach { app ->
-                    AppIconItem(app = app)
-                }
-                // 기본 아이콘들 (선택된 앱이 3개 미만인 경우)
-                repeat(3 - selectedApps.size) {
-                    AppIconItem()
-                }
+                    // 로그 추가: 실제로 사용앱 데이터가 표시되는지 확인
+                    android.util.Log.d("ScreenBlockOverlay", "📱 화면 차단 오버레이에서 사용앱 표시")
+                    android.util.Log.d("ScreenBlockOverlay", "📱 selectedApps 개수: ${selectedApps.size}")
+                    selectedApps.forEachIndexed { index, app ->
+                        android.util.Log.d("ScreenBlockOverlay", "   ${index + 1}. 앱 표시: ${app.name} (${app.packageName})")
+                        AppIconItem(
+                            app = app,
+                            isLandscape = isLandscape,
+                            onAppClick = { 
+                                // 앱 실행
+                                android.util.Log.d("ScreenBlockOverlay", "🚀 앱 실행 시도: ${app.name} (${app.packageName})")
+                                launchApp(context, app.packageName)
+                            }
+                        )
+                    }
+                    // 기본 아이콘들 (선택된 앱이 3개 미만인 경우)
+                    repeat(3 - selectedApps.size) {
+                        AppIconItem(isLandscape = isLandscape)
+                    }
                 }
             }
         }
@@ -165,14 +231,45 @@ fun DarkBalloonWithTail(
 }
 
 @Composable
-private fun AppIconItem(app: AppInfo? = null) {
-    Image(
-        painter = painterResource(id = R.drawable.ic_default),
-        contentDescription = app?.name?.let { "${it} 아이콘" } ?: "앱 아이콘",
-        modifier = Modifier
-            .size(48.dp)
-            .clip(RoundedCornerShape(6.dp))
-    )
+private fun AppIconItem(
+    app: AppDto? = null, 
+    isLandscape: Boolean = false,
+    onAppClick: (() -> Unit)? = null
+) {
+    val context = LocalContext.current
+    // 화면 방향에 따라 아이콘 크기 조정 (사용앱 팝업과 동일하게)
+    val iconSize = if (isLandscape) 36.dp else 48.dp // 가로모드: 36dp, 세로모드: 48dp
+    
+    // 실제 앱 정보가 있으면 앱 이름에 맞는 아이콘을 표시하고, 없으면 기본 아이콘 표시
+    if (app != null) {
+        // 앱 이름에 따라 적절한 아이콘 선택 (하드코딩)
+        val iconResource = when (app.name.lowercase()) {
+            "카카오톡" -> R.drawable.kakaotalk_icon
+            "네이버" -> R.drawable.naver_icon
+            "인스타그램" -> R.drawable.instagram_icon
+            "유튜브" -> R.drawable.youtube_icon
+            else -> R.drawable.ic_default
+        }
+        
+        // 앱 이름에 맞는 아이콘 표시
+        Image(
+            painter = painterResource(id = iconResource),
+            contentDescription = "${app.name} 아이콘",
+            modifier = Modifier
+                .size(iconSize)
+                .clip(RoundedCornerShape(6.dp))
+                .clickable { onAppClick?.invoke() }
+        )
+    } else {
+        // 기본 아이콘 (선택된 앱이 3개 미만인 경우)
+        Image(
+            painter = painterResource(id = R.drawable.ic_default),
+            contentDescription = "앱 아이콘",
+            modifier = Modifier
+                .size(iconSize)
+                .clip(RoundedCornerShape(6.dp))
+        )
+    }
 }
 
 @Preview(
@@ -184,19 +281,16 @@ private fun AppIconItem(app: AppInfo? = null) {
 fun ScreenBlockOverlayPreview() {
     // 더미 앱 데이터 생성
     val dummyApps = listOf(
-        AppInfo(
+        AppDto(
             name = "YouTube",
-            iconUrl = null,
             packageName = "com.google.android.youtube"
         ),
-        AppInfo(
+        AppDto(
             name = "Instagram",
-            iconUrl = null,
             packageName = "com.instagram.android"
         ),
-        AppInfo(
+        AppDto(
             name = "KakaoTalk",
-            iconUrl = null,
             packageName = "com.kakao.talk"
         )
     )

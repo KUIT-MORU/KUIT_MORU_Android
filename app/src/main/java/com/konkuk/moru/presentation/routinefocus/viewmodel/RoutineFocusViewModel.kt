@@ -7,7 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.konkuk.moru.data.model.AppInfo
+import com.konkuk.moru.presentation.routinefeed.data.AppDto
 import com.konkuk.moru.presentation.routinefocus.screen.parseTimeToSeconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -133,11 +133,11 @@ class RoutineFocusViewModel : ViewModel() {
 
     // 화면 차단 오버레이 관련
     var isScreenBlockOverlayVisible by mutableStateOf(false)
-    private val _selectedApps = mutableStateOf<List<AppInfo>>(emptyList())
-    val selectedApps: List<AppInfo>
+    private val _selectedApps = mutableStateOf<List<AppDto>>(emptyList())
+    val selectedApps: List<AppDto>
         get() = _selectedApps.value
     
-    fun showScreenBlockOverlay(apps: List<AppInfo>) {
+    fun showScreenBlockOverlay(apps: List<AppDto>) {
         Log.d("RoutineFocusViewModel", "🛡️ showScreenBlockOverlay 호출: apps.size=${apps.size}")
         _selectedApps.value = apps
         isScreenBlockOverlayVisible = true
@@ -150,14 +150,27 @@ class RoutineFocusViewModel : ViewModel() {
         Log.d("RoutineFocusViewModel", "🛡️ isScreenBlockOverlayVisible = $isScreenBlockOverlayVisible")
     }
     
-    fun setSelectedApps(apps: List<AppInfo>) {
+    fun setSelectedApps(apps: List<AppDto>) {
+        Log.d("RoutineFocusViewModel", "🔄 setSelectedApps 호출됨")
+        Log.d("RoutineFocusViewModel", "📱 전달받은 앱 개수: ${apps.size}")
+        Log.d("RoutineFocusViewModel", "📱 앱 상세 정보:")
+        apps.forEachIndexed { index, app ->
+            Log.d("RoutineFocusViewModel", "   ${index + 1}. 이름: ${app.name}, 패키지: ${app.packageName}")
+        }
         _selectedApps.value = apps
+        Log.d("RoutineFocusViewModel", "✅ selectedApps 설정 완료: ${_selectedApps.value.size}개")
+        
+        // 추가 로그: 업데이트 후 상태 확인
+        Log.d("RoutineFocusViewModel", "🔍 업데이트 후 selectedApps 확인: ${_selectedApps.value.size}개")
+        _selectedApps.value.forEachIndexed { index, app ->
+            Log.d("RoutineFocusViewModel", "   - 업데이트 후 앱 ${index + 1}: ${app.name} (${app.packageName})")
+        }
     }
     
     // 기존 팝업 관련 (하위 호환성 유지)
     var isScreenBlockPopupVisible by mutableStateOf(false)
     
-    fun showScreenBlockPopup(apps: List<AppInfo>) {
+    fun showScreenBlockPopup(apps: List<AppDto>) {
         _selectedApps.value = apps
         isScreenBlockPopupVisible = true
     }
@@ -177,6 +190,8 @@ class RoutineFocusViewModel : ViewModel() {
         isOnboardingPopupVisible = false
     }
 
+
+
     // 집중 루틴 활성화 상태
     var _isFocusRoutineActive by mutableStateOf(false)
         private set
@@ -186,7 +201,9 @@ class RoutineFocusViewModel : ViewModel() {
         private set
 
     fun startFocusRoutine() {
+        android.util.Log.d("RoutineFocusViewModel", "🚀 startFocusRoutine 호출됨!")
         _isFocusRoutineActive = true
+        android.util.Log.d("RoutineFocusViewModel", "✅ _isFocusRoutineActive = $_isFocusRoutineActive")
     }
 
     fun endFocusRoutine() {
@@ -239,8 +256,13 @@ class RoutineFocusViewModel : ViewModel() {
         get() = isAppIconsVisible
 
     fun toggleAppIcons() {
-        Log.d("RoutineFocusViewModel", "📱 앱 아이콘 팝업 토글: $isAppIconsVisible → ${!isAppIconsVisible}")
+        // 강제 테스트 로그
+        android.util.Log.e("TEST_LOG", "🔥 toggleAppIcons 호출됨! 현재 상태: $isAppIconsVisible")
+        System.out.println("🔥 System.out: toggleAppIcons 호출됨! 현재 상태: $isAppIconsVisible")
+        
+        android.util.Log.d("RoutineFocusViewModel", "📱 앱 아이콘 팝업 토글: $isAppIconsVisible → ${!isAppIconsVisible}")
         isAppIconsVisible = !isAppIconsVisible
+        android.util.Log.d("RoutineFocusViewModel", "✅ isAppIconsVisible = $isAppIconsVisible")
     }
 
     fun hideAppIcons() {

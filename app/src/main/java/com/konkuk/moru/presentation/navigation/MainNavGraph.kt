@@ -260,7 +260,13 @@ fun MainNavGraph(
 
             // 집중 루틴 화면 진입 시 선택된 앱들을 설정하고 집중 루틴 시작
             LaunchedEffect(selectedApps) {
+                Log.d("MainNavGraph", "🔄 LaunchedEffect(selectedApps) 실행")
+                Log.d("MainNavGraph", "📱 selectedApps 전달: ${selectedApps.size}개")
+                selectedApps.forEachIndexed { index, app ->
+                    Log.d("MainNavGraph", "   ${index + 1}. 이름: ${app.name}, 패키지: ${app.packageName}")
+                }
                 routineFocusViewModel.setSelectedApps(selectedApps)
+                Log.d("MainNavGraph", "✅ routineFocusViewModel.setSelectedApps 완료")
                 routineFocusViewModel.startFocusRoutine()
             }
 

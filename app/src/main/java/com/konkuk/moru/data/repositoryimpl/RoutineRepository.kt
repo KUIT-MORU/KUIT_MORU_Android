@@ -2,7 +2,6 @@ package com.konkuk.moru.data.repositoryimpl
 
 import android.util.Log
 import com.konkuk.moru.data.dto.response.RoutinePageResponse
-import com.konkuk.moru.data.dto.response.RoutineDetailResponseV1
 import com.konkuk.moru.data.dto.response.Routine.RoutineDetailResponseV1
 import com.konkuk.moru.data.dto.response.RoutineStepResponse
 import com.konkuk.moru.data.dto.response.HomeScheduleResponse

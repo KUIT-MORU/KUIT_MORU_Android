@@ -46,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -62,6 +63,8 @@ import com.konkuk.moru.R
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
 import com.konkuk.moru.presentation.routinefocus.component.RoutineTimelineItem
+import com.konkuk.moru.presentation.routinefocus.component.ScreenBlockOverlay
+import com.konkuk.moru.presentation.routinefocus.component.AppIcon
 import com.konkuk.moru.presentation.routinefocus.component.SettingSwitchGroup
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
 import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
@@ -89,6 +92,12 @@ fun LandscapeRoutineFocusScreen(
     // 내 기록으로 이동을 위한 네비게이션 콜백 추가
     onNavigateToMyActivity: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    
+    // 기본 로그 추가
+    android.util.Log.d("LandscapeRoutineFocusScreen", "🚀 LandscapeRoutineFocusScreen 시작됨!")
+    android.util.Log.d("LandscapeRoutineFocusScreen", "📱 routineId: $routineId, currentStep: $currentStep")
+    
     // intro 화면에서 넘기는 데이터들
     val steps =
         sharedViewModel.selectedSteps.collectAsStateWithLifecycle<List<RoutineStepData>>().value
@@ -146,7 +155,7 @@ fun LandscapeRoutineFocusScreen(
     // 메모장 내용 저장 - focusViewModel에서 실시간으로 가져오기
     var memoText by remember { 
         val initialMemo = focusViewModel.getStepMemo(currentstep)
-        Log.d("LandscapeRoutineFocusScreen", "📝 memoText 초기화: '$initialMemo' (스텝: $currentstep)")
+        android.util.Log.d("LandscapeRoutineFocusScreen", "📝 memoText 초기화: '$initialMemo' (스텝: $currentstep)")
         mutableStateOf(initialMemo) 
     }
     
@@ -159,6 +168,22 @@ fun LandscapeRoutineFocusScreen(
 
     // 앱 아이콘 팝업 상태 저장 - focusViewModel에서 가져오기
     val showAppIcons = focusViewModel.showAppIcons
+
+    // 사용앱 리스트 (루틴 생성 시 선택한 앱들)
+    val selectedApps = focusViewModel.selectedApps
+    
+    // 테스트용 더미 데이터 (selectedApps가 비어있을 때)
+    val testApps = if (selectedApps.isEmpty()) {
+        listOf(
+            com.konkuk.moru.presentation.routinefeed.data.AppDto("카카오톡", "com.kakao.talk"),
+            com.konkuk.moru.presentation.routinefeed.data.AppDto("유튜브", "com.google.android.youtube"),
+            com.konkuk.moru.presentation.routinefeed.data.AppDto("인스타그램", "com.instagram.android")
+        ).also {
+            android.util.Log.d("LandscapeRoutineFocusScreen", "🧪 테스트용 더미 앱 데이터 사용: ${it.size}개")
+        }
+    } else {
+        selectedApps
+    }
 
     // 집중 루틴 시작
     LaunchedEffect(Unit) {
@@ -181,7 +206,7 @@ fun LandscapeRoutineFocusScreen(
      // 현재 스텝이 변경될 때마다 해당 스텝의 메모 불러오기 (디버깅용)
      LaunchedEffect(currentstep) {
          val savedMemo = focusViewModel.getStepMemo(currentstep)
-         Log.d("LandscapeRoutineFocusScreen", "📖 스텝 $currentstep 메모 불러오기: $savedMemo")
+         android.util.Log.d("LandscapeRoutineFocusScreen", "📖 스텝 $currentstep 메모 불러오기: $savedMemo")
      }
      
      // 현재 스텝이 변경될 때마다 타임라인을 해당 스텝으로 스크롤
@@ -465,7 +490,34 @@ fun LandscapeRoutineFocusScreen(
                             horizontalArrangement = Arrangement.spacedBy(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            repeat(3) {
+                            // 사용앱 아이콘들 (루틴 생성 시 선택한 앱들) - 앱 이름에 맞는 아이콘 표시
+                            selectedApps.forEachIndexed { index, appInfo ->
+                                android.util.Log.e("TEST_LOG", "🔥 가로모드 렌더링 중: 앱 ${index + 1} - ${appInfo.name} (${appInfo.packageName})")
+                                
+                                // 앱 이름에 따라 적절한 아이콘 선택
+                                val iconResource = when (appInfo.name.lowercase()) {
+                                    "카카오톡" -> R.drawable.kakaotalk_icon
+                                    "네이버" -> R.drawable.naver_icon
+                                    "인스타그램" -> R.drawable.instagram_icon
+                                    "유튜브" -> R.drawable.youtube_icon
+                                    else -> R.drawable.ic_default
+                                }
+                                
+                                Image(
+                                    painter = painterResource(id = iconResource),
+                                    contentDescription = "사용앱 ${appInfo.name}",
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .clickable {
+                                            // 앱 바로 실행
+                                            launchApp(context, appInfo.packageName)
+                                        }
+                                )
+                            }
+                            
+                            // 기본 아이콘들 (선택된 앱이 3개 미만인 경우)
+                            repeat(3 - selectedApps.size) {
                                 Image(
                                     painter = painterResource(id = R.drawable.ic_default),
                                     contentDescription = "사용앱 ${it + 1}",
@@ -491,14 +543,14 @@ fun LandscapeRoutineFocusScreen(
                         @OptIn(ExperimentalMaterial3Api::class)
                         androidx.compose.material3.TextField(
                             value = memoText.also { 
-                                Log.d("LandscapeRoutineFocusScreen", "📝 TextField value: '$it'")
+                                android.util.Log.d("LandscapeRoutineFocusScreen", "📝 TextField value: '$it'")
                             },
                             onValueChange = { newText ->
                                 // 로컬 상태와 ViewModel 상태 모두 업데이트
-                                Log.d("LandscapeRoutineFocusScreen", "📝 onValueChange 호출: '$newText' (이전: '$memoText')")
+                                android.util.Log.d("LandscapeRoutineFocusScreen", "📝 onValueChange 호출: '$newText' (이전: '$memoText')")
                                 memoText = newText
                                 focusViewModel.saveStepMemo(currentstep, newText)
-                                Log.d("LandscapeRoutineFocusScreen", "📝 메모 입력 완료: $newText")
+                                android.util.Log.d("LandscapeRoutineFocusScreen", "📝 메모 입력 완료: $newText")
                             },
                             placeholder = {
                                 Text(
@@ -512,7 +564,7 @@ fun LandscapeRoutineFocusScreen(
                                  .height(100.dp) // 높이를 늘려서 더 많은 텍스트 표시
                                  .padding(16.dp)
                                  .onGloballyPositioned { coordinates ->
-                                     Log.d("LandscapeRoutineFocusScreen", "📝 TextField 위치: ${coordinates.size}")
+                                     android.util.Log.d("LandscapeRoutineFocusScreen", "📝 TextField 위치: ${coordinates.size}")
                                  },
                             textStyle = typography.body_SB_16.copy(color = colors.black),
                                                          singleLine = false, // 여러 줄 입력 가능
@@ -756,6 +808,16 @@ fun LandscapeRoutineFocusScreen(
                 }
             }
         }
+
+        // 화면 차단 팝업창
+        if (focusViewModel.isScreenBlockPopupVisible) {
+            ScreenBlockOverlay(
+                selectedApps = focusViewModel.selectedApps,
+                onDismiss = { focusViewModel.hideScreenBlockPopup() }
+            )
+        }
+
+
 
         // 설정 팝업
         if (showSettingsPopup) {
