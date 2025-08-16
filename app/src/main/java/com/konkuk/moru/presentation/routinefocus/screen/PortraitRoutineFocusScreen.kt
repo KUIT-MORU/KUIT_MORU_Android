@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -39,6 +40,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -340,6 +344,22 @@ fun PortraitRoutineFocusScreen(
         focusViewModel.setStepLimitFromTimeString(stepLimit)
         focusViewModel.startTimer()
     }
+    
+         // 타임라인 스크롤 상태 관리
+     val timelineListState = rememberLazyListState()
+     
+     // 코루틴 스코프 생성
+     val coroutineScope = rememberCoroutineScope()
+     
+          // 현재 스텝이 변경될 때마다 타임라인을 해당 스텝으로 스크롤
+      LaunchedEffect(currentstep) {
+         // 스크롤 상태가 준비된 후에 스크롤 실행
+         delay(100)
+         // 현재 스텝이 화면에 보이도록 스크롤
+         val targetIndex = (currentstep - 1).coerceIn(0, routineItems.size - 1)
+         // 스크롤 애니메이션 실행
+         timelineListState.animateScrollToItem(targetIndex)
+     }
 
     // 시간 초과 시 진동 효과
     LaunchedEffect(isTimeout) {
@@ -461,14 +481,15 @@ fun PortraitRoutineFocusScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    // 타임라인 영역 - LazyColumn으로 스크롤 가능하게 변경
-                    LazyColumn(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(200.dp), // 고정 높이 설정
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        horizontalAlignment = Alignment.Start
-                    ) {
+                                         // 타임라인 영역 - LazyColumn으로 스크롤 가능하게 변경
+                     LazyColumn(
+                         state = timelineListState,
+                         modifier = Modifier
+                             .weight(1f)
+                             .height(200.dp), // 고정 높이 설정
+                         verticalArrangement = Arrangement.spacedBy(0.dp), // 간격 제거하여 선이 연결되도록
+                         horizontalAlignment = Alignment.Start
+                     ) {
                         // 모든 스텝을 표시하여 스크롤 가능하게 함
                         val allSteps = getAllSteps(routineItems.size)
                         
@@ -531,6 +552,11 @@ fun PortraitRoutineFocusScreen(
                                                         ?: "0m"
                                                 focusViewModel.nextStep(nextStepTimeString)
                                                 focusViewModel.resumeTimer()
+                                                
+                                                                                                 // 현재 step으로 타임라인 스크롤
+                                                 coroutineScope.launch {
+                                                     timelineListState.animateScrollToItem(currentstep - 1)
+                                                 }
                                             } else {
                                                 focusViewModel.pauseTimer()
                                                 // 루틴 종료 시 사용앱과 메모장 자동으로 끄기

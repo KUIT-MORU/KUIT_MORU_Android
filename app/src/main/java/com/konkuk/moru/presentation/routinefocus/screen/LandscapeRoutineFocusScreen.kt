@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -36,6 +38,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -167,11 +172,27 @@ fun LandscapeRoutineFocusScreen(
         focusViewModel.startTimer()
     }
 
-    // 현재 스텝이 변경될 때마다 해당 스텝의 메모 불러오기 (디버깅용)
-    LaunchedEffect(currentstep) {
-        val savedMemo = focusViewModel.getStepMemo(currentstep)
-        Log.d("LandscapeRoutineFocusScreen", "📖 스텝 $currentstep 메모 불러오기: $savedMemo")
-    }
+         // 타임라인 스크롤 상태 관리
+     val timelineListState = rememberLazyListState()
+     
+     // 코루틴 스코프 생성
+     val coroutineScope = rememberCoroutineScope()
+     
+     // 현재 스텝이 변경될 때마다 해당 스텝의 메모 불러오기 (디버깅용)
+     LaunchedEffect(currentstep) {
+         val savedMemo = focusViewModel.getStepMemo(currentstep)
+         Log.d("LandscapeRoutineFocusScreen", "📖 스텝 $currentstep 메모 불러오기: $savedMemo")
+     }
+     
+     // 현재 스텝이 변경될 때마다 타임라인을 해당 스텝으로 스크롤
+     LaunchedEffect(currentstep) {
+         // 스크롤 상태가 준비된 후에 스크롤 실행
+         delay(100)
+         // 현재 스텝이 3개씩 보이는 화면에서 적절한 위치에 오도록 계산
+         val targetIndex = (currentstep - 1).coerceIn(0, routineItems.size - 1)
+         // 스크롤 애니메이션 실행
+         timelineListState.animateScrollToItem(targetIndex)
+     }
 
     Box(
         modifier = Modifier
@@ -278,13 +299,14 @@ fun LandscapeRoutineFocusScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-                // 왼쪽: 타임라인 - 한 화면에 3개 정도 보이고 스크롤 가능
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(0.25f)
-                        .height((60 * 3).dp), // 3개 스텝만 보이도록 정확한 높이 (60dp * 3)
-                    verticalArrangement = Arrangement.spacedBy(0.dp) // 간격 제거하여 선이 연결되도록
-                ) {
+                                 // 왼쪽: 타임라인 - 한 화면에 3개 정도 보이고 스크롤 가능
+                 LazyColumn(
+                     state = timelineListState,
+                     modifier = Modifier
+                         .weight(0.25f)
+                         .height((60 * 3).dp), // 3개 스텝만 보이도록 정확한 높이 (60dp * 3)
+                     verticalArrangement = Arrangement.spacedBy(0.dp) // 간격 제거하여 선이 연결되도록
+                 ) {
                     items(routineItems.size) { index ->
                         val (title, time) = routineItems[index]
                         Box(
@@ -370,16 +392,21 @@ fun LandscapeRoutineFocusScreen(
                                     indication = null,
                                     interactionSource = remember { MutableInteractionSource() }
                                 ) {
-                                    // 다음 step으로 가는 기능
-                                    if (!isFinalStep) {
-                                        val nextStepTimeString =
-                                            routineItems.getOrNull(currentstep)?.second ?: "0m"
-                                        focusViewModel.nextStep(nextStepTimeString)
-                                        focusViewModel.resumeTimer()
-                                    } else {
-                                        focusViewModel.pauseTimer()
-                                        showFinishPopup = true
-                                    }
+                                                                         // 다음 step으로 가는 기능
+                                     if (!isFinalStep) {
+                                         val nextStepTimeString =
+                                             routineItems.getOrNull(currentstep)?.second ?: "0m"
+                                         focusViewModel.nextStep(nextStepTimeString)
+                                         focusViewModel.resumeTimer()
+                                         
+                                         // 현재 step으로 타임라인 스크롤
+                                         coroutineScope.launch {
+                                             timelineListState.animateScrollToItem(currentstep - 1)
+                                         }
+                                     } else {
+                                         focusViewModel.pauseTimer()
+                                         showFinishPopup = true
+                                     }
                                 },
                             tint = if (!isDarkMode && isTimeout) colors.oliveGreen else if (!isDarkMode && !isTimeout) colors.limeGreen else Color.White
                         )
