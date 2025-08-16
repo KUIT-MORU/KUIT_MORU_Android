@@ -75,4 +75,12 @@ sealed class Route(
 
     // 루틴 생성 화면
     data object RoutineCreate : Route(route = "routine_create")
+
+
+    data object TagSearch : Route("tag_search?originalQuery={originalQuery}") {
+        fun createRoute(originalQuery: String = ""): String {
+            val enc = URLEncoder.encode(originalQuery, StandardCharsets.UTF_8.toString())
+            return "tag_search?originalQuery=$enc"
+        }
+    }
 }

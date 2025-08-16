@@ -1,13 +1,22 @@
 package com.konkuk.moru.data.repositoryimpl
 
+import com.konkuk.moru.data.dto.response.MyRoutine.AddTagsRequest
+import com.konkuk.moru.data.dto.response.MyRoutine.MyRoutineDetailDto
 import com.konkuk.moru.data.dto.response.MyRoutine.MyRoutineSummaryDto
 import com.konkuk.moru.data.dto.response.MyRoutine.MyRoutineUi
+import com.konkuk.moru.data.dto.response.MyRoutine.PatchOrCreateStepRequest
+import com.konkuk.moru.data.dto.response.MyRoutine.PatchRoutineRequest
 import com.konkuk.moru.data.dto.response.MyRoutine.UpdateScheduleRequest
 import com.konkuk.moru.data.mapper.toMyApiString
 import com.konkuk.moru.data.mapper.toMyUi
+import com.konkuk.moru.data.service.ImageService
 import com.konkuk.moru.data.service.MyRoutineService
 import com.konkuk.moru.domain.repository.MyRoutineRepository
 import com.konkuk.moru.domain.repository.MyRoutineSchedule
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Response
 import java.time.DayOfWeek
 import java.time.Instant
@@ -19,7 +28,8 @@ import java.time.temporal.ChronoField
 import javax.inject.Inject
 
 class MyRoutineRepositoryImpl @Inject constructor(
-    private val service: MyRoutineService
+    private val service: MyRoutineService,
+    private val imageService: ImageService // [추가]
 ) : MyRoutineRepository {
 
     override suspend fun getMyRoutines(
@@ -45,7 +55,7 @@ class MyRoutineRepositoryImpl @Inject constructor(
 
         val sortedDto: List<MyRoutineSummaryDto> = when (sortType) {
             "POPULAR" -> dtoList.sortedByDescending { it.likeCount } // [추가] 좋아요 내림차순
-            "LATEST"  -> dtoList.sortedByDescending { toEpochFlexible(it.createdAt) }// [추가] 최신순
+            "LATEST" -> dtoList.sortedByDescending { toEpochFlexible(it.createdAt) }// [추가] 최신순
             else -> dtoList // TIME은 서버 기준(요일 필요) 유지
         }
 
@@ -70,16 +80,26 @@ class MyRoutineRepositoryImpl @Inject constructor(
                 // 2) 2025-08-15T16:26:06.764185 (존 없음, 마이크로초도 허용)
                 val parser = DateTimeFormatterBuilder()
                     .appendPattern("yyyy-MM-dd'T'HH:mm:ss")
-                    .optionalStart().appendFraction(ChronoField.NANO_OF_SECOND, 1, 9, true).optionalEnd()
+                    .optionalStart().appendFraction(ChronoField.NANO_OF_SECOND, 1, 9, true)
+                    .optionalEnd()
                     .toFormatter()
-                LocalDateTime.parse(s, parser).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            } catch (_: Exception) { 0L }
+                LocalDateTime.parse(s, parser).atZone(ZoneId.systemDefault()).toInstant()
+                    .toEpochMilli()
+            } catch (_: Exception) {
+                0L
+            }
         }
     }
 
     override suspend fun getRoutineDetail(routineId: String): MyRoutineUi {
         return service.getRoutineDetail(routineId).toMyUi()
     }
+
+    // ===== [추가] 상세 RAW =====
+    override suspend fun getRoutineDetailRaw(routineId: String): MyRoutineDetailDto {
+        return service.getRoutineDetail(routineId)
+    }
+
 
     private fun Response<Unit>.isOkOr404() = isSuccessful || code() == 404
 
@@ -166,6 +186,89 @@ class MyRoutineRepositoryImpl @Inject constructor(
                 alarmEnabled = it.alarmEnabled
             )
         }
+    }
+
+
+    // ===== [추가] 루틴 PATCH =====
+    override suspend fun patchRoutine(
+        routineId: String,
+        title: String?,
+        imageUrl: String?,
+        tagNames: List<String>?,
+        description: String?,
+        steps: List<Triple<String, Int, String?>>?,
+        selectedApps: List<String>?,
+        isSimple: Boolean?,
+        isUserVisible: Boolean?
+    ) {
+        val steps2d = steps?.let { list ->
+            listOf(list.map { (name, order, iso) ->
+                PatchOrCreateStepRequest(name, order, iso)
+            })
+        }
+        val body = PatchRoutineRequest(
+            title = title,
+            imageUrl = imageUrl,
+            tags = tagNames,
+            description = description,
+            steps = steps2d,
+            selectedApps = selectedApps,
+            isSimple = isSimple,
+            isUserVisible = isUserVisible
+        )
+        val res = service.patchRoutine(routineId, body)
+        if (!res.isSuccessful) error("patchRoutine failed: ${res.code()}")
+    }
+
+    // ===== [추가] STEP =====
+    override suspend fun getSteps(routineId: String): List<MyRoutineDetailDto.StepDto> =
+        service.getSteps(routineId)
+
+    override suspend fun addSteps(routineId: String, steps: List<Triple<String, Int, String?>>) {
+        val body = steps.map { (n, o, iso) -> PatchOrCreateStepRequest(n, o, iso) }
+        val res = service.addSteps(routineId, body)
+        if (!res.isSuccessful) error("addSteps failed: ${res.code()}")
+    }
+
+    override suspend fun patchSteps(
+        routineId: String,
+        stepId: String,
+        steps: List<Triple<String, Int, String?>>
+    ) {
+        val body = steps.map { (n, o, iso) -> PatchOrCreateStepRequest(n, o, iso) }
+        val res = service.patchSteps(routineId, stepId, body)
+        if (!res.isSuccessful) error("patchSteps failed: ${res.code()}")
+    }
+
+    override suspend fun deleteStep(routineId: String, stepId: String) {
+        val res = service.deleteStep(routineId, stepId)
+        if (!res.isSuccessful) error("deleteStep failed: ${res.code()}")
+    }
+
+    // ===== [추가] TAG =====
+    override suspend fun getRoutineTags(routineId: String) = service.getRoutineTags(routineId)
+
+    override suspend fun addRoutineTags(routineId: String, tagIds: List<String>) =
+        service.addRoutineTags(routineId, AddTagsRequest(tagIds))
+
+    override suspend fun removeRoutineTag(routineId: String, tagId: String) {
+        val res = service.removeRoutineTag(routineId, tagId)
+        if (!res.isSuccessful) error("removeRoutineTag failed: ${res.code()}")
+    }
+
+    // ===== [추가] 이미지 업로드 =====
+    override suspend fun uploadImageAndGetUrl(
+        fileName: String,
+        bytes: ByteArray,
+        mime: String
+    ): String {
+        val media = mime.toMediaType()
+        val body: RequestBody = bytes.toRequestBody(media, 0, bytes.size)
+        val part = MultipartBody.Part.createFormData("file", fileName, body)
+        val map = imageService.upload(part)
+        // 서버가 어떤 키로 주든 안전하게 파싱
+        return map["url"] ?: map["location"] ?: map["key"]
+        ?: error("upload response missing url/location/key")
     }
 
 

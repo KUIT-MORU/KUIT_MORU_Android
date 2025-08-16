@@ -38,6 +38,7 @@ import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetailScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedRec
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedScreen
+import com.konkuk.moru.presentation.routinefeed.screen.search.TagSearchScreen
 import com.konkuk.moru.presentation.routinefeed.screen.userprofile.UserProfileScreen
 import com.konkuk.moru.presentation.routinefeed.viewmodel.RoutineFeedViewModel
 import com.konkuk.moru.presentation.routinefocus.screen.RoutineFocusScreenContainer
@@ -287,6 +288,31 @@ fun MainNavGraph(
             // 변경: Host에 vm 전달
             com.konkuk.moru.presentation.routinefeed.screen.search.RoutineSearchHost(
                 navController = navController
+            )
+        }
+
+        composable(
+            route = Route.TagSearch.route,
+            arguments = listOf(
+                navArgument("originalQuery") {
+                    type = NavType.StringType
+                    defaultValue = "" // 없으면 빈 문자열
+                }
+            )
+        ) { backStackEntry ->
+            val originalQuery = backStackEntry.arguments?.getString("originalQuery") ?: ""
+
+            // ⚠️ 기존에 사용 중인 TagSearch 화면을 그대로 호출
+            com.konkuk.moru.presentation.routinefeed.screen.search.TagSearchScreen(
+                originalQuery = originalQuery,
+                onNavigateBack = { navController.popBackStack() },
+                onTagSelected = { tagName ->
+                    // 선택 결과를 이전 스택(MyRoutineDetail)으로 돌려준다
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("picked_tag_name", tagName) // 이름만 전달
+                    navController.popBackStack() // 검색 화면 닫기
+                }
             )
         }
 

@@ -7,6 +7,7 @@ import com.konkuk.moru.BuildConfig
 import com.konkuk.moru.data.interceptor.AuthInterceptor
 import com.konkuk.moru.data.interceptor.TokenAuthenticator
 import com.konkuk.moru.data.service.AuthService
+import com.konkuk.moru.data.service.ImageService
 import com.konkuk.moru.data.service.InsightService
 import com.konkuk.moru.data.service.MyRoutineService
 import com.konkuk.moru.data.service.RoutineService
@@ -34,14 +35,16 @@ import javax.inject.Named
 object NetworkModule {
 
 
-
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideGson(): Gson = GsonBuilder()
         .setLenient()
         .create()
 
     // 2-2. Gson 컨버터 Retrofit (인증 포함)
-    @Provides @Singleton @Named("gsonRetrofit")
+    @Provides
+    @Singleton
+    @Named("gsonRetrofit")
     fun provideGsonRetrofit(
         baseUrl: String,
         okHttp: OkHttpClient,
@@ -59,17 +62,22 @@ object NetworkModule {
         retrofit.create(RoutineFeedService::class.java)
 
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideBaseUrl(): String = BuildConfig.BASE_URL
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideHttpLoggingInterceptor(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor().apply {
-            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
+            level =
+                if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
         }
     }
 
-    @Provides @Singleton @Named("authlessOkHttp")
+    @Provides
+    @Singleton
+    @Named("authlessOkHttp")
     fun provideAuthlessOkHttp(
         loggingInterceptor: HttpLoggingInterceptor
     ): OkHttpClient =
@@ -77,13 +85,16 @@ object NetworkModule {
             .addInterceptor(loggingInterceptor)
             .build()
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideJson(): Json = Json {
         coerceInputValues = true
         ignoreUnknownKeys = true
     }
 
-    @Provides @Singleton @Named("authlessRetrofit")
+    @Provides
+    @Singleton
+    @Named("authlessRetrofit")
     fun provideAuthlessRetrofit(
         @Named("authlessOkHttp") ok: OkHttpClient,
         baseUrl: String,
@@ -94,10 +105,12 @@ object NetworkModule {
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideAuthInterceptor(authInterceptor: AuthInterceptor): Interceptor = authInterceptor
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideOkHttpClient(
         authInterceptor: Interceptor,
         tokenAuthenticator: TokenAuthenticator,
@@ -109,7 +122,8 @@ object NetworkModule {
             .authenticator(tokenAuthenticator)
             .build()
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideRetrofit(baseUrl: String, okHttp: OkHttpClient, json: Json): Retrofit =
         Retrofit.Builder()
             .baseUrl(baseUrl)
@@ -117,11 +131,13 @@ object NetworkModule {
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideAuthService(retrofit: Retrofit): AuthService =
         retrofit.create(AuthService::class.java)
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideInsightService(retrofit: Retrofit): InsightService =
         retrofit.create(InsightService::class.java)
 
@@ -141,26 +157,31 @@ object NetworkModule {
         retrofit.create(com.konkuk.moru.data.service.HomeUserService::class.java)
 
 
-
     @Provides
     @Singleton
     fun provideRoutineUserService(@Named("gsonRetrofit") retrofit: Retrofit): RoutineUserService =
         retrofit.create(RoutineUserService::class.java)
 
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideNotificationService(@Named("gsonRetrofit") r: Retrofit): NotificationService =
         r.create(NotificationService::class.java)
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideSocialService(@Named("gsonRetrofit") r: Retrofit): SocialService =
         r.create(SocialService::class.java)
 
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideSearchService(@Named("gsonRetrofit") r: Retrofit): SearchService =
         r.create(SearchService::class.java)
 
-
+    @Provides
+    @Singleton
+    fun provideImageService(retrofit: Retrofit): ImageService =
+        retrofit.create(ImageService::class.java) // [추가]
 
 }
