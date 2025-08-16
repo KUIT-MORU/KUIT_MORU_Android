@@ -9,6 +9,7 @@ import retrofit2.HttpException
 import javax.inject.Inject
 
 class RoutineFeedRepositoryImpl @Inject constructor(
+
     private val routineFeedService: RoutineFeedService
 ) : RoutineFeedRepository {
 
