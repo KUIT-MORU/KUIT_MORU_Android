@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -17,10 +18,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,7 +41,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -45,35 +51,26 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
-import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.routinefocus.component.RoutineTimelineItem
 import com.konkuk.moru.presentation.routinefocus.component.SettingSwitchGroup
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
-import com.konkuk.moru.presentation.routinefocus.screen.formatTotalTime
-import com.konkuk.moru.presentation.routinefocus.screen.formatTime
-import com.konkuk.moru.presentation.routinefocus.screen.calculateVisibleSteps
-import com.konkuk.moru.presentation.routinefocus.screen.parseTimeToSeconds
+import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
+import com.konkuk.moru.presentation.routinefocus.screen.parseTimeToSeconds
+import com.konkuk.moru.presentation.routinefocus.screen.formatTotalTime
+import com.konkuk.moru.presentation.routinefocus.screen.formatTime
 
-// 개선된 가시적 스텝 계산 함수
-fun calculateLandscapeVisibleSteps(currentStep: Int, totalSteps: Int): List<Int> {
-    return when {
-        totalSteps <= 4 -> (1..totalSteps).toList()
-        currentStep <= 4 -> (1..4).toList()
-        else -> {
-            val startStep = currentStep - 3
-            val endStep = minOf(startStep + 3, totalSteps)
-            (startStep..endStep).toList()
-        }
-    }
-}
+// 스크롤 가능한 타임라인을 위한 고정 스텝 높이
+const val TIMELINE_STEP_HEIGHT = 40
+const val TIMELINE_STEP_SPACING = 6
+const val MAX_VISIBLE_STEPS = 3
 
 @Composable
 fun LandscapeRoutineFocusScreen(
-    focusViewModel: RoutineFocusViewModel = hiltViewModel(),
+    focusViewModel: RoutineFocusViewModel,
     sharedViewModel: SharedRoutineViewModel,
-    routineId : Int,
+    routineId: Int,
     onDismiss: () -> Unit,
     currentStep: Int,
     onFinishConfirmed: (String) -> Unit,
@@ -83,7 +80,8 @@ fun LandscapeRoutineFocusScreen(
     onNavigateToMyActivity: () -> Unit = {}
 ) {
     // intro 화면에서 넘기는 데이터들
-    val steps = sharedViewModel.selectedSteps.collectAsStateWithLifecycle<List<RoutineStepData>>().value
+    val steps =
+        sharedViewModel.selectedSteps.collectAsStateWithLifecycle<List<RoutineStepData>>().value
     val routineTitle = sharedViewModel.routineTitle.collectAsStateWithLifecycle<String>().value
     val routineItems = steps.map { it.name to "${it.duration}m" }
 
@@ -132,14 +130,14 @@ fun LandscapeRoutineFocusScreen(
     // 가로 모드 on/off 상태 저장
     var isLandscapeMode by remember { mutableStateOf(false) }
 
-    // 메모장 팝업 상태 저장
-    var showMemoPad by remember { mutableStateOf(false) }
+    // 메모장 팝업 상태 저장 - focusViewModel에서 가져오기
+    val showMemoPad = focusViewModel.showMemoPad
 
     // 메모장 내용 저장
     var memoText by remember { mutableStateOf("") }
 
-    // 앱 아이콘 팝업 상태 저장
-    var showAppIcons by remember { mutableStateOf(false) }
+    // 앱 아이콘 팝업 상태 저장 - focusViewModel에서 가져오기
+    val showAppIcons = focusViewModel.showAppIcons
 
     // 집중 루틴 시작
     LaunchedEffect(Unit) {
@@ -151,6 +149,11 @@ fun LandscapeRoutineFocusScreen(
         val stepLimit = parseTimeToSeconds(routineItems.getOrNull(currentstep - 1)?.second ?: "0m")
         focusViewModel.setStepLimitFromTimeString(stepLimit)
         focusViewModel.startTimer()
+    }
+
+    // 현재 스텝이 변경될 때마다 해당 스텝의 메모 불러오기
+    LaunchedEffect(currentstep) {
+        memoText = focusViewModel.getStepMemo(currentstep)
     }
 
     Box(
@@ -165,7 +168,7 @@ fun LandscapeRoutineFocusScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = 60.dp) // 하단 바만 제외
+                    .padding(bottom = 60.dp) // 고정된 하단 바 높이
                     .background(colors.limeGreen.copy(alpha = 0.5f))
                     .zIndex(1f)
             )
@@ -173,7 +176,8 @@ fun LandscapeRoutineFocusScreen(
 
         // 메인 콘텐츠
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
         ) {
             // 상단 영역: X버튼, 설정 버튼, 루틴 제목, 총 소요시간
             Row(
@@ -187,22 +191,22 @@ fun LandscapeRoutineFocusScreen(
                 Column(
                     horizontalAlignment = Alignment.Start
                 ) {
-                                         // X버튼 - 클릭 시 종료 팝업 표시
-                     Icon(
-                         painter = painterResource(id = R.drawable.ic_x),
-                         contentDescription = "종료",
-                         tint = if (isDarkMode) Color.White else colors.black,
-                         modifier = Modifier
-                             .size(24.dp)
-                             .clickable(
-                                 indication = null,
-                                 interactionSource = remember { MutableInteractionSource() }
-                             ) {
-                                 showFinishPopup = true
-                             }
-                     )
+                    // X버튼 - 클릭 시 종료 팝업 표시
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_x),
+                        contentDescription = "종료",
+                        tint = if (isDarkMode) Color.White else colors.black,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) {
+                                showFinishPopup = true
+                            }
+                    )
 
-                     Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     // 루틴 제목
                     Text(
@@ -222,21 +226,22 @@ fun LandscapeRoutineFocusScreen(
 
                 // 오른쪽: 설정 버튼과 총 소요시간
                 Column(
-                    horizontalAlignment = Alignment.End
+                    horizontalAlignment = Alignment.End,
+                    modifier = Modifier.padding(end = 35.dp) // 오른쪽 벽에서 조금 멀어지도록
                 ) {
-                                         // 설정 버튼
-                     Icon(
-                         painter = painterResource(id = R.drawable.ic_gear),
-                         contentDescription = "설정",
-                         tint = if (isDarkMode) Color.White else colors.black,
-                         modifier = Modifier
-                             .size(24.dp)
-                             .clickable {
-                                 focusViewModel.toggleSettingsPopup()
-                             }
-                     )
+                    // 설정 버튼 - 가로모드에서 하단 바에 가려지지 않도록 더 위쪽으로 배치
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_gear),
+                        contentDescription = "설정",
+                        tint = if (isDarkMode) Color.White else colors.black,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable {
+                                focusViewModel.toggleSettingsPopup()
+                            }
+                    )
 
-                     Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     // 총 소요시간
                     Text(
@@ -247,58 +252,66 @@ fun LandscapeRoutineFocusScreen(
                 }
             }
 
-            // 중앙과 하단을 포함한 메인 영역 - 높이 조정으로 타이머를 더 위로
+            // 중앙 영역: 타임라인, 타이머, NEXT STEP 버튼
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp), // top padding 제거
+                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top // CenterVertically에서 Top으로 변경
+                verticalAlignment = Alignment.Top
             ) {
-                // 왼쪽: 타임라인 - 크기 축소 및 간격 조정
-                Column(
-                    modifier = Modifier.weight(0.25f), // 0.3f에서 0.25f로 축소
-                    verticalArrangement = Arrangement.spacedBy(8.dp) // 4.dp에서 8.dp로 증가하여 여유롭게
+                // 왼쪽: 타임라인 - 한 화면에 3개 정도 보이고 스크롤 가능
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(0.25f)
+                        .height((60 * 3).dp), // 3개 스텝만 보이도록 정확한 높이 (60dp * 3)
+                    verticalArrangement = Arrangement.spacedBy(0.dp) // 간격 제거하여 선이 연결되도록
                 ) {
-                    // 개선된 가시적 스텝 계산
-                    val visibleSteps = calculateLandscapeVisibleSteps(currentstep, routineItems.size)
-
-                    visibleSteps.forEach { stepIndex ->
-                        val (title, time) = routineItems[stepIndex - 1]
-                        // 타임라인 아이템 크기도 여유롭게
+                    items(routineItems.size) { index ->
+                        val (title, time) = routineItems[index]
                         Box(
-                            modifier = Modifier.height(40.dp) // 32.dp에서 40.dp로 증가하여 여유롭게
+                            modifier = Modifier.height(60.dp) // RoutineTimelineItem의 Canvas 높이와 정확히 일치
                         ) {
                             RoutineTimelineItem(
                                 time = time,
                                 title = title,
-                                index = stepIndex,
+                                index = index + 1,
                                 currentStep = currentstep,
                                 isTimeout = isTimeout,
-                                isDarkMode = isDarkMode
+                                isDarkMode = isDarkMode,
+                                onStepClick = { clickedStep ->
+                                    // 클릭된 스텝으로 이동
+                                    if (clickedStep != currentstep) {
+                                        val stepTimeString = routineItems.getOrNull(clickedStep - 1)?.second ?: "0m"
+                                        focusViewModel.updateCurrentStep(clickedStep)
+                                        focusViewModel.setStepLimitFromTimeString(parseTimeToSeconds(stepTimeString))
+                                        focusViewModel.resetTimer()
+                                        focusViewModel.startTimer()
+                                    }
+                                }
                             )
                         }
                     }
                 }
 
-                // 중앙: 타이머와 정지/재생 버튼 - 상단으로 이동
+                // 중앙: 타이머와 정지/재생 버튼
                 Column(
                     modifier = Modifier
-                        .weight(0.55f) // 0.8f에서 0.55f로 축소
-                        .padding(top = 20.dp), // 상단으로 이동
+                        .weight(0.55f)
+                        .padding(top = 20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Top // Center에서 Top으로 변경
+                    verticalArrangement = Arrangement.Top
                 ) {
                     // 중앙 타이머
                     Text(
                         text = formatTime(elapsedSeconds),
-                        fontSize = 56.sp, // 64.sp에서 56.sp로 축소
+                        fontSize = 56.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (!isDarkMode && isTimeout) colors.oliveGreen else if (isDarkMode) Color.White else Color.Black,
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp)) // 16.dp에서 12.dp로 축소
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     // 정지/재생 버튼
                     Icon(
@@ -306,7 +319,7 @@ fun LandscapeRoutineFocusScreen(
                         contentDescription = if (!isUserPaused) "정지" else "시작",
                         tint = if (isDarkMode) Color.White else colors.black,
                         modifier = Modifier
-                            .size(40.dp) // 45.dp에서 40.dp로 축소
+                            .size(40.dp)
                             .clickable(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
@@ -316,21 +329,21 @@ fun LandscapeRoutineFocusScreen(
                     )
                 }
 
-                // 오른쪽: NEXT STEP 버튼 - 상단으로 이동
+                // 오른쪽: NEXT STEP 버튼
                 Column(
                     modifier = Modifier
                         .weight(0.2f)
-                        .padding(top = 40.dp), // 상단으로 이동
+                        .padding(top = 40.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top
                 ) {
                     // 마지막 step 도달 조건
                     val isFinalStep = currentstep == routineItems.size
 
-                                         // 다음 버튼
-                     Box(
-                         modifier = Modifier.size(74.dp) // 64.dp에서 74.dp로 증가하여 세로 모드와 동일하게
-                     ) {
+                    // 다음 버튼
+                    Box(
+                        modifier = Modifier.size(74.dp)
+                    ) {
                         Icon(
                             painter = painterResource(id = if (isFinalStep) R.drawable.enable_check_icon else R.drawable.ic_next_in_circle),
                             contentDescription = if (isFinalStep) "완료됨" else "다음 루틴으로",
@@ -362,7 +375,10 @@ fun LandscapeRoutineFocusScreen(
                         isFinalStep -> {
                             Text(
                                 text = "FINISH !",
-                                style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold, fontSize = 12.sp), // 폰트 크기 축소
+                                style = typography.body_SB_16.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
+                                ),
                                 color = when {
                                     isDarkMode -> Color.White
                                     isFinalStep && isTimeout -> colors.oliveGreen
@@ -370,10 +386,14 @@ fun LandscapeRoutineFocusScreen(
                                 }
                             )
                         }
+
                         isTimeout -> {
                             Text(
                                 text = "NEXT STEP",
-                                style = typography.body_SB_16.copy(fontWeight = FontWeight.Bold, fontSize = 12.sp), // 폰트 크기 축소
+                                style = typography.body_SB_16.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
+                                ),
                                 color = if (isDarkMode) Color.White else colors.oliveGreen
                             )
                         }
@@ -381,86 +401,130 @@ fun LandscapeRoutineFocusScreen(
                 }
             }
 
-            // 하단 바: 사용앱 아이콘과 메모장 아이콘
-            Row(
+            // 하단 고정 영역을 하나의 Column으로 통합 (세로모드와 동일한 구조)
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(60.dp)
-                    .background(if (isDarkMode) colors.black else colors.veryLightGray)
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
             ) {
-                // 왼쪽: 사용앱 아이콘
-                Image(
-                    painter = painterResource(id = R.drawable.menu_icon),
-                    contentDescription = "메뉴 아이콘",
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clickable {
-                            showAppIcons = !showAppIcons
-                        },
-                    colorFilter = ColorFilter.tint(if (isDarkMode) colors.mediumGray else colors.black)
-                )
-
-                // 오른쪽: 메모장 아이콘
-                Image(
-                    painter = painterResource(id = R.drawable.chatting_icon),
-                    contentDescription = "채팅 아이콘",
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clickable {
-                            showMemoPad = !showMemoPad
-                        },
-                    colorFilter = ColorFilter.tint(if (isDarkMode) colors.mediumGray else colors.black)
-                )
-            }
-
-            // 앱 아이콘 (조건부 표시)
-            if (showAppIcons) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(88.dp)
-                        .background(if (isDarkMode) colors.black else Color.White)
-                ) {
-                    Row(
+                // 앱 아이콘 (가장 위에 표시 - 조건부)
+                if (showAppIcons) {
+                    Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp, vertical = 20.dp),
-                        horizontalArrangement = Arrangement.spacedBy(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .fillMaxWidth()
+                            .height(60.dp)
+                            .background(if (isDarkMode) colors.black else Color.White)
                     ) {
-                        repeat(3) {
-                            Image(
-                                painter = painterResource(id = R.drawable.ic_default),
-                                contentDescription = "사용앱 ${it + 1}",
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            repeat(3) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_default),
+                                    contentDescription = "사용앱 ${it + 1}",
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // 메모장 (사용앱 아래에 표시 - 조건부)
+                if (showMemoPad) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp) // 높이를 80dp로 늘려서 hint text가 잘 보이도록
+                            .background(colors.veryLightGray)
+                            .zIndex(10f) // 메모장이 다른 요소들 위에 표시되도록 zIndex 설정
+                            .imePadding() // 키보드가 열릴 때만 메모장을 위로 밀림
+                            .padding(bottom = 20.dp) // 키보드 위에 적절한 간격 유지
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                        ) {
+                            // 힌트 텍스트
+                            Text(
+                                text = "step $currentstep 메모 하기...",
+                                style = typography.desc_M_14,
+                                color = colors.darkGray
+                            )
+                            
+                            Spacer(modifier = Modifier.height(4.dp))
+                            
+                            // 메모 입력 필드
+                            androidx.compose.material3.TextField(
+                                value = memoText,
+                                onValueChange = { newText ->
+                                    memoText = newText
+                                    // 현재 스텝에 메모 저장
+                                    focusViewModel.saveStepMemo(currentstep, newText)
+                                },
+                                placeholder = {
+                                    Text(
+                                        text = "메모를 입력하세요...",
+                                        style = typography.desc_M_12,
+                                        color = colors.mediumGray
+                                    )
+                                },
                                 modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(RoundedCornerShape(6.dp))
+                                    .fillMaxWidth()
+                                    .height(24.dp),
+                                textStyle = typography.desc_M_12,
+                                colors = androidx.compose.material3.TextFieldDefaults.colors(
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
+                                    focusedIndicatorColor = colors.limeGreen,
+                                    unfocusedIndicatorColor = colors.lightGray
+                                ),
+                                singleLine = false, // 여러 줄 입력 가능
+                                maxLines = 2 // 최대 2줄까지 입력 가능
                             )
                         }
                     }
                 }
-            }
 
-            // 메모장 (조건부 표시)
-            if (showMemoPad) {
-                Box(
+                // 하단 메뉴 버튼 줄 (항상 고정 표시)
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(120.dp)
-                        .background(colors.veryLightGray)
-                        .padding(16.dp)
+                        .height(50.dp)
+                        .background(if (isDarkMode) colors.black else colors.veryLightGray)
+                        .padding(start = 16.dp, end = 60.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "메모 하기...",
-                        style = typography.desc_M_14,
-                        color = colors.darkGray
+                    Image(
+                        painter = painterResource(id = R.drawable.menu_icon),
+                        contentDescription = "메뉴 아이콘",
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable {
+                                focusViewModel.toggleAppIcons()
+                            },
+                        colorFilter = ColorFilter.tint(if (isDarkMode) colors.mediumGray else colors.black)
+                    )
+                    Image(
+                        painter = painterResource(id = R.drawable.chatting_icon),
+                        contentDescription = "채팅 아이콘",
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable {
+                                focusViewModel.toggleMemoPad()
+                            },
+                        colorFilter = ColorFilter.tint(if (isDarkMode) colors.mediumGray else colors.black)
                     )
                 }
             }
         }
+
 
         // 팝업 1(종료 확인 팝업)
         if (showFinishPopup) {
@@ -660,6 +724,7 @@ fun LandscapeRoutineFocusScreen(
                     .fillMaxHeight()
                     .background(Color(0x33000000))
                     .zIndex(102f)
+                    .padding(end = 35.dp)
                     .clickable { focusViewModel.closeSettingsPopup() },
                 contentAlignment = Alignment.TopEnd
             ) {

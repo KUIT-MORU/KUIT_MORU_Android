@@ -25,6 +25,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -85,6 +87,11 @@ fun calculateVisibleSteps(currentStep: Int, totalSteps: Int): List<Int> {
             (startStep..endStep).toList()
         }
     }
+}
+
+// 모든 스텝을 반환하는 함수 (스크롤용)
+fun getAllSteps(totalSteps: Int): List<Int> {
+    return (1..totalSteps).toList()
 }
 
 // 스탭 개수에 따라 타임라인을 그리는 함수
@@ -233,7 +240,7 @@ fun launchApp(context: Context, packageName: String) {
 
 @Composable
 fun PortraitRoutineFocusScreen(
-    focusViewModel: RoutineFocusViewModel = viewModel(),
+    focusViewModel: RoutineFocusViewModel,
     sharedViewModel: SharedRoutineViewModel,
     routineId: Int,
     onDismiss: () -> Unit,
@@ -455,15 +462,18 @@ fun PortraitRoutineFocusScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    // 타임라인 영역 - weight를 사용해서 남은 공간 모두 사용
-                    Column(
-                        verticalArrangement = Arrangement.Center, // 선택된 아이템들을 세로 중앙 정렬
+                    // 타임라인 영역 - LazyColumn으로 스크롤 가능하게 변경
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(200.dp), // 고정 높이 설정
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                         horizontalAlignment = Alignment.Start
                     ) {
-                        // 현재 step에 따라 보여줄 step들을 동적으로 계산
-                        val visibleSteps = calculateVisibleSteps(currentstep, routineItems.size)
+                        // 모든 스텝을 표시하여 스크롤 가능하게 함
+                        val allSteps = getAllSteps(routineItems.size)
                         
-                        visibleSteps.forEach { stepIndex ->
+                        items(allSteps) { stepIndex ->
                             val (title, time) = routineItems[stepIndex - 1] // stepIndex는 1부터 시작하므로 -1
                             RoutineTimelineItem(
                                 time = time,
@@ -471,7 +481,17 @@ fun PortraitRoutineFocusScreen(
                                 index = stepIndex,
                                 currentStep = currentstep,
                                 isTimeout = isTimeout,
-                                isDarkMode = isDarkMode
+                                isDarkMode = isDarkMode,
+                                onStepClick = { clickedStep ->
+                                    // 클릭된 스텝으로 이동
+                                    if (clickedStep != currentstep) {
+                                        val stepTimeString = routineItems.getOrNull(clickedStep - 1)?.second ?: "0m"
+                                        focusViewModel.updateCurrentStep(clickedStep)
+                                        focusViewModel.setStepLimitFromTimeString(parseTimeToSeconds(stepTimeString))
+                                        focusViewModel.resetTimer()
+                                        focusViewModel.startTimer()
+                                    }
+                                }
                             )
                         }
                     }

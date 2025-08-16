@@ -25,6 +25,11 @@ class RoutineFocusViewModel : ViewModel() {
     var currentStep by mutableIntStateOf(1)
         private set
 
+    // 현재 스텝 설정 함수
+    fun updateCurrentStep(step: Int) {
+        currentStep = step
+    }
+
     // 각 스탭의 현재 경과 시간
     var elapsedSeconds by mutableIntStateOf(0)
         private set
@@ -73,6 +78,8 @@ class RoutineFocusViewModel : ViewModel() {
         stepLimit = limitInSeconds
     }
 
+
+
     var isUserPaused by mutableStateOf(false)
         private set
 
@@ -85,9 +92,13 @@ class RoutineFocusViewModel : ViewModel() {
         }
     }
 
+
+
     // 설정 팝업 상태 저장
     var isSettingsPopupVisible by mutableStateOf(false)
         private set
+
+
 
     fun toggleSettingsPopup() {
         isSettingsPopupVisible = !isSettingsPopupVisible
@@ -158,6 +169,31 @@ class RoutineFocusViewModel : ViewModel() {
     fun endFocusRoutine() {
         _isFocusRoutineActive = false
         _isPermittedAppLaunch = false
+        
+        // 루틴 종료 시 모든 상태 초기화
+        isTimerRunning = false
+        isTimeout = false
+        currentStep = 1
+        elapsedSeconds = 0
+        totalElapsedSeconds = 0
+        isUserPaused = false
+        stepLimit = 0
+        
+        // 팝업 상태들도 초기화
+        isAppIconsVisible = false
+        showMemoPad = false
+        isScreenBlockOverlayVisible = false
+        isScreenBlockPopupVisible = false
+        isOnboardingPopupVisible = false
+        isSettingsPopupVisible = false
+        
+        // 선택된 앱들 초기화
+        _selectedApps.value = emptyList()
+        
+        // 스텝별 메모 초기화
+        _stepMemos.value = emptyMap()
+        
+        Log.d("RoutineFocusViewModel", "🔄 루틴 종료: 모든 상태 초기화 완료")
     }
 
     fun setPermittedAppLaunch(permitted: Boolean) {
@@ -175,12 +211,46 @@ class RoutineFocusViewModel : ViewModel() {
     var isAppIconsVisible by mutableStateOf(false)
         private set
 
+    // 세로모드와의 호환성을 위한 별칭
+    val showAppIcons: Boolean
+        get() = isAppIconsVisible
+
     fun toggleAppIcons() {
         isAppIconsVisible = !isAppIconsVisible
     }
 
     fun hideAppIcons() {
         isAppIconsVisible = false
+    }
+
+    // 메모장 팝업 상태 저장
+    var showMemoPad by mutableStateOf(false)
+        private set
+
+    // 스텝별 메모 저장
+    private val _stepMemos = mutableStateOf<Map<Int, String>>(emptyMap())
+    val stepMemos: Map<Int, String>
+        get() = _stepMemos.value
+
+    fun toggleMemoPad() {
+        showMemoPad = !showMemoPad
+    }
+
+    fun hideMemoPad() {
+        showMemoPad = false
+    }
+
+    // 특정 스텝의 메모 저장
+    fun saveStepMemo(step: Int, memo: String) {
+        _stepMemos.value = _stepMemos.value.toMutableMap().apply {
+            put(step, memo)
+        }
+        Log.d("RoutineFocusViewModel", "📝 스텝 $step 메모 저장: $memo")
+    }
+
+    // 특정 스텝의 메모 가져오기
+    fun getStepMemo(step: Int): String {
+        return _stepMemos.value[step] ?: ""
     }
 
     // 타이머 시작 함수
@@ -205,14 +275,16 @@ class RoutineFocusViewModel : ViewModel() {
         isTimerRunning = false
     }
 
-
-    // 재생/정지 버튼 재개 함수
+    // 타이머 재개 함수
     fun resumeTimer() {
         if (!isTimerRunning) {
             isUserPaused = false
             startTimer()
         }
     }
+
+
+
 
 
     // 다음 스텝으로 넘어갈 때 호출하는 함수

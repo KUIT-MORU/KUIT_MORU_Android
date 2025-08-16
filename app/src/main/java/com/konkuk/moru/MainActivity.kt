@@ -1,5 +1,6 @@
 package com.konkuk.moru
 
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
@@ -100,6 +101,22 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     routineFocusViewModel = focusViewModel
                 )
+                
+                // 가로모드 스위치 상태에 따른 화면 방향 제어
+                LaunchedEffect(focusViewModel.isLandscapeMode) {
+                    Log.d("MainActivity", "🔍 가로모드 상태 변경 감지: isLandscapeMode=${focusViewModel.isLandscapeMode}")
+                    
+                    val newOrientation = if (focusViewModel.isLandscapeMode) {
+                        ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    } else {
+                        ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                    }
+                    
+                    if (requestedOrientation != newOrientation) {
+                        Log.d("MainActivity", "🔄 화면 방향 변경: ${if (focusViewModel.isLandscapeMode) "가로" else "세로"} 모드")
+                        requestedOrientation = newOrientation
+                    }
+                }
             }
         }
     }
