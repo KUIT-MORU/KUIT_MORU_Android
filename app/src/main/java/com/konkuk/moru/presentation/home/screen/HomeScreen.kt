@@ -72,6 +72,9 @@ import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 import android.content.Context
 import kotlinx.coroutines.delay
+import kotlin.collections.first
+import kotlin.collections.isNotEmpty
+import kotlin.collections.mapNotNull
 
 fun convertDurationToMinutes(duration: String): Int {
     val parts = duration.split(":")
@@ -125,9 +128,9 @@ private fun buildWeeklyMap(routines: List<Routine>): Pair<Map<Int, List<String>>
 
                 // 더 많은 루틴을 표시하기 위한 개선된 로직
                 val shouldShow = when {
-                    // 1. 로컬 스케줄에 scheduledDays가 설정되어 있고 해당 요일에 포함되는 경우 (우선순위 1)
+                    // 1. 서버 스케줄에 scheduledDays가 설정되어 있고 해당 요일에 포함되는 경우 (우선순위 1)
                     hasScheduledDays && containsDayOfWeek -> {
-                        Log.d("HomeScreen", "✅ ${r.title}: 로컬 스케줄에 ${date.dayOfWeek} 포함됨")
+                        Log.d("HomeScreen", "✅ ${r.title}: 서버 스케줄에 ${date.dayOfWeek} 포함됨")
                         true
                     }
                     // 2. scheduledDays가 비어있지만 오늘 요일인 경우 (우선순위 2)
@@ -135,24 +138,9 @@ private fun buildWeeklyMap(routines: List<Routine>): Pair<Map<Int, List<String>>
                         Log.d("HomeScreen", "✅ ${r.title}: 오늘 루틴으로 ${date.dayOfWeek}에 배치")
                         true
                     }
-                    // 3. scheduledDays가 비어있고, 루틴이 간단한 경우 (우선순위 3 - 임시 분산 배치)
-                    !hasScheduledDays && (r.category == "집중" || r.category == "간편" || r.category.isEmpty()) -> {
-                        // 요일별로 분산 배치 (월요일부터 시작해서 루틴 개수만큼 분산)
-                        val routineIndex = routines.indexOf(r)
-                        val dayIndex = routineIndex % 7
-                        val targetDayValue = dayIndex + 1 // DayOfWeek.MONDAY.value = 1
-                        val matches = date.dayOfWeek.value == targetDayValue
-                        
-                        if (matches) {
-                            Log.d("HomeScreen", "✅ ${r.title}: 임시 분산 배치로 ${date.dayOfWeek}에 배치 (routineIndex=$routineIndex, dayIndex=$dayIndex, category='${r.category}')")
-                        } else {
-                            Log.d("HomeScreen", "❌ ${r.title}: 임시 분산 배치 실패 (routineIndex=$routineIndex, dayIndex=$dayIndex, targetDay=${targetDayValue}, currentDay=${date.dayOfWeek.value}, category='${r.category}')")
-                        }
-                        matches
-                    }
-                    // 4. 그 외의 경우는 표시하지 않음
+                    // 3. 그 외의 경우는 표시하지 않음 (임시 분산 배치 제거)
                     else -> {
-                        Log.d("HomeScreen", "❌ ${r.title}: 조건에 맞지 않음 (hasScheduledDays=$hasScheduledDays, category=${r.category})")
+                        Log.d("HomeScreen", "❌ ${r.title}: 조건에 맞지 않음 (hasScheduledDays=$hasScheduledDays, containsDayOfWeek=$containsDayOfWeek)")
                         false
                     }
                 }
@@ -280,26 +268,24 @@ fun HomeScreen(
     // 하이라이트 대상 보관
     var highlightId by remember { mutableStateOf<Int?>(null) }
 
-    // X 눌러서 나온 "진행중" 루틴을 맨 앞으로, isRunning=true, 하이라이트 지정
-    LaunchedEffect(runningId) {
-        runningId?.let { id ->
-            val idx = todayRoutines.indexOfFirst { it.routineId.toStableIntId() == id }
-            if (idx >= 0) {
-                val item = todayRoutines.removeAt(idx)
-                val updated = item.copy(isRunning = true) // 정렬에서도 앞으로 오도록
-                todayRoutines.add(0, updated)
-                // 순서 저장
-                homeEntry.savedStateHandle["todayOrderIds"] = todayRoutines.map { it.routineId }
-                // 하이라이트 지정
-                highlightId = id
-            }
-            // 한 번 처리했으면 플래그 비워주기
-            homeEntry.savedStateHandle["runningRoutineId"] = null
-        }
+
+    
+    // 하이라이트 ID 변경 시 로그 추가
+    LaunchedEffect(highlightId) {
+        Log.d("HomeScreen", "🎯 하이라이트 ID 변경됨: $highlightId")
     }
 
     // 서버 오늘 루틴
     val homeVm: HomeRoutinesViewModel = hiltViewModel()
+    
+    Log.d("HomeScreen", "🔍 homeVm 인스턴스: $homeVm")
+    Log.d("HomeScreen", "🔍 homeVm 클래스: ${homeVm.javaClass.simpleName}")
+
+    // SharedRoutineViewModel을 HomeRoutinesViewModel에 설정
+    LaunchedEffect(Unit) {
+        homeVm.setSharedRoutineViewModel(sharedViewModel)
+        Log.d("HomeScreen", "✅ SharedRoutineViewModel을 HomeRoutinesViewModel에 설정 완료")
+    }
 
     // ① Today(오늘용)
     val serverRoutines by homeVm.serverRoutines.collectAsState()
@@ -307,34 +293,135 @@ fun HomeScreen(
     val myRoutines by homeVm.myRoutines.collectAsState()
     // ③ 스케줄 정보가 병합된 루틴 (주간 달력용)
     val scheduledRoutines by homeVm.scheduledRoutines.collectAsState()
+    
+
 
     LaunchedEffect(Unit) {
+        Log.d("HomeScreen", "🔄 LaunchedEffect(Unit) 실행 시작")
+        Log.d("HomeScreen", "🔍 homeVm 상태 확인: $homeVm")
         Log.d("HomeScreen", "loadTodayRoutines() 호출")
-        homeVm.loadTodayRoutines()
+        try {
+            homeVm.loadTodayRoutines()
+            Log.d("HomeScreen", "✅ loadTodayRoutines() 호출 완료")
+        } catch (e: Exception) {
+            Log.e("HomeScreen", "❌ loadTodayRoutines() 호출 실패", e)
+        }
+        
         // 하단 카드용 전체 목록도 로드
-        homeVm.loadMyRoutines()
+        try {
+            homeVm.loadMyRoutines()
+            Log.d("HomeScreen", "✅ loadMyRoutines() 호출 완료")
+        } catch (e: Exception) {
+            Log.e("HomeScreen", "❌ loadMyRoutines() 호출 실패", e)
+        }
     }
 
-    // 서버 데이터 로드 후 로컬 스케줄 정보와 병합
+    // 서버 데이터 로드 후 스케줄 정보와 병합
     LaunchedEffect(serverRoutines) {
         if (serverRoutines.isNotEmpty()) {
-            Log.d("HomeScreen", "서버 데이터 로드 완료, 로컬 스케줄 정보와 병합 시작")
-            homeVm.mergeWithLocalSchedule(context)
-
-            // 테스트용: 임시로 스케줄 데이터 설정 (실제로는 시계 아이콘을 통해 설정)
-            if (serverRoutines.isNotEmpty()) {
-                val firstRoutine = serverRoutines.first()
-                val testSchedule = SchedulePreference.ScheduleInfo(
-                    routineId = firstRoutine.routineId,
-                    scheduledDays = SchedulePreference.dayOfWeeksToStrings(setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY)),
-                    scheduledTime = SchedulePreference.localTimeToString(LocalTime.of(9, 0))
-                )
-                SchedulePreference.saveSchedule(context, testSchedule)
-                Log.d("HomeScreen", "테스트 스케줄 설정: ${firstRoutine.title} - ${testSchedule.scheduledDays}, ${testSchedule.scheduledTime}")
-
-                // 스케줄 정보 다시 병합
-                homeVm.mergeWithLocalSchedule(context)
+            Log.d("HomeScreen", "서버 데이터 로드 완료, 스케줄 정보와 병합 시작")
+            
+            // 각 루틴의 스케줄 정보를 서버에서 가져와서 병합 (비동기 처리)
+            val routinesWithSchedules = serverRoutines.map { routine ->
+                routine
             }
+            
+            // 병합된 루틴을 todayRoutines에 설정
+            todayRoutines.clear()
+            todayRoutines.addAll(routinesWithSchedules)
+            
+            // 로컬 스케줄 정보도 병합 (기존 기능 유지)
+            homeVm.mergeWithLocalSchedule(context)
+            
+            // 스케줄 정보를 비동기로 가져와서 업데이트
+            Log.d("HomeScreen", "🔄 스케줄 정보 가져오기 시작: ${serverRoutines.size}개 루틴")
+            serverRoutines.forEach { routine ->
+                Log.d("HomeScreen", "🔍 루틴 스케줄 조회: ${routine.title} (ID: ${routine.routineId})")
+                try {
+                    val schedules = homeVm.getRoutineSchedules(routine.routineId)
+                    Log.d("HomeScreen", "📊 스케줄 응답: ${routine.title} - ${schedules.size}개 스케줄")
+                    
+                    schedules.forEachIndexed { index, schedule ->
+                        Log.d("HomeScreen", "   스케줄[$index]: dayOfWeek=${schedule.dayOfWeek}, time=${schedule.time}, alarmEnabled=${schedule.alarmEnabled}")
+                    }
+                    
+                    if (schedules.isNotEmpty()) {
+                        // 스케줄 정보를 DayOfWeek와 LocalTime으로 변환
+                        val scheduledDays: Set<DayOfWeek> = schedules.mapNotNull { schedule ->
+                            val dayOfWeek = when (schedule.dayOfWeek.uppercase()) {
+                                "MON" -> DayOfWeek.MONDAY
+                                "TUE" -> DayOfWeek.TUESDAY
+                                "WED" -> DayOfWeek.WEDNESDAY
+                                "THU" -> DayOfWeek.THURSDAY
+                                "FRI" -> DayOfWeek.FRIDAY
+                                "SAT" -> DayOfWeek.SATURDAY
+                                "SUN" -> DayOfWeek.SUNDAY
+                                else -> {
+                                    Log.w("HomeScreen", "⚠️ 알 수 없는 요일 형식: ${schedule.dayOfWeek}")
+                                    null
+                                }
+                            }
+                            Log.d("HomeScreen", "   변환: ${schedule.dayOfWeek} -> $dayOfWeek")
+                            dayOfWeek
+                        }.toSet()
+                        
+                        val scheduledTime = if (schedules.isNotEmpty()) {
+                            try {
+                                val time = LocalTime.parse(schedules.first().time, DateTimeFormatter.ofPattern("HH:mm:ss"))
+                                Log.d("HomeScreen", "   시간 변환: ${schedules.first().time} -> $time")
+                                time
+                            } catch (e: Exception) {
+                                Log.e("HomeScreen", "❌ 시간 파싱 실패: ${schedules.first().time}", e)
+                                null
+                            }
+                        } else null
+                        
+                        Log.d("HomeScreen", "✅ 스케줄 정보 병합: ${routine.title} - 요일: $scheduledDays, 시간: $scheduledTime")
+                        
+                        // todayRoutines에서 해당 루틴을 찾아서 업데이트
+                        val index = todayRoutines.indexOfFirst { it.routineId == routine.routineId }
+                        if (index >= 0) {
+                            val updatedRoutine = todayRoutines[index].copy(scheduledDays = scheduledDays, scheduledTime = scheduledTime)
+                            todayRoutines[index] = updatedRoutine
+                            Log.d("HomeScreen", "✅ 루틴 업데이트 완료: ${routine.title}")
+                        } else {
+                            Log.w("HomeScreen", "⚠️ todayRoutines에서 루틴을 찾을 수 없음: ${routine.title}")
+                        }
+                    } else {
+                        Log.d("HomeScreen", "⚠️ 스케줄 정보 없음: ${routine.title}")
+                    }
+                } catch (e: Exception) {
+                    Log.e("HomeScreen", "❌ 스케줄 정보 가져오기 실패: ${routine.title}", e)
+                }
+            }
+            
+                         // 서버 데이터 로드 후 runningId가 있으면 myRoutines에서만 해당 루틴을 isRunning=true로 설정하고 맨 앞으로 이동 (TODAY 탭은 제외)
+             runningId?.let { id ->
+                 Log.d("HomeScreen", "🔄 서버 데이터 로드 후 runningId 처리: $id")
+                 
+                 // myRoutines에서만 진행중인 루틴을 맨 앞으로 이동 (TODAY 탭은 하이라이트/이동 없음)
+                 val myRoutinesList = myRoutines.toList()
+                 val myIdx = myRoutinesList.indexOfFirst { it.routineId.toStableIntId() == id }
+                 if (myIdx >= 0) {
+                     Log.d("HomeScreen", "✅ myRoutines에서 진행중 루틴 발견: ${myRoutinesList[myIdx].title}")
+                     
+                     val updatedRoutines = myRoutinesList.toMutableList()
+                     val runningRoutine = updatedRoutines.removeAt(myIdx)
+                     val updatedRunningRoutine = runningRoutine.copy(isRunning = true)
+                     updatedRoutines.add(0, updatedRunningRoutine)
+                     
+                     Log.d("HomeScreen", "🔄 myRoutines 업데이트: ${updatedRunningRoutine.title}를 맨 앞으로 이동")
+                     homeVm.updateMyRoutines(updatedRoutines)
+                     
+                     // 하이라이트 설정 (하단 루틴 목록용)
+                     if (highlightId != id) {
+                         highlightId = id
+                         Log.d("HomeScreen", "🎯 서버 데이터 로드 후 하이라이트 ID 설정: $highlightId")
+                     }
+                 } else {
+                     Log.w("HomeScreen", "⚠️ myRoutines에서 runningId=$id 를 찾을 수 없음")
+                 }
+             }
         }
     }
 
@@ -654,8 +741,8 @@ fun HomeScreen(
                                     sharedViewModel.setRoutineInfo(title = routine.title, category = actualCategory, tags = routine.tags, isSimple = isSimple)
 
                                     // 루틴 상세 정보 로드 (스텝 포함) 후 SharedRoutineViewModel에 직접 설정
-                                    Log.d("HomeScreen", "🔄 loadRoutineDetail 호출")
-                                    homeVm.loadRoutineDetail(routine.routineId)
+                                    Log.d("HomeScreen", "🔄 loadMyRoutineDetail 호출 (사용앱 정보 포함)")
+                                    homeVm.loadMyRoutineDetail(routine.routineId)
 
                                     // 네비게이션 트리거 설정
                                     Log.d("HomeScreen", "🔄 네비게이션 트리거 설정")
@@ -674,15 +761,15 @@ fun HomeScreen(
 
                         // 이번주 탭 선택 시
                         1 -> {
-                            // 주간 데이터 만들기 (scheduledRoutines 사용 - 이미 로컬 스케줄 정보가 병합됨)
-                            val mergedRoutines = scheduledRoutines
+                            // 주간 데이터 만들기 (todayRoutines 사용 - 서버 스케줄 정보가 포함됨)
+                            val mergedRoutines = todayRoutines.toList()
                             
                             Log.d("HomeScreen", "🔍 이번주 탭 선택됨: mergedRoutines.size=${mergedRoutines.size}")
                             
                             // mergedRoutines 상세 정보 로깅
                             mergedRoutines.forEachIndexed { index, routine ->
                                 val routineTyped: Routine = routine
-                                Log.d("HomeScreen", "🔍 mergedRoutines[$index]: ${routineTyped.title}, category=${routineTyped.category}, isSimple=${routineTyped.isSimple}, scheduledDays=${routineTyped.scheduledDays}, scheduledTime=${routineTyped.scheduledTime}, requiredTime=${routineTyped.requiredTime}")
+                                Log.d("HomeScreen", "🔍 mergedRoutines[$index]: ${routineTyped.title}, category=${routineTyped.category}, scheduledDays=${routineTyped.scheduledDays}, scheduledTime=${routineTyped.scheduledTime}, requiredTime=${routineTyped.requiredTime}")
                             }
                             
                             val (routinesPerDate, todayDom) = buildWeeklyMap(mergedRoutines)
@@ -734,6 +821,10 @@ fun HomeScreen(
                     if (myRoutines.isNotEmpty()) {
                         val context = LocalContext.current
                         val list = myRoutines.sortedForList()   // 이미 정렬된 리스트
+                        
+                        Log.d("HomeScreen", "🔄 하단 카드 렌더링: myRoutines.size=${myRoutines.size}, sortedList.size=${list.size}")
+                        Log.d("HomeScreen", "📋 정렬된 리스트: " + list.joinToString { "${it.title}(isRunning=${it.isRunning})" })
+                        Log.d("HomeScreen", "🔍 정렬된 리스트 첫 번째: ${list.firstOrNull()?.title} (isRunning=${list.firstOrNull()?.isRunning})")
 
                         RoutineCardList(
                             routines = list,
@@ -762,14 +853,12 @@ fun HomeScreen(
                                 )
 
                                 // 루틴 상세 정보 로드 (스텝 포함) 후 네비게이션
-                                homeVm.loadRoutineDetail(routine.routineId)
+                                homeVm.loadMyRoutineDetail(routine.routineId)
 
                                 // 네비게이션 트리거 설정
                                 homeEntry.savedStateHandle["navigateToRoutineFocus"] = routine.routineId
                             },
-                            runningHighlightId = highlightId?.takeIf { id ->
-                                list.any { it.routineId.toStableIntId() == id }
-                            }
+                            runningHighlightId = highlightId
                         )
                     } else {
                         Log.d("HomeScreen", "내 루틴 목록이 비어있음")
@@ -795,13 +884,22 @@ private fun String.toStableIntId(): Int {
 }
 
 // 오늘 "루틴 목록" 전용 정렬:
-// 1) 진행중(간편) 우선 → 2) 시간 미설정 → 3) 시간 설정(오름차순)
-private fun List<Routine>.sortedForList(): List<Routine> =
-    this.sortedWith(
-        compareByDescending<Routine> { it.isRunning && it.category == "간편" }
+// 1) 진행중 루틴 우선 → 2) 시간 미설정 → 3) 시간 설정(오름차순)
+private fun List<Routine>.sortedForList(): List<Routine> {
+    Log.d("HomeScreen", "🔄 sortedForList() 호출: ${this.size}개 루틴")
+    this.forEach { routine ->
+        Log.d("HomeScreen", "   - ${routine.title}: isRunning=${routine.isRunning}, category=${routine.category}")
+    }
+    
+    val sorted = this.sortedWith(
+        compareByDescending<Routine> { it.isRunning }  // 진행중인 루틴을 맨 앞으로 (카테고리 상관없이)
             .thenByDescending { it.scheduledTime == null }
             .thenBy { it.scheduledTime ?: java.time.LocalTime.MAX }
     )
+    
+    Log.d("HomeScreen", "✅ 정렬 완료: " + sorted.joinToString { "${it.title}(isRunning=${it.isRunning})" })
+    return sorted
+}
 
 // 현재 시간을 기준으로 가장 가까운 시간대의 루틴부터 정렬 (오늘 탭용)
 private fun List<Routine>.sortByNearestTime(): List<Routine> {

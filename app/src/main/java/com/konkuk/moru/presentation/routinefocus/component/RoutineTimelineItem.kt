@@ -1,6 +1,8 @@
 package com.konkuk.moru.presentation.routinefocus.component
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -29,7 +32,8 @@ fun RoutineTimelineItem(
     index: Int, // 1부터 시작
     currentStep: Int, // 1부터 시작
     isTimeout: Boolean, // 시간 초과 유무
-    isDarkMode: Boolean // 다크 모드 유무
+    isDarkMode: Boolean, // 다크 모드 유무
+    onStepClick: ((Int) -> Unit)? = null // 스텝 클릭 시 호출될 콜백
 ) {
     val colors = MORUTheme.colors
     val typography = MORUTheme.typography
@@ -73,6 +77,12 @@ fun RoutineTimelineItem(
     val pathEffect = PathEffect.dashPathEffect(floatArrayOf(7f, 7f))
 
     Row(
+        modifier = Modifier.clickable(
+            indication = null,
+            interactionSource = remember { MutableInteractionSource() }
+        ) {
+            onStepClick?.invoke(index)
+        },
         verticalAlignment = Alignment.CenterVertically
     ) {
         // 시간
@@ -96,7 +106,7 @@ fun RoutineTimelineItem(
                 val centerX = size.width / 2
                 val centerY = size.height / 2
 
-                // 위 선
+                // 위 선 - 완벽하게 연결되도록 조정
                 drawLine(
                     color = lineColor,
                     start = Offset(centerX, 0f),
@@ -105,7 +115,7 @@ fun RoutineTimelineItem(
                     pathEffect = if (isActive) null else pathEffect
                 )
 
-                // 아래 선
+                // 아래 선 - 완벽하게 연결되도록 조정
                 drawLine(
                     color = lineColor,
                     start = Offset(centerX, centerY + 6.dp.toPx()),
@@ -178,7 +188,8 @@ fun RoutineTimelineItemPreview1() {
                 index = index,
                 currentStep = 2, // limeGreen 스타일은 1, 2번만 적용됨
                 isTimeout = false,
-                isDarkMode = false
+                isDarkMode = false,
+                onStepClick = null
             )
         }
     }
@@ -206,7 +217,8 @@ fun RoutineTimelineItemPreview2() {
                 index = index,
                 currentStep = 2,   // 중요하지 않음
                 isTimeout = true,   // ← 시간 초과 상태
-                isDarkMode = false
+                isDarkMode = false,
+                onStepClick = null
             )
         }
     }
@@ -234,7 +246,8 @@ fun RoutineTimelineItemPreview3() {
                 index = index,
                 currentStep = 2, // limeGreen 스타일은 1, 2번만 적용됨
                 isTimeout = false,
-                isDarkMode = true
+                isDarkMode = true,
+                onStepClick = null
             )
         }
     }
@@ -263,7 +276,8 @@ fun RoutineTimelineItemPreview4() {
                 index = index,
                 currentStep = 2, // limeGreen 스타일은 1, 2번만 적용됨
                 isTimeout = true,
-                isDarkMode = true
+                isDarkMode = true,
+                onStepClick = null
             )
         }
     }

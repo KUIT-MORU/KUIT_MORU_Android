@@ -121,7 +121,6 @@ private fun RoutineStepDto.toStepModel(): RoutineStep {
 private fun AppDto.toAppModel(): AppInfo {
     return AppInfo(
         name = name,
-        iconUrl = null, // [TODO] 서버가 앱 아이콘 URL 제공 시 매핑
         packageName = packageName
     )
 }

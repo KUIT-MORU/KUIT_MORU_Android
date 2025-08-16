@@ -12,7 +12,8 @@ fun SimpleBottomTailBalloonByRatio(
     offsetRatioX: Float,
     offsetRatioY: Float,
     balloonWidth: Dp = 138.dp,
-    balloonHeight: Dp = 42.dp
+    balloonHeight: Dp = 42.dp,
+    onClick: (() -> Unit)? = null
 ) {
     val config = LocalConfiguration.current
     val screenWidth = config.screenWidthDp.dp
@@ -27,6 +28,7 @@ fun SimpleBottomTailBalloonByRatio(
         offsetX = offsetX,
         offsetY = offsetY,
         balloonWidth = balloonWidth,
-        balloonHeight = balloonHeight
+        balloonHeight = balloonHeight,
+        onClick = onClick
     )
 }

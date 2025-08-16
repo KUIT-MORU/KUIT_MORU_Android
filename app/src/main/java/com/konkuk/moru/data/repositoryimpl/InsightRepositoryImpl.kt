@@ -12,4 +12,8 @@ class InsightRepositoryImpl @Inject constructor(
     override suspend fun getInsights(): Result<Insight> = runCatching {
         service.getInsights().toDomain()
     }
+    
+    override suspend fun completeRoutine(routineId: String): Result<Unit> = runCatching {
+        service.completeRoutine(routineId)
+    }
 }

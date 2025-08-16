@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -15,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.ui.theme.MORUTheme.colors
@@ -54,7 +56,7 @@ fun RoutineStepItem(
                 color = colors.black,
                 modifier = Modifier.weight(1f)
             )
-            if(showDuration) {
+            if (showDuration) {
                 Text(
                     text = "${duration}m",
                     style = typography.desc_M_14,
@@ -62,22 +64,32 @@ fun RoutineStepItem(
                 )
                 Spacer(modifier = modifier.width(20.dp))
             }
-            if(showSwitch) {
+            if (showSwitch) {
                 Switch(
                     checked = isChecked,
                     onCheckedChange = onCheckedChange,
-                    modifier = Modifier.scale(0.8f),
+                    modifier = Modifier
+                        .scale(scaleX = 0.7f, scaleY = 0.7f), // 가로 70%, 세로 50%로 슬림하게
                     colors = SwitchDefaults.colors(
-                        uncheckedThumbColor = colors.mediumGray,   // OFF 상태 버튼 색 (회색)
-                        uncheckedTrackColor = colors.lightGray,    // OFF 상태 배경 색 (연회색)
-                        checkedThumbColor = colors.lightGray,      // ON 상태 버튼 색
-                        checkedTrackColor = colors.darkGray        // ON 상태 배경 색
-                    )
+                        uncheckedThumbColor = colors.mediumGray,
+                        uncheckedTrackColor = colors.lightGray,
+                        checkedThumbColor = colors.mediumGray,
+                        checkedTrackColor = Color(0xFF1A1A1A),
+                        uncheckedBorderColor = Color.Transparent,
+                        checkedBorderColor = Color.Transparent
+                    ),
+                    thumbContent = {
+                        val thumbSize = if (isChecked) 8.dp else 10.dp  // 전체적으로 더 작게 조정
+                        Box(
+                            modifier = Modifier.size(thumbSize)
+                        )
+                    }
                 )
             }
         }
     }
 }
+
 
 @Preview
 @Composable
