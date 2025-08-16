@@ -1,6 +1,6 @@
 package com.konkuk.moru.data.service
 
-import com.konkuk.moru.data.dto.response.FollowListResponseDto
+import com.konkuk.moru.data.dto.response.Follow.FollowListResponseDto
 import retrofit2.http.*
 
 interface SocialService {

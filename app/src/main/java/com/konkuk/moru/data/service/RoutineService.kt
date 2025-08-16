@@ -1,7 +1,7 @@
 package com.konkuk.moru.data.service
 
 import com.konkuk.moru.data.dto.response.RoutinePageResponse
-import com.konkuk.moru.data.dto.response.RoutineDetailResponseV1
+import com.konkuk.moru.data.dto.response.Routine.RoutineDetailResponseV1
 import com.konkuk.moru.data.dto.response.RoutineStepResponse
 import retrofit2.http.GET
 import retrofit2.http.Path

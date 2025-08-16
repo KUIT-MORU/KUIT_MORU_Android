@@ -40,6 +40,8 @@ fun MyRoutineDetailContent(
     selectedImageUri: Uri?,
     onAddTagClick: () -> Unit
 ) {
+
+    val CATEGORY_SIMPLE = "간편"
     val listState = rememberLazyListState()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val routine = uiState.routine ?: return
@@ -94,7 +96,9 @@ fun MyRoutineDetailContent(
                 MyRoutineTag(
                     tags = routine.tags,
                     isEditMode = isEditMode,
-                    onAddTag = onAddTagClick,
+                    onAddTag = {
+                        if (routine.tags.size < 3) onAddTagClick() // [추가] 이중 가드
+                    },
                     onDeleteTag = viewModel::deleteTag
                 )
             }
@@ -109,26 +113,10 @@ fun MyRoutineDetailContent(
                 actions = routineStepActions
             )
 
-//            if (routine.usedApps.isNotEmpty() || isEditMode) {
-//                item {
-//                    Spacer(modifier = Modifier.height(20.dp))
-//                    UsedAppsSection(
-//                        apps = routine.usedApps,
-//                        isEditMode = isEditMode,
-//                        onAddApp = viewModel::addApp,
-//                        onDeleteApp = viewModel::deleteApp
-//                    )
-//                }
-//            }
-            if (routine.usedApps.isNotEmpty()) {
+//
+            if (routine.usedApps.isNotEmpty() && routine.category != CATEGORY_SIMPLE) {
                 item {
                     Spacer(modifier = Modifier.height(20.dp))
-//                    UsedAppsSection(
-//                        apps = routine.usedApps,
-//                        isEditMode = isEditMode,
-//                        onAddApp = viewModel::addApp,
-//                        onDeleteApp = viewModel::deleteApp
-//                    )
                     SelectUsedAppSection(
                         selectedAppList = routine.usedApps,
                         isEditMode = isEditMode,
@@ -162,7 +150,8 @@ fun MyRoutineDetailContent(
         )
     }
     if (isTimePickerVisible) {
-        val init = editingStepIndex?.let { idx -> routine.steps.getOrNull(idx)?.duration } // "HH:MM:SS"
+        val init =
+            editingStepIndex?.let { idx -> routine.steps.getOrNull(idx)?.duration } // "HH:MM:SS"
         TimePickerDialog(
             initialTime = init,
             onConfirm = { h, m, s ->
@@ -218,7 +207,7 @@ private fun MyRoutineDetailContentPreview_EditMode() {
             onOpenBottomSheet = { },
             onCardImageClick = {},
             selectedImageUri = null,
-            onAddTagClick = {  }
+            onAddTagClick = { }
         )
     }
 }

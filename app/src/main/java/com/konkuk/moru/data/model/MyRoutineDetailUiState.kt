@@ -1,7 +1,7 @@
 package com.konkuk.moru.data.model
 
 data class MyRoutineDetailUiState(
-    val routine: Routine? = null,
+    val routine:  MyRoutineDetailUi? = null,
     val isLoading: Boolean = true,
     val isEditMode: Boolean = false,
     val draggedStepIndex: Int? = null,

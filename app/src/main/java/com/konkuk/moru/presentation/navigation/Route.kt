@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.navigation
 
+import android.net.Uri
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -46,15 +47,20 @@ sealed class Route(
         fun createRoute(userId: String) = "user_profile/$userId"
     }
 
+
     object RoutineDetail {
-        const val route = "routine_detail/{routineId}"
-        fun create(routineId: String) = "routine_detail/$routineId"
+        const val KEY = "routineId" // ✅ 키 상수화
+        const val route = "routine_detail/{$KEY}"
+        fun create(routineId: String) = "routine_detail/${Uri.encode(routineId)}"
     }
+
+    data object MyRoutineDetail : Route("my_routine_detail/{routineId}") { // ← 리터럴로 넣기
+        const val KEY = "routineId"
+        fun createRoute(routineId: String) = "my_routine_detail/${Uri.encode(routineId)}"
+    }
+
     data object MyRoutine : Route(route = "my_routine")
 
-    data object MyRoutineDetail : Route("my_routine_detail/{routineId}") {
-        fun createRoute(routineId: String) = "my_routine_detail/$routineId"
-    }
     data object MyActivity : Route(route = "my_activity")
 
     data object Notification : Route("notification")
@@ -75,4 +81,18 @@ sealed class Route(
 
     // 루틴 생성 화면
     data object RoutineCreate : Route(route = "routine_create")
+
+
+    object TagSearch {
+        // [수정] 베이스 경로만
+        const val route = "tag_search"
+
+        // 이동용 URL 생성기
+        fun createRoute(originalQuery: String = ""): String =
+            "tag_search?originalQuery=${java.net.URLEncoder.encode(originalQuery, "UTF-8")}"
+    }
+
+    // [추가] 태그 전용 검색
+    data object RoutineTagSearch : Route("routine_tag_search")
+
 }

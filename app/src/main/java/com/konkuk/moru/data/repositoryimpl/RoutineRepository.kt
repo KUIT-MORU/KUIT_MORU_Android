@@ -1,8 +1,7 @@
 package com.konkuk.moru.data.repositoryimpl
 
 import com.konkuk.moru.data.dto.response.RoutinePageResponse
-import com.konkuk.moru.data.dto.response.RoutineDetailResponse
-import com.konkuk.moru.data.dto.response.RoutineDetailResponseV1
+import com.konkuk.moru.data.dto.response.Routine.RoutineDetailResponseV1
 import com.konkuk.moru.data.dto.response.RoutineStepResponse
 import com.konkuk.moru.data.mapper.toBackend
 import com.konkuk.moru.data.service.RoutineService

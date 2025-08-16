@@ -1,6 +1,6 @@
 package com.konkuk.moru.data.repositoryimpl
 
-import com.konkuk.moru.data.dto.response.UserProfileResponse
+import com.konkuk.moru.data.dto.response.UserProfile.UserProfileResponse
 import com.konkuk.moru.data.service.HomeUserService
 import com.konkuk.moru.domain.repository.UserRepository
 import javax.inject.Inject

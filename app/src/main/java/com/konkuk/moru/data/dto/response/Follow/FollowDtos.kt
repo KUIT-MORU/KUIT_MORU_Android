@@ -1,4 +1,4 @@
-package com.konkuk.moru.data.dto.response
+package com.konkuk.moru.data.dto.response.Follow
 
 import com.google.gson.annotations.SerializedName
 

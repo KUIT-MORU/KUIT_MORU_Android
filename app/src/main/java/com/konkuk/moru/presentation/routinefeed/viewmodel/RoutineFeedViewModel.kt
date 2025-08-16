@@ -8,9 +8,11 @@ import com.konkuk.moru.core.datastore.RoutineSyncBus
 import com.konkuk.moru.core.datastore.SocialMemory
 import com.konkuk.moru.data.mapper.toRoutineModel
 import com.konkuk.moru.domain.repository.RoutineFeedRepository
+import com.konkuk.moru.domain.repository.RoutineUserRepository
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedSectionModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -28,10 +30,12 @@ data class RoutineFeedUiState(
 
 @HiltViewModel
 class RoutineFeedViewModel @Inject constructor(
-    private val routineFeedRepository: RoutineFeedRepository // 👈 주입받는 타입 변경
+    private val routineFeedRepository: RoutineFeedRepository, // 👈 주입받는 타입 변경
+    private val userRepository: RoutineUserRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(RoutineFeedUiState())
     val uiState = _uiState.asStateFlow()
+
 
     init {
         loadLiveUsers()
@@ -109,28 +113,43 @@ class RoutineFeedViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                // 1. Repository를 통해 서버로부터 DTO 받아오기
-                val response = routineFeedRepository.getRoutineFeed()
+                // ✅ [변경] feed와 me를 코루틴에서 병렬로 가져오기
+                val feedDef = async { routineFeedRepository.getRoutineFeed() }
+                val meDef = async { runCatching { userRepository.getMe() }.getOrNull() }
 
-                // 2. 받아온 DTO를 UI에서 사용할 `RoutineFeedSectionModel` 리스트로 변환
+                val response = feedDef.await()
+                val me = meDef.await()
+                val ownerId = me?.id             // ✅ 코루틴 안에서 안전하게 사용
+                val ownerName = me?.nickname
+                val ownerPhoto = me?.profileImageUrl
+
                 val sections = buildList {
                     if (response.hotRoutines.isNotEmpty()) {
                         add(
                             RoutineFeedSectionModel(
                                 title = "지금 가장 핫한 루틴은?",
-                                routines = response.hotRoutines.map { it.toRoutineModel() } // ✅ 매퍼 함수 사용
+                                routines = response.hotRoutines.map { it.toRoutineModel() }
                             )
                         )
                     }
-                    // TODO: 사용자 별명 받으면 title 변경 
+
                     if (response.personalRoutines.isNotEmpty()) {
+                        // ✅ [중요] add(...) 누락되어 있던 부분 복구 + fallback 전달
                         add(
                             RoutineFeedSectionModel(
-                                title = "MORU님과 딱 맞는 루틴",
-                                routines = response.personalRoutines.map { it.toRoutineModel() }
+                                title = "${ownerName ?: "MORU"}님과 딱 맞는 루틴",
+                                routines = response.personalRoutines.map {
+                                    it.toRoutineModel(
+                                        authorIdFallback = ownerId,
+                                        authorNameFallback = ownerName,
+                                        authorProfileUrlFallback = ownerPhoto
+                                    )
+                                }
                             )
                         )
                     }
+
+
                     if (response.tagPairSection1.routines.isNotEmpty()) {
                         add(
                             RoutineFeedSectionModel(
@@ -170,7 +189,6 @@ class RoutineFeedViewModel @Inject constructor(
     }
 
 
-
     fun toggleLike(routineId: String) {
         val before = _uiState.value.routineSections
 
@@ -191,7 +209,8 @@ class RoutineFeedViewModel @Inject constructor(
 
         viewModelScope.launch {
             runCatching {
-                val target = after.firstNotNullOfOrNull { s -> s.routines.find { it.routineId == routineId } }
+                val target =
+                    after.firstNotNullOfOrNull { s -> s.routines.find { it.routineId == routineId } }
                 if (target?.isLiked == true) routineFeedRepository.addLike(routineId)
                 else routineFeedRepository.removeLike(routineId)
             }.onSuccess {
@@ -199,7 +218,13 @@ class RoutineFeedViewModel @Inject constructor(
                     .firstNotNullOfOrNull { s -> s.routines.find { it.routineId == routineId } }
                 latest?.let {
                     // [유지]
-                    RoutineSyncBus.publish(RoutineSyncBus.Event.Like(routineId, it.isLiked, it.likes))
+                    RoutineSyncBus.publish(
+                        RoutineSyncBus.Event.Like(
+                            routineId,
+                            it.isLiked,
+                            it.likes
+                        )
+                    )
                     // [선택] 서버 재조회/확정 로직을 추가하고 싶다면 여기서 상세값 가져와 SocialMemory 재확정
                 }
             }.onFailure { e ->
@@ -221,7 +246,8 @@ class RoutineFeedViewModel @Inject constructor(
                 routines = section.routines.map { r ->
                     if (r.routineId == routineId) {
                         val newScrap = !r.isBookmarked
-                        val newScrapCount = (r.scrapCount + if (newScrap) 1 else -1).coerceAtLeast(0)
+                        val newScrapCount =
+                            (r.scrapCount + if (newScrap) 1 else -1).coerceAtLeast(0)
                         SocialMemory.setScrap(routineId, newScrap, newScrapCount)
                         r.copy(isBookmarked = newScrap, scrapCount = newScrapCount)
                     } else r
@@ -232,7 +258,8 @@ class RoutineFeedViewModel @Inject constructor(
 
         viewModelScope.launch {
             runCatching {
-                val target = after.firstNotNullOfOrNull { s -> s.routines.find { it.routineId == routineId } }
+                val target =
+                    after.firstNotNullOfOrNull { s -> s.routines.find { it.routineId == routineId } }
                 if (target?.isBookmarked == true) routineFeedRepository.addScrap(routineId)
                 else routineFeedRepository.removeScrap(routineId)
             }.onSuccess {
