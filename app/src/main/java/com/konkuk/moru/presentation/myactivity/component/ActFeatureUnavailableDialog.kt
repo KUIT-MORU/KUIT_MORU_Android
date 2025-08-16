@@ -1,6 +1,5 @@
 package com.konkuk.moru.presentation.common
 
-import android.provider.CalendarContract.Colors
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
