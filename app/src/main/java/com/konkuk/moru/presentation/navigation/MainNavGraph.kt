@@ -101,7 +101,6 @@ fun MainNavGraph(
 //        }
 
 
-
         composable(route = Route.RoutineFocusIntro.route) {
 
             val parentEntry = remember(navController.currentBackStackEntry) {
@@ -205,10 +204,16 @@ fun MainNavGraph(
 
                     },
                     onFinishConfirmed = { finishedId: String ->
-                        Log.d("MainNavGraph", "🔄 RoutineSimpleRun 완료 처리: originalRoutineId=$originalRoutineId")
+                        Log.d(
+                            "MainNavGraph",
+                            "🔄 RoutineSimpleRun 완료 처리: originalRoutineId=$originalRoutineId"
+                        )
                         navController.getBackStackEntry(Route.Home.route)
                             .savedStateHandle["finishedRoutineId"] = originalRoutineId ?: finishedId
-                        Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}")
+                        Log.d(
+                            "MainNavGraph",
+                            "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}"
+                        )
                         navController.popBackStack(Route.Home.route, false)
                     }
                 )
@@ -255,10 +260,16 @@ fun MainNavGraph(
                     }
                 },
                 onFinishConfirmed = { finishedId: String ->
-                    Log.d("MainNavGraph", "🔄 RoutineFocus 완료 처리: originalRoutineId=$originalRoutineId")
+                    Log.d(
+                        "MainNavGraph",
+                        "🔄 RoutineFocus 완료 처리: originalRoutineId=$originalRoutineId"
+                    )
                     navController.getBackStackEntry(Route.Home.route)
                         .savedStateHandle["finishedRoutineId"] = originalRoutineId ?: finishedId
-                    Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}")
+                    Log.d(
+                        "MainNavGraph",
+                        "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}"
+                    )
                     navController.popBackStack(Route.Home.route, false)
                 },
                 onScreenBlockTrigger = {
@@ -291,7 +302,7 @@ fun MainNavGraph(
             )
         }
 
-        composable(
+        /*composable(
             route = Route.TagSearch.route,
             arguments = listOf(
                 navArgument("originalQuery") {
@@ -314,7 +325,31 @@ fun MainNavGraph(
                     navController.popBackStack() // 검색 화면 닫기
                 }
             )
+        }*/
+
+        composable(
+            route = "${Route.TagSearch.route}?originalQuery={originalQuery}",
+            arguments = listOf(
+                navArgument("originalQuery") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            val originalQuery = backStackEntry.arguments?.getString("originalQuery").orEmpty()
+            TagSearchScreen(
+                originalQuery = originalQuery,
+                onNavigateBack = { navController.popBackStack() },
+                onTagSelected = { nameOrHash ->
+                    val normalized = nameOrHash.removePrefix("#")
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("selectedTagsResult", listOf(normalized))
+                    navController.popBackStack()
+                }
+            )
         }
+
 
         composable(
             route = Route.RoutineFeedDetail.route,
@@ -371,30 +406,28 @@ fun MainNavGraph(
             val viewModel: MyRoutinesViewModel = hiltViewModel()
 
             MyRoutinesScreen(
-                viewModel = viewModel, // ViewModel 인스턴스만 전달
-                onNavigateToRoutineFeed = {
-                    navController.navigate(Route.RoutineFeed.route)
-                },
+                viewModel = viewModel,
+                onNavigateToRoutineFeed = { navController.navigate(Route.RoutineFeed.route) },
                 onNavigateToDetail = { routineId ->
-                    navController.navigate(Route.MyRoutineDetail.createRoute(routineId))
+                    val target = Route.MyRoutineDetail.createRoute(routineId)
+                    android.util.Log.d("Nav", "navigate -> $target")
+                    navController.navigate(target)
                 },
-                onNavigateToCreateRoutine = {
-                    navController.navigate(Route.RoutineCreate.route) // 루틴 생성 화면으로 이동
-                }
+                onNavigateToCreateRoutine = { navController.navigate(Route.RoutineCreate.route) }
             )
         }
 
         // [추가] UserProfileScreen 내비게이션 설정
         composable(
             route = Route.MyRoutineDetail.route,
-            arguments = listOf(navArgument("routineId") { type = NavType.StringType })
+            arguments = listOf(navArgument(Route.MyRoutineDetail.KEY) { type = NavType.StringType })
         ) { backStackEntry ->
-            val routineId = backStackEntry.arguments?.getString("routineId")
+            val routineId = backStackEntry.arguments?.getString(Route.MyRoutineDetail.KEY)
             if (routineId != null) {
                 MyRoutineDetailScreen(
                     routineId = routineId,
                     onBackClick = { navController.popBackStack() },
-                    navController = navController // [추가]
+                    navController = navController
                 )
             } else {
                 navController.popBackStack()

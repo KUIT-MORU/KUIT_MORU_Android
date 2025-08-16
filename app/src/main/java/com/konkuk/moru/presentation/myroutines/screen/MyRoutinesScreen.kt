@@ -71,7 +71,7 @@ data class MyRoutinesUiState(
     val initialDaysForSheet: Set<DayOfWeek> = emptySet(),
     val initialAlarmForSheet: Boolean = true,
 
-)
+    )
 
 /**
  * MyRoutinesScreen의 메인 컴포저블입니다.
@@ -105,7 +105,7 @@ fun MyRoutinesScreen(
 
     Box(modifier = modifier.fillMaxSize()) {
         Scaffold(
-            modifier=Modifier.padding(bottom=80.dp),
+            modifier = Modifier.padding(bottom = 80.dp),
             topBar = {
                 MyRoutineTopAppBar(
                     onInfoClick = viewModel::onShowInfoTooltip,
@@ -176,7 +176,12 @@ fun MyRoutinesScreen(
                                     onCheckedChange = { isChecked ->
                                         viewModel.onCheckRoutine(routine.routineId, isChecked)
                                     },
-                                    onItemClick = { viewModel.onCheckRoutine(routine.routineId, !routine.isChecked) }
+                                    onItemClick = {
+                                        viewModel.onCheckRoutine(
+                                            routine.routineId,
+                                            !routine.isChecked
+                                        )
+                                    }
                                 )
                             } else {
                                 RoutineListItemWithClock(
@@ -187,7 +192,13 @@ fun MyRoutinesScreen(
                                     isLiked = routine.isLiked,
                                     onLikeClick = { viewModel.onLikeClick(routine.routineId) },
                                     onClockClick = { viewModel.openTimePicker(routine.routineId) },
-                                    onItemClick = { onNavigateToDetail(routine.routineId) }
+                                    onItemClick = {
+                                        android.util.Log.d(
+                                            "MyRoutinesScreen",
+                                            "onItemClick -> ${routine.routineId}"
+                                        )
+                                        onNavigateToDetail(routine.routineId)
+                                    }
                                 )
                             }
                         }

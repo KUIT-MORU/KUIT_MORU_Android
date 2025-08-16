@@ -39,18 +39,22 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import java.io.File
 import com.konkuk.moru.core.component.ImageChoiceOptionButtonScreen
 import com.konkuk.moru.presentation.myroutines.component.MyRoutineDetailContent
 import com.konkuk.moru.presentation.navigation.Route
+import kotlinx.coroutines.flow.collectLatest
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyRoutineDetailScreen(
     routineId: String,
     onBackClick: () -> Unit,
-    viewModel: MyRoutineDetailViewModel = viewModel(),
+    viewModel: MyRoutineDetailViewModel = hiltViewModel(),
     navController: NavHostController
 ) {
     // ✨ ViewModel의 UiState를 구독하여 단일 진실 공급원 원칙을 따름
@@ -97,8 +101,11 @@ fun MyRoutineDetailScreen(
     }
 
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(routineId) {
+        android.util.Log.d("MyRoutineDetailScreen", "loadRoutine($routineId)")
         viewModel.loadRoutine(routineId)
+    }
+    LaunchedEffect(Unit) {
         viewModel.loadInstalledApps(context)
     }
 
@@ -113,16 +120,19 @@ fun MyRoutineDetailScreen(
     }
 
     // (LaunchedEffect) 검색 결과 수신
-    LaunchedEffect(Unit) {
-        // [추가] 태그 검색 화면에서 되돌아올 때 결과를 받는다.
-        val handle = navController.currentBackStackEntry?.savedStateHandle
-        handle?.getStateFlow<List<String>>("selectedTagsResult", emptyList())
-            ?.collect { result ->
+    // ✅ 결과 수신: 내비 백스택 복귀 시점에 확실하게 받는다
+    LaunchedEffect(navController) {
+        val handle = navController.currentBackStackEntry?.savedStateHandle ?: return@LaunchedEffect
+        handle.getStateFlow("selectedTagsResult", emptyList<String>())
+            .collectLatest { result ->
                 if (result.isNotEmpty()) {
-                    // '#'(있으면) 제거 + 중복 방지 후 추가
+                    viewModel.setEditMode(true)
                     viewModel.addTags(result.map { it.removePrefix("#") })
-                    // 재수신 방지 초기화 (핵심)
-                    handle["selectedTagsResult"] = emptyList<String>()
+                    android.util.Log.d(
+                        "TagReturn",
+                        "after addTags -> ${viewModel.uiState.value.routine?.tags}"
+                    )
+                    handle["selectedTagsResult"] = emptyList<String>() // 재수신 방지
                 }
             }
     }
@@ -177,7 +187,7 @@ fun MyRoutineDetailScreen(
                         selectedImageUri = selectedImageUri,
                         onAddTagClick = { // [추가]
                             if (uiState.isEditMode) {
-                                navController.navigate(Route.RoutineSearch.route)
+                                navController.navigate(Route.TagSearch.createRoute("")) // [수정] 생성기를 사용
                             }
                         }
                     )

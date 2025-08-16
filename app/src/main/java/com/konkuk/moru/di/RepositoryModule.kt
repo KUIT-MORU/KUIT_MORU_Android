@@ -50,11 +50,15 @@ abstract class RepositoryModule {
         impl: RoutineUserRepositoryImpl
     ): RoutineUserRepository
 
-    @Binds
-    @Singleton
-    abstract fun bindMyRoutineRepository(impl: MyRoutineRepositoryImpl): MyRoutineRepository
-
-
+    @Module
+    @InstallIn(SingletonComponent::class)
+    abstract class RepositoryModule {
+        @Binds
+        @Singleton
+        abstract fun bindMyRoutineRepository(
+            impl: MyRoutineRepositoryImpl
+        ): MyRoutineRepository
+    }
 
     @Binds
     @Singleton
@@ -69,5 +73,6 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindSearchRepository(impl: SearchRepositoryImpl): SearchRepository
+
 
 }
