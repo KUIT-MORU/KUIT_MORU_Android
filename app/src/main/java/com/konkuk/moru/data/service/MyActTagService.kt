@@ -6,7 +6,9 @@ import retrofit2.http.GET
 import com.konkuk.moru.data.dto.request.MyActFavoriteTagSetRequestDto
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface MyActTagService {
     @GET("api/tags")
@@ -18,5 +20,10 @@ interface MyActTagService {
     @POST("api/user/favorite-tag")
     suspend fun setFavoriteTags(
         @Body body: MyActFavoriteTagSetRequestDto
+    ): Response<Unit>
+
+    @DELETE("api/user/favorite-tag/{tagId}")
+    suspend fun deleteFavoriteTag(
+        @Path("tagId") tagId: String
     ): Response<Unit>
 }

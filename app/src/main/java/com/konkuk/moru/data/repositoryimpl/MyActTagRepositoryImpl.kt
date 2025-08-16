@@ -22,4 +22,9 @@ class MyActTagRepositoryImpl @Inject constructor(
         val res = service.setFavoriteTags(MyActFavoriteTagSetRequestDto(tagIds))
         if (!res.isSuccessful) throw HttpException(res)
     }
+
+    override suspend fun deleteMyFavoriteTag(tagId: String) {
+        val res = service.deleteFavoriteTag(tagId)
+        if (!res.isSuccessful) throw HttpException(res)
+    }
 }

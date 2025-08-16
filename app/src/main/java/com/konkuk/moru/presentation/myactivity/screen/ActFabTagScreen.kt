@@ -188,11 +188,9 @@ fun ActFabTagScreen(
                             TagChip(
                                 text = tag.name,
                                 selected = false,
-//                                onClick = {
-//                                    allTags = allTags.map {
-//                                        if (it.id == tag.id) it.copy(isSelected = false) else it
-//                                    }
-//                                }
+                                onClick = {
+                                    vm.removeFavoriteTag(tag.id)
+                                }
                             )
                         }
                     }

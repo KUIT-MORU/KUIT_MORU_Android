@@ -91,4 +91,25 @@ class MyActTagViewModel @Inject constructor(
                 }
         }
     }
+
+    fun removeFavoriteTag(uiId: Int) {
+        val before = _allTags.value
+        val target = before.firstOrNull { it.id == uiId } ?: return
+        val tagId = target.serverId
+        if (tagId.isBlank()) return
+
+        val optimistic = before.map { dto ->
+            if (dto.id == uiId) dto.copy(isSelected = false) else dto
+        }
+        _allTags.value = optimistic
+
+        viewModelScope.launch {
+            runCatching { repo.deleteMyFavoriteTag(tagId) }
+                .onFailure { e ->
+                    // 실패하면 롤백 + 에러 메시지
+                    _allTags.value = before
+                    _error.value = e.message ?: "관심 태그 삭제 실패"
+                }
+        }
+    }
 }

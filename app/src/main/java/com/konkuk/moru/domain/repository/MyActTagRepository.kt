@@ -8,4 +8,6 @@ interface MyActTagRepository {
     suspend fun getMyFavoriteTags(): List<MyActTag>
 
     suspend fun setMyFavoriteTags(tagIds: List<String>)
+
+    suspend fun deleteMyFavoriteTag(tagId: String)
 }
