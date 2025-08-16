@@ -49,20 +49,27 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.core.content.FileProvider
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
+import android.util.Log
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun UserInfoPage(
     onNext: () -> Unit,
-    viewModel: OnboardingViewModel? = null
+//    viewModel: OnboardingViewModel? = null,
+    viewModel: OnboardingViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
 
     var nickName by remember { mutableStateOf("") }
+    val nicknameAvailable by viewModel?.nicknameAvailable?.collectAsState()
+        ?: remember { mutableStateOf<Boolean?>(null) }
     var isNickNameValid by remember { mutableStateOf(false) }
     var gender by remember { mutableStateOf("") }
     var birthDay by remember { mutableStateOf("") }
@@ -80,7 +87,7 @@ fun UserInfoPage(
         DatePickerDialog(
             context,
             { _, year, month, dayOfMonth ->
-                val selectedDate = "%04d.%02d.%02d".format(year, month + 1, dayOfMonth)
+                val selectedDate = "%04d-%02d-%02d".format(year, month + 1, dayOfMonth)
                 birthDay = selectedDate
                 viewModel?.updateBirthday(selectedDate)
             },
@@ -137,10 +144,16 @@ fun UserInfoPage(
             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
         )
     }
+
     fun onCaptureFromCamera() {
         cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
     }
     // -------------- [추가 끝] 사진 선택/촬영 런처 세팅 -------------- //
+
+    // 닉네임 유효성 검사 결과에 따라 상태 업데이트
+    LaunchedEffect(nicknameAvailable) {
+        isNickNameValid = (nicknameAvailable == true)
+    }
 
     Box(
         modifier = Modifier
@@ -211,10 +224,9 @@ fun UserInfoPage(
                     Spacer(modifier = Modifier.height(8.dp))
                     NickNameTextField(
                         value = nickName,
-                        onValueChange = {
-                            nickName = it
-                            isNickNameValid = it.length in 2..10
-                            if (isNickNameValid) viewModel?.updateNickname(it)
+                        onValueChange = { nickName = it },
+                        onCheckValidNickname = {
+                            viewModel?.checkNicknameAvailability(nickName)
                         },
                         isValid = isNickNameValid,
                         placeholder = "닉네임",
@@ -268,7 +280,10 @@ fun UserInfoPage(
                         modifier = Modifier.width(134.dp)
                     )
                     Spacer(modifier = Modifier.height(35.dp))
-                    MoruButtonTypeA(text = "다음", enabled = isFormValid) { onNext() }
+                    MoruButtonTypeA(text = "다음", enabled = isFormValid) {
+                        viewModel?.submitUserInfo()
+                        onNext()
+                    }
                 }
             }
         }
@@ -290,7 +305,8 @@ fun UserInfoPage(
  * [추가] 촬영 이미지 저장용 임시 파일 URI 생성 (FileProvider 사용)
  */
 private fun createTempImageUri(context: android.content.Context): Uri {
-    val time = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(System.currentTimeMillis())
+    val time =
+        SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(System.currentTimeMillis())
     val imageFile = File.createTempFile("IMG_${time}_", ".jpg", context.cacheDir) // 캐시 폴더 사용
     return FileProvider.getUriForFile(
         context,

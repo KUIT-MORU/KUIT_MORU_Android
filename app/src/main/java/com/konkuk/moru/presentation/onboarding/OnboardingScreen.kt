@@ -18,7 +18,7 @@ import com.konkuk.moru.presentation.onboarding.component.OnboardingPage
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun OnboardingScreen(
-    viewModel: OnboardingViewModel = hiltViewModel(), //TODO: 추후 주석 해제 예정
+    viewModel: OnboardingViewModel = hiltViewModel(),
     onFinish: () -> Unit
 ) {
     val pagerState = rememberPagerState()

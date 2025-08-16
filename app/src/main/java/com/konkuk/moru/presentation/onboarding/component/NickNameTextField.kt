@@ -2,6 +2,7 @@ package com.konkuk.moru.presentation.onboarding.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -33,6 +34,7 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 fun NickNameTextField(
     value: String,
     onValueChange: (String) -> Unit,
+    onCheckValidNickname: () -> Unit,
     isValid: Boolean,
     placeholder: String,
     keyboardType: KeyboardType = KeyboardType.Text,
@@ -50,7 +52,11 @@ fun NickNameTextField(
 
     BasicTextField(
         value = value,
-        onValueChange = onValueChange,
+        onValueChange = { newValue ->
+            if (newValue.length <= 7) {
+                onValueChange(newValue)
+            }
+        },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         visualTransformation = visualTransformation,
@@ -84,11 +90,16 @@ fun NickNameTextField(
                 Column(
                     modifier = Modifier
                         .background(
-                            color = if(isValid) colors.paleLime else colors.veryLightGray,
+                            color = if (isValid) colors.paleLime else colors.veryLightGray,
                             shape = RoundedCornerShape(10.5.dp)
                         )
                         .padding(horizontal = 7.dp, vertical = 4.dp)
-                        .align(Alignment.CenterEnd),
+                        .align(Alignment.CenterEnd)
+                        .clickable(
+                            interactionSource = null,
+                            indication = null,
+                            onClick = onCheckValidNickname
+                        ),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -113,6 +124,7 @@ private fun BasicPreview() {
         NickNameTextField(
             value = "",
             onValueChange = {},
+            onCheckValidNickname = {},
             isValid = true,
             placeholder = "닉네임",
             keyboardType = KeyboardType.Email,

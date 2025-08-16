@@ -28,15 +28,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.TopBarLogoWithTitle
 import com.konkuk.moru.core.component.button.MoruButtonTypeA
 import com.konkuk.moru.presentation.onboarding.OnboardingViewModel
 import com.konkuk.moru.presentation.onboarding.component.TagItem
+import com.konkuk.moru.presentation.onboarding.model.OnboardingTags
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 data class SelectableTag(
+    val id: String,
     val label: String
 ) {
     var isSelected by mutableStateOf(false)
@@ -44,19 +48,23 @@ data class SelectableTag(
 @Composable
 fun TagSelectionPage(
     onNext: () -> Unit,
-    viewModel: OnboardingViewModel? = null
-    //viewModel: OnboardingViewModel = hiltViewModel() //Todo: 프리뷰용으로 대체
+//    viewModel: OnboardingViewModel? = null
+    viewModel: OnboardingViewModel = hiltViewModel()
 ) {
-    val isPreview = viewModel == null // ✅ 프리뷰 모드 구분
+    //val isPreview = viewModel == null // ✅ 프리뷰 모드 구분
 
     val situationTags = remember {
         mutableStateListOf<SelectableTag>().apply {
-            repeat(9) { add(SelectableTag("#상황$it")) }
+            OnboardingTags.SITUATION.forEach { def ->
+                add(SelectableTag(id = def.id, label = def.label))
+            }
         }
     }
     val activityTags = remember {
         mutableStateListOf<SelectableTag>().apply {
-            repeat(9) { add(SelectableTag("#활동$it")) }
+            OnboardingTags.ACTIVITY.forEach { def ->
+                add(SelectableTag(id = def.id, label = def.label))
+            }
         }
     }
 
@@ -144,8 +152,10 @@ fun TagSelectionPage(
                     )
                     Spacer(modifier = Modifier.height(35.dp))
                     MoruButtonTypeA(text = "다음", enabled = isButtonEnabled) {
-                        val selectedTags = getSelectedLabels(situationTags) + getSelectedLabels(activityTags)
-                        if (!isPreview) viewModel.updateTags(selectedTags) // ✅ 실제 실행 시만 ViewModel 호출
+                        val selected = (situationTags + activityTags).filter { it.isSelected }
+                        val tagIds = selected.map { it.id }                   // ← [중요] id만 추출
+                        viewModel?.submitFavoriteTags(tagIds)                 // ← 서버로 전송
+                        viewModel?.updateTags(selected.map { it.label })      // ← UI상태(라벨) 저장(선택)
                         onNext()
                     }
                 }
