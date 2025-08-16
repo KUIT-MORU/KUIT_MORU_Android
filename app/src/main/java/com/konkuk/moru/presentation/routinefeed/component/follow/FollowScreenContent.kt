@@ -97,6 +97,8 @@ fun FollowScreenContent(
                         users = uiState.followers,
                         emptyMessage = "내 팔로워가 없어요.",
                         emptySubMessage = "다른 사람들을 찾아보세요!",
+                        myId = uiState.myId,                             // ✅ 추가
+                        inFlight = uiState.inFlight,                     // ✅ 추가
                         onFollowClick = onFollowClick,
                         onUserClick = onUserClick
                     )
@@ -105,6 +107,8 @@ fun FollowScreenContent(
                         users = uiState.followings,
                         emptyMessage = "내 팔로잉이 없어요.",
                         emptySubMessage = "다른 사람들을 찾아보세요!",
+                        myId = uiState.myId,                             // ✅ 추가
+                        inFlight = uiState.inFlight,                     // ✅ 추가
                         onFollowClick = onFollowClick,
                         onUserClick = onUserClick
                     )
@@ -124,14 +128,50 @@ private fun FollowScreenContentPreview() {
 
     val me = "me-123"
     val followers = listOf(
-        FollowUser(id = me, profileImageUrl = "", username = "나", bio = "It's me", isFollowing = false),
-        FollowUser(id = "u-2", profileImageUrl = "", username = "Alice", bio = "안녕", isFollowing = true),
-        FollowUser(id = "u-3", profileImageUrl = "", username = "Bob", bio = "hi", isFollowing = false),
+        FollowUser(
+            id = me,
+            profileImageUrl = "",
+            username = "나",
+            bio = "It's me",
+            isFollowing = false
+        ),
+        FollowUser(
+            id = "u-2",
+            profileImageUrl = "",
+            username = "Alice",
+            bio = "안녕",
+            isFollowing = true
+        ),
+        FollowUser(
+            id = "u-3",
+            profileImageUrl = "",
+            username = "Bob",
+            bio = "hi",
+            isFollowing = false
+        ),
     )
     val followings = listOf(
-        FollowUser(id = "u-10", profileImageUrl = "", username = "Carol", bio = "yo", isFollowing = true),
-        FollowUser(id = "u-11", profileImageUrl = "", username = "Dave", bio = "sup", isFollowing = true),
-        FollowUser(id = me, profileImageUrl = "", username = "나", bio = "me again", isFollowing = true),
+        FollowUser(
+            id = "u-10",
+            profileImageUrl = "",
+            username = "Carol",
+            bio = "yo",
+            isFollowing = true
+        ),
+        FollowUser(
+            id = "u-11",
+            profileImageUrl = "",
+            username = "Dave",
+            bio = "sup",
+            isFollowing = true
+        ),
+        FollowUser(
+            id = me,
+            profileImageUrl = "",
+            username = "나",
+            bio = "me again",
+            isFollowing = true
+        ),
     )
 
     MORUTheme {

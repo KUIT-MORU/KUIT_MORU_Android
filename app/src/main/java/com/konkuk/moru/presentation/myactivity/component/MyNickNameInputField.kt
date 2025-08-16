@@ -93,7 +93,7 @@ fun MyNickNameInputField(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(45.dp)
-                .border(1.dp, borderColor, RoundedCornerShape(10.5.dp))
+                .border(1.dp, borderColor, RoundedCornerShape(4.dp))
                 .padding(end = 16.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {

@@ -1,6 +1,7 @@
 package com.konkuk.moru.presentation.myroutines.viewmodel
 
 import android.annotation.SuppressLint
+import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -8,212 +9,269 @@ import android.graphics.Canvas
 import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.net.Uri
+import android.provider.OpenableColumns
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.createBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.konkuk.moru.data.model.AppInfo
-import com.konkuk.moru.data.model.DummyData
+import com.konkuk.moru.data.mapper.toIso8601
+import com.konkuk.moru.data.mapper.toMyDetailUi
+import com.konkuk.moru.data.model.MyRoutineDetailUi
 import com.konkuk.moru.data.model.MyRoutineDetailUiState
-import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.model.RoutineStep
 import com.konkuk.moru.data.model.UsedAppInRoutine
 import com.konkuk.moru.data.model.placeholderIcon
+import com.konkuk.moru.domain.repository.MyRoutineRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import android.net.Uri
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import javax.inject.Inject
+import kotlin.collections.forEach
 
+@HiltViewModel
+class MyRoutineDetailViewModel @Inject constructor(
+    private val repo: MyRoutineRepository,
+    @ApplicationContext private val appContext: Context
+) : ViewModel() {
+    private val pendingTags = mutableSetOf<String>()
 
-class MyRoutineDetailViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(MyRoutineDetailUiState())
     val uiState = _uiState.asStateFlow()
 
-    private val _availableApps = MutableStateFlow<List<UsedAppInRoutine>>(emptyList())  // [추가]
+    private val _availableApps = MutableStateFlow<List<UsedAppInRoutine>>(emptyList())
     val availableApps = _availableApps.asStateFlow()
 
-    // 삭제 완료 후 이전 화면으로 돌아가기 위한 신호(Event)
     private val _deleteCompleted = MutableSharedFlow<Boolean>()
     val deleteCompleted = _deleteCompleted.asSharedFlow()
-
-    private var originalRoutine: Routine? = null
 
     private val _localImageUri = MutableStateFlow<Uri?>(null)
     val localImageUri = _localImageUri.asStateFlow()
 
-    fun updateLocalImage(uri: Uri?) { _localImageUri.value = uri }
+    // 상세 원본 스냅샷(취소/복원용)
+    private var originalRoutine: MyRoutineDetailUi? = null
 
-    /**
-     * 특정 routineId를 가진 '내 루틴'을 불러옵니다.
-     */
+    // name -> id (서버 태그 id 캐싱, 필요 시 사용)
+    private val tagNameToId = mutableMapOf<String, String>()
+
+    fun updateLocalImage(uri: Uri?) {
+        _localImageUri.value = uri
+    }
+
+    fun updateDescription(newDescription: String) {
+        _uiState.update { st -> st.copy(routine = st.routine?.copy(description = newDescription)) }
+    }
+
+    fun updateCategory(newCategory: String) {
+        _uiState.update { st -> st.copy(routine = st.routine?.copy(category = newCategory)) }
+    }
+
+    /** 특정 routineId의 '내 루틴' 상세를 서버에서 불러옴 */
     fun loadRoutine(routineId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            // '내 루틴'만 찾도록 authorId 조건을 추가합니다.
-            val routine = DummyData.feedRoutines.find {
-                it.routineId == routineId && it.authorId == DummyData.MY_USER_ID
+
+            val ui = runCatching {
+                repo.getRoutineDetailRaw(routineId).toMyDetailUi()
+            }.getOrElse { e ->
+                android.util.Log.e("MyRoutineDetailVM", "detail failed", e)
+                _uiState.update { it.copy(isLoading = false) }
+                return@launch
             }
-            originalRoutine = routine?.copy()
-            _uiState.update { it.copy(routine = routine, isLoading = false) }
+
+            // ⬇️ [중요] 스냅샷은 '서버 원본' 그대로 저장
+            originalRoutine = ui
+
+            // 화면에는 임시 태그까지 합쳐서 보여줌
+            val mergedTags = (ui.tags + pendingTags).distinct()
+            _uiState.update { it.copy(routine = ui.copy(tags = mergedTags), isLoading = false) }
+
+            runCatching {
+                val serverTags = repo.getRoutineTags(routineId)
+                tagNameToId.clear()
+                serverTags.forEach { tagNameToId[it.name] = it.id.toString() }
+            }.onFailure { e ->
+                android.util.Log.w("MyRoutineDetailVM", "getRoutineTags failed (non-fatal)", e)
+            }
         }
     }
-
 
     fun setEditMode(isEdit: Boolean) {
         _uiState.update { it.copy(isEditMode = isEdit) }
     }
 
-    /**
-     * 특정 routineId를 가진 루틴을 DummyData에서 삭제합니다.
-     */
+    /** 편집 취소: 원본 복원 + 임시 이미지 제거 */
     fun restoreRoutine() {
         _uiState.update { it.copy(routine = originalRoutine) }
-        _localImageUri.value = null              // [변경] 임시 이미지 버리기 (원복)
+        _localImageUri.value = null
     }
 
     fun cancelEdits() {
-        restoreRoutine()                         // 원본으로 되돌림 + 임시 이미지 초기화
-        setEditMode(false)                       // 편집모드 종료
+        // 1) 서버 스냅샷 그대로 복원 (임시 태그 섞지 않음)
+        originalRoutine?.let { snap ->
+            _uiState.update { it.copy(routine = snap) }
+        }
+
+        // 2) 임시 상태 정리
+        pendingTags.clear()      // 임시로 추가해 둔 태그 버퍼 비움
+        _localImageUri.value = null
+
+        // 3) 편집 모드 종료
+        setEditMode(false)
     }
 
+    /** 루틴 삭제 (안전 삭제) */
     fun deleteRoutine(routineId: String) {
         viewModelScope.launch {
-            DummyData.feedRoutines.removeAll { it.routineId == routineId }
-            _deleteCompleted.emit(true) // 삭제 완료 신호를 보냅니다.
+            val ok = repo.deleteRoutineSafe(routineId)
+            _deleteCompleted.emit(ok)
         }
     }
 
-    /**
-     * 루틴의 설명과 카테고리를 업데이트합니다. -> 수정예정
-     */
+    /** (로컬 상태만) 설명/카테고리 변경 */
     fun updateRoutine(routineId: String, newDescription: String, newCategory: String) {
-        val index = DummyData.feedRoutines.indexOfFirst { it.routineId == routineId }
-        if (index != -1) {
-            val originalRoutine = DummyData.feedRoutines[index]
-            // description과 category를 업데이트합니다.
-            DummyData.feedRoutines[index] = originalRoutine.copy(
-                description = newDescription,
-                category = newCategory
+        _uiState.update { st ->
+            st.copy(
+                routine = st.routine?.copy(
+                    description = newDescription,
+                    category = newCategory
+                )
             )
         }
     }
 
+    /** 저장(PATCH) */
     fun saveChanges() {
         viewModelScope.launch {
             val current = uiState.value.routine ?: return@launch
 
-            // [추가] 편집 중 이미지가 있으면 서버 업로드 → routine 반영
+            // (선택) 로컬 이미지 업로드
             val pending = _localImageUri.value
-            val withImageApplied = if (pending != null) {
-                val uploadedUrl = uploadImageToServer(pending) // [추가] 업로드
-                current.copy(imageUrl = uploadedUrl)          // 필요 시 imageKey 필드에 넣어도 됨
-            } else {
-                current
+            val uploadedUrl: String? =
+                if (pending != null) runCatching { uploadLocalImage(pending) }.getOrNull() else null
+
+            // 스텝 → (name, order, iso8601)
+            val stepsTriple = current.steps.mapIndexed { idx, step ->
+                Triple(step.name, idx + 1, step.duration.toIso8601())
             }
 
-            val index = DummyData.feedRoutines.indexOfFirst { it.routineId == withImageApplied.routineId }
-            if (index != -1) {
-                DummyData.feedRoutines[index] = withImageApplied
+            val selectedApps = current.usedApps.map { it.packageName }
+            val isSimple = current.category == "간편"
+
+            runCatching {
+                repo.patchRoutine(
+                    routineId = current.routineId,
+                    title = current.title,
+                    imageUrl = uploadedUrl ?: current.imageUrl,
+                    tagNames = current.tags,      // 서버가 태그 "이름" 배열도 허용
+                    description = current.description,
+                    steps = stepsTriple,
+                    selectedApps = selectedApps,
+                    isSimple = isSimple,
+                    isUserVisible = null          // 필요 시 UI 스위치 연결
+                )
+            }.onSuccess {
+                // 성공 시 상세 재조회 & 태그 id 캐시 갱신
+                val refreshed = repo.getRoutineDetailRaw(current.routineId).toMyDetailUi()
+                val serverTags = repo.getRoutineTags(current.routineId)
+                tagNameToId.clear()
+                // ✅ id가 Int여도 안전하게 문자열로 보관
+                serverTags.forEach { tagNameToId[it.name] = it.id.toString() }
+
+                pendingTags.clear() // [추가] 서버 반영 끝났으니 비움
+
+                originalRoutine = refreshed.copy()
+                _uiState.update { it.copy(routine = refreshed) }
+                _localImageUri.value = null
+                setEditMode(false)
             }
-            // [추가] 화면 상태/원본 스냅샷 업데이트 & 임시 이미지 초기화
-            _uiState.update { it.copy(routine = withImageApplied) }
-            originalRoutine = withImageApplied.copy()
-            _localImageUri.value = null
         }
     }
 
-    // [추가] 실제 서버 연동 자리 (샘플 구현)
-    private suspend fun uploadImageToServer(uri: Uri): String = withContext(Dispatchers.IO) {
-        // TODO: 실제 업로드 로직으로 교체 (Retrofit/Multipart 등)
-        delay(300) // 업로드 대기 시뮬레이션
-        // 서버가 반환한 이미지 접근 URL(or imageKey)을 반환한다고 가정
-        "https://cdn.moru.app/uploads/${System.currentTimeMillis()}.jpg"
+    // === 내부: 이미지 업로드 ===
+    private suspend fun uploadLocalImage(uri: Uri): String = withContext(Dispatchers.IO) {
+        val resolver: ContentResolver = appContext.contentResolver
+        val mime = resolver.getType(uri) ?: "image/jpeg"
+        val fileName = resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+            ?.use { if (it.moveToFirst()) it.getString(0) else null }
+            ?: "upload_${System.currentTimeMillis()}.jpg"
+
+        val bytes = resolver.openInputStream(uri)?.use { ins ->
+            val buf = ByteArray(16 * 1024)
+            val bos = ByteArrayOutputStream()
+            while (true) {
+                val r = ins.read(buf); if (r <= 0) break; bos.write(buf, 0, r)
+            }
+            bos.toByteArray()
+        } ?: ByteArray(0)
+
+        repo.uploadImageAndGetUrl(fileName, bytes, mime)
     }
 
-    fun updateDescription(newDescription: String) {
-        _uiState.update { state ->
-            state.copy(routine = state.routine?.copy(description = newDescription))
-        }
-    }
-
-    fun updateCategory(newCategory: String) {
-        _uiState.update { state ->
-            state.copy(routine = state.routine?.copy(category = newCategory))
-        }
-    }
-
+    // ===== 태그 (UI 즉시 반영: 이름 리스트) =====
     fun deleteTag(tag: String) {
-        _uiState.update { state ->
-            val updatedTags = state.routine?.tags?.toMutableList()?.apply { remove(tag) }
-            state.copy(routine = state.routine?.copy(tags = updatedTags ?: emptyList()))
+        pendingTags.remove(tag) // [추가]
+        _uiState.update { st ->
+            val updated = st.routine?.tags?.toMutableList()?.apply { remove(tag) } ?: emptyList()
+            st.copy(routine = st.routine?.copy(tags = updated))
         }
     }
 
-    // TODO: 실제 앱에서는 다이얼로그 등을 통해 태그 이름을 입력받아야 합니다.
-    fun addTag(tag: String = "새 태그") {
-        if (tag.isBlank()) return
-        _uiState.update { state ->
-            val updatedTags = state.routine?.tags?.plus(tag)
-            state.copy(routine = state.routine?.copy(tags = updatedTags ?: listOf(tag)))
-        }
-    }
 
-    // [추가] 여러 태그를 한 번에 추가 (중복 제거)
     fun addTags(tags: List<String>) {
         if (tags.isEmpty()) return
-        _uiState.update { state ->
-            val current = state.routine?.tags.orEmpty()
-            val normalized = tags.map { it.trim() }.filter { it.isNotBlank() }
-            val merged = (current + normalized).distinct()
-            state.copy(routine = state.routine?.copy(tags = merged))
+        val clean = tags.map { it.trim().removePrefix("#") }.filter { it.isNotBlank() }
+        if (clean.isEmpty()) return
+
+        pendingTags.addAll(clean) // [추가]
+
+        _uiState.update { st ->
+            val merged = (st.routine?.tags.orEmpty() + clean).distinct()
+            st.copy(routine = st.routine?.copy(tags = merged))
         }
     }
 
+    // ===== 스텝 편집 =====
     fun deleteStep(index: Int) {
-        _uiState.update { state ->
-            val currentSteps = state.routine?.steps?.toMutableList()
-            currentSteps?.removeAt(index)
-            state.copy(routine = state.routine?.copy(steps = currentSteps ?: emptyList()))
+        _uiState.update { st ->
+            val list = st.routine?.steps?.toMutableList() ?: return@update st
+            if (index !in list.indices) return@update st
+            list.removeAt(index)
+            st.copy(routine = st.routine?.copy(steps = list))
         }
     }
 
-    // TODO: 실제 앱에서는 스텝 추가 화면으로 이동하거나 다이얼로그를 띄워야 합니다.
     fun addStep() {
-        _uiState.update { state ->
-            val newStep = RoutineStep(name = "활동명 입력", duration = "00:30")
-            val updatedSteps = state.routine?.steps?.plus(newStep)
-            state.copy(routine = state.routine?.copy(steps = updatedSteps ?: listOf(newStep)))
+        _uiState.update { st ->
+            val new = RoutineStep(name = "활동명 입력", duration = "00:30:00")
+            st.copy(routine = st.routine?.copy(steps = st.routine.steps + new))
         }
     }
-
 
     fun updateStepName(index: Int, newName: String) {
-        _uiState.update { state ->
-            state.routine?.let { routine ->
-                val currentSteps = routine.steps.toMutableList()
-                // 인덱스가 유효한 범위 내에 있는지 확인
-                if (index in currentSteps.indices) {
-                    // 해당 인덱스의 스텝을 새로운 이름으로 교체
-                    currentSteps[index] = currentSteps[index].copy(name = newName)
-                }
-                // 업데이트된 스텝 리스트로 routine 상태를 갱신
-                state.copy(routine = routine.copy(steps = currentSteps))
-            } ?: state // routine이 null이면 기존 상태 반환
+        _uiState.update { st ->
+            val list = st.routine?.steps?.toMutableList() ?: return@update st
+            if (index !in list.indices) return@update st
+            list[index] = list[index].copy(name = newName)
+            st.copy(routine = st.routine?.copy(steps = list))
         }
     }
 
     fun updateStepDuration(index: Int, newDuration: String) {
-        val current = _uiState.value.routine ?: return
-        if (index < 0 || index >= current.steps.size) return
-        val updatedSteps = current.steps.toMutableList()
-        updatedSteps[index] = updatedSteps[index].copy(duration = newDuration) // [추가]
-        _uiState.update { it.copy(routine = current.copy(steps = updatedSteps)) } // [추가]
+        _uiState.update { st ->
+            val list = st.routine?.steps?.toMutableList() ?: return@update st
+            if (index !in list.indices) return@update st
+            list[index] = list[index].copy(duration = newDuration)
+            st.copy(routine = st.routine?.copy(steps = list))
+        }
     }
 
     fun onDragStart(index: Int) {
@@ -221,12 +279,57 @@ class MyRoutineDetailViewModel : ViewModel() {
     }
 
     fun onDrag(offset: Float) {
-        // 드래그 중인 아이템의 Y축 오프셋을 업데이트
         _uiState.update { it.copy(draggedStepVerticalOffset = it.draggedStepVerticalOffset + offset) }
     }
 
+    fun finalizeStepReorder(from: Int, to: Int) {
+        _uiState.update { st ->
+            val list = st.routine?.steps?.toMutableList() ?: return@update st
+            val item = list.removeAt(from); list.add(to, item)
+            st.copy(
+                routine = st.routine?.copy(steps = list),
+                draggedStepIndex = null,
+                draggedStepVerticalOffset = 0f
+            )
+        }
+    }
 
-    // [수정] 설치 앱 로드: 기존 appList 참조 제거하고 StateFlow 채우기
+    fun cancelDrag() {
+        _uiState.update { it.copy(draggedStepIndex = null, draggedStepVerticalOffset = 0f) }
+    }
+
+    // ===== 사용 앱 =====
+    fun deleteApp(appToDelete: UsedAppInRoutine) {
+        _uiState.update { st ->
+            val updated =
+                st.routine?.usedApps?.filter { it.packageName != appToDelete.packageName }.orEmpty()
+            st.copy(routine = st.routine?.copy(usedApps = updated))
+        }
+    }
+
+    fun addApp(app: UsedAppInRoutine) {
+        _uiState.update { st ->
+            val cur = st.routine?.usedApps.orEmpty()
+            if (cur.any { it.packageName == app.packageName } || cur.size >= 4) return@update st
+            st.copy(routine = st.routine?.copy(usedApps = cur + app))
+        }
+    }
+
+    // (샘플) 매개변수 없는 추가 - 기존 UI 호출 호환용
+    fun addApp() {
+        _uiState.update { st ->
+            val cur = st.routine?.usedApps.orEmpty()
+            if (cur.size >= 4) return@update st
+            val newApp = UsedAppInRoutine(
+                appName = "새로운 앱",
+                appIcon = placeholderIcon(),
+                packageName = "com.example.newapp"
+            )
+            st.copy(routine = st.routine?.copy(usedApps = cur + newApp))
+        }
+    }
+
+    // 설치 앱 로드 → availableApps에 채움
     @SuppressLint("QueryPermissionsNeeded")
     fun loadInstalledApps(context: Context) {
         viewModelScope.launch {
@@ -234,7 +337,8 @@ class MyRoutineDetailViewModel : ViewModel() {
                 val pm = context.packageManager
                 pm.getInstalledApplications(PackageManager.GET_META_DATA)
                     .mapNotNull { appInfo ->
-                        val label = pm.getApplicationLabel(appInfo)?.toString() ?: return@mapNotNull null
+                        val label =
+                            pm.getApplicationLabel(appInfo)?.toString() ?: return@mapNotNull null
                         val drawable = pm.getApplicationIcon(appInfo.packageName)
                         val bitmap = drawableToBitmap(drawable)
                         val imageBitmap = bitmap.asImageBitmap()
@@ -250,18 +354,6 @@ class MyRoutineDetailViewModel : ViewModel() {
         }
     }
 
-    // [추가] 실제 선택앱 추가(중복/최대 4개 방지)
-    fun addApp(app: UsedAppInRoutine) {
-        _uiState.update { state ->
-            val current = state.routine?.usedApps ?: emptyList()
-            if (current.any { it.packageName == app.packageName } || current.size >= 4) {
-                return@update state
-            }
-            val updated = current + app
-            state.copy(routine = state.routine?.copy(usedApps = updated) ?: state.routine)
-        }
-    }
-
     private fun drawableToBitmap(drawable: Drawable): Bitmap {
         return when (drawable) {
             is BitmapDrawable -> drawable.bitmap
@@ -270,7 +362,7 @@ class MyRoutineDetailViewModel : ViewModel() {
                     drawable.intrinsicWidth.coerceAtLeast(1),
                     drawable.intrinsicHeight.coerceAtLeast(1)
                 )
-                val canvas = Canvas(bmp) // [중요] android.graphics.Canvas 사용
+                val canvas = Canvas(bmp) // android.graphics.Canvas
                 drawable.setBounds(0, 0, canvas.width, canvas.height)
                 drawable.draw(canvas)
                 bmp
@@ -281,60 +373,11 @@ class MyRoutineDetailViewModel : ViewModel() {
                     drawable.intrinsicWidth.coerceAtLeast(1),
                     drawable.intrinsicHeight.coerceAtLeast(1)
                 )
-                val canvas = Canvas(bmp) // [중요] android.graphics.Canvas 사용
+                val canvas = Canvas(bmp) // android.graphics.Canvas
                 drawable.setBounds(0, 0, canvas.width, canvas.height)
                 drawable.draw(canvas)
                 bmp
             }
-        }
-    }
-
-
-    fun finalizeStepReorder(from: Int, to: Int) {
-        _uiState.update { currentState ->
-            val currentSteps = currentState.routine?.steps?.toMutableList()
-                ?: return@update currentState
-
-            // 1. 리스트 순서 변경
-            val movedItem = currentSteps.removeAt(from)
-            currentSteps.add(to, movedItem)
-
-            // 2. 순서 변경된 리스트와 드래그 상태 초기화를 포함한 새 상태 반환
-            currentState.copy(
-                routine = currentState.routine.copy(steps = currentSteps),
-                draggedStepIndex = null,
-                draggedStepVerticalOffset = 0f
-            )
-        }
-    }
-
-    fun cancelDrag() {
-        _uiState.update { currentState ->
-            currentState.copy(
-                draggedStepIndex = null,
-                draggedStepVerticalOffset = 0f
-            )
-        }
-    }
-
-    fun deleteApp(appToDelete: UsedAppInRoutine) {
-        _uiState.update { state ->
-            val updatedApps = state.routine?.usedApps?.filter { it.appName != appToDelete.appName }
-            state.copy(routine = state.routine?.copy(usedApps = updatedApps ?: emptyList()))
-        }
-    }
-
-
-    fun addApp() {
-        _uiState.update { state ->
-            // 예시로 새 앱 추가
-            val newApp = UsedAppInRoutine(
-                appName = "새로운 앱",
-                appIcon = placeholderIcon(), // 더미 아이콘 사용
-                packageName = "com.example.newapp"
-            )
-            val updatedApps = state.routine?.usedApps?.plus(newApp)
-            state.copy(routine = state.routine?.copy(usedApps = updatedApps ?: listOf(newApp)))
         }
     }
 }

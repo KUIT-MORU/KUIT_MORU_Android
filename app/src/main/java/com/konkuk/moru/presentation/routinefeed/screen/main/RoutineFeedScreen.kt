@@ -48,6 +48,7 @@ fun RoutineFeedScreen(
     val hasNotification by mainViewModel.hasUnreadNotification.collectAsState() // [추가]
 
     Scaffold(
+        modifier=Modifier.padding(bottom = 80.dp),
         containerColor = Color.White,
         topBar = {
             HomeTopAppBar(

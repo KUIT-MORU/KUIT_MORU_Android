@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,17 +25,33 @@ import androidx.navigation.NavHostController
 import com.konkuk.moru.presentation.myactivity.component.ActMyInfo
 import com.konkuk.moru.presentation.myactivity.component.MyActivityTab
 import com.konkuk.moru.presentation.myactivity.component.MyProfileTitle
-import com.konkuk.moru.presentation.myactivity.component.RoutinePaceCard
 import com.konkuk.moru.presentation.myactivity.viewmodel.InsightViewModel
+import com.konkuk.moru.presentation.myactivity.viewmodel.ActUserViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 
 @Composable
 fun ActMainScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    viewModel: InsightViewModel = hiltViewModel()
+    viewModel: InsightViewModel = hiltViewModel(),
+    viewModelUser: ActUserViewModel = hiltViewModel()
 ) {
+    val nickname by viewModelUser.nickname.collectAsState()
+    val routineCount by viewModelUser.routineCount.collectAsState()
+    val followerCount by viewModelUser.followerCount.collectAsState()
+    val followingCount by viewModelUser.followingCount.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModelUser.loadMe()
+    }
+
     val uiState = viewModel.ui.collectAsState().value
+
+    val routineStatus = when (uiState.routineCompletionRate.toFloat()) {
+        in 0f..0.3f -> "잠시 걷는 중"
+        in 0.3f..0.7f -> "간헐적 루틴러"
+        else -> "루틴 페이스 메이커"
+    }
 
     Column(
         modifier = modifier
@@ -58,11 +74,12 @@ fun ActMainScreen(
                 .fillMaxWidth()
         ) {
             Spacer(modifier = Modifier.height(28.dp))
-            ActMyInfo(4, 628, 221, "정해찬", "루틴페이스 메이커", 0.5f, navController = navController)
+            ActMyInfo(routineCount, followerCount, followingCount, nickname ?: "알 수 없음", routineStatus, uiState.routineCompletionRate.toFloat(), navController = navController)
             Spacer(modifier = Modifier.height(24.dp))
 
             var selectedTab by remember { mutableStateOf(0) }
             MyActivityTab(
+                insightData = uiState,
                 selectedTab = selectedTab,
                 onTabSelected = { selectedTab = it },
                 navController = navController,
@@ -70,24 +87,6 @@ fun ActMainScreen(
                     .fillMaxSize()
                     .padding(horizontal = 16.dp)
             )
-
-            Spacer(modifier = Modifier.height(24.dp))
-            Text("paceGrade: ${uiState.paceGrade}")
-            Text("routineCompletionRate: ${uiState.routineCompletionRate}")
-            Text("globalAverageRoutineCompletionRate: ${uiState.globalAverageRoutineCompletionRate}")
-
-            Text("completionDistribution:")
-            uiState.completionDistribution.forEach { (key, value) ->
-                Text(" - $key: $value")
-            }
-
-            Text("weekday user/overall: ${uiState.weekdayUser} / ${uiState.weekdayOverall}")
-            Text("weekend user/overall: ${uiState.weekendUser} / ${uiState.weekendOverall}")
-
-            Text("completionByTimeSlot:")
-            uiState.completionByTimeSlot.forEach { (key, value) ->
-                Text(" - $key: $value")
-            }
         }
     }
 }

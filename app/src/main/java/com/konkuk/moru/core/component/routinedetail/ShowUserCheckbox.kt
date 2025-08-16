@@ -35,7 +35,7 @@ fun ShowUserCheckbox(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            painter = painterResource(id = if (showUser) R.drawable.ic_checkbox_checked else R.drawable.ic_checkbox),
+            painter = painterResource(id = if (showUser) R.drawable.ic_checkbox_checked else R.drawable.ic_checkbox_uncheck),
             contentDescription = "사용자 표시 아이콘",
             modifier = Modifier.size(16.dp),
             tint = Color.Unspecified

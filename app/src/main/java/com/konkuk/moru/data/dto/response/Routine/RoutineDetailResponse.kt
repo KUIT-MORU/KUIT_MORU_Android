@@ -1,13 +1,12 @@
-package com.konkuk.moru.data.dto.response
+package com.konkuk.moru.data.dto.response.Routine
 
 import com.google.gson.annotations.SerializedName
-import com.konkuk.moru.data.model.UsedAppInRoutine
+import com.konkuk.moru.data.dto.response.RoutineStepResponse
 import com.konkuk.moru.presentation.routinefeed.data.AppDto
 import com.konkuk.moru.presentation.routinefeed.data.AuthorDto
 import com.konkuk.moru.presentation.routinefeed.data.RoutineStepDto
 import com.konkuk.moru.presentation.routinefeed.data.SimilarRoutineItemDto
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 
 data class RoutineDetailResponse(

@@ -33,7 +33,7 @@ fun SelfIntroductionField(modifier: Modifier = Modifier) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(1.dp, Color(0xFFD9D9D9), RoundedCornerShape(6.dp))
+                .border(1.dp, Color(0xFFD9D9D9), RoundedCornerShape(4.dp))
                 .clip(RoundedCornerShape(6.dp))
         ) {
             BasicTextField(

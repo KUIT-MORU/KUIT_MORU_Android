@@ -3,7 +3,7 @@ package com.konkuk.moru.domain.repository
 
 import com.konkuk.moru.presentation.routinefeed.data.LiveUserInfo
 import com.konkuk.moru.presentation.routinefeed.data.RoutineFeedResponse
-import com.konkuk.moru.data.dto.response.RoutineDetailResponse // [변경]
+import com.konkuk.moru.data.dto.response.Routine.RoutineDetailResponse // [변경]
 
 
 interface RoutineFeedRepository {

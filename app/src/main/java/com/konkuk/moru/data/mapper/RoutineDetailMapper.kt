@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import com.konkuk.moru.core.datastore.SocialMemory
 import com.konkuk.moru.core.util.getAppIconImageBitmap
 import com.konkuk.moru.core.util.getAppLabel
-import com.konkuk.moru.data.dto.response.RoutineDetailResponse
+import com.konkuk.moru.data.dto.response.Routine.RoutineDetailResponse
 import com.konkuk.moru.data.model.AppInfo
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.model.RoutineStep

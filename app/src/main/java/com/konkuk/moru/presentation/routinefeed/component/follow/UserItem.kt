@@ -31,7 +31,8 @@ fun UserItem(
     showFollowButton: Boolean,
     onFollowClick: (FollowUser) -> Unit,
     onUserClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    followEnabled: Boolean = true
 ) {
     Row(
         modifier = modifier
@@ -90,7 +91,8 @@ fun UserItem(
         if (showFollowButton) {
             MoruButton(
                 text = buttonText,
-                onClick = { onFollowClick(user) },
+                onClick = { if (followEnabled) onFollowClick(user) },
+                enabled = followEnabled, // ✅ 하드 가드(시각 + 클릭 차단)
                 backgroundColor = backgroundColor,
                 contentColor = contentColor,
                 shape = RoundedCornerShape(140.dp),
@@ -116,12 +118,14 @@ private fun UserItemPreview() {
                 onFollowClick = {},
                 onUserClick = {},
                 showFollowButton = true,
+                followEnabled = true
             )
             UserItem(
                 user = FollowUser("", "", "사용자명2", "안녕하세요!", true),
                 onFollowClick = {},
                 onUserClick = {},
                 showFollowButton = true,
+                followEnabled = false
             )
         }
     }

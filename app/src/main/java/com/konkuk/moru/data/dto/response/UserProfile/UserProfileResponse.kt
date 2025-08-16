@@ -1,4 +1,4 @@
-package com.konkuk.moru.data.dto.response
+package com.konkuk.moru.data.dto.response.UserProfile
 
 import kotlinx.serialization.Serializable
 

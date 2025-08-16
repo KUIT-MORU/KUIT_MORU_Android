@@ -1,6 +1,6 @@
+package com.konkuk.moru.presentation.myroutines.component
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.FlingBehavior
@@ -43,30 +43,42 @@ enum class RepeatMode { NONE, EVERYDAY, WEEKDAYS, WEEKENDS }
 
 @Composable
 fun TimePickerSheetContent(
+    initialTime: LocalTime? = null,
+    initialDays: Set<DayOfWeek> = emptySet(),
+    initialAlarm: Boolean = true,
     onConfirm: (LocalTime, Set<DayOfWeek>, Boolean) -> Unit
-) {
-    // 1. 초기화를 위한 기본값 정의
-    val defaultAmPm = "오후"
-    val defaultHour = 2
-    val defaultMinute = 1
-    val defaultRepeatMode = RepeatMode.NONE
-    val defaultIsAlarmOn = true
 
-    var selectedAmPm by remember { mutableStateOf(defaultAmPm) }
-    var selectedHour by remember { mutableStateOf(defaultHour) }
-    var selectedMinute by remember { mutableStateOf(defaultMinute) }
-    var selectedDays by remember { mutableStateOf(emptySet<DayOfWeek>()) }
-    var repeatMode by remember { mutableStateOf(defaultRepeatMode) }
-    var isAlarmOn by remember { mutableStateOf(defaultIsAlarmOn) }
+) {
+    // 1) 초기값 → AM/PM + 12시간 변환
+    val initAmPm = when {
+        initialTime == null -> "오후" // 기본
+        initialTime.hour == 0 || initialTime.hour < 12 -> "오전"
+        else -> "오후"
+    }
+    val initHour12 = when {
+        initialTime == null -> 2
+        initialTime.hour == 0 -> 12
+        initialTime.hour in 1..12 -> initialTime.hour
+        else -> initialTime.hour - 12
+    }
+    val initMinute = initialTime?.minute ?: 1
+
+    // 2) remember에 초기값 바인딩 (초기값이 바뀌면 재설정 되도록 key 지정)
+    var selectedAmPm by remember(initialTime) { mutableStateOf(initAmPm) }
+    var selectedHour by remember(initialTime) { mutableStateOf(initHour12) }
+    var selectedMinute by remember(initialTime) { mutableStateOf(initMinute) }
+    var selectedDays by remember(initialDays) { mutableStateOf(initialDays) }
+    var repeatMode by remember { mutableStateOf(RepeatMode.NONE) }
+    var isAlarmOn by remember(initialAlarm) { mutableStateOf(initialAlarm) }
 
     // 2. 상태를 기본값으로 되돌리는 초기화 함수
     fun resetToDefaults() {
-        selectedAmPm = defaultAmPm
-        selectedHour = defaultHour
-        selectedMinute = defaultMinute
-        selectedDays = emptySet()
-        repeatMode = defaultRepeatMode
-        isAlarmOn = defaultIsAlarmOn
+        selectedAmPm = initAmPm
+        selectedHour = initHour12
+        selectedMinute = initMinute
+        selectedDays = initialDays
+        repeatMode = RepeatMode.NONE
+        isAlarmOn = initialAlarm
     }
 
     LaunchedEffect(repeatMode) {
@@ -79,6 +91,7 @@ fun TimePickerSheetContent(
                 DayOfWeek.THURSDAY,
                 DayOfWeek.FRIDAY
             )
+
             RepeatMode.WEEKENDS -> setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
             RepeatMode.NONE -> if (selectedDays.size > 1) emptySet() else selectedDays
         }
@@ -153,7 +166,8 @@ fun TimePickerSheetContent(
                 .clickable { isAlarmOn = !isAlarmOn },
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val icon = if (isAlarmOn) Icons.Outlined.CheckBox else Icons.Outlined.CheckBoxOutlineBlank
+            val icon =
+                if (isAlarmOn) Icons.Outlined.CheckBox else Icons.Outlined.CheckBoxOutlineBlank
             Icon(
                 imageVector = icon,
                 contentDescription = "알림 받기",
@@ -220,7 +234,8 @@ private fun WheelPicker(
     val actualItemCount = items.size
     val centralIndex = itemCount / 2
     val initialIndex =
-        centralIndex + (items.indexOf(initialItem).takeIf { it != -1 } ?: 0) - (centralIndex % actualItemCount)
+        centralIndex + (items.indexOf(initialItem).takeIf { it != -1 }
+            ?: 0) - (centralIndex % actualItemCount)
 
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
     val flingBehavior: FlingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
@@ -281,7 +296,11 @@ private fun WheelPicker(
 
 @Composable
 private fun RepeatModeSelector(selectedMode: RepeatMode, onModeSelected: (RepeatMode) -> Unit) {
-    val modes = mapOf("매일" to RepeatMode.EVERYDAY, "평일만" to RepeatMode.WEEKDAYS, "주말만" to RepeatMode.WEEKENDS)
+    val modes = mapOf(
+        "매일" to RepeatMode.EVERYDAY,
+        "평일만" to RepeatMode.WEEKDAYS,
+        "주말만" to RepeatMode.WEEKENDS
+    )
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
         modes.forEach { (text, mode) ->
             val isSelected = selectedMode == mode
@@ -333,7 +352,7 @@ fun TimeSetPreview() {
             containerColor = Color.White
         ) {
             TimePickerSheetContent(
-                onConfirm = { _, _, _ ->}
+                onConfirm = { _, _, _ -> }
             )
         }
     }

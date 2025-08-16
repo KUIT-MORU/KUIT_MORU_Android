@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,8 +22,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.konkuk.moru.R
 import com.konkuk.moru.core.component.chip.MoruChip
 import com.konkuk.moru.ui.theme.MORUTheme
 
@@ -45,6 +48,7 @@ fun MyRoutineTag(
         ) {
             items(tags) { tag ->
                 MoruChip(
+                    modifier =Modifier.height(31.dp),
                     text = "#$tag",
                     isSelected = true,
                     onClick = {
@@ -68,14 +72,16 @@ fun MyRoutineTag(
                 )
             }
 
-            if (isEditMode) {
+            val canAddMore = isEditMode && tags.size < 3
+
+            if (canAddMore) {
                 item {
                     IconButton(
                         onClick = onAddTag,
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(14.dp)
+                                .size(31.dp)
                                 .background(
                                     color = MORUTheme.colors.lightGray,
                                     shape = CircleShape
@@ -83,10 +89,11 @@ fun MyRoutineTag(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Filled.Add,
+                                modifier = Modifier.size(31.dp),
+                                painter = painterResource(id = R.drawable.ic_routinetagplus),
+                                tint = Color.Unspecified,
                                 contentDescription = "태그 추가",
-                                tint = Color.Black,
-                                modifier = Modifier.size(10.dp)
+
                             )
                         }
                     }
@@ -102,7 +109,7 @@ fun MyRoutineTag(
 private fun RoutineInfoPreview_ViewMode() {
     MORUTheme {
         MyRoutineTag(
-            tags = listOf("아침루틴", "운동", "건강", "자기계발"),
+            tags = listOf("아침루틴", "운동"),
             isEditMode = false, // 보기 모드
             onAddTag = {},
             onDeleteTag = {}
@@ -115,7 +122,20 @@ private fun RoutineInfoPreview_ViewMode() {
 private fun RoutineInfoPreview_ViewMode2() {
     MORUTheme {
         MyRoutineTag(
-            tags = listOf("아침루틴", "운동", "건강", "자기계발"),
+            tags = listOf("아침루틴", "운동", "건강"),
+            isEditMode = true, // 보기 모드
+            onAddTag = {},
+            onDeleteTag = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "태그 정보 - 보기 모드")
+@Composable
+private fun RoutineInfoPreview_ViewMode3() {
+    MORUTheme {
+        MyRoutineTag(
+            tags = listOf("아침루틴", "운동"),
             isEditMode = true, // 보기 모드
             onAddTag = {},
             onDeleteTag = {}

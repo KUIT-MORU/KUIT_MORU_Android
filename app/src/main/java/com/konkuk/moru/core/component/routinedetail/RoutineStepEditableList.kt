@@ -66,7 +66,7 @@ fun LazyListScope.routineStepEditableList(
     }
 
     // 스텝 목록 (드래그 앤 드롭 로직 포함)
-    itemsIndexed(items = steps, key = { _, step -> step.id }) { index, item ->
+    itemsIndexed(items = steps, key = { idx, step -> "${step.name}-$idx" }) { index, item ->
         val isDragging = draggedStepIndex == index
         val offset = if (isDragging) draggedStepVerticalOffset else 0f
 
@@ -139,7 +139,7 @@ fun LazyListScope.routineStepEditableList(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start=16.dp,end=16.dp),
+                    .padding(start = 16.dp, end = 16.dp),
                 horizontalArrangement = Arrangement.Start
             ) {
                 IconButton(onClick = actions.onAddStep) {

@@ -7,15 +7,16 @@ import androidx.lifecycle.viewModelScope
 import com.konkuk.moru.core.datastore.SchedulePreference
 import com.konkuk.moru.data.dto.response.RoutineDetailResponseV1
 import com.konkuk.moru.data.dto.response.HomeScheduleResponse
+import com.konkuk.moru.data.dto.response.Routine.RoutineDetailResponseV1
 import com.konkuk.moru.data.mapper.toDomain
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.repositoryimpl.RoutineRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class HomeRoutinesViewModel @Inject constructor(
@@ -49,18 +50,18 @@ class HomeRoutinesViewModel @Inject constructor(
     fun loadTodayRoutines(page: Int = 0, size: Int = 20) {
         Log.d(TAG, "🔄 loadTodayRoutines 호출됨: page=$page, size=$size")
         Log.d(TAG, "🌐 네트워크 연결 테스트 시작...")
-        
+
         viewModelScope.launch {
             Log.d(TAG, "🚀 코루틴 시작됨!")
             Log.d(TAG, "🔄 loadTodayRoutines 코루틴 시작")
             try {
                 Log.d(TAG, "🔗 서버 연결 시도 중...")
                 Log.d(TAG, "🌐 API 엔드포인트: /api/routines/today (page=$page, size=$size)")
-                
+
                 val pageRes = repo.getMyRoutinesToday(page, size)
                 Log.d(TAG, "✅ loadTodayRoutines 성공!")
                 Log.d(TAG, "📊 서버 응답: total=${pageRes.totalElements}, page=${pageRes.number}, size=${pageRes.size}, contentSize=${pageRes.content.size}")
-                
+
                 if (pageRes.content.isNotEmpty()) {
                     Log.d(TAG, "🎯 루틴 목록:")
                     pageRes.content.forEachIndexed { index, routine ->
@@ -76,13 +77,13 @@ class HomeRoutinesViewModel @Inject constructor(
                     Log.e(TAG, "❌ loadTodayRoutines 실패!", e)
                 Log.e(TAG, "🔍 예외 타입: ${e.javaClass.simpleName}")
                 Log.e(TAG, "🔍 예외 메시지: ${e.message}")
-                
+
                 when (e) {
                     is retrofit2.HttpException -> {
                         val code = e.code()
                         val err = e.response()?.errorBody()?.string()
                         Log.e(TAG, "HTTP $code errorBody=$err")
-                        
+
                         if (code == 500) {
                             Log.e(TAG, "🚨 서버 내부 오류 (500) - 서버 점검 중일 수 있습니다")
                         } else if (code == 404) {
@@ -107,7 +108,7 @@ class HomeRoutinesViewModel @Inject constructor(
                         Log.e(TAG, "🚨 기타 네트워크 오류: ${e.javaClass.simpleName}")
                     }
                     }
-                    
+
                     // 서버 오류 시 빈 리스트로 설정 (UI가 깨지지 않도록)
                     _serverRoutines.value = emptyList()
                     Log.d(TAG, "💡 서버 오류로 인해 빈 리스트로 설정됨. 서버 상태를 확인해주세요.")
@@ -211,15 +212,15 @@ class HomeRoutinesViewModel @Inject constructor(
             null
         }
     }
-    
+
     // myRoutines 업데이트 (진행중인 루틴을 맨 앞으로 이동할 때 사용)
     fun updateMyRoutines(updatedRoutines: List<Routine>) {
         Log.d(TAG, "🔄 updateMyRoutines 호출: ${updatedRoutines.size}개 루틴")
         Log.d(TAG, "📋 업데이트 전 myRoutines: " + _myRoutines.value.joinToString { "${it.title}(isRunning=${it.isRunning})" })
         Log.d(TAG, "📋 업데이트할 루틴들: " + updatedRoutines.joinToString { "${it.title}(isRunning=${it.isRunning})" })
-        
+
         _myRoutines.value = updatedRoutines
-        
+
         Log.d(TAG, "✅ _myRoutines StateFlow 업데이트 완료")
         Log.d(TAG, "📋 업데이트 후 myRoutines: " + _myRoutines.value.joinToString { "${it.title}(isRunning=${it.isRunning})" })
     }
@@ -229,10 +230,10 @@ class HomeRoutinesViewModel @Inject constructor(
         return try {
             Log.d(TAG, "🔄 getRoutineSchedules 호출: routineId=$routineId")
             Log.d(TAG, "🌐 API 엔드포인트: /api/routines/$routineId/schedules")
-            
+
             val schedules = repo.getRoutineSchedules(routineId)
             Log.d(TAG, "✅ 스케줄 정보 가져오기 성공: ${schedules.size}개")
-            
+
             if (schedules.isEmpty()) {
                 Log.w(TAG, "⚠️ 스케줄이 비어있음 - 서버에 스케줄 데이터가 없을 수 있음")
             } else {
@@ -245,13 +246,13 @@ class HomeRoutinesViewModel @Inject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "❌ 스케줄 정보 가져오기 실패: routineId=$routineId", e)
             Log.e(TAG, "❌ 에러 상세: ${e.message}")
-            
+
             // HTTP 오류인 경우 응답 본문 출력
             if (e is retrofit2.HttpException) {
                 val response = e.response()
                 val errorBody = response?.errorBody()?.string()
                 Log.e(TAG, "HTTP ${response?.code()} 응답: $errorBody")
-                
+
                 when (response?.code()) {
                     404 -> Log.e(TAG, "🚨 API 엔드포인트를 찾을 수 없음 (404) - 서버에 해당 엔드포인트가 구현되지 않았을 수 있음")
                     403 -> Log.e(TAG, "🚨 접근 권한 없음 (403) - 인증 토큰 문제일 수 있음")
@@ -259,13 +260,13 @@ class HomeRoutinesViewModel @Inject constructor(
                     else -> Log.e(TAG, "🚨 기타 HTTP 오류: ${response?.code()}")
                 }
             }
-            
+
             // JSON 파싱 오류인 경우 상세 정보 출력
             if (e.message?.contains("JsonDecodingException") == true || e.message?.contains("Unexpected JSON token") == true) {
                 Log.e(TAG, "🚨 JSON 파싱 오류 발생")
                 Log.e(TAG, "   - 오류 메시지: ${e.message}")
                 Log.e(TAG, "   - 오류 타입: ${e.javaClass.simpleName}")
-                
+
                 // 메시지에서 상세 정보 추출
                 e.message?.let { message ->
                     if (message.contains("at offset")) {
@@ -286,7 +287,7 @@ class HomeRoutinesViewModel @Inject constructor(
                     }
                 }
             }
-            
+
             e.printStackTrace()
             emptyList()
         }

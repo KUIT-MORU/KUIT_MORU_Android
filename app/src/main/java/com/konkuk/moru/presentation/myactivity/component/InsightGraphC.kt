@@ -43,7 +43,7 @@ fun InsightGraphC(
     ) {
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = "시간대별 루틴 실천률",
+            text = "시간대별 루틴 실천개수",
             style = typography.body_SB_16,
             color = colors.black,
             modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -67,7 +67,7 @@ fun InsightGraphC(
             ) {
                 for (i in 10 downTo 0 step 1) {
                     Text(
-                        text = "${i * 10}",
+                        text = "$i",
                         color = colors.darkGray,
                         style = typography.body_SB_16.copy(fontSize = 9.sp)
                     )
@@ -90,7 +90,7 @@ fun InsightGraphC(
                         Box(
                             modifier = Modifier
                                 .width(35.dp)
-                                .height(149.dp * (value.coerceIn(0f, 100f) / 100f))
+                                .height(149.dp * (value.coerceIn(0f, 10f) / 10f))
                                 .clip(RoundedCornerShape(topStart = 100.dp, topEnd = 100.dp))
                                 .background(
                                     Brush.verticalGradient(
