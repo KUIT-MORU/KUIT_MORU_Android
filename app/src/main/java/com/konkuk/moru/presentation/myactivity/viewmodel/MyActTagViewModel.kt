@@ -1,0 +1,43 @@
+package com.konkuk.moru.presentation.myactivity.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.konkuk.moru.domain.repository.MyActTagRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+
+import com.konkuk.moru.presentation.myactivity.screen.TagDto
+
+@HiltViewModel
+class MyActTagViewModel @Inject constructor(
+    private val repo: MyActTagRepository
+) : ViewModel() {
+
+    private val _allTags = MutableStateFlow<List<TagDto>>(emptyList())
+    val allTags: StateFlow<List<TagDto>> = _allTags
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
+
+    fun loadAllTags() {
+        viewModelScope.launch {
+            runCatching { repo.getAllTags() }
+                .onSuccess { domainTags ->
+                    val uiTags = domainTags.mapIndexed { index, t ->
+                        TagDto(
+                            id = index,
+                            name = "#${t.name}",
+                            isSelected = false
+                        )
+                    }
+                    _allTags.value = uiTags
+                }
+                .onFailure { e ->
+                    _error.value = e.message ?: "태그를 불러오지 못했습니다."
+                }
+        }
+    }
+}

@@ -2,6 +2,7 @@ package com.konkuk.moru.di
 
 import com.konkuk.moru.data.repositoryimpl.AuthRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.InsightRepositoryImpl
+import com.konkuk.moru.data.repositoryimpl.MyActTagRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.NotificationRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.OBUserRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.RoutineFeedRepositoryImpl
@@ -10,6 +11,7 @@ import com.konkuk.moru.data.repositoryimpl.SearchRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.SocialRepositoryImpl
 import com.konkuk.moru.domain.repository.AuthRepository
 import com.konkuk.moru.domain.repository.InsightRepository
+import com.konkuk.moru.domain.repository.MyActTagRepository
 import com.konkuk.moru.domain.repository.NotificationRepository
 import com.konkuk.moru.domain.repository.OBUserRepository
 import com.konkuk.moru.domain.repository.RoutineFeedRepository
@@ -19,6 +21,7 @@ import com.konkuk.moru.domain.repository.SocialRepository
 import com.konkuk.moru.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
@@ -67,5 +70,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindSearchRepository(impl: SearchRepositoryImpl): SearchRepository
+
+
+    @Binds
+    @Singleton
+    abstract fun bindMyActTagRepository(impl: MyActTagRepositoryImpl): MyActTagRepository
 
 }
