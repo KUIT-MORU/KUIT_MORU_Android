@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.navigation
 
+import android.net.Uri
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -64,10 +65,10 @@ sealed class Route(
     data object ActFabTag : Route(route = "act_fab_tag")
     data object ActProfile : Route(route = "act_profile")
     data object ActRecord : Route(route = "act_record")
-    data object ActRecordDetail : Route(route = "act_record_detail/{routineTitle}") {
-        fun createRoute(routineTitle: String): String {
-            val encoded = URLEncoder.encode(routineTitle, StandardCharsets.UTF_8.toString())
-            return "act_record_detail/$encoded"
+    data object ActRecordDetail : Route(route = "act_record_detail/{logId}") {
+        fun createRoute(logId: String): String {
+            // UUID라도 안전하게 인코딩
+            return "act_record_detail/${Uri.encode(logId)}"
         }
     }
 

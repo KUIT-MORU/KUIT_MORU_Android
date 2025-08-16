@@ -102,7 +102,7 @@ fun ActRecordScreen(
                     tags = rec.tags,
                     completeFlag = rec.isComplete,
                     time = rec.durationSec.toHms(),
-                    onClick = { navController.navigate(Route.ActRecordDetail.createRoute(safe)) }
+                    onClick = { navController.navigate(Route.ActRecordDetail.createRoute(rec.id)) }
                 )
             }
 
@@ -124,7 +124,7 @@ fun ActRecordScreen(
                     tags = rec.tags,
                     completeFlag = rec.isComplete,
                     time = rec.durationSec.toHms(),
-                    onClick = { navController.navigate(Route.ActRecordDetail.createRoute(safe)) }
+                    onClick = { navController.navigate(Route.ActRecordDetail.createRoute(rec.id)) }
                 )
             }
 
@@ -149,7 +149,7 @@ fun ActRecordScreen(
                     tags = rec.tags,
                     completeFlag = rec.isComplete,
                     time = rec.durationSec.toHms(),
-                    onClick = { navController.navigate(Route.ActRecordDetail.createRoute(safe)) }
+                    onClick = { navController.navigate(Route.ActRecordDetail.createRoute(rec.id)) }
                 )
             }
         }

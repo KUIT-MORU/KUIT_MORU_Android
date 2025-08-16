@@ -1,8 +1,10 @@
 package com.konkuk.moru.data.service
 
 import com.konkuk.moru.data.dto.response.MyActLogsPageResponse
+import com.konkuk.moru.data.dto.response.MyActRecordDetailResponse
 import com.konkuk.moru.data.dto.response.MyActRoutineLogResponse
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface MyActLogService {
@@ -18,4 +20,7 @@ interface MyActLogService {
         @Query("logId")     logId: String? = null,
         @Query("size")      size: Int? = null
     ): MyActLogsPageResponse
+
+    @GET("api/logs/{routineLogId}")
+    suspend fun getLogDetail(@Path("routineLogId") id: String): MyActRecordDetailResponse
 }
