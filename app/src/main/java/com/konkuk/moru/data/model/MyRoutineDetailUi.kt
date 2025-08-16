@@ -28,6 +28,7 @@ data class MyRoutineDetailUi(
     val usedApps: List<UsedAppInRoutine> = emptyList()
 )
 
+/*
 data class MyRoutineDetailUiState(
     // [변경] Routine? -> MyRoutineDetailUi?
     val routine: MyRoutineDetailUi? = null,
@@ -36,4 +37,4 @@ data class MyRoutineDetailUiState(
     val draggedStepIndex: Int? = null,
     val draggedStepVerticalOffset: Float = 0f,
     val isQuickMode: Boolean = false,
-)
+)*/
