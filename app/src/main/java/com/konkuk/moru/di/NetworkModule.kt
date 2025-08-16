@@ -8,6 +8,7 @@ import com.konkuk.moru.data.interceptor.AuthInterceptor
 import com.konkuk.moru.data.interceptor.TokenAuthenticator
 import com.konkuk.moru.data.service.AuthService
 import com.konkuk.moru.data.service.InsightService
+import com.konkuk.moru.data.service.MyActSocialService
 import com.konkuk.moru.data.service.MyActTagService
 import com.konkuk.moru.data.service.RoutineService
 import com.konkuk.moru.data.service.NotificationService
@@ -184,5 +185,9 @@ object NetworkModule {
     @Provides @Singleton
     fun provideTagService(retrofit: Retrofit): MyActTagService =
         retrofit.create(MyActTagService::class.java)
+
+    @Provides @Singleton
+    fun provideMyActSocialService(retrofit: Retrofit): MyActSocialService =
+        retrofit.create(MyActSocialService::class.java)
 
 }

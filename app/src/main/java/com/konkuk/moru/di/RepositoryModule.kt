@@ -2,6 +2,7 @@ package com.konkuk.moru.di
 
 import com.konkuk.moru.data.repositoryimpl.AuthRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.InsightRepositoryImpl
+import com.konkuk.moru.data.repositoryimpl.MyActScrapRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.MyActTagRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.NotificationRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.OBUserRepositoryImpl
@@ -11,6 +12,7 @@ import com.konkuk.moru.data.repositoryimpl.SearchRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.SocialRepositoryImpl
 import com.konkuk.moru.domain.repository.AuthRepository
 import com.konkuk.moru.domain.repository.InsightRepository
+import com.konkuk.moru.domain.repository.MyActScrapRepository
 import com.konkuk.moru.domain.repository.MyActTagRepository
 import com.konkuk.moru.domain.repository.NotificationRepository
 import com.konkuk.moru.domain.repository.OBUserRepository
@@ -76,4 +78,7 @@ abstract class RepositoryModule {
     @Singleton
     abstract fun bindMyActTagRepository(impl: MyActTagRepositoryImpl): MyActTagRepository
 
+    @Binds
+    @Singleton
+    abstract fun bindMyActScrapRepository(impl: MyActScrapRepositoryImpl): MyActScrapRepository
 }

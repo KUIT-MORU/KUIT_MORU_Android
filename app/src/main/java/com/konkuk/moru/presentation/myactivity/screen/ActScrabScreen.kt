@@ -17,27 +17,51 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.konkuk.moru.presentation.myactivity.component.BackTitle
 import com.konkuk.moru.presentation.myactivity.component.ScrabRoutine
+import com.konkuk.moru.presentation.myactivity.viewmodel.MyActScrapViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun ActScrabScreen(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    vm: MyActScrapViewModel = hiltViewModel()
 ) {
-    val routines = List(10) {
-        "루틴 제목" to listOf("태그1", "태그2", "태그3", "완전 긴 태그 완전 긴 태그")
-    }
+    val scraps by vm.items.collectAsState()
+    val loading by vm.loading.collectAsState()
+
     val selectedIndex = remember { mutableStateOf<Int?>(null) }
+
+    val gridState = rememberLazyGridState()
+
+    LaunchedEffect(Unit) {
+        vm.loadFirst(size = 21)
+    }
+
+    LaunchedEffect(gridState, scraps.size, loading) {
+        snapshotFlow { gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .collectLatest { last ->
+                if (last != null && !loading && scraps.isNotEmpty() && last >= scraps.lastIndex - 6) {
+                    vm.loadNext(size = 21)
+                }
+            }
+    }
 
     Column(
         modifier = modifier
@@ -59,14 +83,16 @@ fun ActScrabScreen(
                 columns = GridCells.Adaptive(minSize = 98.36.dp),
                 modifier = Modifier
                     .fillMaxWidth(),
+                state = gridState,
                 horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
                 verticalArrangement = Arrangement.spacedBy(32.86.dp),
                 contentPadding = PaddingValues()
             ) {
-                itemsIndexed(routines) { index, (title, tags) ->
+                itemsIndexed(scraps, key = { _, it -> it.routineId }) { index, scrap ->
                     ScrabRoutine(
-                        title = title,
-                        tags = tags,
+                        imageUrl = scrap.imageUrl.takeIf { it.isNotBlank() },
+                        title = scrap.title.ifBlank { "루틴명" },
+                        tags = scrap.tagNames.map { "#$it" },
                         isSelected = selectedIndex.value == index,
                         onLongClick = {
                             selectedIndex.value = if (selectedIndex.value == index) null else index
