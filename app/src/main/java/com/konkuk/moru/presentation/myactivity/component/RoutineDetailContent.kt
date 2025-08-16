@@ -177,18 +177,6 @@ fun RoutineDetailContent(
                         style = typography.title_B_14, color = Color.White
                     )
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
-                Row {
-                    repeat(3) {
-                        Box(
-                            modifier = Modifier
-                                .size(42.dp)
-                                .background(colors.lightGray, RoundedCornerShape(5.dp))
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                }
                 Spacer(modifier = Modifier.height(11.dp))
             }
         }
