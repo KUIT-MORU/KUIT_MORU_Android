@@ -31,8 +31,9 @@ fun MoruButtonTypeA(
             .background(backgroundColor, shape = RoundedCornerShape(10.dp))
             .clickable(
                 indication = null,
-                interactionSource = null
-            ) { onClick() }, // Todo 임시로 항상 작동하도록 설정함
+                interactionSource = null,
+                enabled = enabled
+            ) { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Text(
