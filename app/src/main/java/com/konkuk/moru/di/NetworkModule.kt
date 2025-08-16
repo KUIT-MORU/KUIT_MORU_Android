@@ -12,6 +12,7 @@ import com.konkuk.moru.data.service.InsightService
 import com.konkuk.moru.data.service.MyRoutineService
 import com.konkuk.moru.data.service.RoutineService
 import com.konkuk.moru.data.service.NotificationService
+import com.konkuk.moru.data.service.OBUserService
 import com.konkuk.moru.data.service.RoutineFeedService
 import com.konkuk.moru.data.service.RoutineUserService
 import com.konkuk.moru.data.service.SearchService
@@ -29,14 +30,24 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 import javax.inject.Named
+import kotlin.jvm.java
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
+    @Provides @Singleton
+    @Named("obUserAuthed")
+    fun provideOBUserServiceAuthed(@Named("jsonRetrofit") retrofit: Retrofit): OBUserService =
+        retrofit.create(OBUserService::class.java)
 
-    @Provides
-    @Singleton
+    // [추가] 무인증용 OBUserService (닉네임 체크 전용)
+    @Provides @Singleton
+    @Named("obUserAuthless")
+    fun provideOBUserServiceAuthless(@Named("authlessRetrofit") retrofit: Retrofit): OBUserService =
+        retrofit.create(OBUserService::class.java)
+
+    @Provides @Singleton
     fun provideGson(): Gson = GsonBuilder()
         .setLenient()
         .create()
@@ -130,6 +141,19 @@ object NetworkModule {
             .client(okHttp)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
+
+    @Provides
+    @Singleton
+    @Named("jsonRetrofit")
+    fun provideJsonRetrofit(
+        baseUrl: String,
+        okHttp: OkHttpClient,
+        json: Json
+    ): Retrofit = Retrofit.Builder()
+        .baseUrl(baseUrl)
+        .client(okHttp)
+        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+        .build()
 
     @Provides
     @Singleton

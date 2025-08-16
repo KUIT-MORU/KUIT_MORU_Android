@@ -25,10 +25,12 @@ import com.konkuk.moru.core.util.modifier.noRippleClickable
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 import com.konkuk.moru.R
+import com.konkuk.moru.presentation.myactivity.viewmodel.InsightUiState
 import com.konkuk.moru.presentation.navigation.Route
 
 @Composable
 fun MyActivityTab(
+    insightData: InsightUiState,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     navController: NavHostController,
@@ -100,7 +102,7 @@ fun MyActivityTab(
         }
 
         1 -> {
-            InsightContentSection(70)
+            InsightContentSection((insightData.routineCompletionRate*100).toInt(),insightData)
         }
     }
 }

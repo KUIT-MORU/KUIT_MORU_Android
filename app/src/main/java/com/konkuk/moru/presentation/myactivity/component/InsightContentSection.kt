@@ -11,12 +11,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.konkuk.moru.presentation.myactivity.viewmodel.InsightUiState
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
 fun InsightContentSection(
     insightScore: Int?,
+    insightData: InsightUiState,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -25,7 +27,7 @@ fun InsightContentSection(
     ) {
         if (insightScore != null) {
             Spacer(modifier = Modifier.height(32.dp))
-            InsightGraph()
+            InsightGraph(insightData)
         } else {
             Column(
                 modifier = Modifier

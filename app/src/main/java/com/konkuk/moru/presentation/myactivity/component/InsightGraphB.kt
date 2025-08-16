@@ -50,7 +50,7 @@ fun InsightGraphB(
             modifier = Modifier.fillMaxWidth()
         ){
             Text(
-                text = "평균 루틴 실천 개수",
+                text = "평균 루틴 실천률",
                 style = typography.body_SB_16,
                 color = colors.darkGray
             )

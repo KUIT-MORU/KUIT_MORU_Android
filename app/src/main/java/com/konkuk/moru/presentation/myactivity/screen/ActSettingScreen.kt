@@ -55,7 +55,7 @@ fun ActSettingScreen(
     ) {
         Spacer(modifier = Modifier.padding(16.dp))
         BackTitle(title = "설정", navController)
-        Spacer(modifier = Modifier.padding(48.dp))
+        Spacer(modifier = Modifier.padding(20.dp))
 
         Column(
             modifier = Modifier
