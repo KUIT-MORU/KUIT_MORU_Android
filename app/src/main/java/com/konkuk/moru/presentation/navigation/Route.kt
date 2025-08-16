@@ -71,6 +71,7 @@ sealed class Route(
             return "act_record_detail/${Uri.encode(logId)}"
         }
     }
+    data object ActPolicy : Route(route = "act_policy")
 
     data object ActInsightInfo : Route(route = "act_insight")
 

@@ -27,6 +27,7 @@ import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewMode
 import com.konkuk.moru.presentation.myactivity.screen.ActFabTagScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActInsightInfoClickScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActMainScreen
+import com.konkuk.moru.presentation.myactivity.screen.ActPrivacyPolicyScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActProfileScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActRecordDetailScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActRecordScreen
@@ -462,6 +463,12 @@ fun MainNavGraph(
             val logId = backStackEntry.arguments?.getString("logId") ?: return@composable
             ActRecordDetailScreen(
                 logId = logId,
+                navController = navController
+            )
+        }
+
+        composable(route = Route.ActPolicy.route) {
+            ActPrivacyPolicyScreen(
                 navController = navController
             )
         }
