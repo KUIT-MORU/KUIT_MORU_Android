@@ -20,15 +20,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.Routine
-import com.konkuk.moru.presentation.myactivity.screen.RoutineStep
-import com.konkuk.moru.presentation.routinefeed.component.modale.CenteredInfoDialog
 import com.konkuk.moru.ui.theme.MORUTheme
-import java.time.LocalTime
-import kotlin.time.Duration
 
 
 @Composable

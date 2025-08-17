@@ -7,10 +7,8 @@ import com.konkuk.moru.core.datastore.RoutineSyncBus
 import com.konkuk.moru.core.datastore.SocialMemory
 import com.konkuk.moru.core.util.modifier.toIsoDurationOrZero
 import com.konkuk.moru.data.dto.request.RoutineFeedCreateRequest
-import com.konkuk.moru.data.mapper.toFeedCreateRequest
 import com.konkuk.moru.data.mapper.toRoutineModel
 import com.konkuk.moru.data.mapper.toUiModel
-import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.model.SimilarRoutine
 import com.konkuk.moru.data.repositoryimpl.RoutineRepository
@@ -21,7 +19,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds

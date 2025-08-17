@@ -33,9 +33,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
 import javax.inject.Inject
-import kotlin.collections.forEach
 
 @HiltViewModel
 class MyRoutineDetailViewModel @Inject constructor(
