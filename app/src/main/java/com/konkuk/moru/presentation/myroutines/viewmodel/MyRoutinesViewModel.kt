@@ -169,9 +169,39 @@ class MyRoutinesViewModel @Inject constructor(
      *  - 항상 sortType과 함께 서버로 전달 → 서버가 정렬 + (선택시)요일 필터를 함께 적용
      *  - 서버가 TIME+null을 아직 막아 에러면, 오늘 요일로 1회 폴백
      */
-
-
     private suspend fun fetchFromServer() {
+        val state = _uiState.value
+        val sortType = when (state.selectedSortOption) {
+            SortOption.BY_TIME -> "TIME"
+            SortOption.LATEST -> "LATEST"
+            SortOption.POPULAR -> "POPULAR"
+        }
+        val selectedDay = state.selectedDay
+
+        Log.d(TAG_VM, "fetchFromServer() start: sort=$sortType, day=$selectedDay")
+
+        val base: List<MyRoutineUi> =
+            if (selectedDay == null) {
+                // ✅ 요일 미선택: 서버에 dayOfWeek=null로 그대로 전달 → "전체 목록"
+                repo.getMyRoutines(sortType, null, 0, 50)
+            } else {
+                // ✅ 요일 선택: 서버가 TIME+day로 필터링 (sortType 무시 X)
+                //   (서버가 sortType도 적용한다면 그대로, 아니면 아래서 보정정렬)
+                repo.getMyRoutines(sortType, selectedDay, 0, 50)
+            }
+
+        // (선택) 서버 정렬이 들쭉날쭉할 때만 보정 정렬
+        val result = when (sortType) {
+            "POPULAR" -> base.sortedByDescending { it.likes }
+            "LATEST" -> base.sortedByDescending { it.createdAt.toEpochMsOrZero() }
+            else -> base // TIME은 서버 정렬 신뢰(필요하면 scheduledTime로 로컬정렬)
+        }
+
+        Log.d("MyRoutinesVM", "fetchFromServer() -> resultSize=${result.size}")
+        _sourceRoutines.value = result
+    }
+
+    /*private suspend fun fetchFromServer() {
         val state = _uiState.value
         val sortType = when (state.selectedSortOption) {
             SortOption.BY_TIME -> "TIME"
@@ -185,12 +215,12 @@ class MyRoutinesViewModel @Inject constructor(
         val result: List<MyRoutineUi> = try {
             if (selectedDay == null) {
                 if (sortType == "TIME") {
-                    val all = repo.getMyRoutines("LATEST", null, 0, 50)
-                    Log.d(TAG_VM, "fetchFromServer(): LATEST got=${all.size}")
-                    all.sortedWith(
-                        compareBy<MyRoutineUi> { it.scheduledTime ?: LocalTime.MAX }
-                            .thenBy { it.title }
-                    )
+                    // ✅ 서버 TIME 정렬을 '오늘 요일'로 명시적으로 사용
+                    val today = LocalDate.now(ZoneId.systemDefault()).dayOfWeek
+                    val res = repo.getMyRoutines("TIME", today, 0, 50)
+                    Log.d(TAG_VM, "fetchFromServer(): TIME(today=$today) got=${res.size}")
+                    // 서버가 이미 시간순 정렬을 보장한다면 그대로 반환
+                    res
                 } else {
                     val res = repo.getMyRoutines(sortType, null, 0, 50)
                     Log.d(TAG_VM, "fetchFromServer(): $sortType got=${res.size}")
@@ -211,14 +241,12 @@ class MyRoutinesViewModel @Inject constructor(
                 val today = LocalDate.now(ZoneId.systemDefault()).dayOfWeek
                 Log.w(TAG_VM, "fetchFromServer(): fallback TIME today=$today")
                 repo.getMyRoutines("TIME", today, 0, 50)
-            } else {
-                throw e
-            }
+            } else throw e
         }
 
         Log.d("MyRoutinesVM", "fetchFromServer() -> resultSize=${result.size}")
         _sourceRoutines.value = result
-    }
+    }*/
 
     fun loadRoutines() {
         viewModelScope.launch { fetchFromServer() }
@@ -236,6 +264,19 @@ class MyRoutinesViewModel @Inject constructor(
     fun openTimePicker(routineId: String) {
         openPickerJob?.cancel()
         Log.d(TAG_VM, "openTimePicker($routineId) – fetch schedules...")
+
+// ✅ 이전 루틴에서 남은 편집 상태가 있으면 먼저 초기화 (PATCH/POST 오동작 방지)
+        _uiState.update {
+            it.copy(
+                editingRoutineId = routineId,
+                editingScheduleId = null,
+                initialTimeForSheet = null,
+                initialDaysForSheet = emptySet(),
+                initialAlarmForSheet = true
+            )
+        }
+
+
         openPickerJob = viewModelScope.launch {
             val schedules = repo.getSchedules(routineId)
             Log.d(
@@ -307,6 +348,8 @@ class MyRoutinesViewModel @Inject constructor(
                 }
 
                 RoutineSyncBus.publish(RoutineSyncBus.Event.MyRoutinesChanged)
+                // ✅ 즉시 반영 (버스 지연/디바운스 상황 대비)
+                loadRoutines()
             } catch (e: Exception) {
                 refreshRoutines()
             } finally {

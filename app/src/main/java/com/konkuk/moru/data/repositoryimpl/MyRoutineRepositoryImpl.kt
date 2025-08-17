@@ -46,8 +46,53 @@ class MyRoutineRepositoryImpl @Inject constructor(
         else -> "CUSTOM"
     }
 
-
     override suspend fun getMyRoutines(
+        sortType: String,
+        dayOfWeek: DayOfWeek?,
+        page: Int,
+        size: Int
+    ): List<MyRoutineUi> {
+        val dayParam = dayOfWeek?.toMyApiString()
+
+        // ✅ 폴백: TIME + day=null -> 전체 목록을 불러와 클라에서 시간순 정렬
+        if (sortType == "TIME" && dayParam == null) {
+            val all = service.getMyRoutines(
+                sortType = "LATEST", // 전체를 가장 쉽게 가져오는 소트로 호출
+                dayOfWeek = null,
+                page = page,
+                size = size
+            ).content
+
+            val sorted = all.sortedWith(
+                compareBy<MyRoutineSummaryDto> {
+                    it.requiredTime.parseIsoDurationSecondsOrNull() ?: Long.MAX_VALUE // null은 맨 뒤
+                }.thenBy { it.title } // 동점 안정 정렬
+            )
+            return sorted.map { it.toMyUi() }
+        }
+
+        // 기존 흐름
+        val res = service.getMyRoutines(
+            sortType = sortType,
+            dayOfWeek = dayParam,
+            page = page,
+            size = size
+        )
+        val dtoList = res.content
+        val sortedDto = when (sortType) {
+            "POPULAR" -> dtoList.sortedByDescending { it.likeCount }
+            "LATEST" -> dtoList.sortedByDescending { toEpochFlexible(it.createdAt) }
+            else -> dtoList // TIME(+day 지정)은 서버 정렬 신뢰
+        }
+        return sortedDto.map { it.toMyUi() }
+    }
+
+    private fun String?.parseIsoDurationSecondsOrNull(): Long? = try {
+        this?.let { java.time.Duration.parse(it).seconds }
+    } catch (_: Exception) {
+        null
+    }
+    /*override suspend fun getMyRoutines(
         sortType: String,
         dayOfWeek: DayOfWeek?,
         page: Int,
@@ -76,7 +121,7 @@ class MyRoutineRepositoryImpl @Inject constructor(
 
         // [유지] 정렬된 DTO → UI 매핑 (likeCount → likes 매핑 포함)
         return sortedDto.map { it.toMyUi() }
-    }
+    }*/
 
     private fun toEpoch(iso: String): Long = try {
         // 예) "2025-08-15T02:46:24.026Z"
@@ -286,23 +331,33 @@ class MyRoutineRepositoryImpl @Inject constructor(
         isSimple: Boolean?,
         isUserVisible: Boolean?
     ) {
-        val steps2d = steps?.let { list ->
-            listOf(list.map { (name, order, iso) ->
-                PatchOrCreateStepRequest(name, order, iso)
-            })
+        val steps1d = steps?.map { (name, order, iso) ->
+            PatchOrCreateStepRequest(
+                name = name,
+                stepOrder = order,
+                estimatedTime = iso
+            )
         }
         val body = PatchRoutineRequest(
             title = title,
             imageUrl = imageUrl,
             tags = tagNames,
             description = description,
-            steps = steps2d,
+            steps = steps1d,
             selectedApps = selectedApps,
             isSimple = isSimple,
             isUserVisible = isUserVisible
         )
         val res = service.patchRoutine(routineId, body)
-        if (!res.isSuccessful) error("patchRoutine failed: ${res.code()}")
+        if (res.isSuccessful) return
+
+        // ❗ 서버가 500이면 selectedApps만 제외하고 한번 더 시도
+        if (res.code() == 500 && !selectedApps.isNullOrEmpty()) {
+            val bodyWithoutApps = body.copy(selectedApps = null)
+            val retry = service.patchRoutine(routineId, bodyWithoutApps)
+            if (retry.isSuccessful) return
+        }
+        error("patchRoutine failed: ${res.code()}")
     }
 
     // ===== [추가] STEP =====

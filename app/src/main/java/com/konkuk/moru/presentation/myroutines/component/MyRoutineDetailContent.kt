@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,7 +30,11 @@ import com.konkuk.moru.data.model.RoutineStepActions
 import com.konkuk.moru.core.component.routinedetail.routineStepEditableList
 import com.konkuk.moru.presentation.myroutines.viewmodel.MyRoutineDetailViewModel
 import com.konkuk.moru.presentation.routinecreate.component.TimePickerDialog
+import com.konkuk.moru.presentation.routinefeed.component.modale.CenteredInfoDialog
+import com.konkuk.moru.presentation.routinefeed.component.modale.CustomDialog
 import com.konkuk.moru.ui.theme.MORUTheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 
 
 @Composable
@@ -47,6 +52,13 @@ fun MyRoutineDetailContent(
     val routine = uiState.routine ?: return
     val isEditMode = uiState.isEditMode
 //    val isEditMode = true
+
+
+    // 저장 관련 다이얼로그 상태
+    var showSaveConfirmDialog by remember { mutableStateOf(false) }
+    var showSaveCompleteDialog by remember { mutableStateOf(false) }
+    var showSaveFailDialog by remember { mutableStateOf(false) }
+
 
     // LazyColumn에서 실제 스텝 리스트가 시작되기 전의 아이템 개수 (Card, Tag, "STEP" 헤더)
     val headerItemCount = 3
@@ -67,7 +79,26 @@ fun MyRoutineDetailContent(
             isTimePickerVisible = true
         }
     )
+    
+    LaunchedEffect(viewModel) {
+        viewModel.saveCompleted.collectLatest { ok ->
+            if (ok) {
+                showSaveCompleteDialog = true
+            } else {
+                showSaveFailDialog = true
+            }
+        }
+    }
 
+    /*LaunchedEffect(Unit) {
+        viewModel.saveCompleted.collect { ok ->
+            if (ok) {
+                showSaveCompleteDialog = true   // ✅ 저장 성공 다이얼로그 ON
+            } else {
+                showSaveFailDialog = true       // ❌ 저장 실패 다이얼로그 ON
+            }
+        }
+    }*/
 
     Column(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -144,10 +175,10 @@ fun MyRoutineDetailContent(
             text = if (isEditMode) "완료하기" else "수정하기",
             onClick = {
                 if (isEditMode) {
-                    viewModel.saveChanges()
+                    showSaveConfirmDialog = true
+                } else {
+                    viewModel.setEditMode(true)
                 }
-                // ✨ ViewModel에 모드 변경을 요청
-                viewModel.setEditMode(!isEditMode)
             },
             modifier = Modifier
                 .height(80.dp)
@@ -156,6 +187,7 @@ fun MyRoutineDetailContent(
             contentColor = MORUTheme.colors.black,
             shape = RoundedCornerShape(size = 0.dp)
         )
+
     }
     if (isTimePickerVisible) {
         val init =
@@ -179,7 +211,62 @@ fun MyRoutineDetailContent(
             }
         )
     }
+
+// 저장 확인 다이얼로그 (삭제 다이얼로그와 동일 UI)
+    if (showSaveConfirmDialog) {
+        CustomDialog(
+            onDismissRequest = { showSaveConfirmDialog = false },
+            onConfirmation = {
+                showSaveConfirmDialog = false
+                viewModel.saveChanges()
+            },
+            content = {
+                androidx.compose.material3.Text(
+                    text = "변경사항을 저장하시겠습니까?",
+                    style = MORUTheme.typography.title_B_20,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+        )
+    }
+
+    // 저장 성공 다이얼로그
+    if (showSaveCompleteDialog) {
+        CenteredInfoDialog(
+            onDismissRequest = { showSaveCompleteDialog = false },
+            content = {
+                androidx.compose.material3.Text(
+                    text = "저장되었습니다!",
+                    color = Color.LightGray,
+                    style = MORUTheme.typography.desc_M_14
+                )
+            }
+        )
+        LaunchedEffect(Unit) {
+            delay(1500)
+            showSaveCompleteDialog = false
+        }
+    }
+
+    // 저장 실패 다이얼로그
+    if (showSaveFailDialog) {
+        CenteredInfoDialog(
+            onDismissRequest = { showSaveFailDialog = false },
+            content = {
+                androidx.compose.material3.Text(
+                    text = "저장에 실패했어요. 네트워크 상태를 확인해 주세요.",
+                    color = Color.LightGray,
+                    style = MORUTheme.typography.desc_M_14
+                )
+            }
+        )
+        LaunchedEffect(Unit) {
+            delay(1500)
+            showSaveFailDialog = false
+        }
+    }
 }
+
 
 /**
  * '보기 모드'일 때의 UI를 미리 보여줍니다.

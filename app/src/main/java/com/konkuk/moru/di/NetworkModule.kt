@@ -36,18 +36,21 @@ import kotlin.jvm.java
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     @Named("obUserAuthed")
     fun provideOBUserServiceAuthed(@Named("jsonRetrofit") retrofit: Retrofit): OBUserService =
         retrofit.create(OBUserService::class.java)
 
     // [추가] 무인증용 OBUserService (닉네임 체크 전용)
-    @Provides @Singleton
+    @Provides
+    @Singleton
     @Named("obUserAuthless")
     fun provideOBUserServiceAuthless(@Named("authlessRetrofit") retrofit: Retrofit): OBUserService =
         retrofit.create(OBUserService::class.java)
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideGson(): Gson = GsonBuilder()
         .setLenient()
         .create()
@@ -83,6 +86,7 @@ object NetworkModule {
         return HttpLoggingInterceptor().apply {
             level =
                 if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
+            redactHeader("Authorization")
         }
     }
 
