@@ -13,12 +13,21 @@ interface MyRoutineRepository {
         size: Int
     ): List<MyRoutineUi>
 
+
+    suspend fun createSchedule(
+        routineId: String,
+        time: String,                  // "HH:mm:ss"
+        days: Set<DayOfWeek>,
+        alarm: Boolean
+    ): Boolean
+
     suspend fun getRoutineDetail(routineId: String): MyRoutineUi
 
     // [추가] 상세 원본 DTO (디테일 화면 매핑용)
     suspend fun getRoutineDetailRaw(routineId: String): MyRoutineDetailDto
 
     suspend fun getSchedules(routineId: String): List<MyRoutineSchedule>
+
 
     // ✅ 안전 삭제 (스케줄 먼저 지우고 재시도)
     suspend fun deleteRoutineSafe(routineId: String): Boolean
@@ -64,6 +73,18 @@ interface MyRoutineRepository {
     suspend fun uploadImageAndGetUrl(fileName: String, bytes: ByteArray, mime: String): String
 
 
+    private fun inferRepeatType(days: Set<java.time.DayOfWeek>): String = when {
+        days.size == 7 -> "EVERYDAY"
+        days == setOf(
+            DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
+            DayOfWeek.THURSDAY, DayOfWeek.FRIDAY
+        ) -> "WEEKDAYS"
+        days == setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY) -> "WEEKENDS"
+        else -> "CUSTOM"
+    }
+
+
+
 }
 
 // [추가] 스케줄 도메인도 접두어
@@ -71,5 +92,7 @@ data class MyRoutineSchedule(
     val id: String,
     val dayOfWeek: String, // "MON"...
     val time: String,      // "HH:mm:ss"
-    val alarmEnabled: Boolean
+    val alarmEnabled: Boolean,
+    val repeatType: String? = null, // ⬅︎ 추가
+    val daysToCreate: List<String>? = null // ⬅︎ 추가
 )

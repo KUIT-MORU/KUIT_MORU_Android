@@ -204,16 +204,11 @@ class MyRoutineDetailViewModel @Inject constructor(
             ?.use { if (it.moveToFirst()) it.getString(0) else null }
             ?: "upload_${System.currentTimeMillis()}.jpg"
 
-        val bytes = resolver.openInputStream(uri)?.use { ins ->
-            val buf = ByteArray(16 * 1024)
-            val bos = ByteArrayOutputStream()
-            while (true) {
-                val r = ins.read(buf); if (r <= 0) break; bos.write(buf, 0, r)
-            }
-            bos.toByteArray()
-        } ?: ByteArray(0)
+        val bytes = resolver.openInputStream(uri)?.use { it.readBytes() } ?: ByteArray(0)
 
-        repo.uploadImageAndGetUrl(fileName, bytes, mime)
+        val uploaded = repo.uploadImageAndGetUrl(fileName, bytes, mime)
+        android.util.Log.d("MyRoutineDetailVM", "uploaded imageUrl=$uploaded") // [추가]
+        uploaded
     }
 
     // ===== 태그 (UI 즉시 반영: 이름 리스트) =====

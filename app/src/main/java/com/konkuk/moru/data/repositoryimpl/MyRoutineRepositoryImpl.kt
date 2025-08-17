@@ -1,5 +1,6 @@
 package com.konkuk.moru.data.repositoryimpl
 
+import com.konkuk.moru.data.dto.request.ScheduleUpsertRequest
 import com.konkuk.moru.data.dto.response.MyRoutine.AddTagsRequest
 import com.konkuk.moru.data.dto.response.MyRoutine.MyRoutineDetailDto
 import com.konkuk.moru.data.dto.response.MyRoutine.MyRoutineSummaryDto
@@ -14,6 +15,7 @@ import com.konkuk.moru.data.service.MyRoutineService
 import com.konkuk.moru.domain.repository.MyRoutineRepository
 import com.konkuk.moru.domain.repository.MyRoutineSchedule
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -31,6 +33,19 @@ class MyRoutineRepositoryImpl @Inject constructor(
     private val service: MyRoutineService,
     private val imageService: ImageService // [추가]
 ) : MyRoutineRepository {
+
+
+    private fun inferRepeatType(days: Set<java.time.DayOfWeek>): String = when {
+        days.size == 7 -> "EVERYDAY"
+        days == setOf(
+            DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
+            DayOfWeek.THURSDAY, DayOfWeek.FRIDAY
+        ) -> "WEEKDAYS"
+
+        days == setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY) -> "WEEKENDS"
+        else -> "CUSTOM"
+    }
+
 
     override suspend fun getMyRoutines(
         sortType: String,
@@ -103,23 +118,6 @@ class MyRoutineRepositoryImpl @Inject constructor(
 
     private fun Response<Unit>.isOkOr404() = isSuccessful || code() == 404
 
-    private suspend fun purgeSchedules(routineId: String): Boolean {
-        return try {
-            val bulk = service.deleteAllSchedules(routineId)
-            if (bulk.isOkOr404()) return true
-
-            // 벌크 실패 시 개별 삭제로 폴백
-            val list = runCatching { service.getSchedules(routineId) }.getOrDefault(emptyList())
-            var allOk = true
-            list.forEach { sch ->
-                val r = service.deleteSchedule(routineId, sch.id)
-                if (!r.isOkOr404()) allOk = false
-            }
-            allOk
-        } catch (_: Exception) {
-            false
-        }
-    }
 
     // 404는 “이미 삭제됨”으로 간주하여 성공 처리
     override suspend fun deleteRoutineSafe(routineId: String): Boolean {
@@ -136,6 +134,36 @@ class MyRoutineRepositoryImpl @Inject constructor(
         return false
     }
 
+    override suspend fun createSchedule(
+        routineId: String,
+        time: String,
+        days: Set<DayOfWeek>,
+        alarm: Boolean
+    ): Boolean {
+        require(days.isNotEmpty()) { "days is empty. At least one day must be selected." }
+
+        val body = ScheduleUpsertRequest(
+            repeatType = inferRepeatType(days),
+            daysToCreate = days.map { it.toMyApiString() },
+            time = time,
+            alarmEnabled = alarm
+        )
+        val res = service.createSchedule(routineId, body)
+        if (!res.isSuccessful) {
+            val err = try {
+                res.errorBody()?.string()
+            } catch (_: Exception) {
+                null
+            }
+            throw IllegalStateException("createSchedule failed: ${res.code()} $err")
+        }
+        // (선택) 서버가 리스트를 돌려주면 비었을 때 실패 취급해도 됨
+        val created = res.body().orEmpty()
+        if (created.isEmpty()) {
+            throw IllegalStateException("createSchedule returned empty list (days=${body.daysToCreate})")
+        }
+        return true
+    }
 
     override suspend fun deleteRoutine(routineId: String) {
         val r = service.deleteRoutine(routineId)
@@ -143,17 +171,36 @@ class MyRoutineRepositoryImpl @Inject constructor(
     }
 
     // 스케줄 관련 로직
-
     override suspend fun getSchedules(routineId: String): List<MyRoutineSchedule> {
-        return service.getSchedules(routineId).map {
+        val list = service.getSchedules(routineId)
+        return list.map {
             MyRoutineSchedule(
                 id = it.id,
-                dayOfWeek = it.dayOfWeek,
-                time = it.time,
-                alarmEnabled = it.alarmEnabled
+                dayOfWeek = it.dayOfWeek,          // 서버가 주는 "MON" 등 3글자 그대로
+                time = it.time ?: "00:00:00",      // null 보호
+                alarmEnabled = it.alarmEnabled ?: false,
+                repeatType = it.repeatType,        // (있으면 그대로)
+                daysToCreate = it.daysToCreate     // (있으면 그대로)
             )
         }
     }
+
+    /*override suspend fun getSchedules(routineId: String): List<MyRoutineSchedule> {
+
+
+        return service.getSchedules(routineId).map { dto ->
+            MyRoutineSchedule(
+                id = dto.id,
+                dayOfWeek = dto.dayOfWeek,
+                time = dto.time,
+                alarmEnabled = dto.alarmEnabled,
+                repeatType = dto.repeatType,
+                daysToCreate = dto.daysToCreate
+            )
+
+        }
+
+    }*/
 
     override suspend fun deleteAllSchedules(routineId: String) {
         val r = service.deleteAllSchedules(routineId)
@@ -178,12 +225,50 @@ class MyRoutineRepositoryImpl @Inject constructor(
             time = time,
             alarmEnabled = alarm
         )
-        return service.patchSchedule(routineId, schId, req).map {
+
+        val res = service.patchSchedule(routineId, schId, req)
+        if (res.isSuccessful) {
+            val body = res.body() ?: emptyList()
+            return body.map { dto ->
+                MyRoutineSchedule(
+                    id = dto.id,
+                    dayOfWeek = dto.dayOfWeek,
+                    time = dto.time,
+                    alarmEnabled = dto.alarmEnabled,
+                    repeatType = dto.repeatType,
+                    daysToCreate = dto.daysToCreate
+                )
+            }
+        }
+
+        // 🔁 서버가 또 500을 내면 “전체 치우고 다시 만들기”로 폴백
+        service.deleteAllSchedules(routineId)
+        val created = service.createSchedule(
+            routineId,
+            ScheduleUpsertRequest(
+                repeatType = "CUSTOM",
+                daysToCreate = days.map { it.toMyApiString() },
+                time = time,
+                alarmEnabled = alarm
+            )
+        )
+        if (!created.isSuccessful) {
+            val err = try {
+                created.errorBody()?.string()
+            } catch (_: Exception) {
+                null
+            }
+            throw IllegalStateException("fallback createSchedule failed: ${created.code()} $err")
+        }
+        // 생성 직후 서버 상태 다시 가져와 리턴
+        return service.getSchedules(routineId).map { dto ->
             MyRoutineSchedule(
-                id = it.id,
-                dayOfWeek = it.dayOfWeek,
-                time = it.time,
-                alarmEnabled = it.alarmEnabled
+                id = dto.id,
+                dayOfWeek = dto.dayOfWeek,
+                time = dto.time,
+                alarmEnabled = dto.alarmEnabled,
+                repeatType = dto.repeatType,
+                daysToCreate = dto.daysToCreate
             )
         }
     }
@@ -257,19 +342,38 @@ class MyRoutineRepositoryImpl @Inject constructor(
     }
 
     // ===== [추가] 이미지 업로드 =====
+    // ===== [변경] 이미지 업로드 =====
     override suspend fun uploadImageAndGetUrl(
         fileName: String,
         bytes: ByteArray,
         mime: String
     ): String {
-        val media = mime.toMediaType()
-        val body: RequestBody = bytes.toRequestBody(media, 0, bytes.size)
+        // [변경] toMediaTypeOrNull()로 NPE/IllegalArgumentException 방지
+        val media = mime.toMediaTypeOrNull() ?: "application/octet-stream".toMediaType() // [변경]
+        val body: RequestBody = bytes.toRequestBody(media) // offset/len 지정 불필요
         val part = MultipartBody.Part.createFormData("file", fileName, body)
+
         val map = imageService.upload(part)
-        // 서버가 어떤 키로 주든 안전하게 파싱
-        return map["url"] ?: map["location"] ?: map["key"]
-        ?: error("upload response missing url/location/key")
+
+        // [변경] 서버가 내려주는 "imageUrl" 키 우선 파싱
+        val raw = map["imageUrl"] // [추가]
+            ?: map["url"]
+            ?: map["location"]
+            ?: map["key"]
+            ?: error("upload response missing imageUrl/url/location/key")
+
+        // [선택] 서버가 "/temp/..." 같이 '상대경로'를 준다면 절대경로로 변환하려면 아래 사용
+        // return toAbsoluteUrl(BuildConfig.BASE_URL, raw)
+
+        return raw // [변경] 일단 서버가 준 값 그대로 반환
     }
 
-
+    // [선택] 상대경로 -> 절대경로 변환 유틸 (필요시 주석 해제)
+    /*
+    private fun toAbsoluteUrl(base: String, pathOrUrl: String): String =
+        if (pathOrUrl.startsWith("http", ignoreCase = true)) pathOrUrl
+        else base.trimEnd('/') + "/" + pathOrUrl.removePrefix("/")
+    */
 }
+
+

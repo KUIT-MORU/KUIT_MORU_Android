@@ -1,7 +1,9 @@
 package com.konkuk.moru.presentation.myroutines.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.konkuk.moru.core.datastore.RoutineSyncBus
 import com.konkuk.moru.data.dto.response.MyRoutine.MyRoutineUi
 import com.konkuk.moru.data.mapper.toDayOfWeekOrNull
 import com.konkuk.moru.data.mapper.toMyLocalTimeOrNull
@@ -24,11 +26,21 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+import com.konkuk.moru.core.util.toEpochMsOrZero
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onStart
+
 
 @HiltViewModel
 class MyRoutinesViewModel @Inject constructor(
     private val repo: MyRoutineRepository
 ) : ViewModel() {
+
+
+    private val TAG_VM = "MyRoutinesVM"
+    private val TAG_REPO = "MyRoutineRepo"
 
     private val _sourceRoutines = MutableStateFlow<List<MyRoutineUi>>(emptyList())
     val routinesToDisplay: StateFlow<List<MyRoutineUi>> =
@@ -38,14 +50,25 @@ class MyRoutinesViewModel @Inject constructor(
     val uiState: StateFlow<MyRoutinesUiState> = _uiState.asStateFlow()
 
     init {
-        refreshRoutines()
+        // 1) 트리거 스트림을 하나로 합치기
+        val uiTriggers = uiState
+            .map { it.selectedSortOption to it.selectedDay }
+            .distinctUntilChanged()
+            .map { Unit }
+
+        val busTriggers = RoutineSyncBus.events
+            .filterIsInstance<RoutineSyncBus.Event.MyRoutinesChanged>()
+            .map { Unit }
+
+        // 2) 최초 1회 + 디바운스 + 수집은 한 곳에서만
         viewModelScope.launch {
-            uiState
-                .map { it.selectedSortOption to it.selectedDay }
-                .distinctUntilChanged()
-                .collect { refreshRoutines() }
+            merge(uiTriggers, busTriggers)
+                .onStart { emit(Unit) }           // 최초 1회
+                .debounce(150)                     // 짧은 디바운스로 연타 방지
+                .collect { loadRoutines() }
         }
     }
+
 
     fun onSortOptionSelected(option: SortOption) {
         // ✅ 요일 선택값은 건드리지 않음 (정렬과 독립)
@@ -157,38 +180,43 @@ class MyRoutinesViewModel @Inject constructor(
         }
         val selectedDay = state.selectedDay
 
+        Log.d(TAG_VM, "fetchFromServer() start: sort=$sortType, day=$selectedDay")
+
         val result: List<MyRoutineUi> = try {
             if (selectedDay == null) {
-                // 날짜 미선택 → sortType만으로 전체
-                repo.getMyRoutines(
-                    sortType = sortType,
-                    dayOfWeek = null,
-                    page = 0, size = 50
-                )
+                if (sortType == "TIME") {
+                    val all = repo.getMyRoutines("LATEST", null, 0, 50)
+                    Log.d(TAG_VM, "fetchFromServer(): LATEST got=${all.size}")
+                    all.sortedWith(
+                        compareBy<MyRoutineUi> { it.scheduledTime ?: LocalTime.MAX }
+                            .thenBy { it.title }
+                    )
+                } else {
+                    val res = repo.getMyRoutines(sortType, null, 0, 50)
+                    Log.d(TAG_VM, "fetchFromServer(): $sortType got=${res.size}")
+                    res
+                }
             } else {
-                // 날짜 선택됨 → 먼저 요일 교집합 집합을 확보
-                // 서버가 TIME에서만 요일 필터를 보장하므로 TIME으로 가져온 뒤, 원하는 정렬로 재정렬
-                val dayFiltered = repo.getMyRoutines(
-                    sortType = "TIME",
-                    dayOfWeek = selectedDay,
-                    page = 0, size = 50
-                )
+                val dayFiltered = repo.getMyRoutines("TIME", selectedDay, 0, 50)
+                Log.d(TAG_VM, "fetchFromServer(): TIME(day=$selectedDay) got=${dayFiltered.size}")
                 when (sortType) {
                     "POPULAR" -> dayFiltered.sortedByDescending { it.likes }
-                    "LATEST" -> dayFiltered.sortedByDescending { it.createdAt } // ISO-8601 기준
+                    "LATEST" -> dayFiltered.sortedByDescending { it.createdAt.toEpochMsOrZero() }
                     else -> dayFiltered.sortedBy { it.scheduledTime ?: LocalTime.MAX }
                 }
             }
         } catch (e: Exception) {
-            // 서버가 TIME+null을 아직 막아놨을 때 대비(이 경로는 selectedDay==null && sortType=="TIME"일 때만 의미 있음)
+            Log.e(TAG_VM, "fetchFromServer() failed: sort=$sortType, day=$selectedDay", e)
             if (sortType == "TIME" && selectedDay == null) {
                 val today = LocalDate.now(ZoneId.systemDefault()).dayOfWeek
+                Log.w(TAG_VM, "fetchFromServer(): fallback TIME today=$today")
                 repo.getMyRoutines("TIME", today, 0, 50)
             } else {
                 throw e
             }
         }
 
+        Log.d("MyRoutinesVM", "fetchFromServer() -> resultSize=${result.size}")
         _sourceRoutines.value = result
     }
 
@@ -203,17 +231,35 @@ class MyRoutinesViewModel @Inject constructor(
 
 
     //스케줄 관련 로직
+    private var openPickerJob: kotlinx.coroutines.Job? = null
+
     fun openTimePicker(routineId: String) {
-        viewModelScope.launch {
-            // 서버 스케줄 조회
+        openPickerJob?.cancel()
+        Log.d(TAG_VM, "openTimePicker($routineId) – fetch schedules...")
+        openPickerJob = viewModelScope.launch {
             val schedules = repo.getSchedules(routineId)
+            Log.d(
+                "MyRoutinesVM",
+                "openTimePicker() rid=$routineId schedules=${schedules.joinToString { "${it.dayOfWeek} ${it.time} alarm=${it.alarmEnabled}" }}"
+            )
 
-            // 초기값 구성
-            val initTime = schedules.firstOrNull()?.time?.toMyLocalTimeOrNull()
-            val initDays = schedules.mapNotNull { it.dayOfWeek.toDayOfWeekOrNull() }.toSet()
-            val initAlarm = schedules.any { it.alarmEnabled }
-            val firstSchId = schedules.firstOrNull()?.id
+            val order = listOf("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")
+            val sorted = schedules.sortedBy { order.indexOf(it.dayOfWeek) }
 
+            val rawDays = sorted.map { it.dayOfWeek }
+            val parsedDays = sorted.mapNotNull { it.dayOfWeek.toDayOfWeekOrNull() }.toSet()
+            Log.d(TAG_VM, "openTimePicker() days raw=$rawDays -> parsed=$parsedDays")
+
+            val timeSet = sorted.mapNotNull { it.time.toMyLocalTimeOrNull() }.toSet()
+            val initTime = if (timeSet.size == 1) timeSet.first() else null
+            val initDays = parsedDays
+            val initAlarm = sorted.any { it.alarmEnabled }
+            val firstSchId = sorted.firstOrNull()?.id
+
+            Log.d(
+                TAG_VM,
+                "openTimePicker() -> initTime=$initTime initDays=$initDays initAlarm=$initAlarm firstSchId=$firstSchId"
+            )
             _uiState.update {
                 it.copy(
                     editingRoutineId = routineId,
@@ -239,31 +285,34 @@ class MyRoutinesViewModel @Inject constructor(
     }
 
     fun onConfirmTimeSet(routineId: String, time: LocalTime, days: Set<DayOfWeek>, alarm: Boolean) {
+
+
         viewModelScope.launch {
-            // 서버 PATCH (스케줄이 하나라도 있을 때)
-            val schId = _uiState.value.editingScheduleId
-            if (schId != null) {
-                repo.updateSchedule(
-                    routineId = routineId,
-                    schId = schId,
-                    time = time.format(HH_MM_SS),
-                    days = days,
-                    alarm = alarm
-                )
-            }
-            // 로컬 UI 갱신
-            _sourceRoutines.update { list ->
-                list.map {
-                    if (it.routineId == routineId) it.copy(
-                        scheduledTime = time,
-                        scheduledDays = days,
-                        isAlarmEnabled = alarm
-                    ) else it
+
+
+            try {
+                if (days.isEmpty()) return@launch
+
+                val schId = _uiState.value.editingScheduleId
+                if (schId != null) {
+                    repo.updateSchedule(routineId, schId, time.format(HH_MM_SS), days, alarm)
+                } else {
+                    repo.createSchedule(routineId, time.format(HH_MM_SS), days, alarm)
                 }
+
+                // 💡 현재 선택된 요일이 새 요일셋에 없으면 필터 해제
+                val curSelected = _uiState.value.selectedDay
+                if (curSelected != null && !days.contains(curSelected)) {
+                    _uiState.update { it.copy(selectedDay = null) }
+                }
+
+                RoutineSyncBus.publish(RoutineSyncBus.Event.MyRoutinesChanged)
+            } catch (e: Exception) {
+                refreshRoutines()
+            } finally {
+                closeTimePicker()
             }
-            closeTimePicker()
         }
     }
-
 
 }
