@@ -1,31 +1,31 @@
 package com.konkuk.moru.presentation.onboarding.model
 
-object OnboardingTags {
-    data class TagDef(val id: String, val label: String)
+import com.konkuk.moru.data.model.TagDef
 
+object OnboardingTags {
     // 상황 태그(ob_rou_tag1)
     val SITUATION = listOf(
-        TagDef("6e78b13a-4282-41f4-bb8e-df8ca3baaa85", "#출근길"),
-        TagDef("ded087ad-fc9e-4a70-b016-7f47d7a05e8f", "#지하철"),
-        TagDef("10d0e7c9-8179-4a48-b101-5376eb0f357a", "#퇴근길"),
-        TagDef("672c6fe1-2ba5-4209-9ca0-95274c0d8e82", "#모닝루틴"),
-        TagDef("e0473b71-fe6c-48bb-a1f2-79ccd6efeab8", "#일어나서"),
-        TagDef("13f7788b-4241-43b5-9f52-67ba6a2024c2", "#저녁"),
-        TagDef("7c5cbe2a-ca4c-4134-ae98-836b19f3adc4", "#자기전"),
-        TagDef("4e9282c3-e6a8-445e-89f8-bb0f3fd1a6a2", "#휴일"),
-        TagDef("1516f576-325b-4cba-8871-36a9970fb743", "#공강"),
+        TagDef("f7af32f3-5125-4382-8cc6-06bb9f9fcb6b", "#출근길"),
+        TagDef("842b851c-1f61-48ec-ad79-cea47c1774fc", "#지하철"),
+        TagDef("076af816-24d4-4c4b-936c-44e017497c59", "#퇴근길"),
+        TagDef("b9915595-8291-4450-a582-e39bbd7b3c25", "#모닝루틴"),
+        TagDef("ab83e0e8-3d4b-4012-ac43-596197536bc2", "#일어나서"),
+        TagDef("d6b5668e-a339-4657-95b9-76e34bf2656d", "#저녁"),
+        TagDef("583991ad-4675-44de-90c1-53d01294307d", "#자기전"),
+        TagDef("236d5c10-244c-4a53-bb0d-ab109da2a7a9", "#휴일"),
+        TagDef("78e51b74-80f5-4286-addb-425fc8b792df", "#공강"),
     )
 
     // 활동 태그(ob_rou_tag2)
     val ACTIVITY = listOf(
-        TagDef("8dcf50a6-ceaa-4e4e-acf8-ef148d50d8fe", "#독서"),
-        TagDef("2ce0449c-ab6e-492a-8d2f-888eed127aa6", "#과제"),
-        TagDef("30da5b0c-adb4-44c3-9be7-8f498fdf5b4b", "#공부"),
-        TagDef("0b2026e7-6b63-4086-b808-763b7238eca7", "#작업"),
-        TagDef("304d8485-60e5-40de-a607-1986888cd0bc", "#다이어트"),
-        TagDef("a2331c30-2aa3-451a-97eb-57f578654447", "#수능"),
-        TagDef("4c1281bf-014f-4aba-829b-be8fb7783a97", "#취준"),
-        TagDef("43605d53-3a05-4c08-93cb-686f6ac55944", "#프로그래밍"),
-        TagDef("8e5874ae-62ec-42a0-a5d8-83e5c252ae48", "#휴식"),
+        TagDef("d840097d-5e0a-4d94-9a92-58d4c01bd7c6", "#독서"),
+        TagDef("2a276076-fd0c-4870-9695-c2ba0faa1b7a", "#과제"),
+        TagDef("15298fde-f2cd-4c37-818a-9ea0166a534c", "#공부"),
+        TagDef("e1729a0d-99d9-4eb3-b7e6-550488dfca2e", "#작업"),
+        TagDef("1ee13c59-49ba-4ef8-a280-de08551abae0", "#다이어트"),
+        TagDef("ee154842-4abb-4560-a49e-f4414f2d6730", "#수능"),
+        TagDef("a5f08f69-0e5a-4e47-adc6-1a9462227fb4", "#취준"),
+        TagDef("48c9f196-53cf-4faa-a369-6a8ae95730d2", "#프로그래밍"),
+        TagDef("c6d12e10-2d73-410e-81a2-3aeb48b8a54f", "#휴식"),
     )
 }
