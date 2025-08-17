@@ -3,6 +3,7 @@ package com.konkuk.moru.data.mapper
 import java.time.DayOfWeek
 import java.time.Duration
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 // [추가] 요일 → 서버 문자열
 fun DayOfWeek.toMyApiString(): String = when (this) {
@@ -21,20 +22,25 @@ fun String?.toMyMinutesOrNull(): Long? = try {
     null
 }
 
-fun String?.toMyLocalTimeOrNull(): LocalTime? = try {
-    this?.let { LocalTime.parse(it) }
-} catch (_: Exception) {
-    null
+// 시간 파싱
+fun String.toMyLocalTimeOrNull(): LocalTime? {
+    val s = trim()
+    return runCatching { LocalTime.parse(s) }.getOrNull() // ISO 기본 (HH:mm[:ss][.SSS]도 커버)
+        ?: runCatching { LocalTime.parse(s.take(8)) }.getOrNull() // "10:06:00xxxxx" 같은 보호
+        ?: runCatching { LocalTime.parse(s, DateTimeFormatter.ofPattern("H:mm")) }.getOrNull()
 }
 
-
-fun String.toDayOfWeekOrNull(): DayOfWeek? = when (this.uppercase()) {
-    "MON" -> DayOfWeek.MONDAY
-    "TUE" -> DayOfWeek.TUESDAY
-    "WED" -> DayOfWeek.WEDNESDAY
-    "THU" -> DayOfWeek.THURSDAY
-    "FRI" -> DayOfWeek.FRIDAY
-    "SAT" -> DayOfWeek.SATURDAY
-    "SUN" -> DayOfWeek.SUNDAY
-    else -> null
+// 요일 파싱 (3글자, 풀네임 모두)
+fun String?.toDayOfWeekOrNull(): DayOfWeek? {
+    if (this.isNullOrBlank()) return null
+    return when (this.uppercase()) {
+        "MON", "MONDAY" -> DayOfWeek.MONDAY
+        "TUE", "TUESDAY" -> DayOfWeek.TUESDAY
+        "WED", "WEDNESDAY" -> DayOfWeek.WEDNESDAY
+        "THU", "THURSDAY" -> DayOfWeek.THURSDAY
+        "FRI", "FRIDAY" -> DayOfWeek.FRIDAY
+        "SAT", "SATURDAY" -> DayOfWeek.SATURDAY
+        "SUN", "SUNDAY" -> DayOfWeek.SUNDAY
+        else -> null
+    }
 }

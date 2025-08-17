@@ -5,11 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.konkuk.moru.core.datastore.RoutineSyncBus
 import com.konkuk.moru.core.datastore.SocialMemory
+import com.konkuk.moru.core.util.modifier.toIsoDurationOrZero
+import com.konkuk.moru.data.dto.request.RoutineFeedCreateRequest
 import com.konkuk.moru.data.mapper.toRoutineModel
 import com.konkuk.moru.data.mapper.toUiModel
-import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.Routine
 import com.konkuk.moru.data.model.SimilarRoutine
+import com.konkuk.moru.data.repositoryimpl.RoutineRepository
 import com.konkuk.moru.domain.repository.RoutineFeedRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -17,7 +19,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
@@ -34,11 +35,18 @@ data class RoutineDetailUiState(
     val errorMessage: String? = null,
     val isLiking: Boolean = false,
     val isScrapping: Boolean = false,
+
+
+    // ===== 내 루틴 추가 관련 상태 =====
+    val isAddingToMine: Boolean = false,   // [추가]
+    val showAddedDialog: Boolean = false,  // [추가]
+    val createdMyRoutineId: String? = null // [추가]
 )
 
 @HiltViewModel
 class RoutineDetailViewModel @Inject constructor(
     private val repository: RoutineFeedRepository,
+    private val routineRepository: RoutineRepository,
     @ApplicationContext private val appContext: Context
 ) : ViewModel() {
 
@@ -296,21 +304,60 @@ class RoutineDetailViewModel @Inject constructor(
                 }
         }
     }
+    // RoutineDetailViewModel
+    fun dismissAddedDialog() {
+        _uiState.update { it.copy(showAddedDialog = false) }
+    }
 
-    // ===== 내 루틴으로 복사(더미) =====
-    fun copyRoutineToMyList() {
-        _uiState.value.routine?.let { original ->
-            val myInfo = DummyData.dummyUsers.find { it.userId == DummyData.MY_USER_ID }
-            val newRoutine = original.copy(
-                routineId = UUID.randomUUID().toString(),
-                authorId = DummyData.MY_USER_ID,
-                authorName = myInfo?.nickname ?: "MORU (나)",
-                authorProfileUrl = myInfo?.profileImageUrl,
-                isLiked = false,
-                likes = 0
-            )
-            DummyData.feedRoutines.add(0, newRoutine)
-            _uiState.update { it.copy(canBeAddedToMyRoutines = false) }
+
+    // ===== 내 루틴으로 복사 =====
+    fun addToMyRoutines() {
+        val r = _uiState.value.routine ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isAddingToMine = true, errorMessage = null) }
+
+            runCatching {
+                // 1) 상세 조회(여기에 steps가 이미 포함됨)
+                val detail = repository.getRoutineDetail(r.routineId)
+
+                // 2) 상세의 steps → Request.Step 로 직접 변환 (별도 /steps API 호출 없음)
+                val requestSteps = (detail.steps ?: emptyList()).map { s ->
+                    RoutineFeedCreateRequest.Step(
+                        name = s.name,
+                        stepOrder = s.stepOrder,
+                        estimatedTime = s.estimatedTime.toIsoDurationOrZero() // null → "PT0S" 등으로 보정
+                    )
+                }
+
+                // 3) 요청 바디 조립(매퍼 의존 제거로 unresolved 회피)
+                val body = RoutineFeedCreateRequest(
+                    title = detail.title,
+                    imageKey = null,
+                    tags = (detail.tags ?: emptyList()).map { it.removePrefix("#") },
+                    description = detail.description,
+                    steps = requestSteps,
+                    selectedApps = (detail.apps
+                        ?: emptyList()).map { it.packageName }, // ★ 중요
+                    isSimple = detail.isSimple ?: true,         // 서버값 우선, 없으면 true 가정
+                    isUserVisible = true
+                )
+
+                // 4) 내 루틴 생성
+                routineRepository.createRoutine(body)
+            }.onSuccess { created ->
+                _uiState.update {
+                    it.copy(
+                        isAddingToMine = false,
+                        showAddedDialog = true,
+                        canBeAddedToMyRoutines = false,
+                        createdMyRoutineId = created.id
+                    )
+                }
+                RoutineSyncBus.publish(RoutineSyncBus.Event.MyRoutinesChanged)
+                // ※ RoutineSyncBus 에 MyRoutinesChanged 이벤트가 없다면 추가 발행하지 않음(중복/에러 방지)
+            }.onFailure { e ->
+                _uiState.update { it.copy(isAddingToMine = false, errorMessage = e.message) }
+            }
         }
     }
 }

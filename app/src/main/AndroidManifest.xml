@@ -3,23 +3,27 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.konkuk.moru">
 
-    <!-- 인터넷 권한 -->
+    <!-- 권한들 -->
     <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- 기타 퍼미션들 -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="false" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
+    <!-- ✅ 패키지 가시성: 런처에 보이는 앱 조회 허용 -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <!-- (선택) 특정 앱을 반드시 보이게 하고 싶으면 패키지 명시 -->
+        <!-- <package android:name="com.google.android.youtube" /> -->
+        <!-- <package android:name="com.kakao.talk" /> -->
+    </queries>
 
     <application
         android:name=".MoruApplication"
@@ -33,6 +37,7 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.MORU"
+        android:enableOnBackInvokedCallback="true"
         tools:targetApi="31">
 
         <provider
@@ -53,11 +58,9 @@
             android:configChanges="orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
     </application>
-
 </manifest>

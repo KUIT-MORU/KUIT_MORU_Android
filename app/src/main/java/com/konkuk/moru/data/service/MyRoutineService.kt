@@ -1,5 +1,6 @@
 package com.konkuk.moru.data.service
 
+import com.konkuk.moru.data.dto.request.ScheduleUpsertRequest
 import com.konkuk.moru.data.dto.response.MyRoutine.AddTagsRequest
 import com.konkuk.moru.data.dto.response.MyRoutine.MyPageResponse
 import com.konkuk.moru.data.dto.response.MyRoutine.MyRoutineDetailDto
@@ -50,12 +51,20 @@ interface MyRoutineService {
         @Path("schId") schId: String
     ): Response<Unit>
 
+    // [추가] 스케줄 생성 (단건)
+    @POST("api/routines/{routineId}/schedules")
+    suspend fun createSchedule(
+        @Path("routineId") routineId: String,
+        @Body body: ScheduleUpsertRequest
+    ): Response<List<MyRoutineScheduleDto>>
+
+
     @PATCH("api/routines/{routineId}/schedules/{schId}")
     suspend fun patchSchedule(
         @Path("routineId") routineId: String,
         @Path("schId") schId: String,
         @Body body: UpdateScheduleRequest
-    ): List<MyRoutineScheduleDto>
+    ): Response<List<MyRoutineScheduleDto>>
 
 
     // ====== [추가] 루틴 수정 (PATCH) ======
