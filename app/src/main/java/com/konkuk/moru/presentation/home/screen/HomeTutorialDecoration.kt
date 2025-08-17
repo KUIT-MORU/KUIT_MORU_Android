@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.home.component
 
+import android.R.attr.onClick
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -46,7 +47,8 @@ fun HomeTutorialDecoration(
     onFabClick: () -> Unit,
     bottomIconCenters: List<Offset>,
     todayTabOffsetY: Float,
-    fabOffsetY: Float
+    fabOffsetY: Float,
+    onCreateImmediatelyClick: () -> Unit = onFabClick
 ) {
     val density = LocalDensity.current
     val configuration = LocalConfiguration.current
@@ -126,7 +128,8 @@ fun HomeTutorialDecoration(
             image = R.drawable.right_arrow_green,
             text = "바로 생성하기!",
             offsetRatioX = 0.6f,
-            offsetRatioY = 0.55f
+            offsetRatioY = 0.55f,
+            onClick = onCreateImmediatelyClick
         )
 
         // FAB 터치 클릭 영역
@@ -280,17 +283,22 @@ fun SimpleBottomTailBalloon(
     offsetX: Dp,
     offsetY: Dp,
     balloonWidth: Dp = 138.dp,
-    balloonHeight: Dp = 42.dp
+    balloonHeight: Dp = 42.dp,
+    onClick: (() -> Unit)? = null
 ) {
     //올리브 그린 색 미리 빼기(colors.oliveGreen 은 MORUTheme.colors 에 들어 있는 CompositionLocal 값이라)
     val borderColor = colors.oliveGreen
     val strokeWidthDp = 2.dp
     val tailHeight = 8.dp
     val tailWidth = 12.dp
+
     Box(
         modifier = Modifier
             .offset(x = offsetX, y = offsetY)
             .wrapContentSize()
+            .let{base->
+    if (onClick != null) base.clickable { onClick() } else base
+            }
     ) {
         Canvas(
             modifier = Modifier.size(width = balloonWidth, height = balloonHeight + tailHeight)

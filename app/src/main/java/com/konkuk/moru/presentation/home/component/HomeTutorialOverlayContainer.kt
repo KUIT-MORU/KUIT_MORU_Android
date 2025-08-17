@@ -22,7 +22,8 @@ fun HomeTutorialOverlayContainer(
     onFabClick: () -> Unit,
     fabOffsetY: Float,
     todayTabOffsetY: Float,
-    bottomIconCenters: List<Offset>
+    bottomIconCenters: List<Offset>,
+    onCreateImmediatelyClick: () -> Unit = onFabClick
 ) {
     LaunchedEffect(bottomIconCenters) {
         bottomIconCenters.forEachIndexed { idx, offset ->
@@ -96,7 +97,8 @@ fun HomeTutorialOverlayContainer(
             onFabClick = onFabClick,
             bottomIconCenters = bottomIconCenters,
             todayTabOffsetY = todayTabOffsetY,
-            fabOffsetY = fabOffsetY
+            fabOffsetY = fabOffsetY,
+            onCreateImmediatelyClick = onCreateImmediatelyClick
         )
 
         BottomOverlayBar(
@@ -126,6 +128,7 @@ private fun HomeTutorialOverlayContainerPreview() {
             Offset(134f, 748f),
             Offset(226f, 748f),
             Offset(318f, 748f)
-        )
+        ),
+        onCreateImmediatelyClick = {}
     )
 }

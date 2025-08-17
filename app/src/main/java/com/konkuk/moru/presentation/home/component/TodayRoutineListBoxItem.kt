@@ -2,6 +2,7 @@ package com.konkuk.moru.presentation.home.component
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,16 +42,28 @@ fun TodayRoutineListBoxItem(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    // 디버깅용 로그 추가
+    LaunchedEffect(routine) {
+        android.util.Log.d("TodayRoutineListBoxItem", "🔍 루틴 정보: ${routine.title}")
+        android.util.Log.d("TodayRoutineListBoxItem", "   - scheduledDays: ${routine.scheduledDays}")
+        android.util.Log.d("TodayRoutineListBoxItem", "   - scheduledTime: ${routine.scheduledTime}")
+        android.util.Log.d("TodayRoutineListBoxItem", "   - requiredTime: ${routine.requiredTime}")
+    }
     Box(
         modifier = modifier
             .width(330.dp)
             .height(120.dp)
             .shadow(
-                elevation = 8.dp,
+                elevation = 5.dp,
                 shape = RoundedCornerShape(12.dp),
             )
             .background(
-                color = Color.White,  // 원하는 배경색
+                color = if (routine.isRunning) Color(0xFFE8F5E8) else Color.White,  // 진행중인 루틴은 연한 초록색 배경
+                shape = RoundedCornerShape(12.dp)
+            )
+            .border(
+                width = if (routine.isRunning) 2.dp else 0.dp,
+                color = if (routine.isRunning) colors.limeGreen else Color.Transparent,
                 shape = RoundedCornerShape(12.dp)
             )
             .clickable(
@@ -116,17 +130,19 @@ fun TodayRoutineListBoxItem(
             // 2. 요일과 시간
             Row() {
                 Text(
-                    text = routine.scheduledDays.joinToString("") {
-                        it.getDisplayName(
-                            TextStyle.SHORT,
-                            Locale.KOREAN
-                        )
-                    },
+                    text = routine.scheduledDays
+                        .sortedBy { it.value } // DayOfWeek.value로 정렬 (월=1, 화=2, ..., 일=7)
+                        .joinToString("") {
+                            it.getDisplayName(
+                                TextStyle.SHORT,
+                                Locale.KOREAN
+                            )
+                        },
                     style = typography.title_B_12,
                     color = Color(0xFF61646B)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
-                
+
                 // 설정 시간대~종료 시간대 표시
                 val timeText = if (routine.scheduledTime != null) {
                     val startTime = routine.scheduledTime
@@ -177,7 +193,7 @@ fun TodayRoutineListBoxItem(
                     } else {
                         null
                     }
-                    
+
                     if (endTime != null) {
                         "${startTime.format(DateTimeFormatter.ofPattern("HH:mm"))}~${endTime.format(DateTimeFormatter.ofPattern("HH:mm"))}"
                     } else {
@@ -186,7 +202,7 @@ fun TodayRoutineListBoxItem(
                 } else {
                     "시간 미설정"
                 }
-                
+
                 Text(
                     text = timeText,
                     style = typography.title_B_12,

@@ -114,7 +114,14 @@ fun MyRoutineDetailContent(
             )
 
 //
-            if (routine.usedApps.isNotEmpty() && routine.category != CATEGORY_SIMPLE) {
+            // ===== 사용앱 섹션 표시 조건 수정 =====
+            // [추가] 가독성을 위해 플래그 분리
+            val isFocusMode = routine.category != CATEGORY_SIMPLE // "집중" 여부
+            val hasApps = routine.usedApps.isNotEmpty()
+
+            // [변경] 이전: if (routine.usedApps.isNotEmpty() && routine.category != CATEGORY_SIMPLE)
+            // [변경] 이제: 집중 모드에서 (수정 모드이거나, 앱이 하나라도 있으면) 섹션 노출
+            if (isFocusMode && (isEditMode || hasApps)) { // [변경]
                 item {
                     Spacer(modifier = Modifier.height(20.dp))
                     SelectUsedAppSection(
@@ -124,11 +131,12 @@ fun MyRoutineDetailContent(
                             viewModel.deleteApp(app)
                         },
                         onAddApp = {
-                            onOpenBottomSheet()
+                            onOpenBottomSheet() // + 버튼 → 바텀시트 열기
                         }
                     )
                 }
             }
+
             item { Spacer(modifier = Modifier.height(20.dp)) }
         }
 

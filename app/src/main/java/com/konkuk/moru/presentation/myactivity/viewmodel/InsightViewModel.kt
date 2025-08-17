@@ -64,6 +64,22 @@ class InsightViewModel @Inject constructor(
                 }
         }
     }
+    
+    // 간편 루틴 완료 시 실천율 업데이트
+    fun completeRoutine(routineId: String) {
+        Log.d(TAG, "completeRoutine() called: routineId=$routineId")
+        viewModelScope.launch {
+            insightRepository.completeRoutine(routineId)
+                .onSuccess {
+                    Log.d(TAG, "completeRoutine() success: routineId=$routineId")
+                    // 실천율 정보 새로고침
+                    loadInsights()
+                }
+                .onFailure { e ->
+                    Log.e(TAG, "completeRoutine() failure: routineId=$routineId", e)
+                }
+        }
+    }
 
     private fun InsightUiState.merge(src: Insight) = copy(
         isLoading = false,

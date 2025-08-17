@@ -11,5 +11,17 @@
     <!-- 특정 도메인(혹은 IP)에 대해 cleartext 허용 및 추가 신뢰 -->
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">15.164.150.204</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
     </domain-config>
+    
+    <!-- 개발용 설정: 모든 도메인에 대해 자체 서명 인증서 허용 -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
 </network-security-config>

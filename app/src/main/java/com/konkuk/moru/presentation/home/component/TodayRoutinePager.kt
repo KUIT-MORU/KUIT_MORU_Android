@@ -19,6 +19,17 @@ import com.konkuk.moru.ui.theme.MORUTheme.colors
 import java.time.DayOfWeek
 import java.time.LocalTime
 
+// String ID → 안정적인 Int 키 (기존 Int API/콜백용)
+private fun String.toStableIntId(): Int {
+    this.toLongOrNull()?.let {
+        val mod = (it % Int.MAX_VALUE).toInt()
+        return if (mod >= 0) mod else -mod
+    }
+    var h = 0
+    for (ch in this) h = (h * 31) + ch.code
+    return h
+}
+
 // 2. Pager 컴포저블
 @OptIn(ExperimentalPagerApi::class)
 @Composable

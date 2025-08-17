@@ -20,19 +20,49 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
+import androidx.core.graphics.createBitmap
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.routinedetail.appdisplay.AddAppBox
 import com.konkuk.moru.data.model.AppInfo
 import com.konkuk.moru.ui.theme.MORUTheme
+
+// Drawable을 Bitmap으로 변환하는 함수
+private fun drawableToBitmap(drawable: android.graphics.drawable.Drawable): android.graphics.Bitmap {
+    return when (drawable) {
+        is android.graphics.drawable.BitmapDrawable -> drawable.bitmap
+        is android.graphics.drawable.AdaptiveIconDrawable -> {
+            val bmp = createBitmap(
+                drawable.intrinsicWidth.coerceAtLeast(1),
+                drawable.intrinsicHeight.coerceAtLeast(1)
+            )
+            val canvas = android.graphics.Canvas(bmp)
+            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.draw(canvas)
+            bmp
+        }
+        else -> {
+            val bmp = createBitmap(
+                drawable.intrinsicWidth.coerceAtLeast(1),
+                drawable.intrinsicHeight.coerceAtLeast(1)
+            )
+            val canvas = android.graphics.Canvas(bmp)
+            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.draw(canvas)
+            bmp
+        }
+    }
+}
 
 
 @Composable
@@ -42,6 +72,7 @@ fun UsedAppsSection(
     onAddApp: () -> Unit,
     onDeleteApp: (AppInfo) -> Unit
 ) {
+    val context = LocalContext.current
     Column(
         Modifier
             .padding(16.dp)
@@ -60,19 +91,43 @@ fun UsedAppsSection(
                         horizontalAlignment = Alignment.CenterHorizontally,
 
                     ) {
-                        AsyncImage(
-                            model = app.iconUrl,
-                            contentDescription = app.name,
-                            modifier = Modifier
-                                .size(48.dp)
-                                .background(
-                                    MORUTheme.colors.veryLightGray,
-                                    shape = RoundedCornerShape(size = 6.dp)
-                                )
-                                .padding(8.dp),
-                            placeholder = painterResource(id = R.drawable.ic_reset),
-                            error = painterResource(id = R.drawable.ic_info)
-                        )
+                        // 실제 앱 아이콘을 가져오는 로직
+                        val appIcon = remember(app.packageName) {
+                            try {
+                                val packageManager = context.packageManager
+                                val appInfo = packageManager.getApplicationInfo(app.packageName, 0)
+                                val drawable = packageManager.getApplicationIcon(appInfo)
+                                drawableToBitmap(drawable).asImageBitmap()
+                            } catch (e: Exception) {
+                                null
+                            }
+                        }
+                        
+                        if (appIcon != null) {
+                            androidx.compose.foundation.Image(
+                                bitmap = appIcon,
+                                contentDescription = app.name,
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .background(
+                                        MORUTheme.colors.veryLightGray,
+                                        shape = RoundedCornerShape(size = 6.dp)
+                                    )
+                                    .padding(8.dp)
+                            )
+                        } else {
+                            androidx.compose.foundation.Image(
+                                painter = painterResource(id = R.drawable.ic_reset),
+                                contentDescription = app.name,
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .background(
+                                        MORUTheme.colors.veryLightGray,
+                                        shape = RoundedCornerShape(size = 6.dp)
+                                    )
+                                    .padding(8.dp)
+                            )
+                        }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             app.name,
@@ -112,9 +167,9 @@ fun UsedAppsSection(
 @Composable
 private fun UsedAppsSectionPreview_ViewMode() {
     val apps = listOf(
-        AppInfo(name = "YouTube", iconUrl = null, packageName = "com.google.android.youtube"),
-        AppInfo(name = "Notion", iconUrl = null, packageName = "so.notion.id"),
-        AppInfo(name = "Spotify", iconUrl = null, packageName = "com.spotify.music"),
+        AppInfo(name = "YouTube", packageName = "com.google.android.youtube"),
+        AppInfo(name = "Notion", packageName = "so.notion.id"),
+        AppInfo(name = "Spotify", packageName = "com.spotify.music"),
     )
     MORUTheme {
         UsedAppsSection(
@@ -130,10 +185,10 @@ private fun UsedAppsSectionPreview_ViewMode() {
 @Composable
 private fun UsedAppsSectionPreview_EditMode() {
     val apps = listOf(
-        AppInfo(name = "YouTube", iconUrl = null, packageName = "com.google.android.youtube"),
-        AppInfo(name = "Keep 메모", iconUrl = null, packageName = "com.google.android.keep"),
-        AppInfo(name = "To Do", iconUrl = null, packageName = "com.microsoft.todos"),
-        AppInfo(name = "Forest", iconUrl = null, packageName = "cc.forestapp"),
+        AppInfo(name = "YouTube", packageName = "com.google.android.youtube"),
+        AppInfo(name = "Keep 메모", packageName = "com.google.android.keep"),
+        AppInfo(name = "To Do", packageName = "com.microsoft.todos"),
+        AppInfo(name = "Forest", packageName = "cc.forestapp"),
     )
     MORUTheme {
         UsedAppsSection(
@@ -149,10 +204,10 @@ private fun UsedAppsSectionPreview_EditMode() {
 @Composable
 fun UsedAppsSectionPreview() {
     val sampleApps = listOf(
-        AppInfo("app1", "https://example.com/app1.png",packageName = null),
-        AppInfo("app2", "https://example.com/app2.png",packageName = null),
-        AppInfo("app3", "https://example.com/app3.png",packageName = null),
-        AppInfo("app4", "https://example.com/app4.png",packageName = null)
+        AppInfo("app1", "com.example.app1"),
+        AppInfo("app2", "com.example.app2"),
+        AppInfo("app3", "com.example.app3"),
+        AppInfo("app4", "com.example.app4")
     )
     MORUTheme {
         UsedAppsSection(

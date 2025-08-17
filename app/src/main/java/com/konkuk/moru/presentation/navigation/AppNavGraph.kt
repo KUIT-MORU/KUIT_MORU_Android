@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Scaffold
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,12 +34,16 @@ import com.konkuk.moru.presentation.auth.AuthCheckScreen
 import com.konkuk.moru.presentation.home.component.HomeTutorialOverlayContainer
 import com.konkuk.moru.presentation.home.screen.HomeOnboardingScreen
 import com.konkuk.moru.presentation.login.LoginScreen
+import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.onboarding.OnboardingScreen
+import com.konkuk.moru.presentation.routinefocus.component.ScreenBlockOverlay
+import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
 import com.konkuk.moru.presentation.signup.SignUpScreen
 
 @Composable
 fun AppNavGraph(
-    navController: NavHostController
+    navController: NavHostController,
+    routineFocusViewModel: RoutineFocusViewModel? = null
 ) {
     val startDestination = Route.AuthCheck.route
 
@@ -179,6 +184,7 @@ fun AppNavGraph(
                     onShowOnboarding = { /* 불필요하므로 호출 안 함 */ },
                     fabOffsetY = fabOffsetY,
                     todayTabOffsetY = todayTabOffsetY,
+                    routineFocusViewModel = routineFocusViewModel
                 )
             }
         }
@@ -212,9 +218,28 @@ fun AppNavGraph(
                 .zIndex(10f),
             onDismiss = { showOverlay = false },
             onFabClick = { showOverlay = false },
+            onCreateImmediatelyClick = {
+                showOverlay = false
+                navController.navigate(Route.RoutineCreate.route)
+            },
             fabOffsetY = fabOffsetY.value,
             todayTabOffsetY = todayTabOffsetY.value,
             bottomIconCenters = bottomIconCenters
         )
+    }
+    
+    // 화면 차단 오버레이 표시
+    routineFocusViewModel?.let { viewModel ->
+        Log.d("AppNavGraph", "🛡️ 화면 차단 오버레이 체크: isScreenBlockOverlayVisible=${viewModel.isScreenBlockOverlayVisible}")
+        if (viewModel.isScreenBlockOverlayVisible) {
+            Log.d("AppNavGraph", "🛡️ ScreenBlockOverlay 표시")
+            ScreenBlockOverlay(
+                selectedApps = viewModel.selectedApps,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(1000f),
+                onDismiss = { viewModel.hideScreenBlockOverlay() }
+            )
+        }
     }
 }

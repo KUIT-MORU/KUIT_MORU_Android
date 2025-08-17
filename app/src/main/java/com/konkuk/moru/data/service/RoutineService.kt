@@ -6,6 +6,7 @@ import com.konkuk.moru.data.dto.response.Routine.RoutineDetailResponseV1
 import com.konkuk.moru.data.dto.response.Routine.RoutineFeedCreateResponse
 import com.konkuk.moru.data.dto.response.RoutineStepResponse
 import retrofit2.http.Body
+import com.konkuk.moru.data.dto.response.HomeScheduleResponse
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -30,4 +31,7 @@ interface RoutineService {
 
     @POST("/api/routines")
     suspend fun createRoutine(@Body body: RoutineFeedCreateRequest): RoutineFeedCreateResponse
+
+    @GET("/api/routines/{routineId}/schedules")
+    suspend fun getRoutineSchedules(@Path("routineId") routineId: String): List<HomeScheduleResponse>
 }
