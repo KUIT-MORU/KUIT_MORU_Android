@@ -104,7 +104,7 @@ fun UserInfoPage(
     ) { uri ->
         if (uri != null) {
             selectedImageUri = uri
-            viewModel?.updateProfileImage(uri.toString()) // ★ 선택 결과를 ViewModel에 전달
+            viewModel.uploadProfileImageFromUri(context, uri)
         }
         isImageOptionVisible = false
     }
@@ -118,7 +118,7 @@ fun UserInfoPage(
     ) { success ->
         if (success && cameraTempUri != null) {
             selectedImageUri = cameraTempUri
-            viewModel?.updateProfileImage(cameraTempUri.toString()) // ★ 촬영 결과 전달
+            viewModel.uploadProfileImageFromUri(context, cameraTempUri!!)
         }
         isImageOptionVisible = false
     }
