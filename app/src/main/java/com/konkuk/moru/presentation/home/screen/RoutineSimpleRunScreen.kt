@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import com.google.gson.Gson
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -79,8 +80,58 @@ fun RoutineSimpleRunScreen(
     val hashTag = hashTagList.joinToString(" ") { "#$it" }
 
     /*---------------- 상태 ----------------*/
-    // 선택 여부 상태 관리
-    var selectedStates by remember { mutableStateOf(steps.map { false }.toMutableStateList()) }
+    // Context와 SharedPreferences 가져오기
+    val context = LocalContext.current
+    val sharedPreferences = context.getSharedPreferences("routine_intro_prefs", android.content.Context.MODE_PRIVATE)
+    val gson = Gson()
+    
+    // 선택 여부 상태 관리 (기본값으로 초기화)
+    var selectedStates by remember { 
+        mutableStateOf(steps.map { false }.toMutableStateList())
+    }
+    
+    // 화면 진입 시 저장된 선택 상태 복원
+    LaunchedEffect(Unit) {
+        android.util.Log.d("RoutineSimpleRunScreen", "🔄 화면 진입 - 선택 상태 복원 시작: title='$routineTitle'")
+        
+        // 저장된 선택 상태가 있으면 복원
+        val savedSelectedStatesJson = sharedPreferences.getString("saved_selected_states_$routineTitle", null)
+        if (savedSelectedStatesJson != null) {
+            try {
+                android.util.Log.d("RoutineSimpleRunScreen", "📋 저장된 JSON: $savedSelectedStatesJson")
+                
+                // JSON 문자열을 직접 파싱하여 Boolean 리스트로 변환
+                val savedStates = mutableListOf<Boolean>()
+                val jsonArray = savedSelectedStatesJson.trim('[', ']').split(',')
+                
+                jsonArray.forEach { item ->
+                    val trimmed = item.trim()
+                    if (trimmed == "true") {
+                        savedStates.add(true)
+                    } else if (trimmed == "false") {
+                        savedStates.add(false)
+                    }
+                }
+                
+                android.util.Log.d("RoutineSimpleRunScreen", "📋 파싱된 선택 상태: $savedStates (크기: ${savedStates.size})")
+                android.util.Log.d("RoutineSimpleRunScreen", "📋 현재 스텝 개수: ${steps.size}")
+                
+                if (savedStates.size == steps.size) {
+                    selectedStates = savedStates.toMutableStateList()
+                    android.util.Log.d("RoutineSimpleRunScreen", "✅ 저장된 선택 상태 복원 완료: $selectedStates")
+                } else {
+                    android.util.Log.d("RoutineSimpleRunScreen", "⚠️ 스텝 개수 불일치 (저장: ${savedStates.size}, 현재: ${steps.size}), 기본값으로 초기화")
+                    selectedStates = steps.map { false }.toMutableStateList()
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("RoutineSimpleRunScreen", "❌ 선택 상태 복원 실패", e)
+                selectedStates = steps.map { false }.toMutableStateList()
+            }
+        } else {
+            android.util.Log.d("RoutineSimpleRunScreen", "🔄 저장된 선택 상태 없음, 기본값으로 초기화")
+            selectedStates = steps.map { false }.toMutableStateList()
+        }
+    }
 
     // Finish 버튼의 상태 저장
     val isAnySelected = selectedStates.any { it }
@@ -165,8 +216,21 @@ fun RoutineSimpleRunScreen(
                         text = step.name,
                         isSelected = selectedStates[index],
                         onClick = {
-                            selectedStates = selectedStates.toMutableStateList().apply {
+                            val newSelectedStates = selectedStates.toMutableStateList().apply {
                                 this[index] = !this[index]
+                            }
+                            selectedStates = newSelectedStates
+                            
+                            android.util.Log.d("RoutineSimpleRunScreen", "🔄 스텝 ${index + 1} 선택 상태 변경: ${selectedStates.toList()}")
+                            
+                            // 선택 상태 변경 시 저장
+                            try {
+                                val selectedStatesJson = gson.toJson(selectedStates.toList())
+                                sharedPreferences.edit().putString("saved_selected_states_$routineTitle", selectedStatesJson).apply()
+                                android.util.Log.d("RoutineSimpleRunScreen", "💾 선택 상태 저장 완료: ${selectedStates.toList()}")
+                                android.util.Log.d("RoutineSimpleRunScreen", "💾 저장된 JSON: $selectedStatesJson")
+                            } catch (e: Exception) {
+                                android.util.Log.e("RoutineSimpleRunScreen", "❌ 선택 상태 저장 실패", e)
                             }
                         },
                         modifier = Modifier.padding(bottom = 20.dp)
@@ -382,6 +446,14 @@ fun RoutineSimpleRunScreen(
                                     android.util.Log.d("RoutineSimpleRunScreen", "🔄 간편 루틴 완료: routineId=$routineId")
                                     // 실천율 업데이트 API 호출
                                     insightViewModel.completeRoutine(routineId)
+                                }
+                                
+                                // 루틴 완료 시 저장된 선택 상태 초기화
+                                try {
+                                    sharedPreferences.edit().remove("saved_selected_states_$routineTitle").apply()
+                                    android.util.Log.d("RoutineSimpleRunScreen", "🗑️ 완료된 루틴의 선택 상태 초기화: $routineTitle")
+                                } catch (e: Exception) {
+                                    android.util.Log.e("RoutineSimpleRunScreen", "❌ 선택 상태 초기화 실패", e)
                                 }
                                 
                                 onFinishConfirmed(routineId.toString())

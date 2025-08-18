@@ -133,6 +133,9 @@ fun LandscapeRoutineFocusScreen(
 
     // 결과 팝업 상태 저장 (강제 상태 반영)
     var showResultPopup by remember { mutableStateOf(forceShowResultPopup) }
+    
+    // X 버튼 클릭 시의 시간을 저장할 변수
+    var pausedTime by remember { mutableStateOf(0) }
 
     // 설정 팝업 상태 저장
     val showSettingsPopup = focusViewModel.isSettingsPopupVisible
@@ -265,6 +268,10 @@ fun LandscapeRoutineFocusScreen(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
                             ) {
+                                // X 버튼 클릭 시 타이머 즉시 멈춤
+                                focusViewModel.pauseTimer()
+                                // 현재 시간을 저장 (팝업에서 고정 시간으로 사용)
+                                pausedTime = totalElapsedSeconds + elapsedSeconds
                                 showFinishPopup = true
                             }
                     )
@@ -344,16 +351,7 @@ fun LandscapeRoutineFocusScreen(
                                 currentStep = currentstep,
                                 isTimeout = isTimeout,
                                 isDarkMode = isDarkMode,
-                                onStepClick = { clickedStep ->
-                                    // 클릭된 스텝으로 이동
-                                    if (clickedStep != currentstep) {
-                                        val stepTimeString = routineItems.getOrNull(clickedStep - 1)?.second ?: "0m"
-                                        focusViewModel.updateCurrentStep(clickedStep)
-                                        focusViewModel.setStepLimitFromTimeString(parseTimeToSeconds(stepTimeString))
-                                        focusViewModel.resetTimer()
-                                        focusViewModel.startTimer()
-                                    }
-                                }
+                                onStepClick = null // 타임라인 터치 비활성화
                             )
                         }
                     }
@@ -747,7 +745,7 @@ fun LandscapeRoutineFocusScreen(
                         RoutineResultRow(
                             R.drawable.clock_icon,
                             "시간",
-                            formatTime(totalElapsedSeconds + elapsedSeconds)
+                            formatTime(pausedTime)
                         )
                     }
                     Spacer(modifier = Modifier.height(9.03.dp))

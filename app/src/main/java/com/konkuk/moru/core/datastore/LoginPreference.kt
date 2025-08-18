@@ -49,4 +49,11 @@ object LoginPreference {
             prefs[REFRESH_TOKEN_KEY]
         }
     }
+
+    // 모든 로그인 데이터 삭제 (개발용)
+    suspend fun clearAllData(context: Context) {
+        context.loginDataStore.edit { prefs ->
+            prefs.clear()
+        }
+    }
 }

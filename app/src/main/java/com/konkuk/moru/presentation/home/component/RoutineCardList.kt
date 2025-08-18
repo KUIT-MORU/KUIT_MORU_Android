@@ -16,7 +16,7 @@ import java.time.DayOfWeek
 fun RoutineCardList(
     routines: List<Routine>,
     onRoutineClick: (String) -> Unit,
-    runningHighlightId: Int? = null,
+    runningHighlightIds: List<Int> = emptyList(),
     modifier: Modifier = Modifier
 ) {
     //스크롤 대비 상태 저장
@@ -29,13 +29,11 @@ fun RoutineCardList(
         horizontalArrangement = Arrangement.spacedBy(17.dp)
     ) {
         //나중에 진짜 루틴들 받아올 것
-        android.util.Log.d("RoutineCardList", "🔄 RoutineCardList 렌더링: routines.size=${routines.size}, runningHighlightId=$runningHighlightId")
+        android.util.Log.d("RoutineCardList", "🔄 RoutineCardList 렌더링: routines.size=${routines.size}, runningHighlightIds=$runningHighlightIds")
         
         routines.forEachIndexed { index, routine ->
             val stableId = routine.routineId.toStableIntId()
-            val isHighlighted =
-                runningHighlightId != null &&
-                        runningHighlightId == stableId
+            val isHighlighted = runningHighlightIds.contains(stableId)
 
             android.util.Log.d("RoutineCardList", "🔍 루틴[$index]: ${routine.title}, routineId=${routine.routineId}, stableId=$stableId, isHighlighted=$isHighlighted, isRunning=${routine.isRunning}")
 
@@ -121,6 +119,6 @@ private fun RoutineCardListPreview() {
     RoutineCardList(
         routines = dummyRoutines,
         onRoutineClick = {},
-        runningHighlightId = "routine-2".toStableIntId()
+        runningHighlightIds = listOf("routine-2".toStableIntId())
     )
 }

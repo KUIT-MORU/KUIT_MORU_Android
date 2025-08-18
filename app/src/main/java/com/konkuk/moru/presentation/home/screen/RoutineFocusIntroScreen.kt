@@ -36,6 +36,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.platform.LocalContext
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.konkuk.moru.R
 import com.konkuk.moru.data.dto.response.Routine.RoutineDetailResponseV1
 import com.konkuk.moru.presentation.home.RoutineStepData
@@ -110,11 +113,46 @@ fun RoutineFocusIntroScreen(
         }
     }
 
+    // Context 가져오기
+    val context = LocalContext.current
+    val sharedPreferences = context.getSharedPreferences("routine_intro_prefs", android.content.Context.MODE_PRIVATE)
+    val gson = Gson()
+    
     // 각 루틴의 상태를 기억할 수 있또록 상태로 복사해서 관리
     var stepStates by remember { mutableStateOf(emptyList<RoutineStepData>()) }
-    LaunchedEffect(steps) { 
-        Log.d("RoutineFocusIntroScreen", "🔄 LaunchedEffect(steps) 실행: steps.size=${steps.size}")
-        stepStates = steps.map { it.copy() }
+    
+    // intro 화면을 본 적이 있는지 확인하고, 있다면 저장된 스텝 상태 복원
+    LaunchedEffect(steps, routineTitle) {
+        Log.d("RoutineFocusIntroScreen", "🔄 LaunchedEffect(steps, routineTitle) 실행: steps.size=${steps.size}, title='$routineTitle'")
+        
+        val hasSeenIntro = sharedPreferences.getBoolean("has_seen_intro_$routineTitle", false)
+        val savedStepStatesJson = sharedPreferences.getString("saved_steps_$routineTitle", null)
+        
+        if (hasSeenIntro && savedStepStatesJson != null && steps.isNotEmpty()) {
+            try {
+                val type = object : TypeToken<List<RoutineStepData>>() {}.type
+                val savedStepStates: List<RoutineStepData> = gson.fromJson(savedStepStatesJson, type)
+                Log.d("RoutineFocusIntroScreen", "🔄 저장된 스텝 상태 복원: ${savedStepStates.size}개")
+                
+                // 저장된 스텝 상태와 현재 스텝을 매칭하여 복원
+                val restoredStepStates = steps.map { currentStep ->
+                    val savedStep = savedStepStates.find { it.name == currentStep.name }
+                    if (savedStep != null) {
+                        currentStep.copy(isChecked = savedStep.isChecked)
+                    } else {
+                        currentStep
+                    }
+                }
+                stepStates = restoredStepStates
+                Log.d("RoutineFocusIntroScreen", "✅ 저장된 스텝 상태 복원 완료")
+            } catch (e: Exception) {
+                Log.e("RoutineFocusIntroScreen", "❌ 저장된 스텝 상태 복원 실패", e)
+                stepStates = steps.map { it.copy() }
+            }
+        } else {
+            Log.d("RoutineFocusIntroScreen", "🔄 새로운 루틴이거나 저장된 상태 없음, 기본 상태로 설정")
+            stepStates = steps.map { it.copy() }
+        }
         Log.d("RoutineFocusIntroScreen", "✅ stepStates 설정 완료: ${stepStates.size}개")
     }
 
@@ -174,6 +212,27 @@ fun RoutineFocusIntroScreen(
                     Log.d("RoutineFocusIntroScreen", "   - 총 소요시간: ${totalDuration}분")
                     Log.d("RoutineFocusIntroScreen", "   - 제목: $routineTitle")
                     Log.d("RoutineFocusIntroScreen", "   - 태그: $hashTag")
+                    
+                    // intro 화면을 본 것으로 표시
+                    sharedPreferences.edit().putBoolean("has_seen_intro_$routineTitle", true).apply()
+                    
+                    // 선택된 스텝 상태 저장 (간편 루틴의 경우 전체 스텝 상태 저장)
+                    val stepStatesToSave = if (isSimple || category == "간편") {
+                        stepStates
+                    } else {
+                        stepStates
+                    }
+                    val stepStatesJson = gson.toJson(stepStatesToSave)
+                    sharedPreferences.edit().putString("saved_steps_$routineTitle", stepStatesJson).apply()
+                    Log.d("RoutineFocusIntroScreen", "💾 스텝 상태 저장 완료: ${stepStatesToSave.size}개 스텝")
+                    
+                    // 간편 루틴의 경우 선택 상태도 함께 저장 (모두 false로 초기화)
+                    if (isSimple || category == "간편") {
+                        val initialSelectedStates = stepStates.map { false }
+                        val selectedStatesJson = gson.toJson(initialSelectedStates)
+                        sharedPreferences.edit().putString("saved_selected_states_$routineTitle", selectedStatesJson).apply()
+                        Log.d("RoutineFocusIntroScreen", "💾 간편 루틴 선택 상태 초기화 저장: ${initialSelectedStates.size}개")
+                    }
                     
                     onStartClick(
                         selected,

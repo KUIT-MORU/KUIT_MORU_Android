@@ -24,6 +24,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -45,6 +46,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.konkuk.moru.R
@@ -72,6 +74,11 @@ import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 import android.content.Context
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlin.collections.first
 import kotlin.collections.isNotEmpty
 import kotlin.collections.mapNotNull
@@ -260,20 +267,10 @@ fun HomeScreen(
         navController.getBackStackEntry(Route.Home.route)
     }
 
-    // 진행중 루틴 ID 수신 (Int 안정 ID)
-    val runningId by homeEntry.savedStateHandle
-        .getStateFlow<Int?>("runningRoutineId", null)
-        .collectAsState(initial = null)
-
-    // 하이라이트 대상 보관
-    var highlightId by remember { mutableStateOf<Int?>(null) }
-
-
-    
-    // 하이라이트 ID 변경 시 로그 추가
-    LaunchedEffect(highlightId) {
-        Log.d("HomeScreen", "🎯 하이라이트 ID 변경됨: $highlightId")
-    }
+    // 진행중 루틴 ID 스택 수신 (Int 안정 ID 리스트)
+    val runningIds by homeEntry.savedStateHandle
+        .getStateFlow<List<Int>>("runningRoutineIds", emptyList())
+        .collectAsState(initial = emptyList())
 
     // 서버 오늘 루틴
     val homeVm: HomeRoutinesViewModel = hiltViewModel()
@@ -293,6 +290,43 @@ fun HomeScreen(
     val myRoutines by homeVm.myRoutines.collectAsState()
     // ③ 스케줄 정보가 병합된 루틴 (주간 달력용)
     val scheduledRoutines by homeVm.scheduledRoutines.collectAsState()
+
+    // 하이라이트 대상 보관 (진행중인 모든 루틴)
+    var highlightIds by remember { mutableStateOf<List<Int>>(emptyList()) }
+
+    // runningIds 스택 변경 시 간편 루틴만 하이라이트 ID로 설정
+    LaunchedEffect(runningIds, myRoutines) {
+        if (runningIds.isNotEmpty()) {
+            // 스택에서 간편 루틴만 필터링하여 하이라이트 대상으로 설정
+            val simpleRoutineIds = mutableListOf<Int>()
+            
+            runningIds.forEach { id ->
+                val routine = myRoutines.find { it.routineId.toStableIntId() == id }
+                val isSimpleRoutine = routine?.let { determineRoutineType(it.requiredTime) } ?: false
+                
+                if (isSimpleRoutine) {
+                    simpleRoutineIds.add(id)
+                    Log.d("HomeScreen", "🎯 간편 루틴 하이라이트 추가: ${routine?.title} (ID: $id)")
+                } else {
+                    Log.d("HomeScreen", "🎯 집중 루틴 하이라이트 제외: ${routine?.title} (ID: $id)")
+                }
+            }
+            
+            highlightIds = simpleRoutineIds
+            Log.d("HomeScreen", "🎯 간편 루틴만 하이라이트 ID 설정: $highlightIds (전체 스택 크기: ${runningIds.size})")
+        } else {
+            // 스택이 비어있으면 하이라이트 해제
+            if (highlightIds.isNotEmpty()) {
+                highlightIds = emptyList()
+                Log.d("HomeScreen", "🎯 스택이 비어있으므로 하이라이트 해제")
+            }
+        }
+    }
+
+    // 하이라이트 ID 변경 시 로그 추가
+    LaunchedEffect(highlightIds) {
+        Log.d("HomeScreen", "🎯 하이라이트 IDs 변경됨: $highlightIds")
+    }
     
 
 
@@ -316,6 +350,29 @@ fun HomeScreen(
         }
     }
 
+    // 화면이 다시 활성화될 때 데이터 리로드
+    DisposableEffect(navController) {
+        val listener = NavController.OnDestinationChangedListener { _, destination, _ ->
+            if (destination.route == Route.Home.route) {
+                Log.d("HomeScreen", "🔄 Home 화면 활성화 감지 - 데이터 리로드")
+                try {
+                    homeVm.loadMyRoutines()
+                    Log.d("HomeScreen", "✅ 화면 활성화 시 loadMyRoutines() 호출 완료")
+                    
+                    // 오늘 루틴도 다시 로드하여 스케줄 정보 업데이트
+                    homeVm.loadTodayRoutines()
+                    Log.d("HomeScreen", "✅ 화면 활성화 시 loadTodayRoutines() 호출 완료")
+                } catch (e: Exception) {
+                    Log.e("HomeScreen", "❌ 화면 활성화 시 데이터 리로드 실패", e)
+                }
+            }
+        }
+        navController.addOnDestinationChangedListener(listener)
+        onDispose {
+            navController.removeOnDestinationChangedListener(listener)
+        }
+    }
+
     // 서버 데이터 로드 후 스케줄 정보와 병합
     LaunchedEffect(serverRoutines) {
         if (serverRoutines.isNotEmpty()) {
@@ -333,94 +390,124 @@ fun HomeScreen(
             // 로컬 스케줄 정보도 병합 (기존 기능 유지)
             homeVm.mergeWithLocalSchedule(context)
             
-            // 스케줄 정보를 비동기로 가져와서 업데이트
+            // 스케줄 정보를 비동기로 가져와서 업데이트 (코루틴으로 병렬 처리)
             Log.d("HomeScreen", "🔄 스케줄 정보 가져오기 시작: ${serverRoutines.size}개 루틴")
-            serverRoutines.forEach { routine ->
-                Log.d("HomeScreen", "🔍 루틴 스케줄 조회: ${routine.title} (ID: ${routine.routineId})")
-                try {
-                    val schedules = homeVm.getRoutineSchedules(routine.routineId)
-                    Log.d("HomeScreen", "📊 스케줄 응답: ${routine.title} - ${schedules.size}개 스케줄")
-                    
-                    schedules.forEachIndexed { index, schedule ->
-                        Log.d("HomeScreen", "   스케줄[$index]: dayOfWeek=${schedule.dayOfWeek}, time=${schedule.time}, alarmEnabled=${schedule.alarmEnabled}")
-                    }
-                    
-                    if (schedules.isNotEmpty()) {
-                        // 스케줄 정보를 DayOfWeek와 LocalTime으로 변환
-                        val scheduledDays: Set<DayOfWeek> = schedules.mapNotNull { schedule ->
-                            val dayOfWeek = when (schedule.dayOfWeek.uppercase()) {
-                                "MON" -> DayOfWeek.MONDAY
-                                "TUE" -> DayOfWeek.TUESDAY
-                                "WED" -> DayOfWeek.WEDNESDAY
-                                "THU" -> DayOfWeek.THURSDAY
-                                "FRI" -> DayOfWeek.FRIDAY
-                                "SAT" -> DayOfWeek.SATURDAY
-                                "SUN" -> DayOfWeek.SUNDAY
-                                else -> {
-                                    Log.w("HomeScreen", "⚠️ 알 수 없는 요일 형식: ${schedule.dayOfWeek}")
-                                    null
-                                }
+            
+            CoroutineScope(Dispatchers.IO).launch {
+                val scheduleJobs = serverRoutines.map { routine ->
+                    async {
+                        Log.d("HomeScreen", "🔍 루틴 스케줄 조회: ${routine.title} (ID: ${routine.routineId})")
+                        try {
+                            val schedules = homeVm.getRoutineSchedules(routine.routineId)
+                            Log.d("HomeScreen", "📊 스케줄 응답: ${routine.title} - ${schedules.size}개 스케줄")
+                            
+                            schedules.forEachIndexed { index, schedule ->
+                                Log.d("HomeScreen", "   스케줄[$index]: dayOfWeek=${schedule.dayOfWeek}, time=${schedule.time}, alarmEnabled=${schedule.alarmEnabled}")
                             }
-                            Log.d("HomeScreen", "   변환: ${schedule.dayOfWeek} -> $dayOfWeek")
-                            dayOfWeek
-                        }.toSet()
-                        
-                        val scheduledTime = if (schedules.isNotEmpty()) {
-                            try {
-                                val time = LocalTime.parse(schedules.first().time, DateTimeFormatter.ofPattern("HH:mm:ss"))
-                                Log.d("HomeScreen", "   시간 변환: ${schedules.first().time} -> $time")
-                                time
-                            } catch (e: Exception) {
-                                Log.e("HomeScreen", "❌ 시간 파싱 실패: ${schedules.first().time}", e)
-                                null
+                            
+                            if (schedules.isNotEmpty()) {
+                                // 스케줄 정보를 DayOfWeek와 LocalTime으로 변환
+                                val scheduledDays: Set<DayOfWeek> = schedules.mapNotNull { schedule ->
+                                    val dayOfWeek = when (schedule.dayOfWeek.uppercase()) {
+                                        "MON" -> DayOfWeek.MONDAY
+                                        "TUE" -> DayOfWeek.TUESDAY
+                                        "WED" -> DayOfWeek.WEDNESDAY
+                                        "THU" -> DayOfWeek.THURSDAY
+                                        "FRI" -> DayOfWeek.FRIDAY
+                                        "SAT" -> DayOfWeek.SATURDAY
+                                        "SUN" -> DayOfWeek.SUNDAY
+                                        else -> {
+                                            Log.w("HomeScreen", "⚠️ 알 수 없는 요일 형식: ${schedule.dayOfWeek}")
+                                            null
+                                        }
+                                    }
+                                    Log.d("HomeScreen", "   변환: ${schedule.dayOfWeek} -> $dayOfWeek")
+                                    dayOfWeek
+                                }.toSet()
+                                
+                                val scheduledTime = if (schedules.isNotEmpty()) {
+                                    try {
+                                        val time = LocalTime.parse(schedules.first().time, DateTimeFormatter.ofPattern("HH:mm:ss"))
+                                        Log.d("HomeScreen", "   시간 변환: ${schedules.first().time} -> $time")
+                                        time
+                                    } catch (e: Exception) {
+                                        Log.e("HomeScreen", "❌ 시간 파싱 실패: ${schedules.first().time}", e)
+                                        null
+                                    }
+                                } else null
+                                
+                                Log.d("HomeScreen", "✅ 스케줄 정보 병합: ${routine.title} - 요일: $scheduledDays, 시간: $scheduledTime")
+                                
+                                Triple(routine.routineId, scheduledDays, scheduledTime)
+                            } else {
+                                Log.d("HomeScreen", "⚠️ 스케줄 정보 없음: ${routine.title}")
+                                Triple(routine.routineId, emptySet<DayOfWeek>(), null)
                             }
-                        } else null
-                        
-                        Log.d("HomeScreen", "✅ 스케줄 정보 병합: ${routine.title} - 요일: $scheduledDays, 시간: $scheduledTime")
-                        
-                        // todayRoutines에서 해당 루틴을 찾아서 업데이트
-                        val index = todayRoutines.indexOfFirst { it.routineId == routine.routineId }
-                        if (index >= 0) {
-                            val updatedRoutine = todayRoutines[index].copy(scheduledDays = scheduledDays, scheduledTime = scheduledTime)
-                            todayRoutines[index] = updatedRoutine
-                            Log.d("HomeScreen", "✅ 루틴 업데이트 완료: ${routine.title}")
-                        } else {
-                            Log.w("HomeScreen", "⚠️ todayRoutines에서 루틴을 찾을 수 없음: ${routine.title}")
+                        } catch (e: Exception) {
+                            Log.e("HomeScreen", "❌ 스케줄 정보 가져오기 실패: ${routine.title}", e)
+                            Triple(routine.routineId, emptySet<DayOfWeek>(), null)
                         }
-                    } else {
-                        Log.d("HomeScreen", "⚠️ 스케줄 정보 없음: ${routine.title}")
                     }
-                } catch (e: Exception) {
-                    Log.e("HomeScreen", "❌ 스케줄 정보 가져오기 실패: ${routine.title}", e)
                 }
+                
+                // 모든 스케줄 정보를 병렬로 가져온 후 UI 업데이트
+                val scheduleResults = scheduleJobs.awaitAll()
+                
+                scheduleResults.forEach { (routineId, scheduledDays, scheduledTime) ->
+                    val index = todayRoutines.indexOfFirst { it.routineId == routineId }
+                    if (index >= 0) {
+                        val updatedRoutine = todayRoutines[index].copy(scheduledDays = scheduledDays, scheduledTime = scheduledTime)
+                        todayRoutines[index] = updatedRoutine
+                        Log.d("HomeScreen", "✅ 루틴 업데이트 완료: ${updatedRoutine.title}")
+                    } else {
+                        Log.w("HomeScreen", "⚠️ todayRoutines에서 루틴을 찾을 수 없음: routineId=$routineId")
+                    }
+                }
+                
+                Log.d("HomeScreen", "🎉 모든 스케줄 정보 로딩 완료!")
             }
             
-                         // 서버 데이터 로드 후 runningId가 있으면 myRoutines에서만 해당 루틴을 isRunning=true로 설정하고 맨 앞으로 이동 (TODAY 탭은 제외)
-             runningId?.let { id ->
-                 Log.d("HomeScreen", "🔄 서버 데이터 로드 후 runningId 처리: $id")
+                         // 서버 데이터 로드 후 runningIds 스택이 있으면 myRoutines에서 해당 루틴들을 isRunning=true로 설정하고 맨 앞으로 이동 (TODAY 탭은 제외)
+             if (runningIds.isNotEmpty()) {
+                 Log.d("HomeScreen", "🔄 서버 데이터 로드 후 runningIds 스택 처리: $runningIds")
                  
-                 // myRoutines에서만 진행중인 루틴을 맨 앞으로 이동 (TODAY 탭은 하이라이트/이동 없음)
+                 // myRoutines에서 진행중인 루틴들을 맨 앞으로 이동 (TODAY 탭은 하이라이트/이동 없음)
                  val myRoutinesList = myRoutines.toList()
-                 val myIdx = myRoutinesList.indexOfFirst { it.routineId.toStableIntId() == id }
-                 if (myIdx >= 0) {
-                     Log.d("HomeScreen", "✅ myRoutines에서 진행중 루틴 발견: ${myRoutinesList[myIdx].title}")
-                     
-                     val updatedRoutines = myRoutinesList.toMutableList()
-                     val runningRoutine = updatedRoutines.removeAt(myIdx)
-                     val updatedRunningRoutine = runningRoutine.copy(isRunning = true)
-                     updatedRoutines.add(0, updatedRunningRoutine)
-                     
-                     Log.d("HomeScreen", "🔄 myRoutines 업데이트: ${updatedRunningRoutine.title}를 맨 앞으로 이동")
-                     homeVm.updateMyRoutines(updatedRoutines)
-                     
-                     // 하이라이트 설정 (하단 루틴 목록용)
-                     if (highlightId != id) {
-                         highlightId = id
-                         Log.d("HomeScreen", "🎯 서버 데이터 로드 후 하이라이트 ID 설정: $highlightId")
+                 val updatedRoutines = myRoutinesList.toMutableList()
+                 
+                 // 스택의 순서대로 (최신이 맨 위) 진행중인 루틴들을 맨 앞으로 이동 (간편 루틴만 isRunning=true)
+                 val runningRoutines = mutableListOf<Routine>()
+                 
+                 runningIds.reversed().forEach { id ->
+                     val myIdx = updatedRoutines.indexOfFirst { it.routineId.toStableIntId() == id }
+                     if (myIdx >= 0) {
+                         val routine = updatedRoutines[myIdx]
+                         val isSimpleRoutine = determineRoutineType(routine.requiredTime)
+                         
+                         Log.d("HomeScreen", "✅ myRoutines에서 진행중 루틴 발견: ${routine.title} (간편: $isSimpleRoutine)")
+                         
+                         val runningRoutine = updatedRoutines.removeAt(myIdx)
+                         val updatedRunningRoutine = if (isSimpleRoutine) {
+                             runningRoutine.copy(isRunning = true) // 간편 루틴만 하이라이트
+                         } else {
+                             runningRoutine.copy(isRunning = false) // 집중 루틴은 하이라이트 안함
+                         }
+                         runningRoutines.add(updatedRunningRoutine)
+                         
+                         Log.d("HomeScreen", "🔄 진행중 루틴 수집: ${updatedRunningRoutine.title} (isRunning: ${updatedRunningRoutine.isRunning})")
+                     } else {
+                         Log.w("HomeScreen", "⚠️ myRoutines에서 runningId=$id 를 찾을 수 없음")
                      }
-                 } else {
-                     Log.w("HomeScreen", "⚠️ myRoutines에서 runningId=$id 를 찾을 수 없음")
                  }
+                 
+                 // 스택 순서대로 맨 앞에 추가 (최신이 맨 위)
+                 runningRoutines.reversed().forEach { routine ->
+                     updatedRoutines.add(0, routine)
+                     Log.d("HomeScreen", "🔄 스택 순서대로 맨 앞에 추가: ${routine.title}")
+                 }
+                 
+                 homeVm.updateMyRoutines(updatedRoutines)
+                 Log.d("HomeScreen", "✅ myRoutines 스택 기반 업데이트 완료")
              }
         }
     }
@@ -428,6 +515,10 @@ fun HomeScreen(
     // 네비게이션 트리거 처리
     val navigateToRoutineFocus by homeEntry.savedStateHandle
         .getStateFlow<String?>("navigateToRoutineFocus", null)
+        .collectAsState(initial = null)
+    
+    val navigateToRoutineSimpleRun by homeEntry.savedStateHandle
+        .getStateFlow<String?>("navigateToRoutineSimpleRun", null)
         .collectAsState(initial = null)
 
     LaunchedEffect(navigateToRoutineFocus) {
@@ -442,6 +533,21 @@ fun HomeScreen(
             // 트리거 초기화
             homeEntry.savedStateHandle["navigateToRoutineFocus"] = null
             Log.d("HomeScreen", "🔄 네비게이션 트리거 초기화 완료")
+        }
+    }
+    
+    LaunchedEffect(navigateToRoutineSimpleRun) {
+        Log.d("HomeScreen", "🔄 LaunchedEffect(navigateToRoutineSimpleRun) 실행: $navigateToRoutineSimpleRun")
+        navigateToRoutineSimpleRun?.let { routineId ->
+            Log.d("HomeScreen", "✅ 간편 루틴 네비게이션 트리거 감지: routineId=$routineId")
+            // 스텝 정보 로드 완료 후 네비게이션
+            kotlinx.coroutines.delay(500)
+            Log.d("HomeScreen", "🔄 500ms 딜레이 완료, 간편 루틴 네비게이션 시작")
+            navController.navigate(Route.RoutineSimpleRun.route)
+            Log.d("HomeScreen", "✅ RoutineSimpleRun으로 네비게이션 완료")
+            // 트리거 초기화
+            homeEntry.savedStateHandle["navigateToRoutineSimpleRun"] = null
+            Log.d("HomeScreen", "🔄 간편 루틴 네비게이션 트리거 초기화 완료")
         }
     }
 
@@ -731,6 +837,13 @@ fun HomeScreen(
                                     Log.d("HomeScreen", "   - tags: ${routine.tags}")
                                     val stableId = routine.routineId.toStableIntId()
                                     Log.d("HomeScreen", "   - stableId: $stableId")
+                                    
+                                    // intro 화면을 본 적이 있는지 확인
+                                    val hasSeenIntro = context.getSharedPreferences("routine_intro_prefs", android.content.Context.MODE_PRIVATE)
+                                        .getBoolean("has_seen_intro_${routine.title}", false)
+                                    
+                                    Log.d("HomeScreen", "🔍 intro 화면 확인: ${routine.title} - hasSeenIntro=$hasSeenIntro")
+                                    
                                     sharedViewModel.setSelectedRoutineId(stableId)
                                     sharedViewModel.setOriginalRoutineId(routine.routineId)
                                     Log.d("HomeScreen", "🔄 setRoutineInfo 호출")
@@ -744,9 +857,41 @@ fun HomeScreen(
                                     Log.d("HomeScreen", "🔄 loadMyRoutineDetail 호출 (사용앱 정보 포함)")
                                     homeVm.loadMyRoutineDetail(routine.routineId)
 
-                                    // 네비게이션 트리거 설정
-                                    Log.d("HomeScreen", "🔄 네비게이션 트리거 설정")
-                                    homeEntry.savedStateHandle["navigateToRoutineFocus"] = routine.routineId
+                                                                    if (hasSeenIntro && isSimple) {
+                                    // 이미 intro를 본 간편 루틴이면 바로 간편 루틴 화면으로 이동
+                                    Log.d("HomeScreen", "🚀 이미 intro를 본 간편 루틴, 바로 간편 루틴 화면으로 이동")
+                                    
+                                    // 저장된 스텝 상태 복원
+                                    val savedStepStatesJson = context.getSharedPreferences("routine_intro_prefs", android.content.Context.MODE_PRIVATE)
+                                        .getString("saved_steps_${routine.title}", null)
+                                    
+                                    if (savedStepStatesJson != null) {
+                                        try {
+                                            val gson = com.google.gson.Gson()
+                                            val type = com.google.gson.reflect.TypeToken.getParameterized(List::class.java, RoutineStepData::class.java).type
+                                            val savedStepStates: List<RoutineStepData> = gson.fromJson(savedStepStatesJson, type)
+                                            
+                                            // SharedRoutineViewModel에 저장된 스텝 상태 설정
+                                            sharedViewModel.setStepsFromSaved(savedStepStates)
+                                            Log.d("HomeScreen", "🔄 저장된 스텝 상태 복원: ${savedStepStates.size}개 스텝")
+                                        } catch (e: Exception) {
+                                            Log.e("HomeScreen", "❌ 저장된 스텝 상태 복원 실패", e)
+                                        }
+                                    }
+                                    
+                                    // 스택에 추가
+                                    val currentRunningIds = homeEntry.savedStateHandle.get<List<Int>>("runningRoutineIds") ?: emptyList()
+                                    val updatedRunningIds = currentRunningIds + stableId
+                                    homeEntry.savedStateHandle["runningRoutineIds"] = updatedRunningIds
+                                    Log.d("HomeScreen", "🎯 바로 간편 루틴 화면으로 이동 시 스택에 추가: $stableId (스택 크기: ${updatedRunningIds.size})")
+                                    
+                                    // 바로 간편 루틴 화면으로 네비게이션
+                                    homeEntry.savedStateHandle["navigateToRoutineSimpleRun"] = routine.routineId
+                                } else {
+                                        // 처음이거나 집중 루틴이면 intro 화면으로 이동
+                                        Log.d("HomeScreen", "🎯 intro 화면으로 이동 (스택 추가 안함)")
+                                        homeEntry.savedStateHandle["navigateToRoutineFocus"] = routine.routineId
+                                    }
                                 }
                             )
                         } else {
@@ -839,8 +984,15 @@ fun HomeScreen(
                                 }
 
                                 // 기존 Int API와 호환
-                                sharedViewModel.setSelectedRoutineId(routine.routineId.toStableIntId())
+                                val stableId = routine.routineId.toStableIntId()
+                                sharedViewModel.setSelectedRoutineId(stableId)
                                 sharedViewModel.setOriginalRoutineId(routine.routineId)
+                                
+                                // intro 화면을 본 적이 있는지 확인
+                                val hasSeenIntro = context.getSharedPreferences("routine_intro_prefs", android.content.Context.MODE_PRIVATE)
+                                    .getBoolean("has_seen_intro_${routine.title}", false)
+                                
+                                Log.d("HomeScreen", "🔍 intro 화면 확인: ${routine.title} - hasSeenIntro=$hasSeenIntro")
                                 // requiredTime 기반으로 간편/집중 구분
                                 val isSimple = determineRoutineType(routine.requiredTime)
                                 val actualCategory = if (isSimple) "간편" else "집중"
@@ -855,10 +1007,43 @@ fun HomeScreen(
                                 // 루틴 상세 정보 로드 (스텝 포함) 후 네비게이션
                                 homeVm.loadMyRoutineDetail(routine.routineId)
 
-                                // 네비게이션 트리거 설정
-                                homeEntry.savedStateHandle["navigateToRoutineFocus"] = routine.routineId
+                                if (hasSeenIntro && isSimple) {
+                                    // 이미 intro를 본 간편 루틴이면 바로 간편 루틴 화면으로 이동
+                                    Log.d("HomeScreen", "🚀 이미 intro를 본 간편 루틴, 바로 간편 루틴 화면으로 이동")
+                                    
+                                    // 저장된 스텝 상태 복원
+                                    val savedStepStatesJson = context.getSharedPreferences("routine_intro_prefs", android.content.Context.MODE_PRIVATE)
+                                        .getString("saved_steps_${routine.title}", null)
+                                    
+                                    if (savedStepStatesJson != null) {
+                                        try {
+                                            val gson = com.google.gson.Gson()
+                                            val type = com.google.gson.reflect.TypeToken.getParameterized(List::class.java, RoutineStepData::class.java).type
+                                            val savedStepStates: List<RoutineStepData> = gson.fromJson(savedStepStatesJson, type)
+                                            
+                                            // SharedRoutineViewModel에 저장된 스텝 상태 설정
+                                            sharedViewModel.setStepsFromSaved(savedStepStates)
+                                            Log.d("HomeScreen", "🔄 저장된 스텝 상태 복원: ${savedStepStates.size}개 스텝")
+                                        } catch (e: Exception) {
+                                            Log.e("HomeScreen", "❌ 저장된 스텝 상태 복원 실패", e)
+                                        }
+                                    }
+                                    
+                                    // 스택에 추가
+                                    val currentRunningIds = homeEntry.savedStateHandle.get<List<Int>>("runningRoutineIds") ?: emptyList()
+                                    val updatedRunningIds = currentRunningIds + stableId
+                                    homeEntry.savedStateHandle["runningRoutineIds"] = updatedRunningIds
+                                    Log.d("HomeScreen", "🎯 바로 간편 루틴 화면으로 이동 시 스택에 추가: $stableId (스택 크기: ${updatedRunningIds.size})")
+                                    
+                                    // 바로 간편 루틴 화면으로 네비게이션
+                                    homeEntry.savedStateHandle["navigateToRoutineSimpleRun"] = routine.routineId
+                                } else {
+                                    // 처음이거나 집중 루틴이면 intro 화면으로 이동
+                                    Log.d("HomeScreen", "🎯 intro 화면으로 이동 (스택 추가 안함)")
+                                    homeEntry.savedStateHandle["navigateToRoutineFocus"] = routine.routineId
+                                }
                             },
-                            runningHighlightId = highlightId
+                            runningHighlightIds = highlightIds
                         )
                     } else {
                         Log.d("HomeScreen", "내 루틴 목록이 비어있음")
@@ -884,21 +1069,28 @@ private fun String.toStableIntId(): Int {
 }
 
 // 오늘 "루틴 목록" 전용 정렬:
-// 1) 진행중 루틴 우선 → 2) 시간 미설정 → 3) 시간 설정(오름차순)
+// 1) 진행중 루틴 우선 (스택 순서 유지) → 2) 시간 미설정 → 3) 시간 설정(오름차순)
 private fun List<Routine>.sortedForList(): List<Routine> {
     Log.d("HomeScreen", "🔄 sortedForList() 호출: ${this.size}개 루틴")
     this.forEach { routine ->
         Log.d("HomeScreen", "   - ${routine.title}: isRunning=${routine.isRunning}, category=${routine.category}")
     }
     
-    val sorted = this.sortedWith(
-        compareByDescending<Routine> { it.isRunning }  // 진행중인 루틴을 맨 앞으로 (카테고리 상관없이)
-            .thenByDescending { it.scheduledTime == null }
+    // 진행중인 루틴들과 나머지 루틴들을 분리
+    val runningRoutines = this.filter { it.isRunning }
+    val nonRunningRoutines = this.filter { !it.isRunning }
+    
+    // 나머지 루틴들을 기존 정렬 기준으로 정렬
+    val sortedNonRunning = nonRunningRoutines.sortedWith(
+        compareByDescending<Routine> { it.scheduledTime == null }
             .thenBy { it.scheduledTime ?: java.time.LocalTime.MAX }
     )
     
-    Log.d("HomeScreen", "✅ 정렬 완료: " + sorted.joinToString { "${it.title}(isRunning=${it.isRunning})" })
-    return sorted
+    // 진행중인 루틴들 + 정렬된 나머지 루틴들 (스택 순서 유지)
+    val result = runningRoutines + sortedNonRunning
+    
+    Log.d("HomeScreen", "✅ 정렬 완료: " + result.joinToString { "${it.title}(isRunning=${it.isRunning})" })
+    return result
 }
 
 // 현재 시간을 기준으로 가장 가까운 시간대의 루틴부터 정렬 (오늘 탭용)

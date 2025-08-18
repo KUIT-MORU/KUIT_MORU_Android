@@ -129,6 +129,18 @@ fun MainNavGraph(
                     sharedViewModel.setRoutineCategory(category)
                     sharedViewModel.setTotalDuration(totalDuration)
 
+                    // 실제 루틴 진행 화면에 진입할 때 스택에 추가
+                    val currentRunningIds = navController.getBackStackEntry(Route.Home.route)
+                        .savedStateHandle.get<List<Int>>("runningRoutineIds") ?: emptyList()
+                    val stableId = sharedViewModel.originalRoutineId.value?.toStableIntId()
+                    
+                    if (stableId != null) {
+                        val updatedRunningIds = currentRunningIds + stableId
+                        navController.getBackStackEntry(Route.Home.route)
+                            .savedStateHandle["runningRoutineIds"] = updatedRunningIds
+                        Log.d("MainNavGraph", "🎯 루틴 진행 화면 진입 시 스택에 추가: $stableId (스택 크기: ${updatedRunningIds.size})")
+                    }
+
                     // 실행 화면 이동
                     if (category == "집중") {
                         Log.d("MainNavGraph", "🎯 집중 루틴으로 이동: RoutineFocus")
@@ -139,6 +151,9 @@ fun MainNavGraph(
                     }
                 },
                 onBackClick = {
+                    // intro 화면에서 뒤로가기할 때는 스택에서 제거하지 않음 (아직 실제 루틴 진행 화면에 진입하지 않았으므로)
+                    Log.d("MainNavGraph", "🔄 intro 화면 뒤로가기: 스택 유지 (아직 루틴 진행 화면에 진입하지 않음)")
+                    
                     navController.popBackStack()
                 }
             )
@@ -190,12 +205,10 @@ fun MainNavGraph(
                         // 홈으로 돌아갈 때 "진행중 루틴" 알림
                         android.util.Log.d("MainNavGraph", "🔄 간편 루틴 X 버튼 클릭: routineId=$currentId")
 
-                        // originalRoutineId를 stableIntId로 변환해서 설정
-                        val stableId = originalRoutineId?.toStableIntId()
-                        android.util.Log.d("MainNavGraph", "🎯 runningRoutineId 설정: originalRoutineId=$originalRoutineId, stableId=$stableId")
-
-                        navController.getBackStackEntry(Route.Home.route)
-                            .savedStateHandle["runningRoutineId"] = stableId
+                        // 간편 루틴 중단 시 스택 유지 (다시 들어갈 수 있으므로 하이라이트 유지)
+                        val currentRunningIds = navController.getBackStackEntry(Route.Home.route)
+                            .savedStateHandle.get<List<Int>>("runningRoutineIds") ?: emptyList()
+                        Log.d("MainNavGraph", "🔄 간편화면 중단: 스택 유지 (스택 크기: ${currentRunningIds.size})")
 
                         // 간편 루틴은 실천율에 반영되지만 내 기록에는 표시되지 않음
 
@@ -212,21 +225,25 @@ fun MainNavGraph(
 
                     },
                     onFinishConfirmed = { finishedId: String ->
-                        Log.d(
-                            "MainNavGraph",
-                            "🔄 RoutineSimpleRun 완료 처리: originalRoutineId=$originalRoutineId"
-                        )
                         Log.d("MainNavGraph", "🔄 RoutineSimpleRun 완료 처리: originalRoutineId=$originalRoutineId")
+                        Log.d("MainNavGraph", "🔄 RoutineSimpleRun 완료 처리: originalRoutineId=$originalRoutineId")
+
+                        // 진행중 루틴 ID 스택에서 제거 (간편 루틴 완료)
+                        val currentRunningIds = navController.getBackStackEntry(Route.Home.route)
+                            .savedStateHandle.get<List<Int>>("runningRoutineIds") ?: emptyList()
+                        if (currentRunningIds.isNotEmpty()) {
+                            val updatedRunningIds = currentRunningIds.dropLast(1) // 스택에서 최상단 제거
+                            navController.getBackStackEntry(Route.Home.route)
+                                .savedStateHandle["runningRoutineIds"] = updatedRunningIds
+                            Log.d("MainNavGraph", "🔄 간편화면 완료: runningRoutineIds 스택에서 제거 (스택 크기: ${updatedRunningIds.size})")
+                        }
 
                         // 간편 루틴 완료 시 실천율 업데이트 (RoutineSimpleRunScreen에서 처리됨)
                         // 내 기록에는 표시되지 않음
 
                         navController.getBackStackEntry(Route.Home.route)
                             .savedStateHandle["finishedRoutineId"] = originalRoutineId ?: finishedId
-                        Log.d(
-                            "MainNavGraph",
-                            "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}"
-                        )
+                        Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}")
                         navController.popBackStack(Route.Home.route, false)
                     }
                 )
@@ -275,6 +292,11 @@ fun MainNavGraph(
                 sharedViewModel = sharedViewModel,
                 onDismiss = {
                     routineFocusViewModel.endFocusRoutine()
+                    // 진행중 루틴 ID 스택 완전 초기화 (집중 루틴은 완료해야만 나올 수 있음)
+                    navController.getBackStackEntry(Route.Home.route)
+                        .savedStateHandle["runningRoutineIds"] = emptyList<Int>()
+                    Log.d("MainNavGraph", "🔄 집중화면 중단: runningRoutineIds 스택 완전 초기화")
+                    
                     navController.popBackStack(
                         Route.Home.route,
                         inclusive = false
@@ -289,16 +311,16 @@ fun MainNavGraph(
                 onFinishConfirmed = { finishedId: String ->
                     routineFocusViewModel.endFocusRoutine()
                     Log.d("MainNavGraph", "🔄 RoutineFocus 완료 처리: originalRoutineId=$originalRoutineId")
-                    Log.d(
-                        "MainNavGraph",
-                        "🔄 RoutineFocus 완료 처리: originalRoutineId=$originalRoutineId"
-                    )
+                    Log.d("MainNavGraph", "🔄 RoutineFocus 완료 처리: originalRoutineId=$originalRoutineId")
+                    
+                    // 진행중 루틴 ID 스택 완전 초기화 (집중 루틴 완료)
+                    navController.getBackStackEntry(Route.Home.route)
+                        .savedStateHandle["runningRoutineIds"] = emptyList<Int>()
+                    Log.d("MainNavGraph", "🔄 집중화면 완료: runningRoutineIds 스택 완전 초기화")
+                    
                     navController.getBackStackEntry(Route.Home.route)
                         .savedStateHandle["finishedRoutineId"] = originalRoutineId ?: finishedId
-                    Log.d(
-                        "MainNavGraph",
-                        "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}"
-                    )
+                    Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}")
                     navController.popBackStack(Route.Home.route, false)
                 },
                 onNavigateToMyActivity = {
@@ -314,7 +336,13 @@ fun MainNavGraph(
                         set("completedRoutineTags", tags)
                     }
 
-                    navController.navigate(Route.ActRecord.route)
+                    // 집중화면을 백스택에서 제거하고 내 기록 화면으로 이동
+                    navController.navigate(Route.ActRecord.route) {
+                        // 집중화면을 백스택에서 제거
+                        popUpTo(Route.RoutineFocus.route) { inclusive = true }
+                        // 내 기록 화면으로 이동
+                        launchSingleTop = true
+                    }
                 }
             )
         }

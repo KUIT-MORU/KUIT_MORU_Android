@@ -18,6 +18,13 @@ interface RoutineService {
         @Query("size") size: Int = 20
     ): RoutinePageResponse
 
+    @GET("/api/routines")
+    suspend fun getAllMyRoutines(
+        @Query("sortType") sortType: String = "TIME", // LATEST | POPULAR | TIME
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 100
+    ): RoutinePageResponse
+
     @GET("/api/routines/{routineId}")
     suspend fun getRoutineDetail(@Path("routineId") routineId: String): RoutineDetailResponseV1
 

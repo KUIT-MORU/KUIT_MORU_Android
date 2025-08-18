@@ -222,3 +222,4 @@ private fun launchApp(context: Context, packageName: String) {
         android.util.Log.e("AppListPopup", "앱 실행 실패: $packageName", e)
     }
 }
+
