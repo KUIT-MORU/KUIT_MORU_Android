@@ -1,8 +1,5 @@
 package com.konkuk.moru.presentation.myroutines.screen
 
-import TimePickerSheetContent
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -44,6 +41,7 @@ import com.konkuk.moru.core.component.chip.MoruChip
 import com.konkuk.moru.core.component.routine.RoutineListItem
 import com.konkuk.moru.core.component.routine.RoutineListItemWithClock
 import com.konkuk.moru.presentation.myroutines.component.MyRoutineTopAppBar
+import com.konkuk.moru.presentation.myroutines.component.TimePickerSheetContent
 import com.konkuk.moru.presentation.myroutines.viewmodel.MyRoutinesViewModel
 import com.konkuk.moru.presentation.routinefeed.component.modale.CenteredInfoDialog
 import com.konkuk.moru.presentation.routinefeed.component.modale.CustomDialog
@@ -54,6 +52,7 @@ import com.konkuk.moru.ui.theme.moruFontLight
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
+import java.time.LocalTime
 
 enum class SortOption { BY_TIME, LATEST, POPULAR }
 
@@ -64,8 +63,15 @@ data class MyRoutinesUiState(
     val showDeleteDialog: Boolean = false,
     val showInfoTooltip: Boolean = false,
     val editingRoutineId: String? = null,
-    val showDeleteSuccessDialog: Boolean = false
-)
+    val showDeleteSuccessDialog: Boolean = false,
+
+    // ✅ TimePicker 초기화용
+    val editingScheduleId: String? = null,
+    val initialTimeForSheet: LocalTime? = null,
+    val initialDaysForSheet: Set<DayOfWeek> = emptySet(),
+    val initialAlarmForSheet: Boolean = true,
+
+    )
 
 /**
  * MyRoutinesScreen의 메인 컴포저블입니다.
@@ -99,6 +105,7 @@ fun MyRoutinesScreen(
 
     Box(modifier = modifier.fillMaxSize()) {
         Scaffold(
+            modifier = Modifier.padding(bottom = 80.dp),
             topBar = {
                 MyRoutineTopAppBar(
                     onInfoClick = viewModel::onShowInfoTooltip,
@@ -169,7 +176,12 @@ fun MyRoutinesScreen(
                                     onCheckedChange = { isChecked ->
                                         viewModel.onCheckRoutine(routine.routineId, isChecked)
                                     },
-                                    onItemClick = { viewModel.onCheckRoutine(routine.routineId, !routine.isChecked) }
+                                    onItemClick = {
+                                        viewModel.onCheckRoutine(
+                                            routine.routineId,
+                                            !routine.isChecked
+                                        )
+                                    }
                                 )
                             } else {
                                 RoutineListItemWithClock(
@@ -180,7 +192,13 @@ fun MyRoutinesScreen(
                                     isLiked = routine.isLiked,
                                     onLikeClick = { viewModel.onLikeClick(routine.routineId) },
                                     onClockClick = { viewModel.openTimePicker(routine.routineId) },
-                                    onItemClick = { onNavigateToDetail(routine.routineId) }
+                                    onItemClick = {
+                                        android.util.Log.d(
+                                            "MyRoutinesScreen",
+                                            "onItemClick -> ${routine.routineId}"
+                                        )
+                                        onNavigateToDetail(routine.routineId)
+                                    }
                                 )
                             }
                         }
@@ -229,13 +247,13 @@ fun MyRoutinesScreen(
             sheetState = sheetState
         ) {
             TimePickerSheetContent(
+                initialTime = uiState.initialTimeForSheet,          // ✅ 추가
+                initialDays = uiState.initialDaysForSheet,          // ✅ 추가
+                initialAlarm = uiState.initialAlarmForSheet,        // ✅ 추가
                 onConfirm = { time, days, alarm ->
-                    // 🎨 2. 이제 컴파일러는 editingId가 null이 아님을 확신합니다.
                     viewModel.onConfirmTimeSet(editingId, time, days, alarm)
                     scope.launch { sheetState.hide() }.invokeOnCompletion {
-                        if (!sheetState.isVisible) {
-                            viewModel.closeTimePicker()
-                        }
+                        if (!sheetState.isVisible) viewModel.closeTimePicker()
                     }
                 }
             )
@@ -352,7 +370,7 @@ private fun MyRoutinesScreenDeleteModePreview() {
     }
     MORUTheme {
         MyRoutinesScreen(
-            viewModel = previewViewModel,
+            viewModel = viewModel(),
             onNavigateToCreateRoutine = {},
             onNavigateToRoutineFeed = {},
             onNavigateToDetail = {}
@@ -360,7 +378,6 @@ private fun MyRoutinesScreenDeleteModePreview() {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, name = "내 루틴 - 비어있을 때")
 @Composable
 private fun MyRoutinesScreenEmptyPreview() {
@@ -373,10 +390,11 @@ private fun MyRoutinesScreenEmptyPreview() {
     }
     MORUTheme {
         MyRoutinesScreen(
-            viewModel = previewViewModel,
+            viewModel = viewModel(),
             onNavigateToCreateRoutine = {},
             onNavigateToRoutineFeed = {},
             onNavigateToDetail = {}
         )
     }
 }
+

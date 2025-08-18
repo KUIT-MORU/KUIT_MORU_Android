@@ -1,4 +1,4 @@
-package com.konkuk.moru.data.dto.response
+package com.konkuk.moru.data.dto.response.login
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

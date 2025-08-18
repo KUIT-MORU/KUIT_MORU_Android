@@ -5,8 +5,8 @@ import android.content.Context
 import android.util.Log
 import com.konkuk.moru.core.datastore.TokenPreference
 import com.konkuk.moru.data.dto.request.LoginRequestDto
-import com.konkuk.moru.data.dto.response.LoginResponseDto
-import com.konkuk.moru.data.dto.response.UserProfileResponse
+import com.konkuk.moru.data.dto.response.login.LoginResponseDto
+import com.konkuk.moru.data.dto.response.UserProfile.UserProfileResponse
 import com.konkuk.moru.data.service.AuthService
 import javax.inject.Inject
 

@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.data.model.Routine
+import java.time.DayOfWeek
 
 @Composable
 fun RoutineCardList(
@@ -28,14 +29,24 @@ fun RoutineCardList(
         horizontalArrangement = Arrangement.spacedBy(17.dp)
     ) {
         //나중에 진짜 루틴들 받아올 것
-        routines.forEach { routine ->
+        android.util.Log.d("RoutineCardList", "🔄 RoutineCardList 렌더링: routines.size=${routines.size}, runningHighlightId=$runningHighlightId")
+        
+        routines.forEachIndexed { index, routine ->
+            val stableId = routine.routineId.toStableIntId()
             val isHighlighted =
                 runningHighlightId != null &&
-                        runningHighlightId == routine.routineId.toStableIntId()
+                        runningHighlightId == stableId
+
+            android.util.Log.d("RoutineCardList", "🔍 루틴[$index]: ${routine.title}, routineId=${routine.routineId}, stableId=$stableId, isHighlighted=$isHighlighted, isRunning=${routine.isRunning}")
+
+            if (isHighlighted) {
+                android.util.Log.d("RoutineCardList", "🎯 하이라이트 적용: ${routine.title} (ID: ${routine.routineId})")
+            }
 
             RoutineCardItem(
                 title = routine.title,
                 tags = routine.tags,
+                scheduledDays = routine.scheduledDays,
                 onClick = { onRoutineClick(routine.routineId) },
                 isHighlighted = isHighlighted
             )
@@ -70,7 +81,8 @@ private fun RoutineCardListPreview() {
             likes = 10,
             isLiked = false,
             isBookmarked = false,
-            isRunning = false
+            isRunning = false,
+            scheduledDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY)
         ),
         Routine(
             routineId = "routine-2",
@@ -85,7 +97,8 @@ private fun RoutineCardListPreview() {
             likes = 8,
             isLiked = true,
             isBookmarked = false,
-            isRunning = false
+            isRunning = false,
+            scheduledDays = setOf(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY, DayOfWeek.SATURDAY)
         ),
         Routine(
             routineId = "routine-3",
@@ -100,7 +113,8 @@ private fun RoutineCardListPreview() {
             likes = 5,
             isLiked = false,
             isBookmarked = true,
-            isRunning = false
+            isRunning = false,
+            scheduledDays = setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
         )
     )
 

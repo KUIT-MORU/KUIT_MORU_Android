@@ -2,12 +2,12 @@ package com.konkuk.moru.presentation.routinefocus.screen
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.provider.Settings
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -19,15 +19,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -40,6 +41,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,13 +61,16 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.collectAsState
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
+import com.konkuk.moru.presentation.routinefocus.component.FocusOnboardingPopup
+import com.konkuk.moru.presentation.routinefocus.component.AppIcon
 import com.konkuk.moru.presentation.routinefocus.component.RoutineTimelineItem
 import com.konkuk.moru.presentation.routinefocus.component.SettingSwitchGroup
-import com.konkuk.moru.presentation.routinefocus.component.ScreenBlockPopup
-import com.konkuk.moru.presentation.routinefocus.component.FocusOnboardingPopup
+import com.konkuk.moru.presentation.routinefeed.data.AppDto
+import com.konkuk.moru.presentation.routinefocus.component.ScreenBlockOverlay
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
 import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
@@ -74,6 +81,25 @@ fun formatTotalTime(seconds: Int): String {
     val minutes = seconds / 60
     val secs = seconds % 60
     return String.format("%02dm %02ds", minutes, secs)
+}
+
+// 현재 step에 따라 보여줄 step들을 계산하는 함수
+fun calculateVisibleSteps(currentStep: Int, totalSteps: Int): List<Int> {
+    return when {
+        // step이 1~4일 때는 1,2,3,4를 보여줌
+        currentStep <= 4 -> (1..4).takeWhile { it <= totalSteps }
+        // step이 5 이상일 때는 currentStep-3부터 currentStep까지 보여줌 (최대 4개)
+        else -> {
+            val startStep = maxOf(1, currentStep - 3)
+            val endStep = minOf(totalSteps, currentStep)
+            (startStep..endStep).toList()
+        }
+    }
+}
+
+// 모든 스텝을 반환하는 함수 (스크롤용)
+fun getAllSteps(totalSteps: Int): List<Int> {
+    return (1..totalSteps).toList()
 }
 
 // 스탭 개수에 따라 타임라인을 그리는 함수
@@ -174,13 +200,6 @@ fun triggerVibration(context: Context) {
         @Suppress("DEPRECATION")
         context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
     }
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
-    } else {
-        @Suppress("DEPRECATION")
-        vibrator.vibrate(500)
-    }
 }
 
 // 방해금지 모드 제어 함수
@@ -212,12 +231,7 @@ fun toggleDoNotDisturb(context: Context, enable: Boolean) {
     }
 }
 
-// 사용앱 정보 데이터 클래스
-data class AppInfo(
-    val packageName: String,
-    val appName: String,
-    val iconResId: Int = R.drawable.ic_default
-)
+
 
 // 앱 실행 함수
 fun launchApp(context: Context, packageName: String) {
@@ -234,7 +248,7 @@ fun launchApp(context: Context, packageName: String) {
 
 @Composable
 fun PortraitRoutineFocusScreen(
-    focusViewModel: RoutineFocusViewModel = viewModel(),
+    focusViewModel: RoutineFocusViewModel,
     sharedViewModel: SharedRoutineViewModel,
     routineId: Int,
     onDismiss: () -> Unit,
@@ -242,8 +256,18 @@ fun PortraitRoutineFocusScreen(
     onFinishConfirmed: (String) -> Unit,
     // Preview용 강제 상태 파라미터 추가
     forceShowFinishPopup: Boolean = false,
-    forceShowResultPopup: Boolean = false
+    forceShowResultPopup: Boolean = false,
+    // 내 기록으로 이동을 위한 네비게이션 콜백 추가
+    onNavigateToMyActivity: () -> Unit = {}
 ) {
+    // 강제 테스트 로그
+    android.util.Log.e("TEST_LOG", "🔥 PortraitRoutineFocusScreen 시작됨! routineId=$routineId")
+    System.out.println("🔥 System.out: PortraitRoutineFocusScreen 시작됨!")
+
+    // 기본 로그 추가
+    android.util.Log.d("PortraitRoutineFocusScreen", "🚀 PortraitRoutineFocusScreen 시작됨!")
+    android.util.Log.d("PortraitRoutineFocusScreen", "📱 routineId: $routineId, currentStep: $currentStep")
+
     val context = LocalContext.current
 
     // intro에서 데이터값 받아오기
@@ -301,34 +325,89 @@ fun PortraitRoutineFocusScreen(
     // 가로 모드 on/off 상태 저장
     var isLandscapeMode by remember { mutableStateOf(false) }
 
-    // 메모장 팝업 상태 저장
-    var showMemoPad by remember { mutableStateOf(false) }
+    // 메모장 팝업 상태 저장 - focusViewModel에서 가져오기
+    val showMemoPad = focusViewModel.showMemoPad
 
-    // 메모장 내용 저장 (STEP별로 저장)
+    // 메모장 내용 저장 - focusViewModel에서 실시간으로 가져오기
     var memoText by remember { mutableStateOf("") }
 
-    // STEP별 메모 저장 (내 기록용)
-    var stepMemos by remember { mutableStateOf(mutableMapOf<Int, String>()) }
+    // currentstep이 변경될 때마다 memoText를 업데이트
+    LaunchedEffect(currentstep) {
+        memoText = focusViewModel.getStepMemo(currentstep)
+    }
+
+    // STEP별 메모는 focusViewModel에서 관리
 
     // 앱 아이콘 팝업 상태 저장
     val showAppIcons = focusViewModel.isAppIconsVisible
 
     // 사용앱 리스트 (루틴 생성 시 선택한 앱들)
-    val selectedApps =
-        sharedViewModel.selectedApps.collectAsStateWithLifecycle<List<AppInfo>>().value
+    val selectedApps = focusViewModel.selectedApps
+
+    // 강제 테스트 로그
+    android.util.Log.e("TEST_LOG", "🔥 PortraitRoutineFocusScreen - selectedApps 상태: ${selectedApps.size}개")
+    selectedApps.forEachIndexed { index, app ->
+        android.util.Log.e("TEST_LOG", "🔥 앱 ${index + 1}: ${app.name} (${app.packageName})")
+    }
+    System.out.println("🔥 System.out: selectedApps 상태 - ${selectedApps.size}개")
+
+    // 사용앱 데이터 로깅
+    android.util.Log.d("PortraitRoutineFocusScreen", "🔍 selectedApps 초기값: ${selectedApps.size}개")
+    selectedApps.forEachIndexed { index, app ->
+        android.util.Log.d("PortraitRoutineFocusScreen", "   - 초기 앱 ${index + 1}: ${app.name} (${app.packageName})")
+    }
+
+    // 테스트용 더미 데이터 (selectedApps가 비어있을 때)
+    val testApps = if (selectedApps.isEmpty()) {
+        listOf(
+            com.konkuk.moru.presentation.routinefeed.data.AppDto("카카오톡", "com.kakao.talk"),
+            com.konkuk.moru.presentation.routinefeed.data.AppDto("유튜브", "com.google.android.youtube"),
+            com.konkuk.moru.presentation.routinefeed.data.AppDto("인스타그램", "com.instagram.android")
+        ).also {
+            android.util.Log.d("PortraitRoutineFocusScreen", "🧪 테스트용 더미 앱 데이터 사용: ${it.size}개")
+        }
+    } else {
+        selectedApps.also {
+            android.util.Log.d("PortraitRoutineFocusScreen", "✅ 서버에서 받은 사용앱 데이터 사용: ${it.size}개")
+        }
+    }
+
+    // 강제로 더미 데이터 사용 (테스트용)
+    val forceTestApps = listOf(
+        com.konkuk.moru.presentation.routinefeed.data.AppDto("카카오톡", "com.kakao.talk"),
+        com.konkuk.moru.presentation.routinefeed.data.AppDto("유튜브", "com.google.android.youtube"),
+        com.konkuk.moru.presentation.routinefeed.data.AppDto("인스타그램", "com.instagram.android")
+    )
+
+    android.util.Log.d("PortraitRoutineFocusScreen", "🧪 강제 테스트 앱 데이터: ${forceTestApps.size}개")
+
+    // 집중 루틴 시작
+    LaunchedEffect(Unit) {
+        focusViewModel.startFocusRoutine()
+    }
 
     //1초마다 시간 증가,시간 초과 판단
     LaunchedEffect(currentstep) {
         val stepLimit = parseTimeToSeconds(routineItems.getOrNull(currentstep - 1)?.second ?: "0m")
         focusViewModel.setStepLimitFromTimeString(stepLimit)
         focusViewModel.startTimer()
-
-        // STEP 변경 시 메모 초기화 (이전 STEP 메모 저장)
-        if (currentstep > 1) {
-            stepMemos[currentstep - 1] = memoText
-        }
-        memoText = stepMemos[currentstep] ?: ""
     }
+
+         // 타임라인 스크롤 상태 관리
+     val timelineListState = rememberLazyListState()
+
+     // 코루틴 스코프 생성
+     val coroutineScope = rememberCoroutineScope()
+
+          // 현재 스텝이 변경될 때마다 타임라인을 해당 스텝으로 스크롤
+      LaunchedEffect(currentstep) {
+         // 스크롤 상태가 준비된 후에 스크롤 실행
+         delay(100)
+         // 현재 스텝이 화면에 보이도록 스크롤
+         val targetIndex = (currentstep - 1).coerceIn(0, routineItems.size - 1)
+         // 스크롤 애니메이션 실행
+         timelineListState.animateScrollToItem(targetIndex)
+     }
 
     // 시간 초과 시 진동 효과
     LaunchedEffect(isTimeout) {
@@ -349,7 +428,7 @@ fun PortraitRoutineFocusScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 24.dp, bottom = 133.dp) // 하단 영역 제외
+                    .padding(bottom = 133.dp) // 하단 영역만 제외
                     .background(colors.limeGreen.copy(alpha = 0.5f))
                     .zIndex(1f)
             )
@@ -400,7 +479,7 @@ fun PortraitRoutineFocusScreen(
                             }
                     )
                 }
-
+                Spacer(modifier = Modifier.height(16.dp))
                 // 루틴명
                 Text(
                     text = routineTitle,
@@ -445,25 +524,42 @@ fun PortraitRoutineFocusScreen(
                 // 타임라인과 다음 버튼을 포함하는 Row
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxWidth()
+                        .height(275.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    // 타임라인 영역 - weight를 사용해서 남은 공간 모두 사용
-                    Column(
-                        modifier = Modifier
-                            .weight(1f) // 남은 공간 모두 사용
-                            .height(275.dp)
-                            .padding(top = 18.dp)
-                    ) {
-                        routineItems.forEachIndexed { rawIndex, (title, time) ->
-                            val index = rawIndex + 1
+                                         // 타임라인 영역 - LazyColumn으로 스크롤 가능하게 변경
+                     LazyColumn(
+                         state = timelineListState,
+                         modifier = Modifier
+                             .weight(1f)
+                             .height(200.dp), // 고정 높이 설정
+                         verticalArrangement = Arrangement.spacedBy(0.dp), // 간격 제거하여 선이 연결되도록
+                         horizontalAlignment = Alignment.Start
+                     ) {
+                        // 모든 스텝을 표시하여 스크롤 가능하게 함
+                        val allSteps = getAllSteps(routineItems.size)
+
+                        items(allSteps) { stepIndex ->
+                            val (title, time) = routineItems[stepIndex - 1] // stepIndex는 1부터 시작하므로 -1
                             RoutineTimelineItem(
                                 time = time,
                                 title = title,
-                                index = index,
+                                index = stepIndex,
                                 currentStep = currentstep,
                                 isTimeout = isTimeout,
-                                isDarkMode = isDarkMode
+                                isDarkMode = isDarkMode,
+                                onStepClick = { clickedStep ->
+                                    // 클릭된 스텝으로 이동
+                                    if (clickedStep != currentstep) {
+                                        val stepTimeString = routineItems.getOrNull(clickedStep - 1)?.second ?: "0m"
+                                        focusViewModel.updateCurrentStep(clickedStep)
+                                        focusViewModel.setStepLimitFromTimeString(parseTimeToSeconds(stepTimeString))
+                                        focusViewModel.resetTimer()
+                                        focusViewModel.startTimer()
+                                    }
+                                }
                             )
                         }
                     }
@@ -476,7 +572,10 @@ fun PortraitRoutineFocusScreen(
                             .size(width = 100.dp, height = 123.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
                             // 마지막 step 도달 조건
                             val isFinalStep = currentstep == routineItems.size
 
@@ -501,11 +600,16 @@ fun PortraitRoutineFocusScreen(
                                                         ?: "0m"
                                                 focusViewModel.nextStep(nextStepTimeString)
                                                 focusViewModel.resumeTimer()
+
+                                                                                                 // 현재 step으로 타임라인 스크롤
+                                                 coroutineScope.launch {
+                                                     timelineListState.animateScrollToItem(currentstep - 1)
+                                                 }
                                             } else {
                                                 focusViewModel.pauseTimer()
                                                 // 루틴 종료 시 사용앱과 메모장 자동으로 끄기
                                                 focusViewModel.hideAppIcons()
-                                                showMemoPad = false
+                                                focusViewModel.hideMemoPad()
                                                 showFinishPopup = true
                                             }
                                         },
@@ -559,17 +663,28 @@ fun PortraitRoutineFocusScreen(
                             horizontalArrangement = Arrangement.spacedBy(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // 사용앱 아이콘들 (루틴 생성 시 선택한 앱들)
+                            // 사용앱 아이콘들 (루틴 생성 시 선택한 앱들) - 앱 이름에 맞는 아이콘 표시
                             selectedApps.forEachIndexed { index, appInfo ->
+                                android.util.Log.e("TEST_LOG", "🔥 렌더링 중: 앱 ${index + 1} - ${appInfo.name} (${appInfo.packageName})")
+                                
+                                // 앱 이름에 따라 적절한 아이콘 선택
+                                val iconResource = when (appInfo.name.lowercase()) {
+                                    "카카오톡" -> R.drawable.kakaotalk_icon
+                                    "네이버" -> R.drawable.naver_icon
+                                    "인스타그램" -> R.drawable.instagram_icon
+                                    "유튜브" -> R.drawable.youtube_icon
+                                    else -> R.drawable.ic_default
+                                }
+                                
                                 Image(
-                                    painter = painterResource(id = appInfo.iconResId),
-                                    contentDescription = "사용앱 ${appInfo.appName}",
+                                    painter = painterResource(id = iconResource),
+                                    contentDescription = "사용앱 ${appInfo.name}",
                                     modifier = Modifier
                                         .size(48.dp)
                                         .clip(RoundedCornerShape(6.dp))
                                         .clickable {
-                                            // 온보딩 팝업창 표시
-                                            focusViewModel.showOnboardingPopup()
+                                            // 앱 바로 실행
+                                            launchApp(context, appInfo.packageName)
                                         }
                                 )
                             }
@@ -598,7 +713,12 @@ fun PortraitRoutineFocusScreen(
                         @OptIn(ExperimentalMaterial3Api::class)
                         TextField(
                             value = memoText,
-                            onValueChange = { memoText = it },
+                            onValueChange = { newText ->
+                                // 로컬 상태와 ViewModel 상태 모두 업데이트
+                                memoText = newText
+                                focusViewModel.saveStepMemo(currentstep, newText)
+                                android.util.Log.d("PortraitRoutineFocusScreen", "📝 메모 입력: $newText")
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(130.dp)
@@ -654,7 +774,7 @@ fun PortraitRoutineFocusScreen(
                         modifier = Modifier
                             .size(24.dp)
                             .clickable {
-                                showMemoPad = !showMemoPad
+                                focusViewModel.toggleMemoPad()
                             },
                         colorFilter = ColorFilter.tint(if (isDarkMode) colors.mediumGray else colors.black)
                     )
@@ -747,12 +867,12 @@ fun PortraitRoutineFocusScreen(
                                 .clickable(
                                     indication = null,
                                     interactionSource = remember { MutableInteractionSource() }
-                                ) {
-                                    // 현재 STEP 메모 저장
-                                    stepMemos[currentstep] = memoText
-                                    showResultPopup = true
-                                    showFinishPopup = false
-                                }
+                                                                 ) {
+                                     // 현재 STEP 메모 저장
+                                     focusViewModel.saveStepMemo(currentstep, memoText)
+                                     showResultPopup = true
+                                     showFinishPopup = false
+                                 }
                                 .width(123.dp)
                                 .height(40.55.dp),
                             contentAlignment = Alignment.Center
@@ -786,6 +906,7 @@ fun PortraitRoutineFocusScreen(
                         .padding(5.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Spacer(modifier=Modifier.height(14.07.dp))
                     Text(
                         text = "루틴 종료!",
                         style = typography.title_B_20.copy(fontWeight = FontWeight.SemiBold),
@@ -828,27 +949,33 @@ fun PortraitRoutineFocusScreen(
                     }
                     Spacer(modifier = Modifier.height(9.03.dp))
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 5.dp),
-                        horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(width = 100.dp, height = 14.05.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "내 기록으로 이동",
-                                style = typography.time_R_12.copy(
-                                    textDecoration = TextDecoration.Underline
-                                ),
-                                color = colors.mediumGray
-                            )
-                        }
-                    }
+                                         Row(
+                         modifier = Modifier
+                             .fillMaxWidth()
+                             .padding(horizontal = 5.dp),
+                         horizontalArrangement = Arrangement.End,
+                         verticalAlignment = Alignment.CenterVertically
+                     ) {
+                         Box(
+                             modifier = Modifier
+                                 .size(width = 100.dp, height = 14.05.dp)
+                                 .clickable(
+                                     indication = null,
+                                     interactionSource = remember { MutableInteractionSource() }
+                                 ) {
+                                     onNavigateToMyActivity()
+                                 },
+                             contentAlignment = Alignment.Center
+                         ) {
+                             Text(
+                                 text = "내 기록으로 이동",
+                                 style = typography.time_R_12.copy(
+                                     textDecoration = TextDecoration.Underline
+                                 ),
+                                 color = colors.mediumGray
+                             )
+                         }
+                     }
                     Spacer(modifier = Modifier.height(6.02.dp))
 
                     Box(
@@ -862,6 +989,8 @@ fun PortraitRoutineFocusScreen(
                                 interactionSource = remember { MutableInteractionSource() }
                             ) {
                                 showResultPopup = false
+                                // 집중 루틴 종료
+                                focusViewModel.endFocusRoutine()
                                 // routineId를 String으로 변환하여 전달
                                 onFinishConfirmed(routineId.toString())
                             }
@@ -923,15 +1052,9 @@ fun PortraitRoutineFocusScreen(
 
         // 화면 차단 팝업창
         if (focusViewModel.isScreenBlockPopupVisible) {
-            ScreenBlockPopup(
-                selectedApps = focusViewModel.selectedApps,
-                onAppClick = { app ->
-                    // 앱 실행 로직 (실제로는 Intent로 앱 실행)
-                    focusViewModel.hideScreenBlockPopup()
-                },
-                onOutsideClick = {
-                    focusViewModel.hideScreenBlockPopup()
-                }
+            ScreenBlockOverlay(
+                selectedApps = selectedApps,
+                onDismiss = { focusViewModel.hideScreenBlockPopup() }
             )
         }
 
@@ -939,16 +1062,20 @@ fun PortraitRoutineFocusScreen(
         if (focusViewModel.isOnboardingPopupVisible) {
             FocusOnboardingPopup(
                 selectedApps = focusViewModel.selectedApps,
-                onAppClick = { app ->
-                    // 실제 앱 실행
-                    launchApp(context, app.packageName)
-                    focusViewModel.hideOnboardingPopup()
-                },
+                                 onAppClick = { app ->
+                     // 허용된 앱 실행 플래그 설정
+                     focusViewModel.setPermittedAppLaunch(true)
+                                          // 실제 앱 실행
+                      launchApp(context, app.packageName)
+                     focusViewModel.hideOnboardingPopup()
+                 },
                 onOutsideClick = {
                     focusViewModel.hideOnboardingPopup()
                 }
             )
         }
+
+
     }
 }
 
@@ -963,16 +1090,16 @@ private fun PortraitRoutineFocusScreenPreview() {
     val dummySharedViewModel = remember { SharedRoutineViewModel() }
 
     val dummySteps = listOf(
-        RoutineStepData("샤워하기", 3, true),
-        RoutineStepData("청소하기", 10, true),
-        RoutineStepData("밥먹기", 7, true),
-        RoutineStepData("옷갈아입기", 5, true)
+        RoutineStepData("샤워하기", 1, true), // 3분
+        RoutineStepData("청소하기", 10, true), // 10분
+        RoutineStepData("밥먹기", 7, true), // 7분
+        RoutineStepData("옷갈아입기", 5, true) // 5분
     )
 
     val dummyApps = listOf(
-        AppInfo("com.example.app1", "앱1"),
-        AppInfo("com.example.app2", "앱2"),
-        AppInfo("com.example.app3", "앱3")
+        AppDto("앱1", "com.example.app1"),
+        AppDto("앱2", "com.example.app2"),
+        AppDto("앱3", "com.example.app3")
     )
 
     dummySharedViewModel.setRoutineTitle("주말 아침 루틴")

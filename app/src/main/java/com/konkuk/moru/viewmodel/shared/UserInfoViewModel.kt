@@ -2,7 +2,7 @@ package com.konkuk.moru.viewmodel.shared
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.konkuk.moru.data.dto.response.UserProfileResponse
+import com.konkuk.moru.data.dto.response.UserProfile.UserProfileResponse
 import com.konkuk.moru.data.repositoryimpl.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

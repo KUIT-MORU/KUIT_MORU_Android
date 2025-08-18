@@ -17,13 +17,10 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.konkuk.moru.data.model.DummyData.feedRoutines
-import com.konkuk.moru.data.model.Routine
 import com.google.gson.Gson
 import com.konkuk.moru.presentation.home.screen.HomeScreen
 import com.konkuk.moru.presentation.home.screen.RoutineFocusIntroScreen
 import com.konkuk.moru.presentation.home.screen.RoutineSimpleRunScreen
-import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.presentation.myactivity.screen.ActFabTagScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActInsightInfoClickScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActMainScreen
@@ -42,11 +39,12 @@ import com.konkuk.moru.presentation.routinefeed.screen.follow.FollowScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineDetailScreen
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedRec
 import com.konkuk.moru.presentation.routinefeed.screen.main.RoutineFeedScreen
-import com.konkuk.moru.presentation.routinefeed.screen.search.RoutineSearchHost
+import com.konkuk.moru.presentation.routinefeed.screen.search.TagSearchScreen
 import com.konkuk.moru.presentation.routinefeed.screen.userprofile.UserProfileScreen
 import com.konkuk.moru.presentation.routinefeed.viewmodel.RoutineFeedViewModel
 import com.konkuk.moru.presentation.routinefocus.screen.RoutineFocusScreenContainer
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
+import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
@@ -58,6 +56,7 @@ fun MainNavGraph(
     fabOffsetY: MutableState<Float>,
     todayTabOffsetY: MutableState<Float>,
     onShowOnboarding: () -> Unit,
+    routineFocusViewModel: RoutineFocusViewModel? = null,
 ) {
 
     NavHost(
@@ -102,7 +101,6 @@ fun MainNavGraph(
 //                onBackClick = { navController.popBackStack() }
 //            )
 //        }
-
 
 
         composable(route = Route.RoutineFocusIntro.route) {
@@ -191,9 +189,16 @@ fun MainNavGraph(
                     routineId = currentId!!,
                     onDismiss = {
                         // 홈으로 돌아갈 때 "진행중 루틴" 알림
-                        navController.getBackStackEntry(Route.Home.route)
-                            .savedStateHandle["runningRoutineId"] = currentId!!
+                        android.util.Log.d("MainNavGraph", "🔄 간편 루틴 X 버튼 클릭: routineId=$currentId")
 
+                        // originalRoutineId를 stableIntId로 변환해서 설정
+                        val stableId = originalRoutineId?.toStableIntId()
+                        android.util.Log.d("MainNavGraph", "🎯 runningRoutineId 설정: originalRoutineId=$originalRoutineId, stableId=$stableId")
+
+                        navController.getBackStackEntry(Route.Home.route)
+                            .savedStateHandle["runningRoutineId"] = stableId
+
+                        // 간편 루틴은 실천율에 반영되지만 내 기록에는 표시되지 않음
 
                         navController.popBackStack(
                             Route.Home.route,
@@ -208,10 +213,21 @@ fun MainNavGraph(
 
                     },
                     onFinishConfirmed = { finishedId: String ->
+                        Log.d(
+                            "MainNavGraph",
+                            "🔄 RoutineSimpleRun 완료 처리: originalRoutineId=$originalRoutineId"
+                        )
                         Log.d("MainNavGraph", "🔄 RoutineSimpleRun 완료 처리: originalRoutineId=$originalRoutineId")
+
+                        // 간편 루틴 완료 시 실천율 업데이트 (RoutineSimpleRunScreen에서 처리됨)
+                        // 내 기록에는 표시되지 않음
+
                         navController.getBackStackEntry(Route.Home.route)
                             .savedStateHandle["finishedRoutineId"] = originalRoutineId ?: finishedId
-                        Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}")
+                        Log.d(
+                            "MainNavGraph",
+                            "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}"
+                        )
                         navController.popBackStack(Route.Home.route, false)
                     }
                 )
@@ -220,7 +236,8 @@ fun MainNavGraph(
 
 
         composable(route = Route.RoutineFocus.route) {
-            val routineFocusViewModel: RoutineFocusViewModel = viewModel()
+            // 전달받은 RoutineFocusViewModel 사용
+            val routineFocusViewModel: RoutineFocusViewModel = routineFocusViewModel ?: viewModel()
 
             // Home NavGraph의 ViewModel을 공유
             val parentEntry = remember(navController.currentBackStackEntry) {
@@ -242,10 +259,23 @@ fun MainNavGraph(
             Log.d("MainNavGraph", "   - originalRoutineId: $originalRoutineId")
             Log.d("MainNavGraph", "   - 선택된 앱: ${selectedApps.size}개")
 
+            // 집중 루틴 화면 진입 시 선택된 앱들을 설정하고 집중 루틴 시작
+            LaunchedEffect(selectedApps) {
+                Log.d("MainNavGraph", "🔄 LaunchedEffect(selectedApps) 실행")
+                Log.d("MainNavGraph", "📱 selectedApps 전달: ${selectedApps.size}개")
+                selectedApps.forEachIndexed { index, app ->
+                    Log.d("MainNavGraph", "   ${index + 1}. 이름: ${app.name}, 패키지: ${app.packageName}")
+                }
+                routineFocusViewModel.setSelectedApps(selectedApps)
+                Log.d("MainNavGraph", "✅ routineFocusViewModel.setSelectedApps 완료")
+                routineFocusViewModel.startFocusRoutine()
+            }
+
             RoutineFocusScreenContainer(
                 focusViewModel = routineFocusViewModel,
                 sharedViewModel = sharedViewModel,
                 onDismiss = {
+                    routineFocusViewModel.endFocusRoutine()
                     navController.popBackStack(
                         Route.Home.route,
                         inclusive = false
@@ -258,17 +288,34 @@ fun MainNavGraph(
                     }
                 },
                 onFinishConfirmed = { finishedId: String ->
+                    routineFocusViewModel.endFocusRoutine()
                     Log.d("MainNavGraph", "🔄 RoutineFocus 완료 처리: originalRoutineId=$originalRoutineId")
+                    Log.d(
+                        "MainNavGraph",
+                        "🔄 RoutineFocus 완료 처리: originalRoutineId=$originalRoutineId"
+                    )
                     navController.getBackStackEntry(Route.Home.route)
                         .savedStateHandle["finishedRoutineId"] = originalRoutineId ?: finishedId
-                    Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}")
+                    Log.d(
+                        "MainNavGraph",
+                        "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}"
+                    )
                     navController.popBackStack(Route.Home.route, false)
                 },
-                onScreenBlockTrigger = {
-                    // 집중 루틴 실행 중 다른 앱으로 이동 시 화면 차단 팝업창 표시
-                    if (category == "집중" && selectedApps.isNotEmpty()) {
-                        routineFocusViewModel.showScreenBlockPopup(selectedApps)
+                onNavigateToMyActivity = {
+                    // 완료된 루틴 데이터를 ActRecord 화면으로 전달
+                    val title = sharedViewModel.routineTitle.value
+                    val tags = sharedViewModel.routineTags.value
+                    val totalDuration = sharedViewModel.totalDuration.value
+
+                    // 데이터를 savedStateHandle에 저장
+                    navController.currentBackStackEntry?.savedStateHandle?.apply {
+                        set("completedRoutineTitle", title)
+                        set("completedRoutineTime", totalDuration)
+                        set("completedRoutineTags", tags)
                     }
+
+                    navController.navigate(Route.ActRecord.route)
                 }
             )
         }
@@ -293,6 +340,55 @@ fun MainNavGraph(
                 navController = navController
             )
         }
+
+        /*composable(
+            route = Route.TagSearch.route,
+            arguments = listOf(
+                navArgument("originalQuery") {
+                    type = NavType.StringType
+                    defaultValue = "" // 없으면 빈 문자열
+                }
+            )
+        ) { backStackEntry ->
+            val originalQuery = backStackEntry.arguments?.getString("originalQuery") ?: ""
+
+            // ⚠️ 기존에 사용 중인 TagSearch 화면을 그대로 호출
+            com.konkuk.moru.presentation.routinefeed.screen.search.TagSearchScreen(
+                originalQuery = originalQuery,
+                onNavigateBack = { navController.popBackStack() },
+                onTagSelected = { tagName ->
+                    // 선택 결과를 이전 스택(MyRoutineDetail)으로 돌려준다
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("picked_tag_name", tagName) // 이름만 전달
+                    navController.popBackStack() // 검색 화면 닫기
+                }
+            )
+        }*/
+
+        composable(
+            route = "${Route.TagSearch.route}?originalQuery={originalQuery}",
+            arguments = listOf(
+                navArgument("originalQuery") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            val originalQuery = backStackEntry.arguments?.getString("originalQuery").orEmpty()
+            TagSearchScreen(
+                originalQuery = originalQuery,
+                onNavigateBack = { navController.popBackStack() },
+                onTagSelected = { nameOrHash ->
+                    val normalized = nameOrHash.removePrefix("#")
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("selectedTagsResult", listOf(normalized))
+                    navController.popBackStack()
+                }
+            )
+        }
+
 
         composable(
             route = Route.RoutineFeedDetail.route,
@@ -346,33 +442,31 @@ fun MainNavGraph(
         }
 
         composable(route = Route.MyRoutine.route) {
-            val viewModel: MyRoutinesViewModel = viewModel()
+            val viewModel: MyRoutinesViewModel = hiltViewModel()
 
             MyRoutinesScreen(
-                viewModel = viewModel, // ViewModel 인스턴스만 전달
-                onNavigateToRoutineFeed = {
-                    navController.navigate(Route.RoutineFeed.route)
-                },
+                viewModel = viewModel,
+                onNavigateToRoutineFeed = { navController.navigate(Route.RoutineFeed.route) },
                 onNavigateToDetail = { routineId ->
-                    navController.navigate(Route.MyRoutineDetail.createRoute(routineId))
+                    val target = Route.MyRoutineDetail.createRoute(routineId)
+                    android.util.Log.d("Nav", "navigate -> $target")
+                    navController.navigate(target)
                 },
-                onNavigateToCreateRoutine = {
-                    navController.navigate(Route.RoutineCreate.route) // 루틴 생성 화면으로 이동
-                }
+                onNavigateToCreateRoutine = { navController.navigate(Route.RoutineCreate.route) }
             )
         }
 
         // [추가] UserProfileScreen 내비게이션 설정
         composable(
             route = Route.MyRoutineDetail.route,
-            arguments = listOf(navArgument("routineId") { type = NavType.StringType })
+            arguments = listOf(navArgument(Route.MyRoutineDetail.KEY) { type = NavType.StringType })
         ) { backStackEntry ->
-            val routineId = backStackEntry.arguments?.getString("routineId")
+            val routineId = backStackEntry.arguments?.getString(Route.MyRoutineDetail.KEY)
             if (routineId != null) {
                 MyRoutineDetailScreen(
                     routineId = routineId,
                     onBackClick = { navController.popBackStack() },
-                    navController = navController // [추가]
+                    navController = navController
                 )
             } else {
                 navController.popBackStack()
@@ -484,4 +578,15 @@ fun MainNavGraph(
             RoutineCreateScreen(navController)
         }
     }
+}
+
+// String ID → 안정적인 Int 키 (기존 Int API/콜백용)
+private fun String.toStableIntId(): Int {
+    this.toLongOrNull()?.let {
+        val mod = (it % Int.MAX_VALUE).toInt()
+        return if (mod >= 0) mod else -mod
+    }
+    var h = 0
+    for (ch in this) h = (h * 31) + ch.code
+    return h
 }

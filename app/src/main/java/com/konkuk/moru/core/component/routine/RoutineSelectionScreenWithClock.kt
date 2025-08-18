@@ -68,7 +68,7 @@ fun RoutineListItemWithClock(
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable { onLikeClick() }
+                //modifier = Modifier.clickable { onLikeClick() }
             ) {
                 Icon(
                     imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,

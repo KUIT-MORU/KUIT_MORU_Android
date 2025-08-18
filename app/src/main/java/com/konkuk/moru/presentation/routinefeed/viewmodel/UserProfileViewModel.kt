@@ -32,12 +32,23 @@ class UserProfileViewModel @Inject constructor(
     val uiState: StateFlow<UserProfileUiState> = _uiState.asStateFlow()
 
     // ===== TTL 가드 스탬프 =====
-    private data class FollowStamp(val wantFollow: Boolean, val mark: TimeMark = TimeSource.Monotonic.markNow())
-    private data class LikeStamp(val routineId: String, val wantLike: Boolean, val expectedLikes: Int, val mark: TimeMark = TimeSource.Monotonic.markNow())
+    private data class FollowStamp(
+        val wantFollow: Boolean,
+        val mark: TimeMark = TimeSource.Monotonic.markNow()
+    )
+
+    private data class LikeStamp(
+        val routineId: String,
+        val wantLike: Boolean,
+        val expectedLikes: Int,
+        val mark: TimeMark = TimeSource.Monotonic.markNow()
+    )
 
     private val followStampMap = ConcurrentHashMap<String, FollowStamp>()
     private val likeStampMap = ConcurrentHashMap<String, LikeStamp>()
     private val PROTECT_TTL = 2.seconds
+
+    private val followGate = java.util.concurrent.atomic.AtomicBoolean(false)
 
     init {
         val userId: String? = savedStateHandle["userId"]
@@ -80,7 +91,11 @@ class UserProfileViewModel @Inject constructor(
                         listOf(it.toUiRoutine(domain.id, domain.nickname, domain.profileImageUrl))
                     } ?: emptyList(),
                     userRoutines = domain.routines.map {
-                        it.toUiRoutine(domain.id, domain.nickname, domain.profileImageUrl)
+                        it.toUiRoutine(
+                            domain.id,
+                            domain.nickname,
+                            domain.profileImageUrl
+                        ) // ✅ 프로필 소유자 정보 넣음
                     }
                 )
             }
@@ -89,44 +104,67 @@ class UserProfileViewModel @Inject constructor(
             refreshInitialFollowing()
 
             // 다른 화면 변화 동기화
-            viewModelScope.launch {
-                RoutineSyncBus.events.collectLatest { e ->
-                    when (e) {
-                        is RoutineSyncBus.Event.Like -> {
-                            _uiState.update { s ->
-                                s.copy(
-                                    runningRoutines = s.runningRoutines.map { r ->
-                                        if (r.routineId == e.routineId) r.copy(isLiked = e.isLiked, likes = e.likeCount) else r
-                                    },
-                                    userRoutines = s.userRoutines.map { r ->
-                                        if (r.routineId == e.routineId) r.copy(isLiked = e.isLiked, likes = e.likeCount) else r
-                                    }
+            RoutineSyncBus.events.collectLatest { e ->
+                when (e) {
+                    is RoutineSyncBus.Event.Like -> {
+                        _uiState.update { s ->
+                            s.copy(
+                                runningRoutines = s.runningRoutines.map { r ->
+                                    if (r.routineId == e.routineId) r.copy(
+                                        isLiked = e.isLiked,
+                                        likes = e.likeCount
+                                    ) else r
+                                },
+                                userRoutines = s.userRoutines.map { r ->
+                                    if (r.routineId == e.routineId) r.copy(
+                                        isLiked = e.isLiked,
+                                        likes = e.likeCount
+                                    ) else r
+                                }
+                            )
+                        }
+                    }
+
+                    is RoutineSyncBus.Event.Scrap -> {
+                        _uiState.update { s ->
+                            s.copy(
+                                runningRoutines = s.runningRoutines.map { r ->
+                                    if (r.routineId == e.routineId) r.copy(isBookmarked = e.isScrapped) else r
+                                },
+                                userRoutines = s.userRoutines.map { r ->
+                                    if (r.routineId == e.routineId) r.copy(isBookmarked = e.isScrapped) else r
+                                }
+                            )
+                        }
+                    }
+
+                    is RoutineSyncBus.Event.Follow -> {
+                        val targetId = _uiState.value.userId
+                        if (targetId != null && targetId == e.userId) {
+                            applyExternalFollow(e.isFollowing)
+                        }
+                    }
+
+                    // [추가] 내 루틴 복사/삭제 등으로 '내 프로필'이 바뀐 경우 최신화
+                    RoutineSyncBus.Event.MyRoutinesChanged -> {
+                        if (_uiState.value.isMe == true) {
+                            // UX용 선반영
+                            _uiState.update {
+                                it.copy(
+                                    routineCount = (it.routineCount + 1).coerceAtLeast(
+                                        0
+                                    )
                                 )
                             }
-                        }
-                        is RoutineSyncBus.Event.Scrap -> {
-                            _uiState.update { s ->
-                                s.copy(
-                                    runningRoutines = s.runningRoutines.map { r ->
-                                        if (r.routineId == e.routineId) r.copy(isBookmarked = e.isScrapped) else r
-                                    },
-                                    userRoutines = s.userRoutines.map { r ->
-                                        if (r.routineId == e.routineId) r.copy(isBookmarked = e.isScrapped) else r
-                                    }
-                                )
-                            }
-                        }
-                        is RoutineSyncBus.Event.Follow -> {
-                            val targetId = _uiState.value.userId
-                            if (targetId != null && targetId == e.userId) {
-                                applyExternalFollow(e.isFollowing)
-                            }
+                            // 서버 확정값으로 맞추기
+                            viewModelScope.launch { refreshUserProfile() }
                         }
                     }
                 }
             }
         }
     }
+
 
     // ===== 팔로우 =====
     private suspend fun refreshInitialFollowing() {
@@ -170,14 +208,15 @@ class UserProfileViewModel @Inject constructor(
     }
 
     fun toggleFollow() {
+        if (!followGate.compareAndSet(false, true)) return  // ✅ 동시 재진입 차단
         val before = _uiState.value
-        val targetUserId: String = before.userId ?: return
-        if (targetUserId.isBlank() || before.isMe == true) return
-        if (before.isFollowLoading) return
+        val targetUserId: String = before.userId ?: run { followGate.set(false); return }
+        if (targetUserId.isBlank() || before.isMe == true) {
+            followGate.set(false); return
+        }
 
         val wantFollow = !before.isFollowing
 
-        // 낙관 UI + 카운트
         _uiState.update {
             it.copy(
                 isFollowLoading = true,
@@ -186,23 +225,29 @@ class UserProfileViewModel @Inject constructor(
             )
         }
 
-        // 메모리 + 스탬프
         SocialMemory.setFollow(targetUserId, wantFollow)
         followStampMap[targetUserId] = FollowStamp(wantFollow)
 
         viewModelScope.launch {
             runCatching {
-                if (wantFollow) socialRepository.follow(targetUserId)
-                else socialRepository.unfollow(targetUserId)
+                if (wantFollow) socialRepository.follow(targetUserId) else socialRepository.unfollow(
+                    targetUserId
+                )
             }.onSuccess {
                 _uiState.update { it.copy(isFollowLoading = false) }
-                RoutineSyncBus.publish(RoutineSyncBus.Event.Follow(userId = targetUserId, isFollowing = wantFollow))
-                // 성공 후 스탬프는 굳이 지우지 않아도 TTL 만료 시 무력화되지만, 바로 정리해도 OK
+                RoutineSyncBus.publish(
+                    RoutineSyncBus.Event.Follow(
+                        userId = targetUserId,
+                        isFollowing = wantFollow
+                    )
+                )
                 followStampMap.remove(targetUserId)
             }.onFailure {
                 _uiState.value = before.copy(isFollowLoading = false)
                 SocialMemory.setFollow(targetUserId, before.isFollowing)
                 followStampMap.remove(targetUserId)
+            }.also {
+                followGate.set(false)  // ✅ 해제
             }
         }
     }
@@ -244,7 +289,8 @@ class UserProfileViewModel @Inject constructor(
 
         // 스탬프 기록(둘 중 하나에서 찾으면 동일)
         val cur = (after.runningRoutines + after.userRoutines).first { it.routineId == routineId }
-        likeStampMap[routineId] = LikeStamp(routineId, wantLike = cur.isLiked, expectedLikes = cur.likes)
+        likeStampMap[routineId] =
+            LikeStamp(routineId, wantLike = cur.isLiked, expectedLikes = cur.likes)
 
         viewModelScope.launch {
             runCatching {
@@ -275,19 +321,32 @@ class UserProfileViewModel @Inject constructor(
                 _uiState.update { s ->
                     s.copy(
                         runningRoutines = s.runningRoutines.map {
-                            if (it.routineId == routineId) it.copy(isLiked = mergedIsLiked, likes = mergedLikes) else it
+                            if (it.routineId == routineId) it.copy(
+                                isLiked = mergedIsLiked,
+                                likes = mergedLikes
+                            ) else it
                         },
                         userRoutines = s.userRoutines.map {
-                            if (it.routineId == routineId) it.copy(isLiked = mergedIsLiked, likes = mergedLikes) else it
+                            if (it.routineId == routineId) it.copy(
+                                isLiked = mergedIsLiked,
+                                likes = mergedLikes
+                            ) else it
                         }
                     )
                 }
-                RoutineSyncBus.publish(RoutineSyncBus.Event.Like(server.routineId, mergedIsLiked, mergedLikes))
+                RoutineSyncBus.publish(
+                    RoutineSyncBus.Event.Like(
+                        server.routineId,
+                        mergedIsLiked,
+                        mergedLikes
+                    )
+                )
                 likeStampMap.remove(routineId)
             }.onFailure {
                 _uiState.value = before // 롤백
                 // 메모리 롤백
-                val rb = (before.runningRoutines + before.userRoutines).firstOrNull { it.routineId == routineId }
+                val rb =
+                    (before.runningRoutines + before.userRoutines).firstOrNull { it.routineId == routineId }
                 if (rb != null) SocialMemory.setLike(rb.routineId, rb.isLiked, rb.likes)
                 likeStampMap.remove(routineId)
             }
@@ -313,5 +372,39 @@ class UserProfileViewModel @Inject constructor(
         // 메모리 동기화(프로필 대상만)
         _uiState.value.userId?.let { SocialMemory.setFollow(it, isFollowing) }
     }
+
+    //유저 프로필 부분 업데이트
+    private suspend fun refreshUserProfile() {
+        val targetId = _uiState.value.userId ?: return
+        runCatching { userRepository.getUserProfile(targetId) }
+            .onSuccess { domain ->
+                _uiState.update { prev ->
+                    prev.copy(
+                        userId = domain.id,
+                        isMe = domain.isMe,
+                        profileImageUrl = domain.profileImageUrl,
+                        nickname = domain.nickname,
+                        bio = domain.bio.orEmpty(),
+                        routineCount = domain.routineCount,
+                        followerCount = domain.followerCount,
+                        followingCount = domain.followingCount,
+                        runningRoutines = domain.currentRoutine?.let {
+                            listOf(
+                                it.toUiRoutine(
+                                    domain.id,
+                                    domain.nickname,
+                                    domain.profileImageUrl
+                                )
+                            )
+                        } ?: emptyList(),
+                        userRoutines = domain.routines.map {
+                            it.toUiRoutine(domain.id, domain.nickname, domain.profileImageUrl)
+                        }
+                    )
+                }
+            }
+    }
+
+
 }
 

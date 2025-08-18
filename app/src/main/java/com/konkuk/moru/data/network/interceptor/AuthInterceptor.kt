@@ -23,13 +23,11 @@ class AuthInterceptor(
         if (!accessToken.isNullOrBlank()) {
             reqBuilder.header("Authorization", "Bearer $accessToken")
             Log.d("AuthInterceptor", "Authorization attached. len=${accessToken.length}")
-        } else if (BuildConfig.DEBUG) {
-            // ⚠️ 디버그 전용 임시 토큰 (서버에서 받은 유효한 JWT로 교체)
+        } else {
+            // 임시 토큰 사용 (디버그 모드와 관계없이)
             val devToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIwNWM0NDg2Ni1kYTYwLTQ2YTgtYWVkNC1lZGZjMDE0MjIzNWIiLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc1NDY1ODU5OSwiZXhwIjoxNzU0NjYyMTk5fQ.6Y5UtEL8sIVIUi1E_lwHSWrbIrEp7iBtHiLdCQTHwO8"
             reqBuilder.header("Authorization", "Bearer $devToken")
             Log.w("AuthInterceptor", "No accessToken → DEV token attached.")
-        } else {
-            Log.w("AuthInterceptor", "No accessToken. Authorization header skipped.")
         }
 
         return chain.proceed(reqBuilder.build())

@@ -1,6 +1,6 @@
 package com.konkuk.moru.data.repositoryimpl
 
-import com.konkuk.moru.data.dto.response.FollowListResponseDto
+import com.konkuk.moru.data.dto.response.Follow.FollowListResponseDto
 import com.konkuk.moru.data.service.SocialService
 import com.konkuk.moru.domain.repository.SocialRepository
 

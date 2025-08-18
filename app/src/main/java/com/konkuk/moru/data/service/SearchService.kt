@@ -1,12 +1,12 @@
 package com.konkuk.moru.data.service
 
-import com.konkuk.moru.data.dto.response.FavoriteTagAddRequest
-import com.konkuk.moru.data.dto.response.FavoriteTagItemResponse
-import com.konkuk.moru.data.dto.response.PageResponse
-import com.konkuk.moru.data.dto.response.RoutineSearchRequest
-import com.konkuk.moru.data.dto.response.RoutineSummaryResponse
-import com.konkuk.moru.data.dto.response.SearchHistoryResponse
-import com.konkuk.moru.data.dto.response.TagAllResponse
+import com.konkuk.moru.data.dto.response.Search.FavoriteTagAddRequest
+import com.konkuk.moru.data.dto.response.Search.FavoriteTagItemResponse
+import com.konkuk.moru.data.dto.response.Search.PageResponse
+import com.konkuk.moru.data.dto.response.Search.RoutineSearchRequest
+import com.konkuk.moru.data.dto.response.Search.RoutineSummaryResponse
+import com.konkuk.moru.data.dto.response.Search.SearchHistoryResponse
+import com.konkuk.moru.data.dto.response.Search.TagAllResponse
 import retrofit2.http.*
 import retrofit2.Response
 

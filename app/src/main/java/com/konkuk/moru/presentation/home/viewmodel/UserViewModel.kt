@@ -19,8 +19,22 @@ class UserViewModel @Inject constructor(
     val nickname: StateFlow<String?> = _nickname
 
     fun loadMe() = viewModelScope.launch {
-        runCatching { userRepository.getUserProfile() }
-            .onSuccess { profile -> _nickname.value = profile.nickname }
-            .onFailure { e -> Log.e("UserViewModel", "getUserProfile failed", e) }
+        Log.d("UserViewModel", "🔄 loadMe() 호출됨")
+        runCatching { 
+            Log.d("UserViewModel", "🔗 getUserProfile API 호출 중...")
+            userRepository.getUserProfile() 
+        }
+            .onSuccess { profile -> 
+                Log.d("UserViewModel", "✅ getUserProfile 성공!")
+                Log.d("UserViewModel", "   - 닉네임: ${profile.nickname}")
+                Log.d("UserViewModel", "   - 이메일: ${profile.id}")
+                Log.d("UserViewModel", "   - 루틴 수: ${profile.routineCount}")
+                _nickname.value = profile.nickname 
+            }
+            .onFailure { e -> 
+                Log.e("UserViewModel", "❌ getUserProfile 실패!", e)
+                Log.e("UserViewModel", "🔍 예외 타입: ${e.javaClass.simpleName}")
+                Log.e("UserViewModel", "🔍 예외 메시지: ${e.message}")
+            }
         }
 }

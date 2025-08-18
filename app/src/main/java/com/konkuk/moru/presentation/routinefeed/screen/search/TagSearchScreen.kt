@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,7 +39,7 @@ import com.konkuk.moru.presentation.routinefeed.component.search.TagChip
 import com.konkuk.moru.presentation.routinefeed.component.search.TagSectionHeader
 import com.konkuk.moru.presentation.routinefeed.viewmodel.SearchViewModel
 import com.konkuk.moru.ui.theme.MORUTheme
-
+//@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun TagSearchScreen(
     originalQuery: String,
@@ -57,7 +58,7 @@ internal fun TagSearchScreen(
     val isHashtagMode = query.trim().startsWith("#")
 
     // 변경: 관심 태그는 서버에서 가져온 목록 사용
-    val favoriteTags = ui.favoriteTags              // 관심태그 (서버)
+    val favoriteTags = ui.favoriteTags    // 관심태그 (서버)
     val allTags: List<TagItem> = ui.allTags
 
     // 변경: 전체태그 대용 - 관심태그에서 필터
@@ -84,7 +85,7 @@ internal fun TagSearchScreen(
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxSize()
-                    .padding(start=16.dp,end=16.dp,bottom=80.dp)
+                    .padding(start = 16.dp, end = 16.dp, bottom = 80.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 Spacer(modifier = Modifier.height(16.dp))

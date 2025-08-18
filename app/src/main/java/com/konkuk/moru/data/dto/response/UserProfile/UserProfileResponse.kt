@@ -1,4 +1,4 @@
-package com.konkuk.moru.data.dto.response
+package com.konkuk.moru.data.dto.response.UserProfile
 
 import kotlinx.serialization.Serializable
 
@@ -21,7 +21,7 @@ data class UserProfileResponse(
     val bio: String,
 
     // 프로필 이미지
-    val profileImageUrl: String,
+    val profileImageUrl: String?,
 
     // 내 루틴 갯수
     val routineCount: Int,

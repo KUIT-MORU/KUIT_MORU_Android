@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -17,10 +18,13 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,17 +34,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
 import com.konkuk.moru.presentation.home.component.RoutineSelectItem
+import com.konkuk.moru.presentation.myactivity.viewmodel.InsightViewModel
 import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
@@ -62,6 +69,9 @@ fun RoutineSimpleRunScreen(
     onDismiss: () -> Unit, // x버튼 눌렀을 시
     onFinishConfirmed: (String) -> Unit
 ) {
+    // InsightViewModel 주입 (실천율 업데이트용)
+    val insightViewModel: InsightViewModel = hiltViewModel()
+    val originalRoutineId = sharedViewModel.originalRoutineId.collectAsStateWithLifecycle<String?>().value
     // intro에서 받아올 값들
     val routineTitle = sharedViewModel.routineTitle.collectAsStateWithLifecycle<String>().value
     val hashTagList = sharedViewModel.routineTags.collectAsStateWithLifecycle<List<String>>().value
@@ -143,18 +153,25 @@ fun RoutineSimpleRunScreen(
 
             Spacer(modifier = Modifier.height(129.dp))
 
-            // 루틴 항목들
-            steps.forEachIndexed { index, step ->
-                RoutineSelectItem(
-                    text = step.name,
-                    isSelected = selectedStates[index],
-                    onClick = {
-                        selectedStates = selectedStates.toMutableStateList().apply {
-                            this[index] = !this[index]
-                        }
-                    },
-                    modifier = Modifier.padding(bottom = 20.dp)
-                )
+            // 루틴 항목들 (스크롤 가능)
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f) // 남은 공간을 모두 차지
+                    .padding(end = 16.dp), // 오른쪽 패딩 추가
+                contentPadding = PaddingValues(bottom = 150.dp) // 하단에 충분한 패딩 추가
+            ) {
+                itemsIndexed(steps) { index, step ->
+                    RoutineSelectItem(
+                        text = step.name,
+                        isSelected = selectedStates[index],
+                        onClick = {
+                            selectedStates = selectedStates.toMutableStateList().apply {
+                                this[index] = !this[index]
+                            }
+                        },
+                        modifier = Modifier.padding(bottom = 20.dp)
+                    )
+                }
             }
         }
 
@@ -359,6 +376,14 @@ fun RoutineSimpleRunScreen(
                                 interactionSource = remember { MutableInteractionSource() }
                             ) {
                                 showResultPopup = false
+                                
+                                // 간편 루틴 완료 시 실천율 업데이트
+                                originalRoutineId?.let { routineId ->
+                                    android.util.Log.d("RoutineSimpleRunScreen", "🔄 간편 루틴 완료: routineId=$routineId")
+                                    // 실천율 업데이트 API 호출
+                                    insightViewModel.completeRoutine(routineId)
+                                }
+                                
                                 onFinishConfirmed(routineId.toString())
                             }
                             .padding(vertical = 8.dp),
@@ -390,12 +415,103 @@ fun RoutineSimpleRunScreen(
 private fun RoutineSimpleRunScreenPreview() {
     val dummyViewModel = remember { SharedRoutineViewModel() }
 
-    // 더미 데이터 설정
+    // 더미 데이터 설정 (스크롤 테스트용으로 훨씬 많은 steps 추가)
     val sampleSteps = listOf(
         RoutineStepData("샤워하기", 15, true),
         RoutineStepData("청소하기", 10, true),
         RoutineStepData("밥먹기", 30, true),
-        RoutineStepData("옷갈아입기", 8, true)
+        RoutineStepData("옷갈아입기", 8, true),
+        RoutineStepData("이불 정리하기", 5, true),
+        RoutineStepData("창문 열기", 2, true),
+        RoutineStepData("커피 내리기", 8, true),
+        RoutineStepData("신문 읽기", 15, true),
+        RoutineStepData("운동하기", 20, true),
+        RoutineStepData("일기 쓰기", 10, true),
+        RoutineStepData("화분에 물주기", 3, true),
+        RoutineStepData("우산 정리하기", 2, true),
+        RoutineStepData("신발 정리하기", 4, true),
+        RoutineStepData("가방 정리하기", 5, true),
+        RoutineStepData("전화 충전하기", 1, true),
+        RoutineStepData("알람 설정하기", 2, true),
+        RoutineStepData("책상 정리하기", 7, true),
+        RoutineStepData("컴퓨터 켜기", 1, true),
+        RoutineStepData("이메일 확인하기", 5, true),
+        RoutineStepData("일정 체크하기", 3, true),
+        RoutineStepData("물 마시기", 1, true),
+        RoutineStepData("스트레칭하기", 8, true),
+        RoutineStepData("명상하기", 15, true),
+        RoutineStepData("음악 듣기", 10, true),
+        RoutineStepData("친구에게 연락하기", 5, true),
+        RoutineStepData("가족과 대화하기", 12, true),
+        RoutineStepData("취미 활동하기", 25, true),
+        RoutineStepData("독서하기", 20, true),
+        RoutineStepData("일기 정리하기", 8, true),
+        RoutineStepData("내일 준비하기", 10, true),
+        RoutineStepData("잠자리 준비하기", 15, true),
+        RoutineStepData("방 청소하기", 18, true),
+        RoutineStepData("빨래하기", 25, true),
+        RoutineStepData("설거지하기", 12, true),
+        RoutineStepData("쓰레기 버리기", 5, true),
+        RoutineStepData("장보기", 45, true),
+        RoutineStepData("요리하기", 60, true),
+        RoutineStepData("정리정돈하기", 20, true),
+        RoutineStepData("계획 세우기", 15, true),
+        RoutineStepData("목표 설정하기", 10, true),
+        RoutineStepData("자기계발하기", 30, true),
+        RoutineStepData("새로운 기술 배우기", 40, true),
+        RoutineStepData("프로젝트 진행하기", 90, true),
+        RoutineStepData("회의 준비하기", 25, true),
+        RoutineStepData("보고서 작성하기", 35, true),
+        RoutineStepData("데이터 분석하기", 50, true),
+        RoutineStepData("코딩하기", 120, true),
+        RoutineStepData("디자인하기", 80, true),
+        RoutineStepData("마케팅 전략 세우기", 45, true),
+        RoutineStepData("고객 관리하기", 30, true),
+        RoutineStepData("팀 빌딩하기", 60, true),
+        RoutineStepData("리더십 개발하기", 40, true),
+        RoutineStepData("커뮤니케이션 연습하기", 25, true),
+        RoutineStepData("프레젠테이션 연습하기", 35, true),
+        RoutineStepData("협상 연습하기", 20, true),
+        RoutineStepData("문제 해결하기", 55, true),
+        RoutineStepData("창의적 사고하기", 30, true),
+        RoutineStepData("전략적 사고하기", 40, true),
+        RoutineStepData("시스템 분석하기", 70, true),
+        RoutineStepData("품질 관리하기", 45, true),
+        RoutineStepData("리스크 관리하기", 35, true),
+        RoutineStepData("예산 관리하기", 25, true),
+        RoutineStepData("시간 관리하기", 15, true),
+        RoutineStepData("우선순위 정하기", 10, true),
+        RoutineStepData("효율성 개선하기", 50, true),
+        RoutineStepData("혁신하기", 75, true),
+        RoutineStepData("지속가능성 고려하기", 40, true),
+        RoutineStepData("미래 계획하기", 60, true),
+        RoutineStepData("성장하기", 100, true),
+        RoutineStepData("학습하기", 45, true),
+        RoutineStepData("연습하기", 30, true),
+        RoutineStepData("테스트하기", 20, true),
+        RoutineStepData("검토하기", 25, true),
+        RoutineStepData("수정하기", 35, true),
+        RoutineStepData("완성하기", 15, true),
+        RoutineStepData("점검하기", 18, true),
+        RoutineStepData("보완하기", 22, true),
+        RoutineStepData("검증하기", 28, true),
+        RoutineStepData("개선하기", 32, true),
+        RoutineStepData("최적화하기", 45, true),
+        RoutineStepData("표준화하기", 25, true),
+        RoutineStepData("문서화하기", 35, true),
+        RoutineStepData("교육하기", 50, true),
+        RoutineStepData("멘토링하기", 40, true),
+        RoutineStepData("코칭하기", 30, true),
+        RoutineStepData("피드백하기", 20, true),
+        RoutineStepData("평가하기", 25, true),
+        RoutineStepData("측정하기", 15, true),
+        RoutineStepData("분석하기", 35, true),
+        RoutineStepData("리뷰하기", 20, true),
+        RoutineStepData("검토하기", 25, true),
+        RoutineStepData("수정하기", 30, true),
+        RoutineStepData("완성하기", 20, true),
+        RoutineStepData("배포하기", 15, true),
+        RoutineStepData("모니터링하기", 40, true)
     )
     dummyViewModel.setRoutineTitle("주말 아침 루틴")
     dummyViewModel.setRoutineTags(listOf("태그", "태그"))

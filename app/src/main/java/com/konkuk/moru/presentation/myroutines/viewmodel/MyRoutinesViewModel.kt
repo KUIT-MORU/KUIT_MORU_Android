@@ -1,58 +1,77 @@
 package com.konkuk.moru.presentation.myroutines.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.konkuk.moru.data.model.DummyData
-import com.konkuk.moru.data.model.Routine
+import com.konkuk.moru.core.datastore.RoutineSyncBus
+import com.konkuk.moru.data.dto.response.MyRoutine.MyRoutineUi
+import com.konkuk.moru.data.mapper.toDayOfWeekOrNull
+import com.konkuk.moru.data.mapper.toMyLocalTimeOrNull
+import com.konkuk.moru.domain.repository.MyRoutineRepository
 import com.konkuk.moru.presentation.myroutines.screen.MyRoutinesUiState
 import com.konkuk.moru.presentation.myroutines.screen.SortOption
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
+import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import javax.inject.Inject
+import com.konkuk.moru.core.util.toEpochMsOrZero
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onStart
 
-class MyRoutinesViewModel : ViewModel() {
 
-    // [수정] 원본 데이터 타입을 MyRoutine에서 통합 Routine으로 변경
-    private val _sourceRoutines = MutableStateFlow<List<Routine>>(emptyList())
+@HiltViewModel
+class MyRoutinesViewModel @Inject constructor(
+    private val repo: MyRoutineRepository
+) : ViewModel() {
+
+
+    private val TAG_VM = "MyRoutinesVM"
+    private val TAG_REPO = "MyRoutineRepo"
+
+    private val _sourceRoutines = MutableStateFlow<List<MyRoutineUi>>(emptyList())
+    val routinesToDisplay: StateFlow<List<MyRoutineUi>> =
+        _sourceRoutines.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _uiState = MutableStateFlow(MyRoutinesUiState())
     val uiState: StateFlow<MyRoutinesUiState> = _uiState.asStateFlow()
 
-    // [수정] 화면 표시용 데이터 타입도 통합 Routine으로 변경
-    val routinesToDisplay: StateFlow<List<Routine>> = combine(
-        _sourceRoutines,
-        uiState
-    ) { routines, state ->
-        val filteredByDay = if (state.selectedDay == null) {
-            routines
-        } else {
-            routines.filter { it.scheduledDays.contains(state.selectedDay) }
-        }
-        when (state.selectedSortOption) {
-            SortOption.BY_TIME -> filteredByDay.sortedBy { it.scheduledTime ?: LocalTime.MAX }
-            SortOption.LATEST -> filteredByDay.sortedByDescending { it.routineId }
-            SortOption.POPULAR -> filteredByDay.sortedByDescending { it.likes }
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.Companion.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
-
     init {
-        loadRoutines()
+        // 1) 트리거 스트림을 하나로 합치기
+        val uiTriggers = uiState
+            .map { it.selectedSortOption to it.selectedDay }
+            .distinctUntilChanged()
+            .map { Unit }
+
+        val busTriggers = RoutineSyncBus.events
+            .filterIsInstance<RoutineSyncBus.Event.MyRoutinesChanged>()
+            .map { Unit }
+
+        // 2) 최초 1회 + 디바운스 + 수집은 한 곳에서만
+        viewModelScope.launch {
+            merge(uiTriggers, busTriggers)
+                .onStart { emit(Unit) }           // 최초 1회
+                .debounce(150)                     // 짧은 디바운스로 연타 방지
+                .collect { loadRoutines() }
+        }
     }
 
-    // --- 이벤트 핸들러 ---
 
     fun onSortOptionSelected(option: SortOption) {
+        // ✅ 요일 선택값은 건드리지 않음 (정렬과 독립)
         _uiState.update { it.copy(selectedSortOption = option) }
     }
 
@@ -64,9 +83,7 @@ class MyRoutinesViewModel : ViewModel() {
     fun onTrashClick() {
         val currentMode = _uiState.value.isDeleteMode
         _uiState.update { it.copy(isDeleteMode = !currentMode) }
-        if (currentMode) {
-            uncheckAllRoutines()
-        }
+        if (currentMode) uncheckAllRoutines()
     }
 
     fun onDismissInfoTooltip() {
@@ -74,15 +91,11 @@ class MyRoutinesViewModel : ViewModel() {
     }
 
     fun onCheckRoutine(routineId: String, isChecked: Boolean) {
-        _sourceRoutines.update { currentList ->
-            currentList.map { if (it.routineId == routineId) it.copy(isChecked = isChecked) else it }
-        }
+        _sourceRoutines.update { list -> list.map { if (it.routineId == routineId) it.copy(isChecked = isChecked) else it } }
     }
 
     fun showDeleteDialog() {
-        if (routinesToDisplay.value.any { it.isChecked }) {
-            _uiState.update { it.copy(showDeleteDialog = true) }
-        }
+        if (routinesToDisplay.value.any { it.isChecked }) _uiState.update { it.copy(showDeleteDialog = true) }
     }
 
     fun dismissDeleteDialog() {
@@ -94,76 +107,255 @@ class MyRoutinesViewModel : ViewModel() {
     }
 
     fun deleteCheckedRoutines() {
-        _sourceRoutines.update { currentList ->
-            currentList.filterNot { it.isChecked }
-        }
-        _uiState.update {
-            it.copy(
-                isDeleteMode = false,
-                showDeleteDialog = false,
-                showDeleteSuccessDialog = true
-            )
-        }
-    }
+        viewModelScope.launch {
+            val targets = _sourceRoutines.value.filter { it.isChecked }.map { it.routineId }
 
-    fun openTimePicker(routineId: String) {
-        _uiState.update { it.copy(editingRoutineId = routineId) }
-    }
+            val succeed = mutableListOf<String>()
+            val failed = mutableListOf<String>()
 
-    fun closeTimePicker() {
-        _uiState.update { it.copy(editingRoutineId = null) }
-    }
-
-    fun onConfirmTimeSet(routineId: String, time: LocalTime, days: Set<DayOfWeek>, alarm: Boolean) {
-        _sourceRoutines.update { currentList ->
-            currentList.map {
-                // [수정] it.copy에 isAlarmEnabled = alarm 추가
-                if (it.routineId == routineId) it.copy(
-                    scheduledTime = time,
-                    scheduledDays = days,
-                    isAlarmEnabled = alarm // ◀◀◀ [수정] 전달받은 alarm 값을 저장
-                ) else it
+            for (id in targets) {
+                val ok = repo.deleteRoutineSafe(id)
+                if (ok) succeed += id else failed += id
             }
+
+            // 성공한 것만 즉시 제거(낙관적)
+            if (succeed.isNotEmpty()) {
+                _sourceRoutines.update { list -> list.filterNot { it.routineId in succeed } }
+            }
+
+            // UI 피드백
+            _uiState.update {
+                it.copy(
+                    isDeleteMode = false,
+                    showDeleteDialog = false,
+                    showDeleteSuccessDialog = failed.isEmpty()
+                )
+            }
+
+            // 실패 안내 토스트/스낵바가 필요하면 여기에 호출
+            if (failed.isNotEmpty()) {
+                // e.g. sendEvent(Snackbar("일부 루틴을 삭제하지 못했습니다. 잠시 후 다시 시도해 주세요."))
+            }
+
+            // 최신 서버 상태 재조회
+            refreshRoutines()
         }
-        closeTimePicker()
     }
 
-    fun onLikeClick(routineId: String) {
-        _sourceRoutines.update { currentList ->
-            currentList.map { routine ->
-                if (routine.routineId == routineId) {
-                    routine.copy(
-                        isLiked = !routine.isLiked,
-                        likes = if (routine.isLiked) routine.likes - 1 else routine.likes + 1
-                    )
-                } else {
-                    routine
-                }
-            }
-        }
-    }
 
     fun onShowInfoTooltip() {
         _uiState.update { it.copy(showInfoTooltip = true) }
     }
 
-    private fun uncheckAllRoutines() {
-        _sourceRoutines.update { currentList ->
-            currentList.map { it.copy(isChecked = false) }
+    fun onLikeClick(routineId: String) {
+        _sourceRoutines.update { list ->
+            list.map { r ->
+                if (r.routineId == routineId)
+                    r.copy(
+                        isLiked = !r.isLiked,
+                        likes = if (r.isLiked) r.likes - 1 else r.likes + 1
+                    )
+                else r
+            }
         }
     }
+
+    private fun uncheckAllRoutines() {
+        _sourceRoutines.update { list -> list.map { it.copy(isChecked = false) } }
+    }
+
+    /** ✅ 요구사항 반영:
+     *  - dayParam = 사용자가 탭에서 고른 요일(없으면 null)
+     *  - 항상 sortType과 함께 서버로 전달 → 서버가 정렬 + (선택시)요일 필터를 함께 적용
+     *  - 서버가 TIME+null을 아직 막아 에러면, 오늘 요일로 1회 폴백
+     */
+    private suspend fun fetchFromServer() {
+        val state = _uiState.value
+        val sortType = when (state.selectedSortOption) {
+            SortOption.BY_TIME -> "TIME"
+            SortOption.LATEST -> "LATEST"
+            SortOption.POPULAR -> "POPULAR"
+        }
+        val selectedDay = state.selectedDay
+
+        Log.d(TAG_VM, "fetchFromServer() start: sort=$sortType, day=$selectedDay")
+
+        val base: List<MyRoutineUi> =
+            if (selectedDay == null) {
+                // ✅ 요일 미선택: 서버에 dayOfWeek=null로 그대로 전달 → "전체 목록"
+                repo.getMyRoutines(sortType, null, 0, 50)
+            } else {
+                // ✅ 요일 선택: 서버가 TIME+day로 필터링 (sortType 무시 X)
+                //   (서버가 sortType도 적용한다면 그대로, 아니면 아래서 보정정렬)
+                repo.getMyRoutines(sortType, selectedDay, 0, 50)
+            }
+
+        // (선택) 서버 정렬이 들쭉날쭉할 때만 보정 정렬
+        val result = when (sortType) {
+            "POPULAR" -> base.sortedByDescending { it.likes }
+            "LATEST" -> base.sortedByDescending { it.createdAt.toEpochMsOrZero() }
+            else -> base // TIME은 서버 정렬 신뢰(필요하면 scheduledTime로 로컬정렬)
+        }
+
+        Log.d("MyRoutinesVM", "fetchFromServer() -> resultSize=${result.size}")
+        _sourceRoutines.value = result
+    }
+
+    /*private suspend fun fetchFromServer() {
+        val state = _uiState.value
+        val sortType = when (state.selectedSortOption) {
+            SortOption.BY_TIME -> "TIME"
+            SortOption.LATEST -> "LATEST"
+            SortOption.POPULAR -> "POPULAR"
+        }
+        val selectedDay = state.selectedDay
+
+        Log.d(TAG_VM, "fetchFromServer() start: sort=$sortType, day=$selectedDay")
+
+        val result: List<MyRoutineUi> = try {
+            if (selectedDay == null) {
+                if (sortType == "TIME") {
+                    // ✅ 서버 TIME 정렬을 '오늘 요일'로 명시적으로 사용
+                    val today = LocalDate.now(ZoneId.systemDefault()).dayOfWeek
+                    val res = repo.getMyRoutines("TIME", today, 0, 50)
+                    Log.d(TAG_VM, "fetchFromServer(): TIME(today=$today) got=${res.size}")
+                    // 서버가 이미 시간순 정렬을 보장한다면 그대로 반환
+                    res
+                } else {
+                    val res = repo.getMyRoutines(sortType, null, 0, 50)
+                    Log.d(TAG_VM, "fetchFromServer(): $sortType got=${res.size}")
+                    res
+                }
+            } else {
+                val dayFiltered = repo.getMyRoutines("TIME", selectedDay, 0, 50)
+                Log.d(TAG_VM, "fetchFromServer(): TIME(day=$selectedDay) got=${dayFiltered.size}")
+                when (sortType) {
+                    "POPULAR" -> dayFiltered.sortedByDescending { it.likes }
+                    "LATEST" -> dayFiltered.sortedByDescending { it.createdAt.toEpochMsOrZero() }
+                    else -> dayFiltered.sortedBy { it.scheduledTime ?: LocalTime.MAX }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG_VM, "fetchFromServer() failed: sort=$sortType, day=$selectedDay", e)
+            if (sortType == "TIME" && selectedDay == null) {
+                val today = LocalDate.now(ZoneId.systemDefault()).dayOfWeek
+                Log.w(TAG_VM, "fetchFromServer(): fallback TIME today=$today")
+                repo.getMyRoutines("TIME", today, 0, 50)
+            } else throw e
+        }
+
+        Log.d("MyRoutinesVM", "fetchFromServer() -> resultSize=${result.size}")
+        _sourceRoutines.value = result
+    }*/
 
     fun loadRoutines() {
-        viewModelScope.launch {
-            // [수정] 샘플 데이터를 새로운 통합 Routine 클래스로 변경
-            _sourceRoutines.value = DummyData.feedRoutines.filter { it.authorId == DummyData.MY_USER_ID }
+        viewModelScope.launch { fetchFromServer() }
+    }
+
+    fun refreshRoutines() = loadRoutines()
+
+
+    private val HH_MM_SS = DateTimeFormatter.ofPattern("HH:mm:ss")
+
+
+    //스케줄 관련 로직
+    private var openPickerJob: kotlinx.coroutines.Job? = null
+
+    fun openTimePicker(routineId: String) {
+        openPickerJob?.cancel()
+        Log.d(TAG_VM, "openTimePicker($routineId) – fetch schedules...")
+
+// ✅ 이전 루틴에서 남은 편집 상태가 있으면 먼저 초기화 (PATCH/POST 오동작 방지)
+        _uiState.update {
+            it.copy(
+                editingRoutineId = routineId,
+                editingScheduleId = null,
+                initialTimeForSheet = null,
+                initialDaysForSheet = emptySet(),
+                initialAlarmForSheet = true
+            )
+        }
+
+
+        openPickerJob = viewModelScope.launch {
+            val schedules = repo.getSchedules(routineId)
+            Log.d(
+                "MyRoutinesVM",
+                "openTimePicker() rid=$routineId schedules=${schedules.joinToString { "${it.dayOfWeek} ${it.time} alarm=${it.alarmEnabled}" }}"
+            )
+
+            val order = listOf("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")
+            val sorted = schedules.sortedBy { order.indexOf(it.dayOfWeek) }
+
+            val rawDays = sorted.map { it.dayOfWeek }
+            val parsedDays = sorted.mapNotNull { it.dayOfWeek.toDayOfWeekOrNull() }.toSet()
+            Log.d(TAG_VM, "openTimePicker() days raw=$rawDays -> parsed=$parsedDays")
+
+            val timeSet = sorted.mapNotNull { it.time.toMyLocalTimeOrNull() }.toSet()
+            val initTime = if (timeSet.size == 1) timeSet.first() else null
+            val initDays = parsedDays
+            val initAlarm = sorted.any { it.alarmEnabled }
+            val firstSchId = sorted.firstOrNull()?.id
+
+            Log.d(
+                TAG_VM,
+                "openTimePicker() -> initTime=$initTime initDays=$initDays initAlarm=$initAlarm firstSchId=$firstSchId"
+            )
+            _uiState.update {
+                it.copy(
+                    editingRoutineId = routineId,
+                    editingScheduleId = firstSchId,
+                    initialTimeForSheet = initTime,
+                    initialDaysForSheet = initDays,
+                    initialAlarmForSheet = initAlarm
+                )
+            }
         }
     }
 
-
-    fun refreshRoutines() {
-        loadRoutines()
+    fun closeTimePicker() {
+        _uiState.update {
+            it.copy(
+                editingRoutineId = null,
+                editingScheduleId = null,
+                initialTimeForSheet = null,
+                initialDaysForSheet = emptySet(),
+                initialAlarmForSheet = true
+            )
+        }
     }
 
+    fun onConfirmTimeSet(routineId: String, time: LocalTime, days: Set<DayOfWeek>, alarm: Boolean) {
+
+
+        viewModelScope.launch {
+
+
+            try {
+                if (days.isEmpty()) return@launch
+
+                val schId = _uiState.value.editingScheduleId
+                if (schId != null) {
+                    repo.updateSchedule(routineId, schId, time.format(HH_MM_SS), days, alarm)
+                } else {
+                    repo.createSchedule(routineId, time.format(HH_MM_SS), days, alarm)
+                }
+
+                // 💡 현재 선택된 요일이 새 요일셋에 없으면 필터 해제
+                val curSelected = _uiState.value.selectedDay
+                if (curSelected != null && !days.contains(curSelected)) {
+                    _uiState.update { it.copy(selectedDay = null) }
+                }
+
+                RoutineSyncBus.publish(RoutineSyncBus.Event.MyRoutinesChanged)
+                // ✅ 즉시 반영 (버스 지연/디바운스 상황 대비)
+                loadRoutines()
+            } catch (e: Exception) {
+                refreshRoutines()
+            } finally {
+                closeTimePicker()
+            }
+        }
+    }
 
 }
