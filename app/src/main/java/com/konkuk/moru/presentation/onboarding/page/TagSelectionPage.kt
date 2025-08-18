@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -39,12 +40,10 @@ import com.konkuk.moru.presentation.onboarding.model.OnboardingTags
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
-data class SelectableTag(
-    val id: String,
-    val label: String
-) {
+data class SelectableTag(val label: String) {
     var isSelected by mutableStateOf(false)
 }
+
 @Composable
 fun TagSelectionPage(
     onNext: () -> Unit,
@@ -55,23 +54,19 @@ fun TagSelectionPage(
 
     val situationTags = remember {
         mutableStateListOf<SelectableTag>().apply {
-            OnboardingTags.SITUATION.forEach { def ->
-                add(SelectableTag(id = def.id, label = def.label))
-            }
+            OnboardingTags.SITUATION.forEach { def -> add(SelectableTag(label = def.label)) }
         }
     }
     val activityTags = remember {
         mutableStateListOf<SelectableTag>().apply {
-            OnboardingTags.ACTIVITY.forEach { def ->
-                add(SelectableTag(id = def.id, label = def.label))
-            }
+            OnboardingTags.ACTIVITY.forEach { def -> add(SelectableTag(label = def.label)) }
         }
     }
 
     val isButtonEnabled = situationTags.any { it.isSelected } && activityTags.any { it.isSelected }
 
-    fun getSelectedLabels(tags: List<SelectableTag>): List<String> {
-        return tags.filter { it.isSelected }.map { it.label }
+    LaunchedEffect(Unit) {
+        viewModel.prefetchTags()
     }
 
     Box(
@@ -101,7 +96,11 @@ fun TagSelectionPage(
                 ) {
                     Text("관심태그 설정", style = typography.body_SB_24)
                     Spacer(modifier = Modifier.height(7.dp))
-                    Text("어떤 상황에 주로 사용하시나요?", style = typography.desc_M_14, color = colors.mediumGray)
+                    Text(
+                        "어떤 상황에 주로 사용하시나요?",
+                        style = typography.desc_M_14,
+                        color = colors.mediumGray
+                    )
                     Spacer(modifier = Modifier.height(33.dp))
 
                     LazyVerticalGrid(
@@ -152,10 +151,12 @@ fun TagSelectionPage(
                     )
                     Spacer(modifier = Modifier.height(35.dp))
                     MoruButtonTypeA(text = "다음", enabled = isButtonEnabled) {
-                        val selected = (situationTags + activityTags).filter { it.isSelected }
-                        val tagIds = selected.map { it.id }                   // ← [중요] id만 추출
-                        viewModel?.submitFavoriteTags(tagIds)                 // ← 서버로 전송
-                        viewModel?.updateTags(selected.map { it.label })      // ← UI상태(라벨) 저장(선택)
+                        val selectedLabels = (situationTags + activityTags)
+                            .filter { it.isSelected }
+                            .map { it.label } // "#라벨"
+
+                        viewModel.submitFavoriteTagsByLabels(selectedLabels)
+                        viewModel.updateTags(selectedLabels)
                         onNext()
                     }
                 }
