@@ -156,7 +156,7 @@ fun RoutineDetailScreen(
                     onDismissRequest = { viewModel.dismissAddedDialog() }
                 ) {
                     Text(
-                        text = "루틴이 추가되었습니다.\n 실천 시간대를 설정해주세요!",
+                        text = "루틴이 추가되었습니다.\n실천 시간대를 설정해주세요!",
                         textAlign = TextAlign.Center,
                         color = Color(0xFFE0E0E0),
                         style = MORUTheme.typography.desc_M_14
