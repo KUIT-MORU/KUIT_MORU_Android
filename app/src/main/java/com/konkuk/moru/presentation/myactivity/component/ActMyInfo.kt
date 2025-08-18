@@ -89,7 +89,7 @@ fun ActMyInfo(
                             painter = painterResource(id = R.drawable.ic_profile_basic),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.size(45.dp)
                         )
                     } else {
                         val req = ImageRequest.Builder(ctx)

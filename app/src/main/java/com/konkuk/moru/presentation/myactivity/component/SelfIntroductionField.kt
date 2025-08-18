@@ -6,10 +6,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -18,10 +14,13 @@ import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
-fun SelfIntroductionField(modifier: Modifier = Modifier) {
-    var introText by remember { mutableStateOf("") }
-    val maxLength = 20
-
+fun MyActSelfIntroductionField(
+    value: String,                       // ← ViewModel이 가진 값
+    onValueChange: (String) -> Unit,     // ← ViewModel setter
+    maxLength: Int = 20,
+    placeholder: String = "자기소개를 입력하세요",
+    modifier: Modifier = Modifier
+) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = "자기소개",
@@ -37,26 +36,34 @@ fun SelfIntroductionField(modifier: Modifier = Modifier) {
                 .clip(RoundedCornerShape(6.dp))
         ) {
             BasicTextField(
-                value = introText,
-                onValueChange = {
-                    if (it.length <= maxLength) {
-                        introText = it
-                    }
-                },
+                value = value,
+                onValueChange = { s -> onValueChange(s.take(maxLength)) }, // 길이 제한
                 textStyle = typography.desc_M_14.copy(color = colors.black),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 14.dp),
-                decorationBox = { innerTextField ->
-                    if (introText.isEmpty()) {
+                decorationBox = { inner ->
+                    if (value.isEmpty()) {
                         Text(
-                            text = "자기소개",
+                            text = placeholder,
                             style = typography.desc_M_14,
                             color = Color.Gray
                         )
                     }
-                    innerTextField()
+                    inner()
                 }
+            )
+        }
+
+        // (선택) 글자수 표시
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+            horizontalArrangement = Arrangement.End
+        ) {
+            Text(
+                text = "${value.length}/$maxLength",
+                style = typography.desc_M_12,
+                color = colors.mediumGray
             )
         }
     }
