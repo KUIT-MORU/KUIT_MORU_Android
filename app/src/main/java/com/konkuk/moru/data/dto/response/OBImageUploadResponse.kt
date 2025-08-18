@@ -24,7 +24,7 @@ data class OBImageUploadResponse(
         @SerialName("result")   @SerializedName("result")   val result: String? = null,
     )
     fun bestKeyOrNull(): String? =
-        imageUrl ?: key ?: imageKey ?: path ?: url ?: data?.imageUrl
-        ?: data?.key ?: data?.imageKey ?: data?.path ?: data?.url
+        imageUrl ?: key ?: imageKey ?: path ?: url
+        ?: data?.imageUrl ?: data?.key ?: data?.imageKey ?: data?.path ?: data?.url
         ?: result ?: data?.result
 }

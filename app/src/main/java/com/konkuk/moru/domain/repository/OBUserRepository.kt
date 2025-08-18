@@ -1,7 +1,7 @@
 package com.konkuk.moru.domain.repository
 
 import com.konkuk.moru.data.dto.request.FavoriteTagRequest
-import com.konkuk.moru.data.dto.request.UpdateUserProfileRequest
+import com.konkuk.moru.data.dto.response.ServerTag
 import com.konkuk.moru.data.dto.response.UpdateUserProfileResponse
 import java.io.File
 
@@ -13,6 +13,7 @@ interface OBUserRepository {
         body: Map<String, String>
     ): Result<UpdateUserProfileResponse>
 
+    suspend fun getAllTags(): Result<List<ServerTag>>
     suspend fun addFavoriteTags(body: FavoriteTagRequest): Result<Unit>
     suspend fun uploadImage(file: File): Result<String>
 }

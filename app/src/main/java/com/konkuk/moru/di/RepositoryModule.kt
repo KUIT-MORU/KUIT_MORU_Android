@@ -26,10 +26,8 @@ import com.konkuk.moru.domain.repository.RoutineFeedRepository
 import com.konkuk.moru.domain.repository.RoutineUserRepository
 import com.konkuk.moru.domain.repository.SearchRepository
 import com.konkuk.moru.domain.repository.SocialRepository
-import com.konkuk.moru.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
@@ -41,69 +39,41 @@ abstract class RepositoryModule {
     @Binds @Singleton
     abstract fun bindOBUserRepository(impl: OBUserRepositoryImpl): OBUserRepository
 
-    @Binds
-    @Singleton
-    abstract fun bindAuthRepository(
-        impl: AuthRepositoryImpl
-    ): AuthRepository
+    @Binds @Singleton
+    abstract fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository
 
-    @Binds
-    @Singleton
-    abstract fun bindInsightRepository(
-        impl: InsightRepositoryImpl
-    ): InsightRepository
+    @Binds @Singleton
+    abstract fun bindInsightRepository(impl: InsightRepositoryImpl): InsightRepository
 
-    @Binds
-    @Singleton
-    abstract fun bindRoutineFeedRepository(
-        impl: RoutineFeedRepositoryImpl
-    ): RoutineFeedRepository
+    @Binds @Singleton
+    abstract fun bindRoutineFeedRepository(impl: RoutineFeedRepositoryImpl): RoutineFeedRepository
 
-    @Binds
-    @Singleton
-    abstract fun bindRoutineUserRepository(
-        impl: RoutineUserRepositoryImpl
-    ): RoutineUserRepository
+    @Binds @Singleton
+    abstract fun bindRoutineUserRepository(impl: RoutineUserRepositoryImpl): RoutineUserRepository
 
-    @Module
-    @InstallIn(SingletonComponent::class)
-    abstract class RepositoryModule {
-        @Binds
-        @Singleton
-        abstract fun bindMyRoutineRepository(
-            impl: MyRoutineRepositoryImpl
-        ): MyRoutineRepository
-    }
+    @Binds @Singleton
+    abstract fun bindMyRoutineRepository(impl: MyRoutineRepositoryImpl): MyRoutineRepository
 
-    @Binds
-    @Singleton
-    abstract fun bindNotificationRepository(
-        impl: NotificationRepositoryImpl
-    ): NotificationRepository
+    @Binds @Singleton
+    abstract fun bindNotificationRepository(impl: NotificationRepositoryImpl): NotificationRepository
 
-    @Binds
-    @Singleton
+    @Binds @Singleton
     abstract fun bindSocialRepository(impl: SocialRepositoryImpl): SocialRepository
 
-    @Binds
-    @Singleton
+    @Binds @Singleton
     abstract fun bindSearchRepository(impl: SearchRepositoryImpl): SearchRepository
 
-    @Binds
-    @Singleton
+    @Binds @Singleton
     abstract fun bindMyActTagRepository(impl: MyActTagRepositoryImpl): MyActTagRepository
 
-    @Binds
-    @Singleton
+    @Binds @Singleton
     abstract fun bindMyActScrapRepository(impl: MyActScrapRepositoryImpl): MyActScrapRepository
 
-    @Binds
-    @Singleton
+    @Binds @Singleton
     abstract fun bindMyActRecordRepository(impl: MyActRecordRepositoryImpl): MyActRecordRepository
-  
-    @Singleton
-    @Binds
-    abstract fun bindFcmRepository( // FcmRepository 추가
+
+    @Binds @Singleton
+    abstract fun bindFcmRepository(
         fcmRepositoryImpl: FcmRepositoryImpl
     ): FcmRepository
 }
