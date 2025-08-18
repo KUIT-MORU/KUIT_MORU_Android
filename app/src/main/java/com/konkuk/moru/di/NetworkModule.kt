@@ -7,6 +7,7 @@ import com.konkuk.moru.BuildConfig
 import com.konkuk.moru.data.interceptor.AuthInterceptor
 import com.konkuk.moru.data.interceptor.TokenAuthenticator
 import com.konkuk.moru.data.service.AuthService
+import com.konkuk.moru.data.service.FcmService
 import com.konkuk.moru.data.service.ImageService
 import com.konkuk.moru.data.service.InsightService
 import com.konkuk.moru.data.service.MyRoutineService
@@ -217,5 +218,12 @@ object NetworkModule {
     @Singleton
     fun provideImageService(retrofit: Retrofit): ImageService =
         retrofit.create(ImageService::class.java) // [추가]
+
+    @Singleton
+    @Provides
+    fun provideFcmService(retrofit: Retrofit): FcmService { // FcmService 추가
+        return retrofit.create(FcmService::class.java)
+    }
+
 
 }
