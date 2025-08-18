@@ -91,34 +91,62 @@ private fun parseIsoToLocalDateTime(iso: String): LocalDateTime {
         .getOrElse { LocalDateTime.now() }
 }
 
+/* ===================== 도메인 -> UI 매핑 ===================== */
+
 private fun MyActRecordDetail.toRoutineDetailUi(): RoutineDetail {
+    // 1) 안전한 파싱 사용 (UTC/로컬 모두)
     val start = parseIsoToLocalDateTime(startedAtIso)
-    val totalDur = Duration.ofSeconds(totalSec.coerceAtLeast(0))
-    val end = endedAtIso?.let { parseIsoToLocalDateTime(it) }
+
+    // 2) totalSec 보정: 0이거나 누락이면 step(actual>0 ? actual : estimated) 합 사용
+    val summedStepsSec = steps.sumOf { s ->
+        val a = s.actualSec
+        val e = s.estimatedSec
+        (if (a > 0) a else e).coerceAtLeast(0)
+    }
+    val totalSeconds = if (totalSec > 0) totalSec else summedStepsSec
+    val totalDur = Duration.ofSeconds(totalSeconds.coerceAtLeast(0))
+
+    // 3) 종료시각: 응답에 있으면 파싱, 없으면 start + total
+    val end = endedAtIso
+        ?.let { runCatching { parseIsoToLocalDateTime(it) }.getOrNull() }
         ?: start.plusSeconds(totalDur.seconds)
 
-    // 완료/미완료만 활용
+    // 4) 상태 텍스트
     val status = if (isCompleted) RoutineStatus.DONE else RoutineStatus.FOCUSED
     val resultText = if (isCompleted) "완료" else "미완료"
 
-    // step 시작/끝 시간: startedAt부터 actualSec 누적
-    var cursor: LocalTime = start.toLocalTime()
-    val stepUis = steps
-        .sortedBy { it.order }
-        .map { s ->
-            val sec = s.actualSec.coerceAtLeast(0)
-            val dur = Duration.ofSeconds(sec)
-            val stepStart = cursor
-            val stepEnd = stepStart.plusSeconds(dur.seconds)
-            cursor = stepEnd
-            RoutineStep(
-                order = s.order,
-                name = s.name,
-                startTime = stepStart,
-                endTime = stepEnd,
-                duration = dur,
-                memo = s.note
+    // 5) STEP 매핑 (있으면 그대로, 없으면 단순루틴일 때 "전체" 1스텝 생성)
+    val stepUis: List<RoutineStep> =
+        if (steps.isNotEmpty()) {
+            var cursor = start.toLocalTime()
+            steps.sortedBy { it.order }.map { s ->
+                val sec = (if (s.actualSec > 0) s.actualSec else s.estimatedSec).coerceAtLeast(0)
+                val dur = Duration.ofSeconds(sec)
+                val st = cursor
+                val ed = st.plusSeconds(dur.seconds)
+                cursor = ed
+                RoutineStep(
+                    order = s.order,
+                    name = s.name,
+                    startTime = st,
+                    endTime = ed,
+                    duration = dur,
+                    memo = s.note
+                )
+            }
+        } else if ((isSimple || !totalDur.isZero)) {
+            listOf(
+                RoutineStep(
+                    order = 1,
+                    name = "전체",
+                    startTime = start.toLocalTime(),
+                    endTime = end.toLocalTime(),
+                    duration = totalDur,
+                    memo = null
+                )
             )
+        } else {
+            emptyList()
         }
 
     return RoutineDetail(
@@ -128,6 +156,8 @@ private fun MyActRecordDetail.toRoutineDetailUi(): RoutineDetail {
         totalDuration = totalDur,
         result = resultText,
         dateRange = LocalDateTimeRange(start = start, end = end),
-        steps = stepUis
+        steps = stepUis,
     )
 }
+
+

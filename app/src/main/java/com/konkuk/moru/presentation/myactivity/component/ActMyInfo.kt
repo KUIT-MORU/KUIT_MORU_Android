@@ -89,7 +89,7 @@ fun ActMyInfo(
                             painter = painterResource(id = R.drawable.ic_profile_basic),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize() // ← 컨테이너(80dp) 꽉 채우기
+                            modifier = Modifier.fillMaxSize()
                         )
                     } else {
                         val req = ImageRequest.Builder(ctx)
@@ -128,7 +128,7 @@ fun ActMyInfo(
                                     modifier = Modifier.fillMaxSize()
                                 )
                             },
-                            modifier = Modifier.fillMaxSize() // ← 컨테이너(80dp) 꽉 채우기
+                            modifier = Modifier.fillMaxSize()
                         )
                     }
                 }

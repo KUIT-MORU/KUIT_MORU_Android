@@ -19,6 +19,7 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 fun InsightContentSection(
     insightScore: Int?,
     insightData: InsightUiState,
+    userName: String = "사용자명",
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -27,7 +28,7 @@ fun InsightContentSection(
     ) {
         if (insightScore != null) {
             Spacer(modifier = Modifier.height(32.dp))
-            InsightGraph(insightData)
+            InsightGraph(insightData, userName)
         } else {
             Column(
                 modifier = Modifier

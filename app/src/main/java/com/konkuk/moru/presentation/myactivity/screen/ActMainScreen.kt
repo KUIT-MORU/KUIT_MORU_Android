@@ -81,6 +81,7 @@ fun ActMainScreen(
             var selectedTab by remember { mutableStateOf(0) }
             MyActivityTab(
                 insightData = uiState,
+                userName = nickname ?: "알 수 없음",
                 selectedTab = selectedTab,
                 onTabSelected = { selectedTab = it },
                 navController = navController,
