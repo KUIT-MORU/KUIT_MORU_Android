@@ -36,18 +36,33 @@ import kotlin.jvm.java
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     @Named("obUserAuthed")
-    fun provideOBUserServiceAuthed(@Named("jsonRetrofit") retrofit: Retrofit): OBUserService =
+    fun provideOBUserServiceAuthed(@Named("gsonRetrofit") retrofit: Retrofit): OBUserService =
         retrofit.create(OBUserService::class.java)
 
-    // [추가] 무인증용 OBUserService (닉네임 체크 전용)
-    @Provides @Singleton
+    @Provides
+    @Singleton
     @Named("obUserAuthless")
-    fun provideOBUserServiceAuthless(@Named("authlessRetrofit") retrofit: Retrofit): OBUserService =
+    fun provideOBUserServiceAuthless(@Named("authlessGsonRetrofit") retrofit: Retrofit): OBUserService =
         retrofit.create(OBUserService::class.java)
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
+    @Named("authlessGsonRetrofit")
+    fun provideAuthlessGsonRetrofit(
+        @Named("authlessOkHttp") ok: OkHttpClient,
+        baseUrl: String,
+        gson: Gson
+    ): Retrofit = Retrofit.Builder()
+        .baseUrl(baseUrl)
+        .client(ok)
+        .addConverterFactory(GsonConverterFactory.create(gson)) // [추가]
+        .build()
+
+    @Provides
+    @Singleton
     fun provideGson(): Gson = GsonBuilder()
         .setLenient()
         .create()
