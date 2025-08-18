@@ -148,6 +148,11 @@ class MyRoutineDetailViewModel @Inject constructor(
         }
     }*/
 
+    fun setUserVisible(checked: Boolean) {
+        _uiState.update { st ->
+            st.copy(routine = st.routine?.copy(isUserVisible = checked))
+        }
+    }
     fun setEditMode(isEdit: Boolean) {
         _uiState.update { it.copy(isEditMode = isEdit) }
     }
@@ -236,7 +241,7 @@ class MyRoutineDetailViewModel @Inject constructor(
                         steps = stepsTriple,
                         selectedApps = selectedApps,
                         isSimple = isSimple,
-                        isUserVisible = null
+                        isUserVisible = current.isUserVisible,
                     )
                 }
                     .onSuccess {

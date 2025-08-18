@@ -48,6 +48,7 @@ fun MyRoutineDetailDto.toMyDetailUi(): MyRoutineDetailUi {
         isLiked = isLiked,
         isBookmarked = isScrapped,      // 서버 필드명과 맞춤
         isRunning = false,
+        isUserVisible = this.isUserVisible ?: false,
         isSimple = isSimple,
         isChecked = false,
         scrapCount = scrapCount,
