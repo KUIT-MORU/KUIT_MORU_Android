@@ -46,14 +46,12 @@ object NetworkModule {
     fun provideOBUserServiceAuthed(@Named("gsonRetrofit") retrofit: Retrofit): OBUserService =
         retrofit.create(OBUserService::class.java)
 
-    // [변경] 충돌 해결: master의 주석 문구만 반영, 구현은 Gson 사용 유지
     @Provides
     @Singleton
     @Named("obUserAuthless")
     fun provideOBUserServiceAuthless(@Named("authlessGsonRetrofit") retrofit: Retrofit): OBUserService =
         retrofit.create(OBUserService::class.java)
 
-    // [추가] 무인증용 Gson Retrofit (닉네임 체크 등 authless + Gson 경로)
     @Provides
     @Singleton
     @Named("authlessGsonRetrofit")
