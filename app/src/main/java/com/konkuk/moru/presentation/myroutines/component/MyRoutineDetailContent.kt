@@ -79,7 +79,7 @@ fun MyRoutineDetailContent(
             isTimePickerVisible = true
         }
     )
-    
+
     LaunchedEffect(viewModel) {
         viewModel.saveCompleted.collectLatest { ok ->
             if (ok) {
@@ -119,7 +119,10 @@ fun MyRoutineDetailContent(
                     category = routine.category,
                     onDescriptionChange = viewModel::updateDescription,
                     onCategoryChange = viewModel::updateCategory,
-                    onImageClick = onCardImageClick // [변경]
+                    onImageClick = onCardImageClick, // [변경],
+                    isUserVisible = routine.isUserVisible,          // [추가]
+                    onUserVisibleChange = viewModel::setUserVisible // [추가]
+
                 )
             }
 

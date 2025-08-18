@@ -67,6 +67,8 @@ fun RoutineItemCard(
     onDescriptionChange: (String) -> Unit,
     onCategoryChange: (String) -> Unit,
     onImageClick: () -> Unit,
+    isUserVisible: Boolean,                 // [추가]
+    onUserVisibleChange: (Boolean) -> Unit, // [추가]
 ) {
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var showDeleteCompleteDialog by remember { mutableStateOf(false) }
@@ -114,20 +116,20 @@ fun RoutineItemCard(
         horizontalArrangement = Arrangement.Center
     ) {
         AsyncImage(
-        model = imageUri ?: imageUrl,
-        contentDescription = "루틴 대표 이미지",
-        modifier = Modifier
-            .width(105.dp)
-            .height(140.dp)
-            .clip(RoundedCornerShape(4.dp))
-            .clickable(
-                enabled = isEditMode,
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() }
-            ) { onImageClick() },
-        contentScale = ContentScale.Crop,
-        placeholder = painterResource(id = R.drawable.ic_routine_card_basic),
-        error = painterResource(id = R.drawable.ic_routine_card_basic)
+            model = imageUri ?: imageUrl,
+            contentDescription = "루틴 대표 이미지",
+            modifier = Modifier
+                .width(105.dp)
+                .height(140.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .clickable(
+                    enabled = isEditMode,
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                ) { onImageClick() },
+            contentScale = ContentScale.Crop,
+            placeholder = painterResource(id = R.drawable.ic_routine_card_basic),
+            error = painterResource(id = R.drawable.ic_routine_card_basic)
         )
 
         Spacer(modifier = Modifier.width(16.dp))
@@ -175,12 +177,8 @@ fun RoutineItemCard(
 
             ) {
                 ShowUserCheckbox(
-                    showUser = isUserChecked,
-                    onClick = {
-                        if (isEditMode) {
-                            isUserChecked = !isUserChecked
-                        }
-                    }
+                    showUser = isUserVisible,                                  // [변경]
+                    onClick = { if (isEditMode) onUserVisibleChange(!isUserVisible) } // [변경]
                 )
 
                 if (!isEditMode) {
@@ -253,6 +251,8 @@ private fun RoutineItemCardPreview() {
         onDelete = {},
         onCategoryChange = { _ -> },
         onDescriptionChange = { _ -> },
-        onImageClick = {}
+        onImageClick = {},
+        isUserVisible = true,                 // [추가]
+        onUserVisibleChange = { _ -> }
     )
 }
