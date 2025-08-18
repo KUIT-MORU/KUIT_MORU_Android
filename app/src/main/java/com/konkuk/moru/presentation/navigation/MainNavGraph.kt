@@ -24,6 +24,7 @@ import com.konkuk.moru.presentation.home.screen.RoutineSimpleRunScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActFabTagScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActInsightInfoClickScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActMainScreen
+import com.konkuk.moru.presentation.myactivity.screen.ActPrivacyPolicyScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActProfileScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActRecordDetailScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActRecordScreen
@@ -551,15 +552,17 @@ fun MainNavGraph(
 
         composable(
             route = Route.ActRecordDetail.route,
-            arguments = listOf(navArgument("routineTitle") {
-                type = NavType.StringType
-            })
+            arguments = listOf(navArgument("logId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val encodedTitle = backStackEntry.arguments?.getString("routineTitle") ?: ""
-            val decodedTitle = URLDecoder.decode(encodedTitle, StandardCharsets.UTF_8.toString())
-
+            val logId = backStackEntry.arguments?.getString("logId") ?: return@composable
             ActRecordDetailScreen(
-                title = decodedTitle,
+                logId = logId,
+                navController = navController
+            )
+        }
+
+        composable(route = Route.ActPolicy.route) {
+            ActPrivacyPolicyScreen(
                 navController = navController
             )
         }

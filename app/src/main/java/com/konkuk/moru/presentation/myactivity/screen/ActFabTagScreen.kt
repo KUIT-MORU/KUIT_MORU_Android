@@ -25,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,45 +37,30 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.myactivity.component.BackTitle
 import com.konkuk.moru.presentation.myactivity.component.HashTagSearchField
 import com.konkuk.moru.presentation.myactivity.component.TagSectionHeader
+import com.konkuk.moru.presentation.myactivity.viewmodel.MyActTagViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 data class TagDto(
     val id: Int,
     val name: String,
-    val isSelected: Boolean = false
+    val isSelected: Boolean = false,
+    val serverId: String = ""
 )
-
-fun generateDummyTags(): List<TagDto> {
-    val sampleTagWords = listOf(
-        "자바", "코틀린", "파이썬", "웹", "앱", "프론트", "백엔드", "데이터",
-        "AI", "알고", "디자인", "UX", "UI", "서버", "DB", "리액트", "뷰", "안드로",
-        "IOS", "기획", "보안", "게임", "클라우드", "머신", "딥러닝", "마케팅",
-        "영상", "블록", "핀테크", "스타트"
-    )
-
-    val tags = sampleTagWords.mapIndexed { index, word ->
-        TagDto(id = index, name = "#$word")
-    }
-
-    val selected = tags.shuffled().take(8).map { it.copy(isSelected = true) }
-
-    return tags.map { tag ->
-        selected.find { it.id == tag.id }?.copy(isSelected = true) ?: tag
-    }
-}
 
 @Composable
 fun ActFabTagScreen(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    vm: MyActTagViewModel = hiltViewModel()
 ) {
-    var allTags by remember { mutableStateOf(generateDummyTags()) }
+    val allTags by vm.allTags.collectAsState()
     val interestedTags = allTags.filter { it.isSelected }
 
     var query by remember { mutableStateOf("") }
@@ -82,8 +68,14 @@ fun ActFabTagScreen(
 
     val selectedTagIds = remember { mutableStateListOf<Int>() }
 
-    val filteredTags = allTags.filter {
-        it.name.contains(query.trim(), ignoreCase = true)
+    val filteredTags = remember(allTags, query) {
+        val q = query.trim()
+        if (q.isEmpty()) allTags
+        else allTags.filter { it.name.contains(q, ignoreCase = true) }
+    }
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        vm.loadAllTagsAndFavorites()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -117,9 +109,8 @@ fun ActFabTagScreen(
                             .clip(RoundedCornerShape(10.dp))
                             .background(if (hasSelection) Color.Black else colors.mediumGray)
                             .clickable(enabled = hasSelection) {
-                                allTags = allTags.map {
-                                    if (selectedTagIds.contains(it.id)) it.copy(isSelected = true) else it
-                                }
+                                vm.submitFavoriteTags(selectedTagIds.toList())
+
                                 selectedTagIds.clear()
                             },
                         contentAlignment = Alignment.Center
@@ -198,9 +189,7 @@ fun ActFabTagScreen(
                                 text = tag.name,
                                 selected = false,
                                 onClick = {
-                                    allTags = allTags.map {
-                                        if (it.id == tag.id) it.copy(isSelected = false) else it
-                                    }
+                                    vm.removeFavoriteTag(tag.id)
                                 }
                             )
                         }
@@ -267,9 +256,7 @@ fun ActFabTagScreen(
                                 .clip(RoundedCornerShape(100.dp))
                                 .background(Color.Black)
                                 .clickable {
-                                    allTags = allTags.map {
-                                        if (it.id == tag.id) it.copy(isSelected = true) else it
-                                    }
+                                    vm.submitFavoriteTags(listOf(tag.id))
                                     query = ""
                                 }
                                 .padding(horizontal = 13.dp)

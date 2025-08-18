@@ -35,7 +35,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun InsightGraph(
-    insightData: InsightUiState
+    insightData: InsightUiState,
+    userName: String = "사용자명",
 ) {
     val pagerState = rememberPagerState(pageCount = { 3 })
 
@@ -67,7 +68,7 @@ fun InsightGraph(
                 when (page) {
                     0 -> InsightGraphA((insightData.globalAverageRoutineCompletionRate*100).toFloat(), (insightData.routineCompletionRate*100).toFloat())
                     1 -> InsightGraphB(
-                        userName = "정해찬",
+                        userName = userName,
                         weekdayUser = (insightData.weekdayUser.toFloat()),
                         weekdayAll = (insightData.weekdayOverall.toFloat()),
                         weekendUser = (insightData.weekendUser.toFloat()),

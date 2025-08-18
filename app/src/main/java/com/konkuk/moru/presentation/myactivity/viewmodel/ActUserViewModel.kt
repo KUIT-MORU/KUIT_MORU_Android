@@ -28,6 +28,9 @@ class ActUserViewModel @Inject constructor(
     private val _bio = MutableStateFlow("")
     val bio: StateFlow<String> = _bio
 
+    private val _profileImageUrl = MutableStateFlow<String?>(null)
+    val profileImageUrl: StateFlow<String?> = _profileImageUrl
+
     private val _routineCount = MutableStateFlow(0)
     val routineCount: StateFlow<Int> = _routineCount
     private val _followerCount = MutableStateFlow(0)
@@ -50,6 +53,7 @@ class ActUserViewModel @Inject constructor(
                 _gender.value = p.gender ?: ""          // 원본 그대로
                 _birthday.value = p.birthday ?: ""      // "2025-08-13"
                 _bio.value = p.bio ?: ""
+                _profileImageUrl.value = p.profileImageUrl ?: ""
                 _routineCount.value = p.routineCount
                 _followerCount.value = p.followerCount
                 _followingCount.value = p.followingCount

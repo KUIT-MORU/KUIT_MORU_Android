@@ -40,6 +40,7 @@ fun ActMainScreen(
     val routineCount by viewModelUser.routineCount.collectAsState()
     val followerCount by viewModelUser.followerCount.collectAsState()
     val followingCount by viewModelUser.followingCount.collectAsState()
+    val profileImage by viewModelUser.profileImageUrl.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModelUser.loadMe()
@@ -74,12 +75,13 @@ fun ActMainScreen(
                 .fillMaxWidth()
         ) {
             Spacer(modifier = Modifier.height(28.dp))
-            ActMyInfo(routineCount, followerCount, followingCount, nickname ?: "알 수 없음", routineStatus, uiState.routineCompletionRate.toFloat(), navController = navController)
+            ActMyInfo(profileImage, routineCount, followerCount, followingCount, nickname ?: "알 수 없음", routineStatus, uiState.routineCompletionRate.toFloat(), navController = navController)
             Spacer(modifier = Modifier.height(24.dp))
 
             var selectedTab by remember { mutableStateOf(0) }
             MyActivityTab(
                 insightData = uiState,
+                userName = nickname ?: "알 수 없음",
                 selectedTab = selectedTab,
                 onTabSelected = { selectedTab = it },
                 navController = navController,

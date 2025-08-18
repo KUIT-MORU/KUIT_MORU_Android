@@ -1,17 +1,7 @@
 package com.konkuk.moru.presentation.myactivity.component
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +14,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
+import kotlin.math.ceil
+import kotlin.math.max
 
 @Composable
 fun InsightGraphC(
@@ -35,6 +27,10 @@ fun InsightGraphC(
 ) {
     val labels = listOf("오전", "오후", "밤", "심야")
     val values = listOf(morning, afternoon, night, lateNight)
+
+    val axisMax = max(1, ceil(values.maxOrNull() ?: 0f).toInt())
+
+    val barMaxHeight = 149.dp
 
     Column(
         modifier = modifier
@@ -50,6 +46,7 @@ fun InsightGraphC(
         )
 
         Spacer(modifier = Modifier.height(17.dp))
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -65,7 +62,7 @@ fun InsightGraphC(
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.End
             ) {
-                for (i in 10 downTo 0 step 1) {
+                for (i in axisMax downTo 0) {
                     Text(
                         text = "$i",
                         color = colors.darkGray,
@@ -82,6 +79,8 @@ fun InsightGraphC(
                 verticalAlignment = Alignment.Bottom
             ) {
                 values.forEachIndexed { index, value ->
+                    val ratio = (value / axisMax.toFloat()).coerceIn(0f, 1f)
+
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Bottom,
@@ -90,7 +89,7 @@ fun InsightGraphC(
                         Box(
                             modifier = Modifier
                                 .width(35.dp)
-                                .height(149.dp * (value.coerceIn(0f, 10f) / 10f))
+                                .height(barMaxHeight * ratio)
                                 .clip(RoundedCornerShape(topStart = 100.dp, topEnd = 100.dp))
                                 .background(
                                     Brush.verticalGradient(
