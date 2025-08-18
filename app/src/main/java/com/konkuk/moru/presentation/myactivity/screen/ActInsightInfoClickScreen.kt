@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,18 +22,24 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.konkuk.moru.R
 import com.konkuk.moru.core.util.modifier.noRippleClickable
+import com.konkuk.moru.presentation.myactivity.viewmodel.InsightViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
+import kotlin.math.roundToInt
 
 @Composable
 fun ActInsightInfoClickScreen(
+    vm: InsightViewModel = hiltViewModel(),
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
-    val progress by remember { mutableStateOf(0.15f) }
+    val ui by vm.ui.collectAsState()
+    val progress = ui.routineCompletionRate.toFloat().coerceIn(0f, 1f)
+
     val badgeRes = when (progress) {
         in 0f..0.3f -> R.drawable.ic_third_badge
         in 0.3f..0.7f -> R.drawable.ic_second_badge

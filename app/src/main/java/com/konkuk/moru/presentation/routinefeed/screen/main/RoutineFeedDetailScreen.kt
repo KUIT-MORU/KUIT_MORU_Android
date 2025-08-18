@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -37,6 +38,7 @@ import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.routinefeed.component.RoutineDetail.RoutineHeader
 import com.konkuk.moru.presentation.routinefeed.component.RoutineDetail.RoutineStepSection
 import com.konkuk.moru.presentation.routinefeed.component.RoutineDetail.SimilarRoutinesSection
+import com.konkuk.moru.presentation.routinefeed.component.modale.CenteredInfoDialog
 import com.konkuk.moru.presentation.routinefeed.viewmodel.RoutineDetailViewModel
 import com.konkuk.moru.ui.theme.MORUTheme
 
@@ -88,7 +90,10 @@ fun RoutineDetailScreen(
     }
     // [추가] 디버그 로그 (문제 추적 시 유용)
     LaunchedEffect(topBarLikeCount) {
-        Log.d("RoutineDetailTopAppBar", "likeCount passed=$topBarLikeCount (uiState=${routine.likes})")
+        Log.d(
+            "RoutineDetailTopAppBar",
+            "likeCount passed=$topBarLikeCount (uiState=${routine.likes})"
+        )
     }
 
     Scaffold(
@@ -116,8 +121,9 @@ fun RoutineDetailScreen(
                     RoutineStepSection(
                         modifier = Modifier.padding(16.dp),
                         routine = routine,
+                        isAdding = uiState.isAddingToMine,
                         showAddButton = uiState.canBeAddedToMyRoutines,
-                        onAddToMyRoutineClick = { viewModel.copyRoutineToMyList() }
+                        onAddToMyRoutineClick = { viewModel.addToMyRoutines() }
                     )
                 }
 
@@ -139,6 +145,21 @@ fun RoutineDetailScreen(
                                 )
                             )
                         },
+                    )
+                }
+
+
+            }
+
+            if (uiState.showAddedDialog) {
+                CenteredInfoDialog(
+                    onDismissRequest = { viewModel.dismissAddedDialog() }
+                ) {
+                    Text(
+                        text = "내 루틴이 추가되었습니다.\n 내 루틴으로 가서 날짜를 설정해주세요!",
+                        textAlign = TextAlign.Center,
+                        color = Color(0xFFE0E0E0),
+                        style = MORUTheme.typography.desc_M_14
                     )
                 }
             }
@@ -175,9 +196,14 @@ fun RoutineDetailScreen(
             )
         }
     }
+
+    LaunchedEffect(uiState.showAddedDialog) {
+        if (uiState.showAddedDialog) {
+            kotlinx.coroutines.delay(1500)
+            viewModel.dismissAddedDialog()
+        }
+    }
 }
-
-
 
 
 @Preview(showBackground = true)

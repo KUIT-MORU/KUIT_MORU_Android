@@ -1,8 +1,10 @@
 package com.konkuk.moru.data.repositoryimpl
 
 import android.util.Log
+import com.konkuk.moru.data.dto.request.RoutineFeedCreateRequest
 import com.konkuk.moru.data.dto.response.RoutinePageResponse
 import com.konkuk.moru.data.dto.response.Routine.RoutineDetailResponseV1
+import com.konkuk.moru.data.dto.response.Routine.RoutineFeedCreateResponse
 import com.konkuk.moru.data.dto.response.RoutineStepResponse
 import com.konkuk.moru.data.dto.response.HomeScheduleResponse
 import com.konkuk.moru.data.mapper.toBackend
@@ -19,7 +21,12 @@ class RoutineRepository @Inject constructor(
     }
     suspend fun getMyRoutinesToday(page: Int = 0, size: Int = 20): RoutinePageResponse {
         val day = LocalDate.now().dayOfWeek.toBackend()
-        return service.getMyRoutinesToday(sortType = "TIME", dayOfWeek = day, page = page, size = size)
+        return service.getMyRoutinesToday(
+            sortType = "TIME",
+            dayOfWeek = day,
+            page = page,
+            size = size
+        )
     }
 
     suspend fun getRoutineDetail(routineId: String): RoutineDetailResponseV1 {
@@ -29,6 +36,11 @@ class RoutineRepository @Inject constructor(
     suspend fun getRoutineSteps(routineId: String): List<RoutineStepResponse> {
         return service.getRoutineSteps(routineId)
     }
+
+    // =================== [변경] RoutineFeed 접두 DTO 사용 ===================
+    suspend fun createRoutine(body: RoutineFeedCreateRequest): RoutineFeedCreateResponse =
+        service.createRoutine(body)
+
 
     suspend fun getRoutineSchedules(routineId: String): List<HomeScheduleResponse> {
         Log.d(TAG, "🔄 Repository getRoutineSchedules 호출: routineId=$routineId")

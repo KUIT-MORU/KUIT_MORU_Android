@@ -124,25 +124,27 @@ data class MyRoutineScheduleDto(
 
 @Serializable
 data class UpdateScheduleRequest(
-    val repeatType: String = "CUSTOM",
+    val repeatType: String,
     val daysToCreate: List<String>,
     val time: String,            // "HH:mm:ss"
     val alarmEnabled: Boolean
 )
 
 // [추가] 서버 스펙에 맞춘 PATCH 바디
+@Serializable
 data class PatchRoutineRequest(
     val title: String? = null,
     val imageUrl: String? = null,
     val tags: List<String>? = null,                // 이름 배열 (스웨거 예시 기준)
     val description: String? = null,
-    val steps: List<List<PatchOrCreateStepRequest>>? = null, // [[{...}]] 형태 주의
+    val steps: List<PatchOrCreateStepRequest>? = null, // [[{...}]] 형태 주의
     val selectedApps: List<String>? = null,        // 패키지명 배열
     val isSimple: Boolean? = null,
     val isUserVisible: Boolean? = null
 )
 
 // [추가] STEP 생성/수정 공용 바디
+@Serializable
 data class PatchOrCreateStepRequest(
     val name: String,
     val stepOrder: Int,
@@ -150,6 +152,7 @@ data class PatchOrCreateStepRequest(
 )
 
 // [추가] 태그 연결 요청 (최대 3개)
+@Serializable
 data class AddTagsRequest(
     val tagIds: List<String>
 )

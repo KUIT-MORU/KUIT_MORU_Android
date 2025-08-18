@@ -7,8 +7,12 @@ import com.konkuk.moru.BuildConfig
 import com.konkuk.moru.data.interceptor.AuthInterceptor
 import com.konkuk.moru.data.interceptor.TokenAuthenticator
 import com.konkuk.moru.data.service.AuthService
+import com.konkuk.moru.data.service.FcmService
 import com.konkuk.moru.data.service.ImageService
 import com.konkuk.moru.data.service.InsightService
+import com.konkuk.moru.data.service.MyActLogService
+import com.konkuk.moru.data.service.MyActSocialService
+import com.konkuk.moru.data.service.MyActTagService
 import com.konkuk.moru.data.service.MyRoutineService
 import com.konkuk.moru.data.service.RoutineService
 import com.konkuk.moru.data.service.NotificationService
@@ -42,12 +46,14 @@ object NetworkModule {
     fun provideOBUserServiceAuthed(@Named("gsonRetrofit") retrofit: Retrofit): OBUserService =
         retrofit.create(OBUserService::class.java)
 
+    // [변경] 충돌 해결: master의 주석 문구만 반영, 구현은 Gson 사용 유지
     @Provides
     @Singleton
     @Named("obUserAuthless")
     fun provideOBUserServiceAuthless(@Named("authlessGsonRetrofit") retrofit: Retrofit): OBUserService =
         retrofit.create(OBUserService::class.java)
 
+    // [추가] 무인증용 Gson Retrofit (닉네임 체크 등 authless + Gson 경로)
     @Provides
     @Singleton
     @Named("authlessGsonRetrofit")
@@ -58,7 +64,7 @@ object NetworkModule {
     ): Retrofit = Retrofit.Builder()
         .baseUrl(baseUrl)
         .client(ok)
-        .addConverterFactory(GsonConverterFactory.create(gson)) // [추가]
+        .addConverterFactory(GsonConverterFactory.create(gson))
         .build()
 
     @Provides
@@ -87,7 +93,6 @@ object NetworkModule {
     fun provideRoutineFeedService(@Named("gsonRetrofit") retrofit: Retrofit): RoutineFeedService =
         retrofit.create(RoutineFeedService::class.java)
 
-
     @Provides
     @Singleton
     fun provideBaseUrl(): String = BuildConfig.BASE_URL
@@ -98,6 +103,7 @@ object NetworkModule {
         return HttpLoggingInterceptor().apply {
             level =
                 if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
+            redactHeader("Authorization")
         }
     }
 
@@ -201,12 +207,10 @@ object NetworkModule {
     fun provideUserService(retrofit: Retrofit): com.konkuk.moru.data.service.HomeUserService =
         retrofit.create(com.konkuk.moru.data.service.HomeUserService::class.java)
 
-
     @Provides
     @Singleton
     fun provideRoutineUserService(@Named("gsonRetrofit") retrofit: Retrofit): RoutineUserService =
         retrofit.create(RoutineUserService::class.java)
-
 
     @Provides
     @Singleton
@@ -218,7 +222,6 @@ object NetworkModule {
     fun provideSocialService(@Named("gsonRetrofit") r: Retrofit): SocialService =
         r.create(SocialService::class.java)
 
-
     @Provides
     @Singleton
     fun provideSearchService(@Named("gsonRetrofit") r: Retrofit): SearchService =
@@ -229,4 +232,21 @@ object NetworkModule {
     fun provideImageService(retrofit: Retrofit): ImageService =
         retrofit.create(ImageService::class.java) // [추가]
 
+    @Singleton
+    @Provides
+    fun provideFcmService(retrofit: Retrofit): FcmService { // FcmService 추가
+        return retrofit.create(FcmService::class.java)
+    }
+
+    @Provides @Singleton
+    fun provideTagService(retrofit: Retrofit): MyActTagService =
+        retrofit.create(MyActTagService::class.java)
+
+    @Provides @Singleton
+    fun provideMyActSocialService(retrofit: Retrofit): MyActSocialService =
+        retrofit.create(MyActSocialService::class.java)
+
+    @Provides @Singleton
+    fun provideMyActLogService(retrofit: Retrofit): MyActLogService =
+        retrofit.create(MyActLogService::class.java)
 }

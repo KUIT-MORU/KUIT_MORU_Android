@@ -30,6 +30,7 @@ import com.konkuk.moru.core.util.modifier.noRippleClickable
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,7 +98,7 @@ fun RoutinePaceCard(
                 contentAlignment = Alignment.BottomEnd
             ) {
                 Text(
-                    text = (progress * 100).toString() + "%",
+                    text = (progress * 100).roundToInt().toString() + "%",
                     color = colors.limeGreen,
                     style = typography.body_SB_16
                 )
