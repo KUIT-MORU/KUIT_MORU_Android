@@ -18,23 +18,37 @@ fun AuthCheckScreen(navController: NavController) {
         Log.d("AuthCheckScreen", "🚀 AuthCheckScreen 시작!")
         
         try {
-            // 앱 첫 설치 감지 및 강제 초기화
+            // 앱 첫 설치 및 버전 변경 감지
             val sharedPrefs = context.getSharedPreferences("app_install_check", android.content.Context.MODE_PRIVATE)
             val isFirstInstall = sharedPrefs.getBoolean("is_first_install", true)
+            val currentVersion = "1.0.0" // 앱 버전 (실제로는 BuildConfig에서 가져와야 함)
+            val savedVersion = sharedPrefs.getString("app_version", null)
+            val isVersionChanged = savedVersion != currentVersion
             
-            if (isFirstInstall) {
-                Log.d("AuthCheckScreen", "🚨 앱 첫 설치 감지 - 강제 초기화 실행")
+            // 개발용 강제 초기화 플래그 (필요시 true로 설정)
+            // 앱을 삭제해도 DataStore가 남아있을 때 이 값을 true로 설정하면 강제 초기화됨
+            val forceReset = false
+            
+            if (isFirstInstall || isVersionChanged || forceReset) {
+                Log.d("AuthCheckScreen", "🚨 초기화 조건 감지:")
+                Log.d("AuthCheckScreen", "   - isFirstInstall: $isFirstInstall")
+                Log.d("AuthCheckScreen", "   - isVersionChanged: $isVersionChanged (saved: $savedVersion, current: $currentVersion)")
+                Log.d("AuthCheckScreen", "   - forceReset: $forceReset")
+                
                 try {
-                    // 로그인 상태 강제 초기화
-                    LoginPreference.setLoggedIn(context, false)
-                    Log.d("AuthCheckScreen", "✅ 로그인 상태 초기화 완료")
+                    // DataStore 완전 초기화
+                    LoginPreference.clearAllData(context)
+                    Log.d("AuthCheckScreen", "✅ DataStore 완전 초기화 완료")
                 } catch (e: Exception) {
-                    Log.e("AuthCheckScreen", "❌ 로그인 상태 초기화 실패", e)
+                    Log.e("AuthCheckScreen", "❌ DataStore 초기화 실패", e)
                 }
                 
-                // 첫 설치 플래그 제거
-                sharedPrefs.edit().putBoolean("is_first_install", false).apply()
-                Log.d("AuthCheckScreen", "✅ 첫 설치 플래그 제거 완료")
+                // 설치/버전 정보 업데이트
+                sharedPrefs.edit()
+                    .putBoolean("is_first_install", false)
+                    .putString("app_version", currentVersion)
+                    .apply()
+                Log.d("AuthCheckScreen", "✅ 설치/버전 정보 업데이트 완료")
             }
             
             val isLoggedIn = LoginPreference.isLoggedIn(context).first()

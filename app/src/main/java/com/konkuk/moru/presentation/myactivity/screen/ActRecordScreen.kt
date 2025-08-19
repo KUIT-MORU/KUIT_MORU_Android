@@ -1,9 +1,11 @@
 package com.konkuk.moru.presentation.myactivity.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +13,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -26,15 +32,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.konkuk.moru.presentation.myactivity.component.BackTitle
+import com.konkuk.moru.R
 import com.konkuk.moru.presentation.myactivity.component.RecordCard
 import com.konkuk.moru.presentation.myactivity.viewmodel.MyActRecordUi
 import com.konkuk.moru.presentation.myactivity.viewmodel.MyActRecordViewModel
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.ui.theme.MORUTheme.colors
+import com.konkuk.moru.ui.theme.MORUTheme.typography
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -70,9 +78,31 @@ fun ActRecordScreen(
             .background(Color.White)
             .padding(horizontal = 16.dp)
     ) {
-        Spacer(Modifier.height(16.dp))
-        BackTitle(title = "내 기록", navController = navController)
-        Spacer(Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+        // BackTitle 대신 커스텀 뒤로가기 버튼 사용
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.height(24.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_arrow_a),
+                contentDescription = "Back Icon",
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable {
+                        // 내 활동 화면으로 이동
+                        navController.navigate(Route.MyActivity.route) {
+                            // 현재 화면(내 기록)을 백스택에서 제거
+                            popUpTo(Route.ActRecord.route) { inclusive = true }
+                            // 내 활동 화면으로 이동
+                            launchSingleTop = true
+                        }
+                    }
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(text = "내 기록", style = typography.body_SB_16)
+        }
+        Spacer(modifier = Modifier.height(16.dp))
 
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 90.dp),

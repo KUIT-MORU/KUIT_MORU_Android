@@ -1,14 +1,11 @@
 package com.konkuk.moru.presentation.routinefocus.component
 
-import android.content.Context
-import android.content.pm.PackageManager
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -20,7 +17,6 @@ import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -35,6 +31,8 @@ import androidx.compose.ui.zIndex
 import androidx.core.graphics.createBitmap
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.routinefeed.data.AppDto
+import com.konkuk.moru.core.util.HomeAppUtils
+import com.konkuk.moru.core.util.HomeAppLaunchUtils
 import com.konkuk.moru.ui.theme.MORUTheme
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 
@@ -65,18 +63,7 @@ private fun drawableToBitmap(drawable: android.graphics.drawable.Drawable): andr
     }
 }
 
-// 앱 실행 함수
-private fun launchApp(context: Context, packageName: String) {
-    try {
-        val intent = context.packageManager.getLaunchIntentForPackage(packageName)
-        if (intent != null) {
-            intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-            context.startActivity(intent)
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
-}
+
 
 @Composable
 fun ScreenBlockOverlay(
@@ -148,7 +135,7 @@ fun ScreenBlockOverlay(
                             onAppClick = { 
                                 // 앱 실행
                                 android.util.Log.d("ScreenBlockOverlay", "🚀 앱 실행 시도: ${app.name} (${app.packageName})")
-                                launchApp(context, app.packageName)
+                                HomeAppLaunchUtils.launchApp(context, app.packageName, "ScreenBlockOverlay")
                             }
                         )
                     }
@@ -240,26 +227,34 @@ private fun AppIconItem(
     // 화면 방향에 따라 아이콘 크기 조정 (사용앱 팝업과 동일하게)
     val iconSize = if (isLandscape) 36.dp else 48.dp // 가로모드: 36dp, 세로모드: 48dp
     
-    // 실제 앱 정보가 있으면 앱 이름에 맞는 아이콘을 표시하고, 없으면 기본 아이콘 표시
+    // 실제 앱 정보가 있으면 실제 앱 아이콘을 표시하고, 없으면 기본 아이콘 표시
     if (app != null) {
-        // 앱 이름에 따라 적절한 아이콘 선택 (하드코딩)
-        val iconResource = when (app.name.lowercase()) {
-            "카카오톡" -> R.drawable.kakaotalk_icon
-            "네이버" -> R.drawable.naver_icon
-            "인스타그램" -> R.drawable.instagram_icon
-            "유튜브" -> R.drawable.youtube_icon
-            else -> R.drawable.ic_default
+        // 실제 앱 아이콘을 가져오는 로직
+        val appIcon = remember(app.packageName) {
+            HomeAppUtils.getAppIcon(context, app.packageName)
         }
         
-        // 앱 이름에 맞는 아이콘 표시
-        Image(
-            painter = painterResource(id = iconResource),
-            contentDescription = "${app.name} 아이콘",
-            modifier = Modifier
-                .size(iconSize)
-                .clip(RoundedCornerShape(6.dp))
-                .clickable { onAppClick?.invoke() }
-        )
+        if (appIcon != null) {
+            // 실제 앱 아이콘 표시
+            Image(
+                bitmap = appIcon,
+                contentDescription = "${app.name} 아이콘",
+                modifier = Modifier
+                    .size(iconSize)
+                    .clip(RoundedCornerShape(6.dp))
+                    .clickable { onAppClick?.invoke() }
+            )
+        } else {
+            // 앱 아이콘을 가져올 수 없으면 기본 아이콘 표시
+            Image(
+                painter = painterResource(id = R.drawable.ic_default),
+                contentDescription = "${app.name} 아이콘",
+                modifier = Modifier
+                    .size(iconSize)
+                    .clip(RoundedCornerShape(6.dp))
+                    .clickable { onAppClick?.invoke() }
+            )
+        }
     } else {
         // 기본 아이콘 (선택된 앱이 3개 미만인 경우)
         Image(

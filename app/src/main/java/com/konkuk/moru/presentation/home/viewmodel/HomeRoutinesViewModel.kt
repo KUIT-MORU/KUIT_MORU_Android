@@ -124,7 +124,7 @@ class HomeRoutinesViewModel @Inject constructor(
     // 전체 루틴 로드
     fun loadMyRoutines(page: Int = 0, size: Int = 100) = viewModelScope.launch {
         Log.d(TAG, "🔄 loadMyRoutines 호출됨: page=$page, size=$size")
-        runCatching { repo.getMyRoutinesToday(page, size) }
+        runCatching { repo.getAllMyRoutines(page, size) }
             .onSuccess { pageRes ->
                 Log.d(TAG, "✅ loadMyRoutines 성공!")
                 Log.d(TAG, "📊 응답 데이터: total=${pageRes.totalElements}, page=${pageRes.number}, size=${pageRes.size}, contentSize=${pageRes.content.size}")

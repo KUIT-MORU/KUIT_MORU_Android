@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.konkuk.moru.R
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
@@ -75,7 +76,7 @@ fun RoutineSelectItem(
             ) {
                 Text(
                     text = text,
-                    style = typography.body_SB_16,
+                    style = if (text.length > 12) typography.body_SB_14.copy(fontSize = 11.sp)  else typography.body_SB_16,
                     color = colors.charcoalBlack
                 )
             }

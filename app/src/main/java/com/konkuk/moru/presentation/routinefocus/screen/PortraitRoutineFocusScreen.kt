@@ -3,7 +3,6 @@ package com.konkuk.moru.presentation.routinefocus.screen
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.provider.Settings
@@ -60,13 +59,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.collectAsState
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
 import com.konkuk.moru.presentation.routinefocus.component.FocusOnboardingPopup
-import com.konkuk.moru.presentation.routinefocus.component.AppIcon
 import com.konkuk.moru.presentation.routinefocus.component.RoutineTimelineItem
 import com.konkuk.moru.presentation.routinefocus.component.SettingSwitchGroup
 import com.konkuk.moru.presentation.routinefeed.data.AppDto
@@ -75,6 +71,7 @@ import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
 import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
+import com.konkuk.moru.core.util.HomeAppLaunchUtils
 
 // 총 소요시간 계산하는 함수
 fun formatTotalTime(seconds: Int): String {
@@ -233,18 +230,7 @@ fun toggleDoNotDisturb(context: Context, enable: Boolean) {
 
 
 
-// 앱 실행 함수
-fun launchApp(context: Context, packageName: String) {
-    try {
-        val intent = context.packageManager.getLaunchIntentForPackage(packageName)
-        if (intent != null) {
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            context.startActivity(intent)
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
-}
+
 
 @Composable
 fun PortraitRoutineFocusScreen(
@@ -309,6 +295,9 @@ fun PortraitRoutineFocusScreen(
 
     // 결과 팝업 상태 저장 (강제 상태 반영)
     var showResultPopup by remember { mutableStateOf(forceShowResultPopup) }
+    
+    // X 버튼 클릭 시의 시간을 저장할 변수
+    var pausedTime by remember { mutableStateOf(0) }
 
     // 설정 팝업 상태 저장
     val showSettingsPopup = focusViewModel.isSettingsPopupVisible
@@ -343,6 +332,14 @@ fun PortraitRoutineFocusScreen(
 
     // 사용앱 리스트 (루틴 생성 시 선택한 앱들)
     val selectedApps = focusViewModel.selectedApps
+    
+    // 선택된 앱이 없으면 실제 설치된 앱 목록을 로드
+    LaunchedEffect(selectedApps.isEmpty()) {
+        if (selectedApps.isEmpty()) {
+            Log.d("PortraitRoutineFocusScreen", "🔄 선택된 앱이 없음, 실제 설치된 앱 목록 로드")
+            focusViewModel.loadInstalledApps(context)
+        }
+    }
 
     // 강제 테스트 로그
     android.util.Log.e("TEST_LOG", "🔥 PortraitRoutineFocusScreen - selectedApps 상태: ${selectedApps.size}개")
@@ -464,6 +461,10 @@ fun PortraitRoutineFocusScreen(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
                             ) {
+                                // X 버튼 클릭 시 타이머 즉시 멈춤
+                                focusViewModel.pauseTimer()
+                                // 현재 시간을 저장 (팝업에서 고정 시간으로 사용)
+                                pausedTime = totalElapsedSeconds + elapsedSeconds
                                 showFinishPopup = true
                             }
                     )
@@ -550,16 +551,7 @@ fun PortraitRoutineFocusScreen(
                                 currentStep = currentstep,
                                 isTimeout = isTimeout,
                                 isDarkMode = isDarkMode,
-                                onStepClick = { clickedStep ->
-                                    // 클릭된 스텝으로 이동
-                                    if (clickedStep != currentstep) {
-                                        val stepTimeString = routineItems.getOrNull(clickedStep - 1)?.second ?: "0m"
-                                        focusViewModel.updateCurrentStep(clickedStep)
-                                        focusViewModel.setStepLimitFromTimeString(parseTimeToSeconds(stepTimeString))
-                                        focusViewModel.resetTimer()
-                                        focusViewModel.startTimer()
-                                    }
-                                }
+                                onStepClick = null // 타임라인 터치 비활성화
                             )
                         }
                     }
@@ -663,30 +655,42 @@ fun PortraitRoutineFocusScreen(
                             horizontalArrangement = Arrangement.spacedBy(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // 사용앱 아이콘들 (루틴 생성 시 선택한 앱들) - 앱 이름에 맞는 아이콘 표시
+                            // 사용앱 아이콘들 (루틴 생성 시 선택한 앱들) - 실제 앱 아이콘 표시
                             selectedApps.forEachIndexed { index, appInfo ->
                                 android.util.Log.e("TEST_LOG", "🔥 렌더링 중: 앱 ${index + 1} - ${appInfo.name} (${appInfo.packageName})")
                                 
-                                // 앱 이름에 따라 적절한 아이콘 선택
-                                val iconResource = when (appInfo.name.lowercase()) {
-                                    "카카오톡" -> R.drawable.kakaotalk_icon
-                                    "네이버" -> R.drawable.naver_icon
-                                    "인스타그램" -> R.drawable.instagram_icon
-                                    "유튜브" -> R.drawable.youtube_icon
-                                    else -> R.drawable.ic_default
+                                // 실제 앱 아이콘을 가져오는 로직
+                                val appIcon = remember(appInfo.packageName) {
+                                    com.konkuk.moru.core.util.HomeAppUtils.getAppIcon(context, appInfo.packageName)
                                 }
                                 
-                                Image(
-                                    painter = painterResource(id = iconResource),
-                                    contentDescription = "사용앱 ${appInfo.name}",
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .clickable {
-                                            // 앱 바로 실행
-                                            launchApp(context, appInfo.packageName)
-                                        }
-                                )
+                                if (appIcon != null) {
+                                    // 실제 앱 아이콘 표시
+                                    Image(
+                                        bitmap = appIcon,
+                                        contentDescription = "사용앱 ${appInfo.name}",
+                                        modifier = Modifier
+                                            .size(48.dp)
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .clickable {
+                                                // 앱 바로 실행
+                                                HomeAppLaunchUtils.launchApp(context, appInfo.packageName, "PortraitRoutineFocusScreen")
+                                            }
+                                    )
+                                } else {
+                                    // 앱 아이콘을 가져올 수 없으면 기본 아이콘 표시
+                                    Image(
+                                        painter = painterResource(id = R.drawable.ic_default),
+                                        contentDescription = "사용앱 ${appInfo.name}",
+                                        modifier = Modifier
+                                            .size(48.dp)
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .clickable {
+                                                // 앱 바로 실행
+                                                HomeAppLaunchUtils.launchApp(context, appInfo.packageName, "PortraitRoutineFocusScreen")
+                                            }
+                                    )
+                                }
                             }
                             // 기본 아이콘들 (선택된 앱이 3개 미만인 경우)
                             repeat(3 - selectedApps.size) {
@@ -944,7 +948,7 @@ fun PortraitRoutineFocusScreen(
                         RoutineResultRow(
                             R.drawable.clock_icon,
                             "시간",
-                            formatTime(totalElapsedSeconds + elapsedSeconds)
+                            formatTime(pausedTime)
                         )
                     }
                     Spacer(modifier = Modifier.height(9.03.dp))
@@ -991,6 +995,16 @@ fun PortraitRoutineFocusScreen(
                                 showResultPopup = false
                                 // 집중 루틴 종료
                                 focusViewModel.endFocusRoutine()
+                                
+                                // 루틴 완료 시 intro 상태 초기화 (처음 상태로 복원)
+                                try {
+                                    val sharedPreferences = context.getSharedPreferences("routine_intro_prefs", Context.MODE_PRIVATE)
+                                    sharedPreferences.edit().remove("has_seen_intro_$routineTitle").apply()
+                                    android.util.Log.d("PortraitRoutineFocusScreen", "🗑️ 완료된 집중 루틴의 intro 상태 초기화: $routineTitle")
+                                } catch (e: Exception) {
+                                    android.util.Log.e("PortraitRoutineFocusScreen", "❌ intro 상태 초기화 실패", e)
+                                }
+                                
                                 // routineId를 String으로 변환하여 전달
                                 onFinishConfirmed(routineId.toString())
                             }
@@ -1066,7 +1080,7 @@ fun PortraitRoutineFocusScreen(
                      // 허용된 앱 실행 플래그 설정
                      focusViewModel.setPermittedAppLaunch(true)
                                           // 실제 앱 실행
-                      launchApp(context, app.packageName)
+                      HomeAppLaunchUtils.launchApp(context, app.packageName, "PortraitRoutineFocusScreen")
                      focusViewModel.hideOnboardingPopup()
                  },
                 onOutsideClick = {
