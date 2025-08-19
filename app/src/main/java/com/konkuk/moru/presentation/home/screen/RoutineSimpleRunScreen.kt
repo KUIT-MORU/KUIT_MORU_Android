@@ -448,12 +448,17 @@ fun RoutineSimpleRunScreen(
                                     insightViewModel.completeRoutine(routineId)
                                 }
                                 
-                                // 루틴 완료 시 저장된 선택 상태 초기화
+                                // 루틴 완료 시 저장된 상태들 모두 초기화 (처음 상태로 복원)
                                 try {
-                                    sharedPreferences.edit().remove("saved_selected_states_$routineTitle").apply()
-                                    android.util.Log.d("RoutineSimpleRunScreen", "🗑️ 완료된 루틴의 선택 상태 초기화: $routineTitle")
+                                    val editor = sharedPreferences.edit()
+                                    editor.remove("saved_selected_states_$routineTitle") // 선택 상태 초기화
+                                    editor.remove("has_seen_intro_$routineTitle") // intro 다시 보도록 초기화
+                                    editor.apply()
+                                    android.util.Log.d("RoutineSimpleRunScreen", "🗑️ 완료된 루틴의 모든 상태 초기화: $routineTitle")
+                                    android.util.Log.d("RoutineSimpleRunScreen", "   - saved_selected_states_$routineTitle 제거")
+                                    android.util.Log.d("RoutineSimpleRunScreen", "   - has_seen_intro_$routineTitle 제거")
                                 } catch (e: Exception) {
-                                    android.util.Log.e("RoutineSimpleRunScreen", "❌ 선택 상태 초기화 실패", e)
+                                    android.util.Log.e("RoutineSimpleRunScreen", "❌ 상태 초기화 실패", e)
                                 }
                                 
                                 onFinishConfirmed(routineId.toString())

@@ -10,6 +10,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -226,24 +227,26 @@ fun MainNavGraph(
                     },
                     onFinishConfirmed = { finishedId: String ->
                         Log.d("MainNavGraph", "🔄 RoutineSimpleRun 완료 처리: originalRoutineId=$originalRoutineId")
-                        Log.d("MainNavGraph", "🔄 RoutineSimpleRun 완료 처리: originalRoutineId=$originalRoutineId")
+                        Log.d("MainNavGraph", "🔄 RoutineSimpleRun 완료 처리: finishedId=$finishedId")
 
-                        // 진행중 루틴 ID 스택에서 제거 (간편 루틴 완료)
+                        // 진행중 루틴 ID 스택에서 특정 루틴 제거 (간편 루틴 완료)
                         val currentRunningIds = navController.getBackStackEntry(Route.Home.route)
                             .savedStateHandle.get<List<Int>>("runningRoutineIds") ?: emptyList()
-                        if (currentRunningIds.isNotEmpty()) {
-                            val updatedRunningIds = currentRunningIds.dropLast(1) // 스택에서 최상단 제거
+                        
+                        val routineIdToRemove = originalRoutineId?.toIntOrNull() ?: finishedId.toIntOrNull()
+                        if (routineIdToRemove != null && currentRunningIds.isNotEmpty()) {
+                            val updatedRunningIds = currentRunningIds.filter { it != routineIdToRemove }
                             navController.getBackStackEntry(Route.Home.route)
                                 .savedStateHandle["runningRoutineIds"] = updatedRunningIds
-                            Log.d("MainNavGraph", "🔄 간편화면 완료: runningRoutineIds 스택에서 제거 (스택 크기: ${updatedRunningIds.size})")
+                            Log.d("MainNavGraph", "🔄 간편화면 완료: runningRoutineIds에서 루틴 ID $routineIdToRemove 제거 (스택 크기: ${updatedRunningIds.size})")
                         }
 
                         // 간편 루틴 완료 시 실천율 업데이트 (RoutineSimpleRunScreen에서 처리됨)
                         // 내 기록에는 표시되지 않음
 
                         navController.getBackStackEntry(Route.Home.route)
-                            .savedStateHandle["finishedRoutineId"] = originalRoutineId ?: finishedId
-                        Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}")
+                            .savedStateHandle["finishedRoutineId"] = if (originalRoutineId != null) originalRoutineId.toString() else finishedId
+                        Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${if (originalRoutineId != null) originalRoutineId.toString() else finishedId}")
                         navController.popBackStack(Route.Home.route, false)
                     }
                 )
@@ -276,13 +279,14 @@ fun MainNavGraph(
             Log.d("MainNavGraph", "   - 선택된 앱: ${selectedApps.size}개")
 
             // 집중 루틴 화면 진입 시 선택된 앱들을 설정하고 집중 루틴 시작
+            val context = LocalContext.current
             LaunchedEffect(selectedApps) {
                 Log.d("MainNavGraph", "🔄 LaunchedEffect(selectedApps) 실행")
                 Log.d("MainNavGraph", "📱 selectedApps 전달: ${selectedApps.size}개")
                 selectedApps.forEachIndexed { index, app ->
                     Log.d("MainNavGraph", "   ${index + 1}. 이름: ${app.name}, 패키지: ${app.packageName}")
                 }
-                routineFocusViewModel.setSelectedApps(selectedApps)
+                routineFocusViewModel.setSelectedApps(selectedApps, context)
                 Log.d("MainNavGraph", "✅ routineFocusViewModel.setSelectedApps 완료")
                 routineFocusViewModel.startFocusRoutine()
             }
@@ -292,10 +296,17 @@ fun MainNavGraph(
                 sharedViewModel = sharedViewModel,
                 onDismiss = {
                     routineFocusViewModel.endFocusRoutine()
-                    // 진행중 루틴 ID 스택 완전 초기화 (집중 루틴은 완료해야만 나올 수 있음)
-                    navController.getBackStackEntry(Route.Home.route)
-                        .savedStateHandle["runningRoutineIds"] = emptyList<Int>()
-                    Log.d("MainNavGraph", "🔄 집중화면 중단: runningRoutineIds 스택 완전 초기화")
+                    // 진행중 루틴 ID 스택에서 특정 루틴 제거 (집중 루틴 중단)
+                    val currentRunningIds = navController.getBackStackEntry(Route.Home.route)
+                        .savedStateHandle.get<List<Int>>("runningRoutineIds") ?: emptyList()
+                    
+                    val routineIdToRemove = originalRoutineId?.toIntOrNull()
+                    if (routineIdToRemove != null && currentRunningIds.isNotEmpty()) {
+                        val updatedRunningIds = currentRunningIds.filter { it != routineIdToRemove }
+                        navController.getBackStackEntry(Route.Home.route)
+                            .savedStateHandle["runningRoutineIds"] = updatedRunningIds
+                        Log.d("MainNavGraph", "🔄 집중화면 중단: runningRoutineIds에서 루틴 ID $routineIdToRemove 제거 (스택 크기: ${updatedRunningIds.size})")
+                    }
                     
                     navController.popBackStack(
                         Route.Home.route,
@@ -311,16 +322,23 @@ fun MainNavGraph(
                 onFinishConfirmed = { finishedId: String ->
                     routineFocusViewModel.endFocusRoutine()
                     Log.d("MainNavGraph", "🔄 RoutineFocus 완료 처리: originalRoutineId=$originalRoutineId")
-                    Log.d("MainNavGraph", "🔄 RoutineFocus 완료 처리: originalRoutineId=$originalRoutineId")
+                    Log.d("MainNavGraph", "🔄 RoutineFocus 완료 처리: finishedId=$finishedId")
                     
-                    // 진행중 루틴 ID 스택 완전 초기화 (집중 루틴 완료)
-                    navController.getBackStackEntry(Route.Home.route)
-                        .savedStateHandle["runningRoutineIds"] = emptyList<Int>()
-                    Log.d("MainNavGraph", "🔄 집중화면 완료: runningRoutineIds 스택 완전 초기화")
+                    // 진행중 루틴 ID 스택에서 특정 루틴 제거 (집중 루틴 완료)
+                    val currentRunningIds = navController.getBackStackEntry(Route.Home.route)
+                        .savedStateHandle.get<List<Int>>("runningRoutineIds") ?: emptyList()
+                    
+                    val routineIdToRemove = originalRoutineId?.toIntOrNull() ?: finishedId.toIntOrNull()
+                    if (routineIdToRemove != null && currentRunningIds.isNotEmpty()) {
+                        val updatedRunningIds = currentRunningIds.filter { it != routineIdToRemove }
+                        navController.getBackStackEntry(Route.Home.route)
+                            .savedStateHandle["runningRoutineIds"] = updatedRunningIds
+                        Log.d("MainNavGraph", "🔄 집중화면 완료: runningRoutineIds에서 루틴 ID $routineIdToRemove 제거 (스택 크기: ${updatedRunningIds.size})")
+                    }
                     
                     navController.getBackStackEntry(Route.Home.route)
-                        .savedStateHandle["finishedRoutineId"] = originalRoutineId ?: finishedId
-                    Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}")
+                        .savedStateHandle["finishedRoutineId"] = if (originalRoutineId != null) originalRoutineId.toString() else finishedId
+                    Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${if (originalRoutineId != null) originalRoutineId.toString() else finishedId}")
                     navController.popBackStack(Route.Home.route, false)
                 },
                 onNavigateToMyActivity = {
