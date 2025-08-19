@@ -149,6 +149,7 @@ fun AppNavGraph(
                             Route.ActScrab.route,
                             Route.ActRecordDetail.route,
                             Route.ActInsightInfo.route,
+                            Route.ActPolicy.route,
                             Route.RoutineFocusIntro.route,
                             Route.RoutineFocus.route,
                             Route.RoutineSimpleRun.route,

@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.gms.google.services)
 }
 val localProps = Properties().apply {
     val f = rootProject.file("local.properties")
@@ -129,6 +130,13 @@ dependencies {
     implementation(platform("androidx.compose:compose-bom:2024.06.00")) // 쓰는 BOM 버전에 맞춰서
     implementation("androidx.compose.material:material")
     implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:33.1.1"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-messaging-ktx") // FCM 추가
+
 }
 
 configurations.all {

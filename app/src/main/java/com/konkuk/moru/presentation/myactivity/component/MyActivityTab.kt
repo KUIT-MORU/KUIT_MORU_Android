@@ -31,6 +31,7 @@ import com.konkuk.moru.presentation.navigation.Route
 @Composable
 fun MyActivityTab(
     insightData: InsightUiState,
+    userName: String = "사용자명",
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     navController: NavHostController,
@@ -102,7 +103,7 @@ fun MyActivityTab(
         }
 
         1 -> {
-            InsightContentSection((insightData.routineCompletionRate*100).toInt(),insightData)
+            InsightContentSection((insightData.routineCompletionRate*100).toInt(),insightData, userName)
         }
     }
 }

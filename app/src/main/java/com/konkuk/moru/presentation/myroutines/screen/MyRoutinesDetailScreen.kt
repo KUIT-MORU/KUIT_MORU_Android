@@ -48,7 +48,7 @@ import com.konkuk.moru.presentation.navigation.Route
 import kotlinx.coroutines.flow.collectLatest
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
-
+import androidx.compose.runtime.key
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyRoutineDetailScreen(
@@ -59,6 +59,7 @@ fun MyRoutineDetailScreen(
 ) {
     // ✨ ViewModel의 UiState를 구독하여 단일 진실 공급원 원칙을 따름
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     val context = LocalContext.current
 
     var isBottomSheetOpen by remember { mutableStateOf(false) }
@@ -179,18 +180,20 @@ fun MyRoutineDetailScreen(
                 }
 
                 else -> {
-                    // ✨ Content에는 UiState와 ViewModel만 전달하여 구조를 단순화
-                    MyRoutineDetailContent(
-                        viewModel = viewModel,
-                        onOpenBottomSheet = { isBottomSheetOpen = true },
-                        onCardImageClick = { isImageOptionVisible = true },
-                        selectedImageUri = selectedImageUri,
-                        onAddTagClick = { // [추가]
-                            if (uiState.isEditMode) {
-                                navController.navigate(Route.TagSearch.createRoute("")) // [수정] 생성기를 사용
+                    // [추가] 카테고리 변경 시 내부 remember들이 초기화되도록 키 제공
+                    key(uiState.routine?.category) { // [추가]
+                        MyRoutineDetailContent(
+                            viewModel = viewModel,
+                            onOpenBottomSheet = { isBottomSheetOpen = true },
+                            onCardImageClick = { isImageOptionVisible = true },
+                            selectedImageUri = selectedImageUri,
+                            onAddTagClick = {
+                                if (uiState.isEditMode) {
+                                    navController.navigate(Route.TagSearch.createRoute(""))
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }

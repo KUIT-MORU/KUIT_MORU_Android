@@ -23,6 +23,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,6 +36,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.konkuk.moru.R
 import com.konkuk.moru.core.util.modifier.noRippleClickable
+import com.konkuk.moru.presentation.common.MyActFeatureUnavailableDialog
 import com.konkuk.moru.presentation.myactivity.component.BackTitle
 import com.konkuk.moru.presentation.myactivity.viewmodel.InsightViewModel
 import com.konkuk.moru.presentation.navigation.Route
@@ -44,6 +48,7 @@ fun ActSettingScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
+    var showPopup by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
     Column(
@@ -63,10 +68,9 @@ fun ActSettingScreen(
                 .background(Color(0xFFFFFFFF), shape = RoundedCornerShape(4.dp))
         ) {
             val settings = listOf(
-                "좋아요한 루틴" to {},
-                "알림 설정" to {},
-                "개인정보처리방침" to {},
-                "앱 버전" to {},
+                "좋아요한 루틴" to {showPopup = true},
+                "알림 설정" to {showPopup = true},
+                "개인정보처리방침" to {navController.navigate(Route.ActPolicy.route)},
                 "로그 아웃" to {},
                 "탈퇴" to {}
             )
@@ -78,7 +82,7 @@ fun ActSettingScreen(
                         .fillMaxWidth()
                         .height(51.dp)
                         .padding(start = 16.dp, end = 16.dp)
-                        .noRippleClickable { action() }
+                        .clickable { action() }
                 ) {
                     Text(
                         text = title,
@@ -107,4 +111,9 @@ fun ActSettingScreen(
             }
         }
     }
+
+    MyActFeatureUnavailableDialog(
+        visible = showPopup,
+        onDismiss = { showPopup = false }
+    )
 }

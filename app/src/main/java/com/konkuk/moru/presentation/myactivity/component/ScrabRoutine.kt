@@ -19,12 +19,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.konkuk.moru.R
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
 @Composable
 fun ScrabRoutine(
+    imageUrl: String? = null,
     routineCardImg: Int = R.drawable.ic_routine_card_basic,
     title: String,
     tags: List<String>,
@@ -51,13 +53,25 @@ fun ScrabRoutine(
                     shape = RoundedCornerShape(4.dp)
                 )
         ) {
-            Image(
-                painter = painterResource(id = routineCardImg),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
-            )
+            val fallback = painterResource(id = routineCardImg)
+
+            if (imageUrl.isNullOrBlank()) {
+                Image(
+                    painter = fallback,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                    placeholder = fallback,
+                    error = fallback
+                )
+            }
         }
 
         Text(

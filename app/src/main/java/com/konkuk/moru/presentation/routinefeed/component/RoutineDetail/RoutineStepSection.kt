@@ -23,16 +23,14 @@ import androidx.compose.ui.unit.dp
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.data.model.DummyData
 import com.konkuk.moru.data.model.Routine
-import com.konkuk.moru.presentation.myactivity.screen.RoutineStep
 import com.konkuk.moru.ui.theme.MORUTheme
-import java.time.LocalTime
-import kotlin.time.Duration
 
 
 @Composable
 fun RoutineStepSection(
     modifier: Modifier = Modifier,
     routine: Routine,
+    isAdding: Boolean,
     showAddButton: Boolean,
     onAddToMyRoutineClick: () -> Unit
 ) {
@@ -46,12 +44,14 @@ fun RoutineStepSection(
             if (showAddButton) {
                 MoruButton(
                     text = ("내 루틴에 추가"),
+                    enabled = !isAdding,
                     onClick = onAddToMyRoutineClick,
                     backgroundColor = MORUTheme.colors.limeGreen,
                     contentColor = Color.White,
                     textStyle = MORUTheme.typography.body_SB_14,
                     iconContent = { Icon(Icons.Default.CalendarToday, "캘린더", Modifier.size(16.dp)) }
                 )
+
             }
         }
         Spacer(Modifier.height(16.dp))
@@ -92,7 +92,8 @@ private fun RoutineStepSectionWithButtonPreview() {
         RoutineStepSection(
             routine = sampleRoutine,
             showAddButton = true,
-            onAddToMyRoutineClick = {}
+            onAddToMyRoutineClick = {},
+            isAdding = true,
         )
     }
 }

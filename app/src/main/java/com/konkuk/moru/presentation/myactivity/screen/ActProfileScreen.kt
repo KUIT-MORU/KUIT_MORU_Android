@@ -25,6 +25,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +46,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
+import coil.request.ImageRequest
 import com.konkuk.moru.R
 import com.konkuk.moru.core.util.modifier.noRippleClickable
 import com.konkuk.moru.presentation.myactivity.component.BackTitle
@@ -68,6 +72,7 @@ fun ActProfileScreen(
     val gender by userViewModel.gender.collectAsState()
     val birthday by userViewModel.birthday.collectAsState()
     val bio by userViewModel.bio.collectAsState()
+    val profileImage by userViewModel.profileImageUrl.collectAsState()
 
     LaunchedEffect(Unit) { userViewModel.loadMe() }
 
@@ -119,31 +124,54 @@ fun ActProfileScreen(
                         .background(color = colors.veryLightGray, shape = CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (selectedImageUri.value != null) {
-                        AsyncImage(
-                            model = selectedImageUri.value.toString(),
-                            contentDescription = "Selected Profile Image",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(110.dp)
-                                .clip(CircleShape),
-                            onSuccess = {
-                                Log.d("AsyncImage", "이미지 로드 성공: ${selectedImageUri.value}")
-                            },
-                            onError = {
-                                Log.e(
-                                    "AsyncImage",
-                                    "이미지 로드 실패: ${selectedImageUri.value}",
-                                    it.result.throwable
-                                )
-                            }
-                        )
-                    } else {
+                    val ctx = LocalContext.current
+                    val cleaned = profileImage?.trim()
+
+                    if (cleaned.isNullOrBlank()) {
                         Image(
                             painter = painterResource(id = R.drawable.ic_profile_basic),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier.size(55.69.dp)
+                            modifier = Modifier.fillMaxSize() // ← 컨테이너(80dp) 꽉 채우기
+                        )
+                    } else {
+                        val req = ImageRequest.Builder(ctx)
+                            .data(cleaned)
+                            .crossfade(true)
+                            .listener(
+                                onStart = { Log.d("ProfileImage", "start url=$cleaned") },
+                                onSuccess = { _, r ->
+                                    Log.d(
+                                        "ProfileImage",
+                                        "success url=$cleaned size=${r.drawable.intrinsicWidth}x${r.drawable.intrinsicHeight}"
+                                    )
+                                },
+                                onError = { _, r ->
+                                    Log.e("ProfileImage", "error url=$cleaned", r.throwable)
+                                }
+                            )
+                            .build()
+
+                        SubcomposeAsyncImage(
+                            model = req,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            loading = {
+                                CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(22.dp))
+                            },
+                            success = {
+                                SubcomposeAsyncImageContent() // 정상 렌더
+                            },
+                            error = {
+                                // 에러 시 기본 이미지 표시
+                                Image(
+                                    painter = painterResource(R.drawable.ic_profile_basic),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            },
+                            modifier = Modifier.fillMaxSize() // ← 컨테이너(80dp) 꽉 채우기
                         )
                     }
                 }

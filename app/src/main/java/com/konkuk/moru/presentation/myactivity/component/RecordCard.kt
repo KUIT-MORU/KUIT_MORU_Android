@@ -38,7 +38,7 @@ fun RecordCard(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .width(90.dp)
             .height(139.dp)
             .clip(RoundedCornerShape(8.dp))
@@ -64,7 +64,7 @@ fun RecordCard(
             )
 
             Box(
-                modifier = modifier
+                modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(top = 6.dp, end = 6.dp)
             ) {
@@ -79,8 +79,7 @@ fun RecordCard(
                 Text(
                     text = time,
                     color = Color(0xFFFFFFFF),
-                    style = typography.title_B_14,
-                    modifier = Modifier
+                    style = typography.title_B_14
                 )
             }
 
@@ -91,13 +90,15 @@ fun RecordCard(
                         .height(3.dp)
                         .align(Alignment.BottomCenter)
                         .background(colors.limeGreen)
-                ) {}
+                )
             }
         }
 
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .height(39.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(39.dp)
+        ) {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = title,
@@ -122,4 +123,3 @@ fun RecordCard(
         }
     }
 }
-

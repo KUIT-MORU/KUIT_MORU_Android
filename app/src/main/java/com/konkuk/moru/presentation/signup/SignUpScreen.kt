@@ -19,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,36 +39,43 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.konkuk.moru.core.component.TopBarLogoWithTitle
 import com.konkuk.moru.core.component.button.MoruButtonTypeA
+import com.konkuk.moru.core.datastore.LoginPreference
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.signup.component.CompleteSignupPopup
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun SignUpScreen(
     navController: NavController,
     viewModel: SignUpViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val focusManager = LocalFocusManager.current
-    val context = LocalContext.current
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     var isEmailValid by remember { mutableStateOf(false) }
     val isPasswordValid = remember(password) {
-        password.length >= 8 && password.contains(Regex("[0-9]")) && password.contains(Regex("[!@#\$%^&*(),.?\":{}|<>]"))
+        password.length >= 8 &&
+                password.contains(Regex("[0-9]")) &&
+                password.contains(Regex("[!@#\\\$%^&*(),.?\":{}|<>]"))
     }
     val isFormValid = isEmailValid && isPasswordValid
-    //val isFormValid = true // TODO 임시로 유효성 검사 생략
 
     var emailInvalidMessage by remember { mutableStateOf<String?>(null) }
 
     var showPopup by remember { mutableStateOf(false) }
     LaunchedEffect(showPopup) {
         if (showPopup) {
+            Log.d("signup", "popup visible. will navigate to Onboarding in 3000ms")
             delay(3000)
-            navController.navigate(Route.AuthCheck.route) {
+            Log.d("signup", "navigate to Onboarding (pop SignUp)")
+            navController.navigate(Route.Onboarding.route) {
                 popUpTo(Route.SignUp.route) { inclusive = true }
             }
         }
@@ -173,35 +181,32 @@ fun SignUpScreen(
                         .padding(horizontal = 16.dp)
                 ) {
                     MoruButtonTypeA(text = "회원가입", enabled = isFormValid) {
-                        if (isFormValid) {
-                            viewModel.signUp(
-                                email, password, context,
-                                onSuccess = {
-                                    showPopup = true
-                                },
-                                onFailure = { error ->
-                                    // TODO: 에러 메시지 UI에 띄우기
-                                    Log.e("SignUpScreen", "회원가입 실패: $error")
+                        if (!isFormValid) return@MoruButtonTypeA
+                        Log.d(
+                            "signup",
+                            "click: email=$email, pwdLen=${password.length}, valid=$isFormValid"
+                        )
+                        viewModel.signUp(
+                            email = email,
+                            password = password,
+                            onSuccess = {
+                                Log.d("signup", "success → mark loggedIn & show popup")
+                                scope.launch {
+                                    LoginPreference.setLoggedIn(context, true)
                                 }
-                            )
-                        } else {
-                            // 유효성 검사 실패 시 처리
-                            // ========= TODO 비활성 버튼도 임시로 작동하도록 설정. 추후 기능 제거 필요 =====
-                            viewModel.signUp(
-                                email, password, context,
-                                onSuccess = {
-                                    showPopup = true
-                                },
-                                onFailure = { error ->
-                                    // TODO: 에러 메시지 UI에 띄우기
-                                    Log.e("SignUpScreen", "회원가입 실패: $error")
-                                }
-                            )
-                            // ============================================================
-                        }
+                                // 온보딩에서 활용할 가입 이메일 전달 (선택)  // [추가]
+//                                navController.currentBackStackEntry?.savedStateHandle?.set(
+//                                    "signupEmail",
+//                                    email
+//                                )
+                                showPopup = true
+                            },
+                            onFailure = { error ->
+                                Log.e("signup", "fail: $error")
+                            }
+                        )
                     }
                 }
-
             }
         }
         if (showPopup) {

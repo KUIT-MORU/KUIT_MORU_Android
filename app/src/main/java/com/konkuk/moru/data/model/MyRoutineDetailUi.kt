@@ -22,7 +22,7 @@ data class MyRoutineDetailUi(
     val isSimple: Boolean = false,
     val isChecked: Boolean = false,
     val scrapCount: Int = 0,
-
+    val isUserVisible: Boolean = false,
     // 상세
     val steps: List<RoutineStep> = emptyList(),
     val usedApps: List<UsedAppInRoutine> = emptyList()

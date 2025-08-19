@@ -3,7 +3,7 @@ package com.konkuk.moru.data.dto.request
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class PatchRoutineRequest(
+data class PatchMyRoutineRequest(
     val title: String? = null,
     val imageUrl: String? = null,
     val tags: List<String> = emptyList(),        // 서버가 이름 배열 허용
