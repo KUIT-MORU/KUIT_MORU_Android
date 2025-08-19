@@ -48,7 +48,8 @@ fun WeeklyCalendarView(
 
     Column(
         modifier = modifier
-            .height(160.dp)
+            .wrapContentHeight()
+            .heightIn(min = 160.dp)
     ) {
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -138,7 +139,7 @@ fun RoutineTag(
         color = Color.White,
         textAlign = TextAlign.Center,
         softWrap = true,
-        maxLines = 3,
+        maxLines = 5,
         modifier = Modifier
             .width(tagWidth)
             .background(
@@ -146,7 +147,7 @@ fun RoutineTag(
                 shape = RoundedCornerShape(2.dp)
             )
             .defaultMinSize(minWidth = minWidth)
-            .padding(horizontal = 4.dp, vertical = 1.dp)
+            .padding(horizontal = 4.dp, vertical = 2.dp)
     )
 }
 
