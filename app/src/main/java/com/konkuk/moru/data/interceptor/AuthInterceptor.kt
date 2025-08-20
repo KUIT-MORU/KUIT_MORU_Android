@@ -9,25 +9,24 @@ import javax.inject.Inject
 class AuthInterceptor @Inject constructor(
     private val tokenManager: TokenManager
 ) : Interceptor {
-
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
+        val path = original.url.encodedPath
 
-        if (original.header("Authorization") != null) {
-            return chain.proceed(original)
-        }
+        val token: String? = tokenManager.accessTokenBlocking() // [유지]
 
-        val access = tokenManager.accessTokenBlocking()
-        val req = if (!access.isNullOrEmpty()) {
-            val short = if (access.length > 12) access.take(6) + "..." + access.takeLast(4) else access
-            Log.d("AuthInterceptor", "Attach Authorization: Bearer $short")
+        // 로그인/토큰 발급 계열만 제외
+        val isAuthExcluded = path.startsWith("/api/auth") || path.startsWith("/auth")
+        val shouldAttach = !isAuthExcluded && !token.isNullOrBlank()
+
+        Log.d("createroutine",
+            "[authx] path=$path excluded=$isAuthExcluded tokenLen=${token?.length ?: 0} attach=$shouldAttach")
+
+        val req = if (shouldAttach) {
             original.newBuilder()
-                .header("Authorization", "Bearer $access")
+                .header("Authorization", "Bearer $token")
                 .build()
-        } else {
-            Log.w("AuthInterceptor", "No access token. Sending request without Authorization.")
-            original
-        }
+        } else original
 
         return chain.proceed(req)
     }

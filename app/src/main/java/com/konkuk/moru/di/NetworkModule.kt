@@ -34,13 +34,28 @@ import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 import javax.inject.Named
+import javax.inject.Qualifier
 import kotlin.jvm.java
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+
+    @Provides
+    @Singleton
+    @Named("authHeaderInspector")
+    fun provideAuthHeaderInspector(): Interceptor = Interceptor { chain ->
+        val req = chain.request()
+        val hasAuth = req.header("Authorization") != null
+        android.util.Log.d(
+            "createroutine",
+            "[auth] hasAuthorizationHeader=$hasAuth method=${req.method} url=${req.url.encodedPath}"
+        )
+        chain.proceed(req)
+    }
 
     @Provides
     @Singleton
@@ -167,22 +182,41 @@ object NetworkModule {
 //            .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
 //            .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
 //            .build()
+//    @Provides
+//    @Singleton
+//    fun provideOkHttpClient(
+//        authInterceptor: Interceptor,
+//        tokenAuthenticator: TokenAuthenticator,
+//        loggingInterceptor: HttpLoggingInterceptor,
+//        @Named("contentTypeInspector") ctInspector: Interceptor // <-- add
+//    ): OkHttpClient =
+//        UnsafeHttpClient.getUnsafeOkHttpClient().newBuilder()
+//            .addInterceptor(authInterceptor)
+//            .addInterceptor(ctInspector) // <-- add: Content-Type 확인
+//            .addInterceptor(loggingInterceptor) // BODY 레벨이면 실제 JSON도 찍힘
+//            .authenticator(tokenAuthenticator)
+//            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+//            .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+//            .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+//            .build()
     @Provides
     @Singleton
     fun provideOkHttpClient(
         authInterceptor: Interceptor,
         tokenAuthenticator: TokenAuthenticator,
         loggingInterceptor: HttpLoggingInterceptor,
-        @Named("contentTypeInspector") ctInspector: Interceptor // <-- add
+        @Named("contentTypeInspector") ctInspector: Interceptor,
+        @Named("authHeaderInspector") authHeaderInspector: Interceptor // [추가]
     ): OkHttpClient =
         UnsafeHttpClient.getUnsafeOkHttpClient().newBuilder()
             .addInterceptor(authInterceptor)
-            .addInterceptor(ctInspector) // <-- add: Content-Type 확인
-            .addInterceptor(loggingInterceptor) // BODY 레벨이면 실제 JSON도 찍힘
+            .addInterceptor(authHeaderInspector) // [추가] Authorization 부착 여부 로깅
+            .addInterceptor(ctInspector)
+            .addInterceptor(loggingInterceptor)
             .authenticator(tokenAuthenticator)
-            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-            .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-            .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
             .build()
 
     @Provides

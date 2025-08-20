@@ -17,9 +17,46 @@ private val Context.dataStore by preferencesDataStore(name = "auth_prefs")
 class TokenManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
+
     private object Keys {
         val ACCESS = stringPreferencesKey("access_token")
         val REFRESH = stringPreferencesKey("refresh_token")
+    }
+
+    // ===== [추가] 레거시 저장소(SharedPreferences) 후보들 =====
+    private val legacyPrefs by lazy { context.getSharedPreferences("auth", Context.MODE_PRIVATE) }             // [추가]
+    private val legacyPrefsAlt by lazy { context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE) }    // [추가]
+
+    // [추가] 레거시에서 access token을 여러 후보 키로 탐색
+    private fun findLegacyAccessToken(): String? { // [추가]
+        val cands = listOf("access_token", "accessToken", "ACCESS_TOKEN", "Authorization")
+        return (cands.firstNotNullOfOrNull { legacyPrefs.getString(it, null) }
+            ?: cands.firstNotNullOfOrNull { legacyPrefsAlt.getString(it, null) })
+    }
+
+    // [추가] 레거시에서 refresh token을 여러 후보 키로 탐색
+    private fun findLegacyRefreshToken(): String? { // [추가]
+        val cands = listOf("refresh_token", "refreshToken", "REFRESH_TOKEN")
+        return (cands.firstNotNullOfOrNull { legacyPrefs.getString(it, null) }
+            ?: cands.firstNotNullOfOrNull { legacyPrefsAlt.getString(it, null) })
+    }
+
+    // [추가] DataStore 비어있을 때 1회성 이관 (예외 안전)
+    private fun migrateLegacyIfNeeded() { // [추가]
+        runBlocking {
+            val current = accessToken()
+            if (current.isNullOrBlank()) {
+                val legacyA = findLegacyAccessToken()
+                val legacyR = findLegacyRefreshToken()
+                if (!legacyA.isNullOrBlank()) {
+                    android.util.Log.d(
+                        "createroutine",
+                        "[authx] migrate legacy tokens: access=${legacyA.take(6)}..., hasRefresh=${!legacyR.isNullOrBlank()}"
+                    )
+                    saveTokens(legacyA, legacyR)
+                }
+            }
+        }
     }
 
     /** -------- 읽기 (suspend) -------- */
@@ -30,11 +67,19 @@ class TokenManager @Inject constructor(
         context.dataStore.data.map { it[Keys.REFRESH] }.first()
 
     /** -------- 읽기 (blocking) : Interceptor/Authenticator 용 -------- */
-    fun accessTokenBlocking(): String? = runBlocking { accessToken() }
+    fun accessTokenBlocking(): String? { // [변경]
+        try { migrateLegacyIfNeeded() } catch (e: Exception) { // [추가]
+            android.util.Log.d("createroutine","[authx] migrate failed: ${e.message}")
+        }
+        return runBlocking { accessToken() }
+    }
+
     fun refreshTokenBlocking(): String? = runBlocking { refreshToken() }
 
+    // [추가] 로그인 여부 간편 체크
+    fun isSignedInBlocking(): Boolean = !accessTokenBlocking().isNullOrBlank()
+
     /** -------- 저장 -------- */
-    // 로그인 직후나 갱신 성공 시 원자적으로 저장
     suspend fun saveTokens(access: String, refresh: String?) {
         context.dataStore.edit { prefs ->
             prefs[Keys.ACCESS] = access
@@ -42,7 +87,6 @@ class TokenManager @Inject constructor(
         }
     }
 
-    // access 만 갱신(서버가 refresh 를 안 주는 타입의 갱신 응답일 때)
     suspend fun updateAccess(access: String) {
         context.dataStore.edit { prefs -> prefs[Keys.ACCESS] = access }
     }
