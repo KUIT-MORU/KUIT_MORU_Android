@@ -49,9 +49,9 @@ fun WeeklyCalendarView(
     Column(
         modifier = modifier
             .wrapContentHeight()
-            .heightIn(min = 160.dp)
+            .heightIn(min = 180.dp)
     ) {
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // 요일 행
         Row(
@@ -84,7 +84,7 @@ fun WeeklyCalendarView(
                         if (isToday) {
                             Box(
                                 modifier = Modifier
-                                    .size(17.dp)
+                                    .size(20.dp)
                                     .background(colors.limeGreen, shape = CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -106,11 +106,11 @@ fun WeeklyCalendarView(
                         Box(
                             modifier = Modifier
                                 .wrapContentHeight()
-                                .padding(top = 2.dp)
+                                .padding(top = 4.dp)
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 routinesPerDate[dom]?.forEachIndexed { index, label ->
-                                    if (index != 0) Spacer(Modifier.height(1.dp))
+                                    if (index != 0) Spacer(Modifier.height(2.dp))
                                     RoutineTag(label)
                                 }
                             }
@@ -147,7 +147,7 @@ fun RoutineTag(
                 shape = RoundedCornerShape(2.dp)
             )
             .defaultMinSize(minWidth = minWidth)
-            .padding(horizontal = 4.dp, vertical = 2.dp)
+            .padding(horizontal = 4.dp, vertical = 3.dp)
     )
 }
 

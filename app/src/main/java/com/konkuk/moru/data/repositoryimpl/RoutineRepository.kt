@@ -30,7 +30,7 @@ class RoutineRepository @Inject constructor(
     }
 
     suspend fun getAllMyRoutines(page: Int = 0, size: Int = 100): RoutinePageResponse {
-        return service.getAllMyRoutines(sortType = "TIME", page = page, size = size)
+        return service.getAllMyRoutines(sortType = "LATEST", page = page, size = size)
     }
 
     suspend fun getRoutineDetail(routineId: String): RoutineDetailResponseV1 {

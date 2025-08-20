@@ -1059,28 +1059,16 @@ private fun String.toStableIntId(): Int {
 }
 
 // 오늘 "루틴 목록" 전용 정렬:
-// 1) 진행중 루틴 우선 (스택 순서 유지) → 2) 시간 미설정 → 3) 시간 설정(오름차순)
+// HomeRoutinesViewModel에서 이미 정렬이 완료되었으므로 여기서는 추가 정렬하지 않음
 private fun List<Routine>.sortedForList(): List<Routine> {
-    Log.d("HomeScreen", "🔄 sortedForList() 호출: ${this.size}개 루틴")
+    Log.d("HomeScreen", "🔄 sortedForList() 호출: ${this.size}개 루틴 (추가 정렬 없음)")
     this.forEach { routine ->
         Log.d("HomeScreen", "   - ${routine.title}: isRunning=${routine.isRunning}, category=${routine.category}")
     }
 
-    // 진행중인 루틴들과 나머지 루틴들을 분리
-    val runningRoutines = this.filter { it.isRunning }
-    val nonRunningRoutines = this.filter { !it.isRunning }
-
-    // 나머지 루틴들을 기존 정렬 기준으로 정렬
-    val sortedNonRunning = nonRunningRoutines.sortedWith(
-        compareByDescending<Routine> { it.scheduledTime == null }
-            .thenBy { it.scheduledTime ?: java.time.LocalTime.MAX }
-    )
-
-    // 진행중인 루틴들 + 정렬된 나머지 루틴들 (스택 순서 유지)
-    val result = runningRoutines + sortedNonRunning
-
-    Log.d("HomeScreen", "✅ 정렬 완료: " + result.joinToString { "${it.title}(isRunning=${it.isRunning})" })
-    return result
+    // HomeRoutinesViewModel에서 이미 정렬이 완료되었으므로 그대로 반환
+    Log.d("HomeScreen", "✅ 정렬 완료 (ViewModel에서 처리됨): " + this.joinToString { "${it.title}(isRunning=${it.isRunning})" })
+    return this
 }
 
 // 현재 시간을 기준으로 가장 가까운 시간대의 루틴부터 정렬 (오늘 탭용)

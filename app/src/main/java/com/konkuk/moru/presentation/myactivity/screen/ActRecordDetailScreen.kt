@@ -11,6 +11,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.konkuk.moru.presentation.myactivity.component.RoutineDetailContent
 import com.konkuk.moru.presentation.myactivity.viewmodel.MyActRecordDetailViewModel
+import com.konkuk.moru.presentation.myactivity.viewmodel.MyActRecordViewModel
 import com.konkuk.moru.domain.model.MyActRecordDetail
 import java.time.Duration
 import java.time.Instant
@@ -55,13 +56,20 @@ fun ActRecordDetailScreen(
     val loading = vm.loading.collectAsState().value
     val error = vm.error.collectAsState().value
 
-    LaunchedEffect(logId) { vm.load(logId) }
+    // completed_로 시작하는 ID인 경우 서버에서 로드하지 않음
+    val isCompletedRoutine = logId.startsWith("completed_")
+    
+    LaunchedEffect(logId) { 
+        if (!isCompletedRoutine) {
+            vm.load(logId) 
+        }
+    }
 
     when {
-        loading && detail == null -> {
+        loading && detail == null && !isCompletedRoutine -> {
             Text("로딩중")
         }
-        error != null && detail == null -> {
+        error != null && detail == null && !isCompletedRoutine -> {
             Text("error")
         }
         detail != null -> {
@@ -75,6 +83,47 @@ fun ActRecordDetailScreen(
                 RoutineDetailContent(detail = ui, navController = navController)
             }
         }
+        isCompletedRoutine -> {
+            // completed_ 루틴의 경우 우리가 저장한 데이터를 사용
+            CompletedRoutineDetailContent(logId = logId, navController = navController)
+        }
+    }
+}
+
+@Composable
+fun CompletedRoutineDetailContent(
+    logId: String,
+    navController: NavHostController,
+    vm: MyActRecordViewModel = hiltViewModel()
+) {
+    val completedRoutine = remember(logId) { vm.findCompletedRoutineById(logId) }
+    
+    if (completedRoutine != null) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+        ) {
+            // 간단한 세부 정보 표시
+            Text("제목: ${completedRoutine.title}")
+            Text("태그: ${completedRoutine.tags.joinToString(", ")}")
+            Text("소요시간: ${completedRoutine.durationSec}초")
+            Text("카테고리: ${completedRoutine.category}")
+            Text("시작시간: ${completedRoutine.startTime}")
+            Text("종료시간: ${completedRoutine.endTime}")
+            Text("총 단계: ${completedRoutine.totalSteps}")
+            Text("완료된 단계: ${completedRoutine.completedSteps}")
+            
+            // 단계별 정보
+            completedRoutine.stepNames.forEachIndexed { index, stepName ->
+                val stepDuration = if (index < completedRoutine.stepDurations.size) {
+                    completedRoutine.stepDurations[index]
+                } else "0"
+                Text("단계 ${index + 1}: $stepName (${stepDuration}분)")
+            }
+        }
+    } else {
+        Text("루틴을 찾을 수 없습니다.")
     }
 }
 
