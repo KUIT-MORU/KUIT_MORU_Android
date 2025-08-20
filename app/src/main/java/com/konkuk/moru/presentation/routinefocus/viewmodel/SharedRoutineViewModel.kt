@@ -46,12 +46,20 @@ class SharedRoutineViewModel : ViewModel() {
         _routineCategory.value = category
     }
 
-    // 총 소요시간
+    // 총 소요시간 (초 단위)
     private val _totalDuration = MutableStateFlow(0)
     val totalDuration: StateFlow<Int> = _totalDuration
     fun setTotalDuration(duration: Int) {
-        Log.d("SharedRoutineViewModel", "🔄 setTotalDuration: ${duration}분")
+        Log.d("SharedRoutineViewModel", "🔄 setTotalDuration: ${duration}초")
         _totalDuration.value = duration
+    }
+    
+    // 총 소요시간 업데이트 (실시간으로 누적)
+    fun updateTotalDuration(additionalSeconds: Int) {
+        val currentDuration = _totalDuration.value
+        val newDuration = currentDuration + additionalSeconds
+        Log.d("SharedRoutineViewModel", "🔄 updateTotalDuration: ${currentDuration}초 + ${additionalSeconds}초 = ${newDuration}초")
+        _totalDuration.value = newDuration
     }
 
     // 루틴 태그 리스트
@@ -196,6 +204,26 @@ class SharedRoutineViewModel : ViewModel() {
         Log.d("SharedRoutineViewModel", "🔄 setSelectedStates 시작: $selectedStates")
         // 선택 상태는 RoutineSimpleRunScreen에서 직접 사용하므로 별도 저장
         Log.d("SharedRoutineViewModel", "✅ 선택 상태 설정 완료")
+    }
+
+    // 루틴 완료 시 모든 상태 초기화
+    fun resetRoutineState() {
+        Log.d("SharedRoutineViewModel", "🔄 resetRoutineState 호출됨 - 모든 상태 초기화")
+        
+        _selectedRoutineId.value = null
+        _originalRoutineId.value = null
+        _routineTitle.value = ""
+        _routineCategory.value = ""
+        _totalDuration.value = 0
+        _routineTags.value = emptyList()
+        _isSimple.value = false
+        _selectedApps.value = emptyList()
+        _selectedSteps.value = emptyList()
+        _scheduledTime.value = null
+        _scheduledDays.value = emptySet()
+        _startNavigation.value = null
+        
+        Log.d("SharedRoutineViewModel", "✅ SharedRoutineViewModel 상태 초기화 완료")
     }
 
     // requiredTime을 스텝 개수에 맞게 분배
