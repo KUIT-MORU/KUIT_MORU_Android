@@ -9,6 +9,7 @@ import com.konkuk.moru.core.datastore.OnboardingPreference
 import com.konkuk.moru.data.dto.request.FavoriteTagRequest
 import com.konkuk.moru.data.dto.response.UpdateUserProfileResponse
 import com.konkuk.moru.domain.repository.OBUserRepository
+import com.konkuk.moru.presentation.onboarding.model.NickNameValid
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,8 +47,8 @@ class OnboardingViewModel @Inject constructor(
     // -------------------------------
     // UI 상태
     // -------------------------------
-    private val _nicknameAvailable = MutableStateFlow<Boolean?>(null)
-    val nicknameAvailable: StateFlow<Boolean?> = _nicknameAvailable
+    private val _nicknameAvailable = MutableStateFlow<NickNameValid>(NickNameValid.EMPTY)
+    val nicknameAvailable: StateFlow<NickNameValid> = _nicknameAvailable
 
     private val _currentPage = MutableStateFlow(0)
     val currentPage: StateFlow<Int> = _currentPage
@@ -84,16 +85,30 @@ class OnboardingViewModel @Inject constructor(
     // -------------------------------
     fun checkNicknameAvailability(nickname: String) {
         Log.d(TAG, "checkNicknameAvailability() request: nickname=$nickname")
+
+        val trimmed = nickname.trim()
+
+        // [변경 1] 공백/빈 값 가드: 서버 호출 없이 상태만 EMPTY로 전환
+        if (trimmed.isEmpty()) {
+            _nicknameAvailable.value = NickNameValid.EMPTY
+            return
+        }
+
         viewModelScope.launch {
-            val result = userRepository.checkNicknameAvailable(nickname)
-            result.onSuccess { ok ->
-                Log.d(TAG, "checkNicknameAvailability() success: available=$ok")
-                _nicknameAvailable.value = ok
-                if (ok) updateNickname(nickname)
-            }.onFailure { e ->
-                Log.d(TAG, "checkNicknameAvailability() failed: ${e.message}")
-                _nicknameAvailable.value = false
-            }
+            userRepository.checkNicknameAvailable(trimmed)
+                .onSuccess { ok ->
+                    Log.d("onboarding", "checkNicknameAvailability() success: available=$ok")
+                    _nicknameAvailable.value = when {
+                        ok -> NickNameValid.VALID
+                        else -> NickNameValid.INVALID
+                    }
+                    if (ok) updateNickname(trimmed) // 사용 가능 시 상태 반영
+                }
+                .onFailure { e ->
+                    Log.d("onboarding", "checkNicknameAvailability() failed: ${e.message}")
+                    // [변경 1-2] 실패 시 보수적으로 INVALID로 표기 (UI에서 빨간 테두리)
+                    _nicknameAvailable.value = NickNameValid.INVALID
+                }
         }
     }
 
@@ -103,6 +118,8 @@ class OnboardingViewModel @Inject constructor(
     fun submitUserInfo() {
         viewModelScope.launch {
             val info = _userInfo.value
+
+            // [변경 2] 서버 gender 매핑 일원화
             val serverGender = when (info.gender.trim()) {
                 "남자" -> "MALE"
                 "여자" -> "FEMALE"
@@ -116,7 +133,7 @@ class OnboardingViewModel @Inject constructor(
                         "profileImageUrl='${_userInfo.value.profileImageKey}'"
             )
 
-            // 서버 스키마 확인: PATCH /api/user/me + Map
+            // [변경 2-1] 선택 필드만 put: 서버 스키마와의 충돌 최소화
             val body = buildMap<String, String> {
                 put("nickname", info.nickname.trim())
                 put("gender", serverGender)
@@ -145,11 +162,11 @@ class OnboardingViewModel @Inject constructor(
     /** /api/tags 호출 후 이름→ID 맵을 구성·캐시 */
     private suspend fun ensureTagIdMap(): Map<String, String> {
         if (tagIdMap.value.isNotEmpty()) return tagIdMap.value
-        val result = userRepository.getAllTags() // Result<List<ServerTag>>
+
+        val result = userRepository.getAllTags()
         val map = result
             .onFailure { e -> Log.d(TAG, "getAllTags() failed: ${e.message}") }
             .getOrElse { emptyList() }
-            // ✅ associateBy 두 번째 파라미터는 valueTransform!
             .associateBy(
                 keySelector = { it.name.trim() },   // "공부"
                 valueTransform = { it.id }           // UUID
@@ -165,7 +182,7 @@ class OnboardingViewModel @Inject constructor(
             val map = ensureTagIdMap()
             if (map.isEmpty()) {
                 Log.d(TAG, "submitFavoriteTagsByLabels() aborted: tagIdMap is empty")
-                return@launch // [추가]
+                return@launch
             }
 
             val ids = labelsWithHash
@@ -175,7 +192,7 @@ class OnboardingViewModel @Inject constructor(
 
             if (ids.isEmpty()) {
                 Log.d(TAG, "submitFavoriteTagsByLabels() aborted: resolved ids is empty for labels=$labelsWithHash")
-                return@launch // [추가]
+                return@launch
             }
 
             Log.d(TAG, "submitFavoriteTagsByLabels() labels=$labelsWithHash ids=$ids")
@@ -189,6 +206,7 @@ class OnboardingViewModel @Inject constructor(
     fun submitFavoriteTags(tagIds: List<String>) {
         viewModelScope.launch {
             userRepository.addFavoriteTags(FavoriteTagRequest(tagIds))
+                .onFailure { e -> Log.d(TAG, "submitFavoriteTags() failed: ${e.message}") }
         }
     }
 
@@ -217,6 +235,10 @@ class OnboardingViewModel @Inject constructor(
         _userInfo.value = _userInfo.value.copy(tags = tags)
     }
 
+    fun clearNickNameValidity() {
+        _nicknameAvailable.value = NickNameValid.EMPTY
+    }
+
     // -------------------------------
     // 이미지 업로드
     // -------------------------------
@@ -225,13 +247,14 @@ class OnboardingViewModel @Inject constructor(
             Log.d(TAG, "uploadProfileImageFromUri() uri=$uri")
             val tmpFile = copyUriToCacheFile(context, uri)
             Log.d(TAG, "uploadProfileImageFromUri() tmpFile=${tmpFile.absolutePath} size=${tmpFile.length()}")
-            val result = userRepository.uploadImage(tmpFile)
-            result.onSuccess { imageUrlOrKey ->
-                updateProfileImageUrl(imageUrlOrKey) // 서버는 temp/... 경로를 profileImageUrl로 받음
-                Log.d(TAG, "uploadProfileImageFromUri() success imageUrl=$imageUrlOrKey (state.profileImageKey=${_userInfo.value.profileImageKey})")
-            }.onFailure { e ->
-                Log.d(TAG, "uploadProfileImageFromUri() failed: ${e.message}")
-            }
+            userRepository.uploadImage(tmpFile)
+                .onSuccess { imageUrlOrKey ->
+                    updateProfileImageUrl(imageUrlOrKey) // 서버는 temp/... 경로를 profileImageUrl로 받음
+                    Log.d(TAG, "uploadProfileImageFromUri() success imageUrl=$imageUrlOrKey (state.profileImageKey=${_userInfo.value.profileImageKey})")
+                }
+                .onFailure { e ->
+                    Log.d(TAG, "uploadProfileImageFromUri() failed: ${e.message}")
+                }
         }
     }
 

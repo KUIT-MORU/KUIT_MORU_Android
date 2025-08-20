@@ -32,7 +32,6 @@ import com.konkuk.moru.ui.theme.MORUTheme.typography
 @Composable
 fun FinalPage(
     onNext: () -> Unit,
-    viewModel: OnboardingViewModel? = null
 ) {
     Box(
         modifier = Modifier

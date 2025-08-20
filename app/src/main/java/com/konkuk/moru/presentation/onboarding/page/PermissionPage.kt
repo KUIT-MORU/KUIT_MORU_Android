@@ -14,7 +14,6 @@ import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.TopBarLogoWithTitle
 import com.konkuk.moru.core.component.button.MoruButtonTypeA
-import com.konkuk.moru.presentation.onboarding.OnboardingViewModel
 import com.konkuk.moru.presentation.onboarding.component.PermissionItem
 import com.konkuk.moru.presentation.onboarding.model.PermissionType
 import com.konkuk.moru.ui.theme.MORUTheme.colors
@@ -24,7 +23,6 @@ import com.konkuk.moru.presentation.onboarding.permission.rememberPermissionCont
 @Composable
 fun PermissionPage(
     onNext: () -> Unit,
-    viewModel: OnboardingViewModel? = null
 ) {
     // [변경] 내부 로직 삭제 → 컨트롤러에서 다 처리
     val controller = rememberPermissionController()
