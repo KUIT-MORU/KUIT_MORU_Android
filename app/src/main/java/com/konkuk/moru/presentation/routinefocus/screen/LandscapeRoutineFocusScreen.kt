@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -25,12 +24,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
+import android.content.Context
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -54,30 +48,26 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.util.Log
-import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.layout.onGloballyPositioned
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.home.RoutineStepData
 import com.konkuk.moru.presentation.home.component.RoutineResultRow
 import com.konkuk.moru.presentation.routinefocus.component.RoutineTimelineItem
 import com.konkuk.moru.presentation.routinefocus.component.ScreenBlockOverlay
-import com.konkuk.moru.presentation.routinefocus.component.AppIcon
 import com.konkuk.moru.presentation.routinefocus.component.SettingSwitchGroup
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
 import com.konkuk.moru.presentation.routinefocus.viewmodel.SharedRoutineViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
-import com.konkuk.moru.presentation.routinefocus.screen.parseTimeToSeconds
-import com.konkuk.moru.presentation.routinefocus.screen.formatTotalTime
-import com.konkuk.moru.presentation.routinefocus.screen.formatTime
+import com.konkuk.moru.core.util.HomeAppLaunchUtils
 
 // 스크롤 가능한 타임라인을 위한 고정 스텝 높이
 const val TIMELINE_STEP_HEIGHT = 40
 const val TIMELINE_STEP_SPACING = 6
 const val MAX_VISIBLE_STEPS = 3
+
+
 
 @Composable
 fun LandscapeRoutineFocusScreen(
@@ -133,6 +123,9 @@ fun LandscapeRoutineFocusScreen(
 
     // 결과 팝업 상태 저장 (강제 상태 반영)
     var showResultPopup by remember { mutableStateOf(forceShowResultPopup) }
+    
+    // X 버튼 클릭 시의 시간을 저장할 변수
+    var pausedTime by remember { mutableStateOf(0) }
 
     // 설정 팝업 상태 저장
     val showSettingsPopup = focusViewModel.isSettingsPopupVisible
@@ -172,17 +165,12 @@ fun LandscapeRoutineFocusScreen(
     // 사용앱 리스트 (루틴 생성 시 선택한 앱들)
     val selectedApps = focusViewModel.selectedApps
     
-    // 테스트용 더미 데이터 (selectedApps가 비어있을 때)
-    val testApps = if (selectedApps.isEmpty()) {
-        listOf(
-            com.konkuk.moru.presentation.routinefeed.data.AppDto("카카오톡", "com.kakao.talk"),
-            com.konkuk.moru.presentation.routinefeed.data.AppDto("유튜브", "com.google.android.youtube"),
-            com.konkuk.moru.presentation.routinefeed.data.AppDto("인스타그램", "com.instagram.android")
-        ).also {
-            android.util.Log.d("LandscapeRoutineFocusScreen", "🧪 테스트용 더미 앱 데이터 사용: ${it.size}개")
+    // 선택된 앱이 없으면 실제 설치된 앱 목록을 로드
+    LaunchedEffect(selectedApps.isEmpty()) {
+        if (selectedApps.isEmpty()) {
+            Log.d("LandscapeRoutineFocusScreen", "🔄 선택된 앱이 없음, 실제 설치된 앱 목록 로드")
+            focusViewModel.loadInstalledApps(context)
         }
-    } else {
-        selectedApps
     }
 
     // 집중 루틴 시작
@@ -265,6 +253,10 @@ fun LandscapeRoutineFocusScreen(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
                             ) {
+                                // X 버튼 클릭 시 타이머 즉시 멈춤
+                                focusViewModel.pauseTimer()
+                                // 현재 시간을 저장 (팝업에서 고정 시간으로 사용)
+                                pausedTime = totalElapsedSeconds + elapsedSeconds
                                 showFinishPopup = true
                             }
                     )
@@ -344,16 +336,7 @@ fun LandscapeRoutineFocusScreen(
                                 currentStep = currentstep,
                                 isTimeout = isTimeout,
                                 isDarkMode = isDarkMode,
-                                onStepClick = { clickedStep ->
-                                    // 클릭된 스텝으로 이동
-                                    if (clickedStep != currentstep) {
-                                        val stepTimeString = routineItems.getOrNull(clickedStep - 1)?.second ?: "0m"
-                                        focusViewModel.updateCurrentStep(clickedStep)
-                                        focusViewModel.setStepLimitFromTimeString(parseTimeToSeconds(stepTimeString))
-                                        focusViewModel.resetTimer()
-                                        focusViewModel.startTimer()
-                                    }
-                                }
+                                onStepClick = null // 타임라인 터치 비활성화
                             )
                         }
                     }
@@ -490,30 +473,42 @@ fun LandscapeRoutineFocusScreen(
                             horizontalArrangement = Arrangement.spacedBy(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // 사용앱 아이콘들 (루틴 생성 시 선택한 앱들) - 앱 이름에 맞는 아이콘 표시
+                            // 사용앱 아이콘들 (루틴 생성 시 선택한 앱들) - 실제 앱 아이콘 표시
                             selectedApps.forEachIndexed { index, appInfo ->
                                 android.util.Log.e("TEST_LOG", "🔥 가로모드 렌더링 중: 앱 ${index + 1} - ${appInfo.name} (${appInfo.packageName})")
                                 
-                                // 앱 이름에 따라 적절한 아이콘 선택
-                                val iconResource = when (appInfo.name.lowercase()) {
-                                    "카카오톡" -> R.drawable.kakaotalk_icon
-                                    "네이버" -> R.drawable.naver_icon
-                                    "인스타그램" -> R.drawable.instagram_icon
-                                    "유튜브" -> R.drawable.youtube_icon
-                                    else -> R.drawable.ic_default
+                                // 실제 앱 아이콘을 가져오는 로직
+                                val appIcon = remember(appInfo.packageName) {
+                                    com.konkuk.moru.core.util.HomeAppUtils.getAppIcon(context, appInfo.packageName)
                                 }
                                 
-                                Image(
-                                    painter = painterResource(id = iconResource),
-                                    contentDescription = "사용앱 ${appInfo.name}",
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .clickable {
-                                            // 앱 바로 실행
-                                            launchApp(context, appInfo.packageName)
-                                        }
-                                )
+                                if (appIcon != null) {
+                                    // 실제 앱 아이콘 표시
+                                    Image(
+                                        bitmap = appIcon,
+                                        contentDescription = "사용앱 ${appInfo.name}",
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .clickable {
+                                                // 앱 바로 실행
+                                                HomeAppLaunchUtils.launchApp(context, appInfo.packageName, "LandscapeRoutineFocusScreen")
+                                            }
+                                    )
+                                } else {
+                                    // 앱 아이콘을 가져올 수 없으면 기본 아이콘 표시
+                                    Image(
+                                        painter = painterResource(id = R.drawable.ic_default),
+                                        contentDescription = "사용앱 ${appInfo.name}",
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .clickable {
+                                                // 앱 바로 실행
+                                                HomeAppLaunchUtils.launchApp(context, appInfo.packageName, "LandscapeRoutineFocusScreen")
+                                            }
+                                    )
+                                }
                             }
                             
                             // 기본 아이콘들 (선택된 앱이 3개 미만인 경우)
@@ -747,7 +742,7 @@ fun LandscapeRoutineFocusScreen(
                         RoutineResultRow(
                             R.drawable.clock_icon,
                             "시간",
-                            formatTime(totalElapsedSeconds + elapsedSeconds)
+                            formatTime(pausedTime)
                         )
                     }
                     Spacer(modifier = Modifier.height(9.03.dp))
@@ -794,6 +789,16 @@ fun LandscapeRoutineFocusScreen(
                                 showResultPopup = false
                                 // 집중 루틴 종료
                                 focusViewModel.endFocusRoutine()
+                                
+                                // 루틴 완료 시 intro 상태 초기화 (처음 상태로 복원)
+                                try {
+                                    val sharedPreferences = context.getSharedPreferences("routine_intro_prefs", Context.MODE_PRIVATE)
+                                    sharedPreferences.edit().remove("has_seen_intro_$routineTitle").apply()
+                                    android.util.Log.d("LandscapeRoutineFocusScreen", "🗑️ 완료된 집중 루틴의 intro 상태 초기화: $routineTitle")
+                                } catch (e: Exception) {
+                                    android.util.Log.e("LandscapeRoutineFocusScreen", "❌ intro 상태 초기화 실패", e)
+                                }
+                                
                                 onFinishConfirmed(routineId.toString())
                             }
                             .padding(vertical = 8.dp),

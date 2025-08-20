@@ -1,11 +1,6 @@
 package com.konkuk.moru.presentation.routinefocus.component
 
 import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,7 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -30,6 +24,8 @@ import androidx.compose.ui.window.DialogProperties
 import com.konkuk.moru.R
 import com.konkuk.moru.presentation.routinefeed.data.AppDto
 import com.konkuk.moru.presentation.routinefocus.viewmodel.RoutineFocusViewModel
+import com.konkuk.moru.core.util.HomeAppUtils
+import com.konkuk.moru.core.util.HomeAppLaunchUtils
 
 @Composable
 fun AppListPopup(
@@ -126,14 +122,7 @@ private fun AppIconItem(
 ) {
     // 실제 앱 아이콘을 가져오는 로직
     val appIcon = remember(app.packageName) {
-        try {
-            val packageManager = context.packageManager
-            val appInfo = packageManager.getApplicationInfo(app.packageName, 0)
-            val drawable = packageManager.getApplicationIcon(appInfo)
-            drawableToBitmap(drawable).asImageBitmap()
-        } catch (e: Exception) {
-            null
-        }
+        HomeAppUtils.getAppIcon(context, app.packageName)
     }
     
     Row(
@@ -141,7 +130,7 @@ private fun AppIconItem(
             .fillMaxWidth()
             .clickable {
                 // 앱 실행
-                launchApp(context, app.packageName)
+                HomeAppLaunchUtils.launchApp(context, app.packageName, "AppListPopup")
             }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -196,29 +185,7 @@ private fun AppIconItem(
     }
 }
 
-// Drawable을 Bitmap으로 변환하는 헬퍼 함수
-private fun drawableToBitmap(drawable: Drawable): Bitmap {
-    val bitmap = Bitmap.createBitmap(
-        drawable.intrinsicWidth,
-        drawable.intrinsicHeight,
-        Bitmap.Config.ARGB_8888
-    )
-    val canvas = Canvas(bitmap)
-    drawable.setBounds(0, 0, canvas.width, canvas.height)
-    drawable.draw(canvas)
-    return bitmap
-}
 
-// 앱을 실행하는 헬퍼 함수
-private fun launchApp(context: Context, packageName: String) {
-    try {
-        val intent = context.packageManager.getLaunchIntentForPackage(packageName)
-        if (intent != null) {
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(intent)
-        }
-    } catch (e: Exception) {
-        // 앱 실행 실패 시 로그 출력
-        android.util.Log.e("AppListPopup", "앱 실행 실패: $packageName", e)
-    }
-}
+
+
+
