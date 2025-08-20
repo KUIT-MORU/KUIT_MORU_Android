@@ -137,7 +137,15 @@ class HomeRoutinesViewModel @Inject constructor(
                     Log.d(TAG, "🔍 루틴[$index]: ${routine.title}, category=${routine.category}, scheduledDays=${routine.scheduledDays}, scheduledTime=${routine.scheduledTime}, requiredTime=${routine.requiredTime}")
                 }
                 
-                _myRoutines.value = routines
+                // 로컬에서 우선순위에 따라 정렬
+                val sortedRoutines = routines.sortedWith(
+                    compareByDescending<Routine> { it.scheduledTime == null }
+                        .thenBy { it.scheduledTime ?: java.time.LocalTime.MAX }
+                )
+                
+                Log.d(TAG, "🔄 로컬 정렬 완료: 시간 미설정 루틴 ${sortedRoutines.count { it.scheduledTime == null }}개, 시간 설정 루틴 ${sortedRoutines.count { it.scheduledTime != null }}개")
+                
+                _myRoutines.value = sortedRoutines
                 Log.d(TAG, "✅ _myRoutines StateFlow 업데이트 완료")
             }
             .onFailure { e ->
