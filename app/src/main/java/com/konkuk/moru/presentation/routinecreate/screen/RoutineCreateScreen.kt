@@ -52,7 +52,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.ImageChoiceOptionButtonScreen
@@ -109,7 +108,7 @@ fun RoutineCreateScreen(
             cameraImageUriState.value = uri
             takePictureLauncher.launch(uri)
         } else {
-            // 권한 거부 시: 따로 안내 필요하면 스낵바/토스트 등 처리
+            // 권한 거부 시 안내 필요하면 스낵바/토스트 등 처리
         }
     }
 
@@ -119,32 +118,19 @@ fun RoutineCreateScreen(
         viewModel.imageUri.value = uri
     }
 
-    // 상단 선언부
-    val imageUriState = remember { mutableStateOf<Uri?>(null) }
-    //val appList = remember { mutableStateListOf(UsedAppInRoutine("YouTube", "https://www.youtube.com/logo.png")) }
     val stepListScrollState = rememberLazyListState()
 
-    val isSubmitEnabled =
-        viewModel.routineTitle.value.isNotBlank() &&
-                viewModel.tagList.isNotEmpty() && (
-                        (viewModel.isFocusingRoutine.value && viewModel.stepList.any { it.title.isNotBlank() && it.time.isNotBlank() })
-                                || (!viewModel.isFocusingRoutine.value && viewModel.stepList.any { it.title.isNotBlank() }))
-    //val isSubmitEnabled = true
+    // [변경] 단순 불린 → 검증 객체로 변경
+    val isSubmitting by viewModel.isSubmitting
+    val submitError by viewModel.submitError
+    val validation = viewModel.validateForSubmit() // [변경] 검증 결과
+    val isSubmitEnabled = validation.isValid && !isSubmitting // [변경]
 
     // 사용앱 바텀시트 관련
     val coroutineScope = rememberCoroutineScope()
     var isBottomSheetOpen by remember { mutableStateOf(false) }
     val allApps = viewModel.appList
     val selectedAppList = viewModel.selectedAppList
-    // 개발용 임시 리스트
-//    val dummyBitmap = createBitmap(64, 64).apply {
-//        eraseColor(0xFFF1F3F5.toInt())
-//    }.asImageBitmap()
-//    val selectedAppList = listOf<UsedAppInRoutine>(
-//        UsedAppInRoutine("YouTube", dummyBitmap),
-//        UsedAppInRoutine("Instagram", dummyBitmap),
-//        UsedAppInRoutine("Twitter", dummyBitmap)
-//    )
 
     LaunchedEffect(Unit) {
         viewModel.loadInstalledApps(context)
@@ -161,8 +147,6 @@ fun RoutineCreateScreen(
             }
     }
 
-    val isSubmitting by viewModel.isSubmitting
-    val submitError by viewModel.submitError
     LaunchedEffect(viewModel.createdRoutineId.value) {
         viewModel.createdRoutineId.value?.let {
             Log.d("createroutine", "navigate back after success id=$it")
@@ -231,10 +215,11 @@ fun RoutineCreateScreen(
                         )
                         Spacer(modifier = Modifier.width(15.dp))
                         Column(modifier = Modifier.weight(1f)) {
+                            // [변경] 제목 10자 제한
                             BasicTextField(
                                 value = viewModel.routineTitle.value,
                                 onValueChange = {
-                                    if (it.length <= 30) viewModel.updateTitle(it) // 최대 30자
+                                    if (it.length <= 10) viewModel.updateTitle(it) // [변경]
                                 },
                                 textStyle = typography.title_B_24,
                                 modifier = Modifier.fillMaxWidth(),
@@ -267,18 +252,17 @@ fun RoutineCreateScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .weight(1f),
-                                onValueChange = { viewModel.updateDescription(it) }
+                                onValueChange = { viewModel.updateDescription(it) } // [변경] 내부에서 32자 컷
                             )
                         }
                     }
                 }
 
                 item {
-                    // 태그 추가 버튼
+                    // 태그 추가 버튼/리스트
                     MyRoutineTagInCreateRoutine(
                         tagList = tagList,
                         onAddTag = {
-                            // [변경] 임시 태그 추가 → 검색 화면으로 이동
                             navController.navigate(Route.RoutineSearch.route)
                         },
                         onDeleteTag = { tag ->
@@ -290,7 +274,7 @@ fun RoutineCreateScreen(
                 item { Text("STEP", style = typography.title_B_20) }
                 itemsIndexed(
                     items = stepList,
-                    key = { index, step -> step.id } // id 유지해도 되고 index로 써도 무방
+                    key = { index, step -> step.id }
                 ) { index, step ->
                     StepItem(
                         title = step.title,
@@ -306,7 +290,7 @@ fun RoutineCreateScreen(
                     )
                 }
 
-                item { AddStepButton { viewModel.addStep() } }
+                item { AddStepButton { viewModel.addStep() } } // [변경] VM에서 6개 제한
 
                 item { Spacer(modifier = Modifier.height(24.dp)) }
             }
@@ -330,17 +314,21 @@ fun RoutineCreateScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(80.dp)
-                    .background(if (isSubmitEnabled && !isSubmitting) colors.limeGreen else colors.lightGray)
+                    .background(if (isSubmitEnabled) colors.limeGreen else colors.lightGray)
                     .clickable(
-                        enabled = isSubmitEnabled && !isSubmitting,
+                        enabled = isSubmitEnabled,
                         indication = null,
                         interactionSource = null
                     ) {
                         Log.d(
                             "createroutine",
                             "click submit enabled=$isSubmitEnabled isSubmitting=$isSubmitting " +
-                                    "title='${viewModel.routineTitle.value}' tags=${tagList.size} steps=${stepList.size} apps=${selectedAppList.size}"
+                                    "title='${viewModel.routineTitle.value}' tags=${tagList.size} steps=${stepList.size} apps=${selectedAppList.size} reason=${validation.reason}"
                         )
+                        if (!validation.isValid) {
+                            // TODO: 스낵바 등 UI 안내 필요 시 연결
+                            return@clickable
+                        }
                         val imageKey: String? = null
                         viewModel.createRoutine(imageKey)
                     },
@@ -362,7 +350,6 @@ fun RoutineCreateScreen(
                     isImageOptionVisible = false
                 },
                 onCameraSelected = {
-                    // [변경] 실제 카메라 촬영 동작
                     val permission = Manifest.permission.CAMERA
                     val isGranted = ContextCompat.checkSelfPermission(
                         context, permission
@@ -392,8 +379,8 @@ fun RoutineCreateScreen(
                 onDismiss = { isTimePickerVisible = false }
             )
         }
-
     }
+
     DraggableAppSearchBottomSheet(
         isVisible = isBottomSheetOpen,
         onDismiss = { isBottomSheetOpen = false },
