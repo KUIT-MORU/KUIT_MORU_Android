@@ -1,4 +1,4 @@
-package com.konkuk.moru.presentation.routinecreate.component
+package com.konkuk.moru.core.component.routinedetail.durationpicker
 
 import android.view.HapticFeedbackConstants
 import android.widget.NumberPicker

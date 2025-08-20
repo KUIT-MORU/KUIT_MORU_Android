@@ -26,16 +26,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.konkuk.moru.core.component.button.MoruButton
 import com.konkuk.moru.core.component.routinedetail.MyRoutineTag
 import com.konkuk.moru.core.component.routinedetail.SelectUsedAppSection
+import com.konkuk.moru.core.component.routinedetail.durationpicker.DurationPickerDialog
 import com.konkuk.moru.data.model.RoutineStepActions
 import com.konkuk.moru.core.component.routinedetail.routineStepEditableList
 import com.konkuk.moru.presentation.myroutines.viewmodel.MyRoutineDetailViewModel
-import com.konkuk.moru.presentation.routinecreate.component.TimePickerDialog
 import com.konkuk.moru.presentation.routinefeed.component.modale.CenteredInfoDialog
 import com.konkuk.moru.presentation.routinefeed.component.modale.CustomDialog
 import com.konkuk.moru.ui.theme.MORUTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-
 
 @Composable
 fun MyRoutineDetailContent(
@@ -195,7 +194,7 @@ fun MyRoutineDetailContent(
     if (isTimePickerVisible) {
         val init =
             editingStepIndex?.let { idx -> routine.steps.getOrNull(idx)?.duration } // "HH:MM:SS"
-        TimePickerDialog(
+        DurationPickerDialog(
             initialTime = init,
             onConfirm = { h, m, s ->
                 val hh = "%02d".format(h)
@@ -203,7 +202,7 @@ fun MyRoutineDetailContent(
                 val ss = "%02d".format(s)
                 val newDuration = "$hh:$mm:$ss"
                 editingStepIndex?.let { idx ->
-                    viewModel.updateStepDuration(idx, newDuration) // [추가]
+                    viewModel.updateStepDuration(idx, newDuration)
                 }
                 isTimePickerVisible = false
                 editingStepIndex = null

@@ -61,9 +61,9 @@ import com.konkuk.moru.core.component.routinedetail.RoutineDescriptionField
 import com.konkuk.moru.core.component.routinedetail.RoutineImageSelectBox
 import com.konkuk.moru.core.component.routinedetail.SelectUsedAppSection
 import com.konkuk.moru.core.component.routinedetail.ShowUserCheckbox
+import com.konkuk.moru.core.component.routinedetail.durationpicker.DurationPickerDialog
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.routinecreate.component.StepItem
-import com.konkuk.moru.presentation.routinecreate.component.DurationPickerDialog
 import com.konkuk.moru.presentation.routinecreate.viewmodel.RoutineCreateViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
