@@ -54,6 +54,11 @@ fun AuthCheckScreen(navController: NavController) {
             val isLoggedIn = LoginPreference.isLoggedIn(context).first()
             val isOnboarded = OnboardingPreference.isOnboardingComplete(context).first()
 
+            Log.d("AuthCheckScreen", "🔍 인증 상태 확인: isLoggedIn=$isLoggedIn, isOnboarded=$isOnboarded")
+            if (isLoggedIn && !isOnboarded) {
+                Log.w("AuthCheckScreen", "⚠️ 로그인은 되었으나 OnboardingPreference=false 입니다. 로그인 시 server isOnboarding 반영 여부를 확인하세요.")
+            }
+
             Log.d("AuthCheckScreen", "🔍 인증 상태 확인:")
             Log.d("AuthCheckScreen", "   - isLoggedIn: $isLoggedIn")
             Log.d("AuthCheckScreen", "   - isOnboarded: $isOnboarded")

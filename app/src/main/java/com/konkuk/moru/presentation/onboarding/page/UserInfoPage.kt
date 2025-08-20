@@ -62,7 +62,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 fun UserInfoPage(
     onNext: () -> Unit,
 //    viewModel: OnboardingViewModel? = null,
-    viewModel: OnboardingViewModel = hiltViewModel()
+    viewModel: OnboardingViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -104,7 +104,7 @@ fun UserInfoPage(
     ) { uri ->
         if (uri != null) {
             selectedImageUri = uri
-            viewModel.uploadProfileImageFromUri(context, uri)
+            viewModel?.uploadProfileImageFromUri(context, uri)
         }
         isImageOptionVisible = false
     }
@@ -118,7 +118,7 @@ fun UserInfoPage(
     ) { success ->
         if (success && cameraTempUri != null) {
             selectedImageUri = cameraTempUri
-            viewModel.uploadProfileImageFromUri(context, cameraTempUri!!)
+            viewModel?.uploadProfileImageFromUri(context, cameraTempUri!!)
         }
         isImageOptionVisible = false
     }

@@ -7,6 +7,8 @@ import com.konkuk.moru.BuildConfig
 import com.konkuk.moru.data.interceptor.AuthInterceptor
 import com.konkuk.moru.data.interceptor.TokenAuthenticator
 import com.konkuk.moru.data.service.AuthService
+import com.konkuk.moru.data.service.CRImageService
+import com.konkuk.moru.data.service.CreateRoutineService
 import com.konkuk.moru.data.service.FcmService
 import com.konkuk.moru.data.service.ImageService
 import com.konkuk.moru.data.service.InsightService
@@ -34,10 +36,21 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 import javax.inject.Named
+import kotlin.jvm.java
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+
+    @Provides
+    @Singleton
+    @Named("contentTypeInspector")
+    fun provideContentTypeInspector(): Interceptor = Interceptor { chain ->
+        val req = chain.request()
+        val contentType = req.body?.contentType()
+        android.util.Log.d("createroutine", "[ct] body.contentType=${contentType?.toString()}")
+        chain.proceed(req)
+    }
 
     @Provides
     @Singleton
@@ -139,16 +152,33 @@ object NetworkModule {
     @Singleton
     fun provideAuthInterceptor(authInterceptor: AuthInterceptor): Interceptor = authInterceptor
 
+    //    @Provides
+//    @Singleton
+//    fun provideOkHttpClient(
+//        authInterceptor: Interceptor,
+//        tokenAuthenticator: TokenAuthenticator,
+//        loggingInterceptor: HttpLoggingInterceptor
+//    ): OkHttpClient =
+//        UnsafeHttpClient.getUnsafeOkHttpClient().newBuilder()
+//            .addInterceptor(authInterceptor)
+//            .addInterceptor(loggingInterceptor)
+//            .authenticator(tokenAuthenticator)
+//            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+//            .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+//            .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+//            .build()
     @Provides
     @Singleton
     fun provideOkHttpClient(
         authInterceptor: Interceptor,
         tokenAuthenticator: TokenAuthenticator,
-        loggingInterceptor: HttpLoggingInterceptor
+        loggingInterceptor: HttpLoggingInterceptor,
+        @Named("contentTypeInspector") ctInspector: Interceptor // <-- add
     ): OkHttpClient =
         UnsafeHttpClient.getUnsafeOkHttpClient().newBuilder()
             .addInterceptor(authInterceptor)
-            .addInterceptor(loggingInterceptor)
+            .addInterceptor(ctInspector) // <-- add: Content-Type 확인
+            .addInterceptor(loggingInterceptor) // BODY 레벨이면 실제 JSON도 찍힘
             .authenticator(tokenAuthenticator)
             .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
             .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
@@ -247,5 +277,18 @@ object NetworkModule {
     fun provideAuthService(
         @Named("gsonRetrofit") retrofitGson: Retrofit
     ): AuthService = retrofitGson.create(AuthService::class.java)
+
+
+    @Provides
+    @Singleton
+    fun provideCreateRoutineService(
+        @Named("gsonRetrofit") retrofit: Retrofit
+    ): CreateRoutineService = retrofit.create(CreateRoutineService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideCRImageService(
+        @Named("gsonRetrofit") retrofit: Retrofit
+    ): CRImageService = retrofit.create(CRImageService::class.java)
 
 }

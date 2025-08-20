@@ -1,6 +1,8 @@
 package com.konkuk.moru.di
 
 import com.konkuk.moru.data.repositoryimpl.AuthRepositoryImpl
+import com.konkuk.moru.data.repositoryimpl.CRImageRepositoryImpl
+import com.konkuk.moru.data.repositoryimpl.CreateRoutineRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.FcmRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.InsightRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.MyActRecordRepositoryImpl
@@ -14,6 +16,8 @@ import com.konkuk.moru.data.repositoryimpl.RoutineUserRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.SearchRepositoryImpl
 import com.konkuk.moru.data.repositoryimpl.SocialRepositoryImpl
 import com.konkuk.moru.domain.repository.AuthRepository
+import com.konkuk.moru.domain.repository.CRImageRepository
+import com.konkuk.moru.domain.repository.CreateRoutineRepository
 import com.konkuk.moru.domain.repository.FcmRepository
 import com.konkuk.moru.domain.repository.InsightRepository
 import com.konkuk.moru.domain.repository.MyActRecordRepository
@@ -76,4 +80,12 @@ abstract class RepositoryModule {
     abstract fun bindFcmRepository(
         fcmRepositoryImpl: FcmRepositoryImpl
     ): FcmRepository
+
+    @Binds @Singleton
+    abstract fun bindCreateRoutineRepository(
+        impl: CreateRoutineRepositoryImpl
+    ): CreateRoutineRepository
+
+    @Binds @Singleton
+    abstract fun bindCRImageRepository(impl: CRImageRepositoryImpl): CRImageRepository
 }

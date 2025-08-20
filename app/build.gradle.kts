@@ -72,6 +72,7 @@ dependencies {
     implementation(libs.androidx.room.compiler)
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.firebase.crashlytics.buildtools)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

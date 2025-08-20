@@ -22,7 +22,8 @@ ksp = "2.0.21-1.0.28"
 roomCompiler = "2.7.2"
 accompanistSystemuicontroller = "0.36.0"
 datastorePreferences = "1.1.7"
-google-gms-google-services = "4.4.2" # 이 버전이 없으면 추가
+google-gms-google-services = "4.4.2"
+firebaseCrashlyticsBuildtools = "3.0.6" # 이 버전이 없으면 추가
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -57,6 +58,7 @@ hilt-manager = {group = "androidx.hilt" , name = "hilt-compiler", version.ref = 
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomCompiler" }
 accompanist-systemuicontroller = { group = "com.google.accompanist", name = "accompanist-systemuicontroller", version.ref = "accompanistSystemuicontroller" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastorePreferences" }
+firebase-crashlytics-buildtools = { group = "com.google.firebase", name = "firebase-crashlytics-buildtools", version.ref = "firebaseCrashlyticsBuildtools" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

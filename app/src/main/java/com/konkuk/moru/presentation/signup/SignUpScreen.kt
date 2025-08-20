@@ -194,11 +194,6 @@ fun SignUpScreen(
                                 scope.launch {
                                     LoginPreference.setLoggedIn(context, true)
                                 }
-                                // 온보딩에서 활용할 가입 이메일 전달 (선택)  // [추가]
-//                                navController.currentBackStackEntry?.savedStateHandle?.set(
-//                                    "signupEmail",
-//                                    email
-//                                )
                                 showPopup = true
                             },
                             onFailure = { error ->
