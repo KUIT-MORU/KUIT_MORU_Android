@@ -137,9 +137,16 @@ fun LoginScreen(
                         email = email,
                         password = password,
                         context = context,
-                        onSuccess = {
-                            navController.navigate(Route.AuthCheck.route) {
-                                popUpTo(Route.Login.route) { inclusive = true }
+                        onSuccess = { isOnboarded -> // [변경] 시그니처 변경
+                            // [변경] 서버/로컬이 일치된 상태에서 곧바로 분기
+                            if (isOnboarded) {
+                                navController.navigate(Route.Main.route) {
+                                    popUpTo(Route.Login.route) { inclusive = true }
+                                }
+                            } else {
+                                navController.navigate(Route.Onboarding.route) {
+                                    popUpTo(Route.Login.route) { inclusive = true }
+                                }
                             }
                         },
                         onFailure = { error ->
