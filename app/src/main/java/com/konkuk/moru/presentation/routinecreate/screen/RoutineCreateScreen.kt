@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -50,6 +51,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.konkuk.moru.R
@@ -76,7 +78,7 @@ import java.io.File
 @Composable
 fun RoutineCreateScreen(
     navController: NavHostController,
-    viewModel: RoutineCreateViewModel = viewModel()
+    viewModel: RoutineCreateViewModel = hiltViewModel()
 ) {
     val focusManager = LocalFocusManager.current
     val isFocusingRoutine by viewModel.isFocusingRoutine
@@ -152,9 +154,18 @@ fun RoutineCreateScreen(
             ?.collect { result ->
                 if (result.isNotEmpty()) {
                     viewModel.addTags(result)
-                    handle["selectedTagsResult"] = emptyList<String>()   // ← [중요] 재수신 방지 초기화
+                    handle["selectedTagsResult"] = emptyList<String>()
                 }
             }
+    }
+
+    val isSubmitting by viewModel.isSubmitting
+    val submitError by viewModel.submitError
+    LaunchedEffect(viewModel.createdRoutineId.value) {
+        viewModel.createdRoutineId.value?.let {
+            Log.d("createroutine", "navigate back after success id=$it")
+            navController.popBackStack()
+        }
     }
 
     Box(
@@ -320,21 +331,21 @@ fun RoutineCreateScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(80.dp)
-                    .background(if (isSubmitEnabled) colors.limeGreen else colors.lightGray)
+                    .background(if (isSubmitEnabled && !isSubmitting) colors.limeGreen else colors.lightGray)
                     .clickable(
-                        enabled = isSubmitEnabled,
+                        enabled = isSubmitEnabled && !isSubmitting,
                         indication = null,
                         interactionSource = null
                     ) {
-                        // TODO: 이미지 업로드하여 imageKey 획득 필요
-                        val imageKey: String? = null // [임시] 서버 업로드 연동 후 실제 키로 치환
-                        viewModel.submitRoutine(imageKey) // [변경] DTO 생성/로그
-                        navController.popBackStack()
+                        Log.d("createroutine", "click submit enabled=$isSubmitEnabled isSubmitting=$isSubmitting " +
+                                "title='${viewModel.routineTitle.value}' tags=${tagList.size} steps=${stepList.size} apps=${selectedAppList.size}")
+                        val imageKey: String? = null
+                        viewModel.createRoutine(imageKey)
                     },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "완료하기",
+                    if (isSubmitting) "생성 중..." else "완료하기",
                     style = typography.body_SB_16,
                     color = if (isSubmitEnabled) colors.black else colors.darkGray
                 )

@@ -14,29 +14,27 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.konkuk.moru.data.model.Step
 import com.konkuk.moru.data.model.UsedAppInRoutine
 import androidx.core.graphics.createBitmap
+import com.konkuk.moru.data.dto.request.CreateRoutineRequest
+import com.konkuk.moru.data.dto.request.StepDto
+import com.konkuk.moru.domain.repository.CRImageRepository
+import com.konkuk.moru.domain.repository.CreateRoutineRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import kotlinx.coroutines.launch
+import java.io.File
+import java.util.UUID
 
-// [유지] 서버 DTO들
-data class CreateRoutineRequest(
-    val title: String,
-    val imageKey: String?,
-    val tags: List<String>,
-    val description: String,
-    val steps: List<StepDto>,
-    val selectedApps: List<String>,
-    val isSimple: Boolean,
-    val isUserVisible: Boolean
-)
-
-data class StepDto(
-    val name: String,
-    val stepOrder: Int,
-    val estimatedTime: String // ISO-8601 duration
-)
-
-class RoutineCreateViewModel : ViewModel() {
+@HiltViewModel
+class RoutineCreateViewModel @Inject constructor(
+    private val createRoutineRepository: CreateRoutineRepository,
+    private val crImageRepository: CRImageRepository,
+    @ApplicationContext private val appContext: Context
+) : ViewModel() {
 
     val imageUri = mutableStateOf<Uri?>(null)
     val showUser = mutableStateOf(true)
@@ -48,6 +46,11 @@ class RoutineCreateViewModel : ViewModel() {
     val editingStepId = mutableStateOf<String?>(null)
     val appList = mutableStateListOf<UsedAppInRoutine>()
     val selectedAppList = mutableStateListOf<UsedAppInRoutine>()
+
+    // [추가] UI 상태
+    val isSubmitting = mutableStateOf(false)
+    val submitError = mutableStateOf<String?>(null)
+    val createdRoutineId = mutableStateOf<String?>(null)
 
     fun updateTitle(title: String) {
         routineTitle.value = title
@@ -70,7 +73,6 @@ class RoutineCreateViewModel : ViewModel() {
     }
 
     fun addTags(tags: List<String>) {
-        // 해시(#) 제거 및 공백 트리밍으로 정규화
         val normalized = tags.map { it.removePrefix("#").trim() }
             .filter { it.isNotBlank() }
 
@@ -112,7 +114,7 @@ class RoutineCreateViewModel : ViewModel() {
         return stepList.find { it.id == id }?.time
     }
 
-    // [유지] HH:MM:SS → PT#H#M#S 변환
+    // HH:MM:SS → PT#H#M#S 변환
     private fun String.toIsoDuration(): String {
         val parts = split(":")
         val h = parts.getOrNull(0)?.toIntOrNull() ?: 0
@@ -147,8 +149,6 @@ class RoutineCreateViewModel : ViewModel() {
             try {
                 val label = pm.getApplicationLabel(appInfo).toString()
                 val drawable = pm.getApplicationIcon(appInfo)
-
-                // [유지] 어떤 Drawable이 와도 안전하게 비트맵 변환
                 val bitmap = drawableToBitmap(drawable)
                 val imageBitmap = bitmap.asImageBitmap()
                 val pkg = appInfo.packageName
@@ -175,18 +175,17 @@ class RoutineCreateViewModel : ViewModel() {
                     drawable.intrinsicWidth.coerceAtLeast(1),
                     drawable.intrinsicHeight.coerceAtLeast(1)
                 )
-                val canvas = Canvas(bmp) // [중요] android.graphics.Canvas 사용
+                val canvas = Canvas(bmp)
                 drawable.setBounds(0, 0, canvas.width, canvas.height)
                 drawable.draw(canvas)
                 bmp
             }
-
             else -> {
                 val bmp = createBitmap(
                     drawable.intrinsicWidth.coerceAtLeast(1),
                     drawable.intrinsicHeight.coerceAtLeast(1)
                 )
-                val canvas = Canvas(bmp) // [중요] android.graphics.Canvas 사용
+                val canvas = Canvas(bmp)
                 drawable.setBounds(0, 0, canvas.width, canvas.height)
                 drawable.draw(canvas)
                 bmp
@@ -201,10 +200,10 @@ class RoutineCreateViewModel : ViewModel() {
     }
 
     fun removeAppFromSelected(app: UsedAppInRoutine) {
-        selectedAppList.removeAll { it.packageName == app.packageName } // [변경] 패키지 기준
+        selectedAppList.removeAll { it.packageName == app.packageName } // 패키지 기준
     }
 
-    // [유지] 서버 전송용 DTO 생성기
+    // 서버 전송용 DTO 생성기 (기존 유지)
     fun buildCreateRoutineRequest(imageKey: String?): CreateRoutineRequest {
         val stepsDto = stepList.mapIndexed { idx, step ->
             StepDto(
@@ -219,16 +218,67 @@ class RoutineCreateViewModel : ViewModel() {
             tags = tagList.toList(),
             description = routineDescription.value,
             steps = stepsDto,
-            selectedApps = selectedAppList.map { it.packageName }, // [중요 변경]
-            isSimple = !isFocusingRoutine.value, // [중요 매핑]
+            selectedApps = selectedAppList.map { it.packageName },
+            isSimple = !isFocusingRoutine.value,
             isUserVisible = showUser.value
         )
     }
 
+    private val TAG = "createroutine"
+    fun createRoutine(imageKey: String?) {
+        val trace = UUID.randomUUID().toString().take(8)
+
+        viewModelScope.launch {
+            submitError.value = null
+            isSubmitting.value = true
+
+            // [추가] 이미지 업로드 (있으면) → imageKey 얻기
+            val finalImageKey = try {
+                val localUri = imageUri.value
+                if (localUri != null) {
+                    Log.d(TAG, "[$trace] try upload image uri=$localUri")
+                    val file = copyUriToCache(localUri) // [추가]
+                    val key = crImageRepository.uploadImage(file).getOrThrow() // [추가]
+                    Log.d(TAG, "[$trace] image uploaded. key=$key name=${file.name} size=${file.length()}")
+                    key
+                } else {
+                    imageKey // 그대로 사용(null 가능)
+                }
+            } catch (e: Exception) {
+                Log.d(TAG, "[$trace] image upload failed: ${e.message}")
+                Log.d(TAG, Log.getStackTraceString(e))
+                null // 업로드 실패 시 이미지 없이 진행(서버가 필수라면 400로 확인 가능)
+            }
+
+            val req = buildCreateRoutineRequest(finalImageKey)
+            Log.d(TAG, "[$trace] vm request(final)=$req")
+
+            val result = createRoutineRepository.createRoutine(req)
+            isSubmitting.value = false
+            result
+                .onSuccess { resp ->
+                    Log.d(TAG, "[$trace] vm success id=${resp.id} createdAt=${resp.createdAt}")
+                    createdRoutineId.value = resp.id
+                }
+                .onFailure { e ->
+                    Log.d(TAG, "[$trace] vm failure ${e::class.java.simpleName}: ${e.message}")
+                    Log.d(TAG, Log.getStackTraceString(e))
+                    submitError.value = e.message ?: "루틴 생성에 실패했어요."
+                }
+        }
+    }
+
+    // [추가] content:// URI → 캐시 파일 복사
+    private fun copyUriToCache(uri: Uri): File {
+        val ctx = appContext // ← 아래 전체 코드에 Application 전달 주입 추가
+        val file = File.createTempFile("moru_upload_", ".jpg", ctx.cacheDir)
+        ctx.contentResolver.openInputStream(uri).use { inS ->
+            file.outputStream().use { outS -> inS!!.copyTo(outS) }
+        }
+        return file
+    }
+
     fun submitRoutine(imageKey: String?) {
-        val req = buildCreateRoutineRequest(imageKey)
-        Log.d("RoutineCreate", "CreateRoutineRequest → $req")
-        Log.d("RoutineCreate", "이미지 URI(Local): ${imageUri.value?.toString()}")
-        // TODO: Repository.createRoutine(req) 호출로 네트워크 연결
+        createRoutine(imageKey)
     }
 }
