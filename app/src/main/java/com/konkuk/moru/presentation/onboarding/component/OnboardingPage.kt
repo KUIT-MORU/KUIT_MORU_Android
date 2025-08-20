@@ -11,7 +11,7 @@ import com.konkuk.moru.presentation.onboarding.page.TagSelectionPage
 import com.konkuk.moru.presentation.onboarding.page.UserInfoPage
 
 @Composable
-fun OnboardingPage(page: Int, onNext: () -> Unit, viewModel: OnboardingViewModel) {
+fun OnboardingPage(page: Int, onNext: () -> Unit) {
     when (page) {
         0 -> UserInfoPage(onNext = onNext)
         1 -> InfoPage1(onNext = onNext)
@@ -19,7 +19,7 @@ fun OnboardingPage(page: Int, onNext: () -> Unit, viewModel: OnboardingViewModel
         3 -> InfoPage2(onNext = onNext)
         4 -> PermissionPage(onNext = onNext)
         5 -> InfoPage3(onNext = onNext)
-        6 -> FinalPage(onNext = onNext, viewModel = viewModel)
+        6 -> FinalPage(onNext = onNext)
         else -> throw IllegalArgumentException("Invalid page number: $page")
     }
 }
