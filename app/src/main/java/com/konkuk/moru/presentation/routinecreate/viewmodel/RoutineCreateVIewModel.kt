@@ -42,18 +42,20 @@ class RoutineCreateViewModel @Inject constructor(
     val routineTitle = mutableStateOf("")
     val routineDescription = mutableStateOf("")
     val tagList = mutableStateListOf<String>()
-    val stepList = mutableStateListOf(StepUi())
+    // [변경] 기본 3개
+    val stepList = mutableStateListOf(StepUi(), StepUi(), StepUi())
     val editingStepIndex = mutableStateOf<Int?>(null)
     val appList = mutableStateListOf<UsedAppInRoutine>()
-    val selectedAppList = mutableStateListOf<UsedAppInRoutine>()
+    val selectedAppList = mutableStateListOf<UsedAppInRoutine>() // 최대 4개 (UI/로직에서 제한)
 
-    // [추가] UI 상태
+    // UI 상태
     val isSubmitting = mutableStateOf(false)
     val submitError = mutableStateOf<String?>(null)
     val createdRoutineId = mutableStateOf<String?>(null)
 
+    // [변경] 제목 10자 컷
     fun updateTitle(title: String) {
-        routineTitle.value = title
+        routineTitle.value = title.take(10)
     }
 
     fun toggleShowUser() {
@@ -64,17 +66,22 @@ class RoutineCreateViewModel @Inject constructor(
         isFocusingRoutine.value = !isFocusingRoutine.value
     }
 
+    // [변경] 설명 32자 컷
     fun updateDescription(desc: String) {
-        routineDescription.value = desc
+        routineDescription.value = desc.take(32)
     }
 
+    // [변경] 태그: 1~3개, 각 태그 ≤ 5자
     fun addTag(tag: String) {
-        tagList.add(tag) // TODO: 중복 체크 로직 추가 필요
+        val t = tag.removePrefix("#").trim()
+        if (t.isNotBlank() && t.length <= 5 && tagList.size < 3 && !tagList.contains(t)) {
+            tagList.add(t)
+        }
     }
 
     fun addTags(tags: List<String>) {
         val normalized = tags.map { it.removePrefix("#").trim() }
-            .filter { it.isNotBlank() }
+            .filter { it.isNotBlank() && it.length <= 5 }
 
         normalized.forEach { t ->
             if (!tagList.contains(t) && tagList.size < 3) {
@@ -94,12 +101,14 @@ class RoutineCreateViewModel @Inject constructor(
     fun getEditingStepTime(): String? =
         editingStepIndex.value?.let { idx -> stepList.getOrNull(idx)?.time }
 
+    // [변경] 최대 6개
     fun addStep() {
-        stepList.add(StepUi())
+        if (stepList.size < 6) stepList.add(StepUi())
     }
 
+    // [변경] 최소 3개 유지
     fun removeStep(index: Int) {
-        if (index in stepList.indices) stepList.removeAt(index)
+        if (stepList.size > 3 && index in stepList.indices) stepList.removeAt(index)
     }
 
     fun updateStepTitle(index: Int, newTitle: String) {
@@ -115,14 +124,6 @@ class RoutineCreateViewModel @Inject constructor(
         val formatted = String.format("%02d:%02d:%02d", hour, minute, second)
         stepList[i] = stepList[i].copy(time = formatted)
     }
-
-//    private fun reassignStepOrders() {
-//        stepList.forEachIndexed { i, s ->
-//            if (s.stepOrder != i + 1) {
-//                stepList[i] = s.copy(stepOrder = i + 1)
-//            }
-//        }
-//    }
 
     // ---- 시간 변환 유틸 ----
     private fun hmsToIso(h: Int, m: Int, s: Int): String {
@@ -144,7 +145,6 @@ class RoutineCreateViewModel @Inject constructor(
         null
     }
 
-    // HH:MM:SS -> ISO-8601 (PT#H#M#S)
     private fun String.toIsoDuration(): String {
         val p = split(":")
         val h = p.getOrNull(0)?.toIntOrNull() ?: 0
@@ -200,7 +200,6 @@ class RoutineCreateViewModel @Inject constructor(
                 drawable.draw(canvas)
                 bmp
             }
-
             else -> {
                 val bmp = createBitmap(
                     drawable.intrinsicWidth.coerceAtLeast(1),
@@ -214,6 +213,7 @@ class RoutineCreateViewModel @Inject constructor(
         }
     }
 
+    // 앱은 최대 4개
     fun addAppToSelected(app: UsedAppInRoutine) {
         if (selectedAppList.none { it.packageName == app.packageName } && selectedAppList.size < 4) {
             selectedAppList.add(app)
@@ -221,50 +221,72 @@ class RoutineCreateViewModel @Inject constructor(
     }
 
     fun removeAppFromSelected(app: UsedAppInRoutine) {
-        selectedAppList.removeAll { it.packageName == app.packageName } // 패키지 기준
+        selectedAppList.removeAll { it.packageName == app.packageName }
+    }
+
+    fun validateForSubmit(): String? {
+        // 1) 제목: 1~10자
+        val title = routineTitle.value
+        if (title.isBlank() || title.length > 10) return "제목은 1~10자여야 해요."
+
+        // 2) 태그: 1~3개, 각 1~5자
+        val tags = tagList
+        if (tags.isEmpty()) return "태그를 최소 1개 선택해 주세요."
+        if (tags.size !in 1..3) return "태그는 1~3개까지만 선택할 수 있어요."
+        if (tags.any { it.isBlank() || it.length > 5 }) return "각 태그 길이는 최대 5자예요."
+
+        // 3) 설명: 최대 32자
+        if (routineDescription.value.length > 32) return "설명은 최대 32자까지 입력할 수 있어요."
+
+        // 4) STEP: 3~6개, 제목 필수
+        val steps = stepList
+        if (steps.size !in 3..6) return "STEP은 3~6개여야 해요."
+        if (steps.any { it.title.isBlank() }) return "모든 STEP에 제목을 입력해 주세요."
+
+        // 5) 집중 루틴일 때: 각 STEP 시간 필수, 사용 앱 최대 4개
+        if (isFocusingRoutine.value) {
+            if (steps.any { it.time.isBlank() }) return "집중 루틴은 각 STEP의 소요시간이 필요해요."
+            if (selectedAppList.size > 4) return "사용 앱은 최대 4개까지 선택할 수 있어요."
+        }
+
+        // 모두 통과
+        return null
     }
 
     // ---- 서버 전송 DTO 빌드 ----
+    // [변경] 간편/집중 모두 steps 포함(3~6개). 간편의 시간은 PT0S로 전송.
     fun buildCreateRoutineRequest(imageKey: String?): CreateRoutineRequest {
-        val simple = !isFocusingRoutine.value
+        val focusing = isFocusingRoutine.value
 
-        // 1) steps payload
-        val stepsPayload: List<StepDto>? =
-            if (simple) {
-                // ✅ 간편 루틴: steps 필드 자체를 생략해야 하므로 null
-                null
-            } else {
-                // 집중 루틴: 시간 규칙 준수 (비었으면 PT0S, 있으면 HH:MM:SS -> PT#H#M#S)
-                stepList.mapIndexed { idx, step ->
-                    val timeIso: String =
+        val stepsPayload: List<StepDto> =
+            stepList.mapIndexed { idx, step ->
+                val timeIso: String =
+                    if (focusing) {
                         if (step.time.isBlank()) "PT0S" else step.time.toIsoDuration()
-                    Log.d(
-                        "createroutine",
-                        "[build] step idx=${idx + 1} title='${step.title}' time='${step.time}' -> iso=$timeIso simple=$simple"
-                    )
-                    StepDto(
-                        name = step.title,
-                        stepOrder = idx + 1,
-                        estimatedTime = timeIso
-                    )
-                }
+                    } else {
+                        "PT0S"
+                    }
+                Log.d(
+                    "createroutine",
+                    "[build] step idx=${idx + 1} title='${step.title}' time='${step.time}' -> iso=$timeIso focusing=$focusing"
+                )
+                StepDto(
+                    name = step.title,
+                    stepOrder = idx + 1,
+                    estimatedTime = timeIso
+                )
             }
 
-        // 2) selectedApps payload
-        val appsPayload: List<String>? =
-            if (simple) {
-                // ✅ 간편 루틴: selectedApps 필드 자체 생략
-                null
-            } else {
-                // 집중 루틴: 선택 앱이 없으면 빈 배열로 보냄([]) — 서버가 허용
+        val appsPayload: List<String> =
+            if (focusing) {
                 selectedAppList.map { it.packageName }
+            } else {
+                emptyList()
             }
 
         Log.d(
             "createroutine",
-            "[build] final isSimple=$simple steps=${stepsPayload?.size ?: 0}(null means omitted) " +
-                    "anyTimeSent=${stepsPayload?.any { it.estimatedTime != null } ?: false} " +
-                    "apps=${appsPayload?.size ?: 0}(null means omitted)"
+            "[build] final focusing=$focusing steps=${stepsPayload.size} apps=${appsPayload.size}"
         )
 
         return CreateRoutineRequest(
@@ -272,13 +294,12 @@ class RoutineCreateViewModel @Inject constructor(
             imageKey = imageKey,
             tags = tagList.toList(),
             description = routineDescription.value,
-            steps = stepsPayload,          // ✅ 간편이면 null → JSON에서 아예 빠짐
-            selectedApps = appsPayload,    // ✅ 간편이면 null → JSON에서 아예 빠짐
-            isSimple = simple,
+            steps = stepsPayload,          // [변경]
+            selectedApps = appsPayload,    // [변경]
+            isSimple = !focusing,
             isUserVisible = showUser.value
         )
     }
-
 
     private val TAG = "createroutine"
     fun createRoutine(imageKey: String?) {
@@ -288,25 +309,21 @@ class RoutineCreateViewModel @Inject constructor(
             submitError.value = null
             isSubmitting.value = true
 
-            // [추가] 이미지 업로드 (있으면) → imageKey 얻기
             val finalImageKey = try {
                 val localUri = imageUri.value
                 if (localUri != null) {
                     Log.d(TAG, "[$trace] try upload image uri=$localUri")
-                    val file = copyUriToCache(localUri) // [추가]
-                    val key = crImageRepository.uploadImage(file).getOrThrow() // [추가]
-                    Log.d(
-                        TAG,
-                        "[$trace] image uploaded. key=$key name=${file.name} size=${file.length()}"
-                    )
+                    val file = copyUriToCache(localUri)
+                    val key = crImageRepository.uploadImage(file).getOrThrow()
+                    Log.d(TAG, "[$trace] image uploaded. key=$key name=${file.name} size=${file.length()}")
                     key
                 } else {
-                    imageKey // 그대로 사용(null 가능)
+                    imageKey
                 }
             } catch (e: Exception) {
                 Log.d(TAG, "[$trace] image upload failed: ${e.message}")
                 Log.d(TAG, Log.getStackTraceString(e))
-                null // 업로드 실패 시 이미지 없이 진행(서버가 필수라면 400로 확인 가능)
+                imageKey
             }
 
             val req = buildCreateRoutineRequest(finalImageKey)
@@ -327,9 +344,9 @@ class RoutineCreateViewModel @Inject constructor(
         }
     }
 
-    // [추가] content:// URI → 캐시 파일 복사
+    // content:// URI → 캐시 파일 복사
     private fun copyUriToCache(uri: Uri): File {
-        val ctx = appContext // ← 아래 전체 코드에 Application 전달 주입 추가
+        val ctx = appContext
         val file = File.createTempFile("moru_upload_", ".jpg", ctx.cacheDir)
         ctx.contentResolver.openInputStream(uri).use { inS ->
             file.outputStream().use { outS -> inS!!.copyTo(outS) }

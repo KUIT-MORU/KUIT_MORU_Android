@@ -27,6 +27,7 @@ class CreateRoutineRepositoryImpl @Inject constructor(
             Log.d(TAG, "[$trace] request json=${gson.toJson(body)}")
 
             val res = service.createRoutine(body)
+
             val parsed = ErrorBodyParser.parse(res.errorBody())
             if (parsed != null) {
                 Log.d(TAG, "[$trace] parsedError status=${parsed.status} code=${parsed.code} message=${parsed.message} basicError=${parsed.error} path=${parsed.path}")
@@ -37,10 +38,11 @@ class CreateRoutineRepositoryImpl @Inject constructor(
             if (!res.isSuccessful) throw HttpException(res)
 
             val t1 = SystemClock.elapsedRealtime()
+            // ----- [추가] 성공/실패와 무관하게 Authorization 헤더 먼저 로깅 -----
             val rawReq = res.raw().request
-            Log.d(TAG, "[$trace] response time=${t1 - t0}ms")
             Log.d(TAG, "[$trace] http ${rawReq.method} ${rawReq.url}")
             Log.d(TAG, "[$trace] req headers: Authorization=${rawReq.header("Authorization")?.let { it.take(16) + "..." } ?: "null"}")
+            // --------------------------------------------------------------------
 
             if (!res.isSuccessful) {
                 // ❗ errorBody는 여기서 단 한번만 소비
