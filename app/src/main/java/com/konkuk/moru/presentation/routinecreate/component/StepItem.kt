@@ -15,7 +15,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -25,20 +24,31 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.konkuk.moru.R
-import com.konkuk.moru.data.model.Step
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
+/**
+ * 순수 UI용 Step 아이템
+ *
+ * @param title            현재 스텝 제목
+ * @param timeDisplay      "HH:mm:ss" 또는 "" (빈 문자열이면 '소요 시간' 플레이스홀더 표시)
+ * @param isFocusingRoutine true면 시간 필드 노출
+ * @param stepCount        리스트 총 개수(1개일 땐 삭제 아이콘 숨김)
+ * @param onTitleChange    제목 입력 변경 콜백
+ * @param onShowTimePicker 시간 클릭 시 호출(외부에서 다이얼 열기)
+ * @param onDelete         삭제 아이콘 클릭 시 호출
+ */
 @Composable
 fun StepItem(
-    step: Step,
+    title: String,
+    timeDisplay: String,
     isFocusingRoutine: Boolean,
+    stepCount: Int,
     onTitleChange: (String) -> Unit,
     onShowTimePicker: () -> Unit,
-    stepCount: Int,
-    onDelete: (stepId: String) -> Unit,
+    onDelete: () -> Unit
 ) {
-    var titleInput by remember(step.id) { mutableStateOf(step.title) }
+    var titleInput by remember(title) { mutableStateOf(title) }
 
     Column(
         modifier = Modifier
@@ -61,7 +71,7 @@ fun StepItem(
             )
             Spacer(modifier = Modifier.width(21.dp))
 
-            // 활동명 (기본 텍스트 or 입력 필드 전환)
+            // 활동명
             BasicTextField(
                 value = titleInput,
                 onValueChange = {
@@ -85,10 +95,10 @@ fun StepItem(
                 }
             )
 
-            // 소요 시간 (기본 텍스트, 클릭 시 다이얼 팝업)
+            // 소요 시간 (포커싱 루틴일 때만 노출)
             if (isFocusingRoutine) {
                 Text(
-                    text = if (step.time == "") "소요 시간" else step.time,
+                    text = if (timeDisplay.isBlank()) "소요 시간" else timeDisplay,
                     style = typography.body_SB_14,
                     color = colors.charcoalBlack,
                     modifier = Modifier
@@ -97,6 +107,7 @@ fun StepItem(
                 )
             }
 
+            // 삭제 아이콘 (스텝이 2개 이상일 때만)
             if (stepCount > 1) {
                 Spacer(modifier = Modifier.width(10.dp))
                 Icon(
@@ -104,7 +115,7 @@ fun StepItem(
                     contentDescription = "Step 삭제",
                     modifier = Modifier
                         .size(16.dp)
-                        .clickable { onDelete(step.id) },
+                        .clickable { onDelete() },
                     tint = colors.mediumGray
                 )
             } else {
@@ -118,29 +129,28 @@ fun StepItem(
 
 @Preview
 @Composable
-private fun StepItemPreview() {
-    val stepList = remember {
-        mutableStateListOf(
-            Step(title = "활동명", time = "")
-        )
-    } // 초기 step 1개
-    Column {
-        StepItem(
-            step = stepList[0],
-            isFocusingRoutine = false,
-            onTitleChange = { stepList[0] = stepList[0].copy(title = it) },
-            onShowTimePicker = { },
-            stepCount = 2,
-            onDelete = { stepList.removeAt(0) },
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-        StepItem(
-            step = stepList[0],
-            isFocusingRoutine = true,
-            onTitleChange = { stepList[0] = stepList[0].copy(title = it) },
-            onShowTimePicker = { },
-            stepCount = 2,
-            onDelete = { stepList.removeAt(0) },
-        )
-    }
+private fun StepItemPreview_Focusing() {
+    StepItem(
+        title = "스트레칭",
+        timeDisplay = "00:05:00",
+        isFocusingRoutine = true,
+        stepCount = 2,
+        onTitleChange = {},
+        onShowTimePicker = {},
+        onDelete = {}
+    )
+}
+
+@Preview
+@Composable
+private fun StepItemPreview_Simple() {
+    StepItem(
+        title = "",
+        timeDisplay = "",
+        isFocusingRoutine = false,
+        stepCount = 1,
+        onTitleChange = {},
+        onShowTimePicker = {},
+        onDelete = {}
+    )
 }

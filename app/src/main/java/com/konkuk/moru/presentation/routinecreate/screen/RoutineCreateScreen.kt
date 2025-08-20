@@ -124,9 +124,11 @@ fun RoutineCreateScreen(
     //val appList = remember { mutableStateListOf(UsedAppInRoutine("YouTube", "https://www.youtube.com/logo.png")) }
     val stepListScrollState = rememberLazyListState()
 
-    val isSubmitEnabled = viewModel.routineTitle.value.isNotBlank() &&
-            viewModel.stepList.any { it.title.isNotBlank() && it.time.isNotBlank() } &&
-            viewModel.tagList.isNotEmpty()
+    val isSubmitEnabled =
+        viewModel.routineTitle.value.isNotBlank() &&
+                viewModel.tagList.isNotEmpty() && (
+                        (viewModel.isFocusingRoutine.value && viewModel.stepList.any { it.title.isNotBlank() && it.time.isNotBlank() })
+                                || (!viewModel.isFocusingRoutine.value && viewModel.stepList.any { it.title.isNotBlank() }))
     //val isSubmitEnabled = true
 
     // 사용앱 바텀시트 관련
@@ -288,22 +290,19 @@ fun RoutineCreateScreen(
                 item { Text("STEP", style = typography.title_B_20) }
                 itemsIndexed(
                     items = stepList,
-                    key = { _, step -> step.id }
+                    key = { index, step -> step.id } // id 유지해도 되고 index로 써도 무방
                 ) { index, step ->
                     StepItem(
-                        step = step,
-                        stepCount = stepList.size,
+                        title = step.title,
+                        timeDisplay = if (isFocusingRoutine) step.time else "",
                         isFocusingRoutine = isFocusingRoutine,
-                        onTitleChange = { newTitle ->
-                            viewModel.updateStepTitle(step.id, newTitle)
-                        },
+                        stepCount = stepList.size,
+                        onTitleChange = { newTitle -> viewModel.updateStepTitle(index, newTitle) },
                         onShowTimePicker = {
-                            viewModel.setEditingStep(step.id)
+                            viewModel.setEditingStep(index)
                             isTimePickerVisible = true
                         },
-                        onDelete = {
-                            viewModel.removeStep(step.id)
-                        }
+                        onDelete = { viewModel.removeStep(index) }
                     )
                 }
 
@@ -337,8 +336,11 @@ fun RoutineCreateScreen(
                         indication = null,
                         interactionSource = null
                     ) {
-                        Log.d("createroutine", "click submit enabled=$isSubmitEnabled isSubmitting=$isSubmitting " +
-                                "title='${viewModel.routineTitle.value}' tags=${tagList.size} steps=${stepList.size} apps=${selectedAppList.size}")
+                        Log.d(
+                            "createroutine",
+                            "click submit enabled=$isSubmitEnabled isSubmitting=$isSubmitting " +
+                                    "title='${viewModel.routineTitle.value}' tags=${tagList.size} steps=${stepList.size} apps=${selectedAppList.size}"
+                        )
                         val imageKey: String? = null
                         viewModel.createRoutine(imageKey)
                     },

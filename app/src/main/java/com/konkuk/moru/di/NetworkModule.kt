@@ -44,6 +44,16 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    @Named("contentTypeInspector")
+    fun provideContentTypeInspector(): Interceptor = Interceptor { chain ->
+        val req = chain.request()
+        val contentType = req.body?.contentType()
+        android.util.Log.d("createroutine", "[ct] body.contentType=${contentType?.toString()}")
+        chain.proceed(req)
+    }
+
+    @Provides
+    @Singleton
     @Named("obUserAuthed")
     fun provideOBUserServiceAuthed(@Named("gsonRetrofit") retrofit: Retrofit): OBUserService =
         retrofit.create(OBUserService::class.java)
@@ -142,16 +152,33 @@ object NetworkModule {
     @Singleton
     fun provideAuthInterceptor(authInterceptor: AuthInterceptor): Interceptor = authInterceptor
 
+    //    @Provides
+//    @Singleton
+//    fun provideOkHttpClient(
+//        authInterceptor: Interceptor,
+//        tokenAuthenticator: TokenAuthenticator,
+//        loggingInterceptor: HttpLoggingInterceptor
+//    ): OkHttpClient =
+//        UnsafeHttpClient.getUnsafeOkHttpClient().newBuilder()
+//            .addInterceptor(authInterceptor)
+//            .addInterceptor(loggingInterceptor)
+//            .authenticator(tokenAuthenticator)
+//            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+//            .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+//            .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+//            .build()
     @Provides
     @Singleton
     fun provideOkHttpClient(
         authInterceptor: Interceptor,
         tokenAuthenticator: TokenAuthenticator,
-        loggingInterceptor: HttpLoggingInterceptor
+        loggingInterceptor: HttpLoggingInterceptor,
+        @Named("contentTypeInspector") ctInspector: Interceptor // <-- add
     ): OkHttpClient =
         UnsafeHttpClient.getUnsafeOkHttpClient().newBuilder()
             .addInterceptor(authInterceptor)
-            .addInterceptor(loggingInterceptor)
+            .addInterceptor(ctInspector) // <-- add: Content-Type 확인
+            .addInterceptor(loggingInterceptor) // BODY 레벨이면 실제 JSON도 찍힘
             .authenticator(tokenAuthenticator)
             .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
             .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)

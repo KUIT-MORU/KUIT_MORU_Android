@@ -15,11 +15,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.konkuk.moru.data.model.Step
 import com.konkuk.moru.data.model.UsedAppInRoutine
 import androidx.core.graphics.createBitmap
 import com.konkuk.moru.data.dto.request.CreateRoutineRequest
 import com.konkuk.moru.data.dto.request.StepDto
+import com.konkuk.moru.data.model.StepUi
 import com.konkuk.moru.domain.repository.CRImageRepository
 import com.konkuk.moru.domain.repository.CreateRoutineRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -42,8 +42,8 @@ class RoutineCreateViewModel @Inject constructor(
     val routineTitle = mutableStateOf("")
     val routineDescription = mutableStateOf("")
     val tagList = mutableStateListOf<String>()
-    val stepList = mutableStateListOf(Step(title = "", time = ""))
-    val editingStepId = mutableStateOf<String?>(null)
+    val stepList = mutableStateListOf(StepUi())
+    val editingStepIndex = mutableStateOf<Int?>(null)
     val appList = mutableStateListOf<UsedAppInRoutine>()
     val selectedAppList = mutableStateListOf<UsedAppInRoutine>()
 
@@ -87,54 +87,74 @@ class RoutineCreateViewModel @Inject constructor(
         tagList.remove(tag)
     }
 
-    fun updateStepTitle(stepId: String, newTitle: String) {
-        val index = stepList.indexOfFirst { it.id == stepId }
-        if (index != -1) {
-            stepList[index] = stepList[index].copy(title = newTitle)
-        }
+    fun setEditingStep(index: Int) {
+        editingStepIndex.value = index
     }
 
-    fun removeStep(stepId: String) {
-        val index = stepList.indexOfFirst { it.id == stepId }
-        if (index != -1) {
-            stepList.removeAt(index)
-        }
-    }
+    fun getEditingStepTime(): String? =
+        editingStepIndex.value?.let { idx -> stepList.getOrNull(idx)?.time }
 
     fun addStep() {
-        stepList.add(Step(title = "", time = ""))
+        stepList.add(StepUi())
     }
 
-    fun setEditingStep(stepId: String) {
-        editingStepId.value = stepId
+    fun removeStep(index: Int) {
+        if (index in stepList.indices) stepList.removeAt(index)
     }
 
-    fun getEditingStepTime(): String? {
-        val id = editingStepId.value ?: return null
-        return stepList.find { it.id == id }?.time
-    }
-
-    // HH:MM:SS → PT#H#M#S 변환
-    private fun String.toIsoDuration(): String {
-        val parts = split(":")
-        val h = parts.getOrNull(0)?.toIntOrNull() ?: 0
-        val m = parts.getOrNull(1)?.toIntOrNull() ?: 0
-        val s = parts.getOrNull(2)?.toIntOrNull() ?: 0
-        return buildString {
-            append("PT")
-            if (h > 0) append("${h}H")
-            if (m > 0) append("${m}M")
-            if (s > 0 || (h == 0 && m == 0)) append("${s}S")
+    fun updateStepTitle(index: Int, newTitle: String) {
+        if (index in stepList.indices) {
+            stepList[index] = stepList[index].copy(title = newTitle)
         }
     }
 
     @SuppressLint("DefaultLocale")
     fun confirmTime(hour: Int, minute: Int, second: Int) {
+        val i = editingStepIndex.value ?: return
+        if (i !in stepList.indices) return
         val formatted = String.format("%02d:%02d:%02d", hour, minute, second)
-        val stepId = editingStepId.value ?: return
-        val index = stepList.indexOfFirst { it.id == stepId }
-        if (index != -1) {
-            stepList[index] = stepList[index].copy(time = formatted)
+        stepList[i] = stepList[i].copy(time = formatted)
+    }
+
+//    private fun reassignStepOrders() {
+//        stepList.forEachIndexed { i, s ->
+//            if (s.stepOrder != i + 1) {
+//                stepList[i] = s.copy(stepOrder = i + 1)
+//            }
+//        }
+//    }
+
+    // ---- 시간 변환 유틸 ----
+    private fun hmsToIso(h: Int, m: Int, s: Int): String {
+        val sb = StringBuilder("PT")
+        if (h > 0) sb.append("${h}H")
+        if (m > 0) sb.append("${m}M")
+        if (s > 0 || (h == 0 && m == 0)) sb.append("${s}S")
+        return sb.toString()
+    }
+
+    private fun isoToHmsOrNull(iso: String): String? = try {
+        val d = java.time.Duration.parse(iso)
+        val total = d.seconds
+        val h = (total / 3600).toInt()
+        val m = ((total % 3600) / 60).toInt()
+        val s = (total % 60).toInt()
+        String.format("%02d:%02d:%02d", h, m, s)
+    } catch (_: Exception) {
+        null
+    }
+
+    // HH:MM:SS -> ISO-8601 (PT#H#M#S)
+    private fun String.toIsoDuration(): String {
+        val p = split(":")
+        val h = p.getOrNull(0)?.toIntOrNull() ?: 0
+        val m = p.getOrNull(1)?.toIntOrNull() ?: 0
+        val s = p.getOrNull(2)?.toIntOrNull() ?: 0
+        return buildString {
+            append("PT")
+            if (h > 0) append("${h}H")
+            if (m > 0) append("${m}M")
+            if (s > 0 || (h == 0 && m == 0)) append("${s}S")
         }
     }
 
@@ -180,6 +200,7 @@ class RoutineCreateViewModel @Inject constructor(
                 drawable.draw(canvas)
                 bmp
             }
+
             else -> {
                 val bmp = createBitmap(
                     drawable.intrinsicWidth.coerceAtLeast(1),
@@ -203,26 +224,61 @@ class RoutineCreateViewModel @Inject constructor(
         selectedAppList.removeAll { it.packageName == app.packageName } // 패키지 기준
     }
 
-    // 서버 전송용 DTO 생성기 (기존 유지)
+    // ---- 서버 전송 DTO 빌드 ----
     fun buildCreateRoutineRequest(imageKey: String?): CreateRoutineRequest {
-        val stepsDto = stepList.mapIndexed { idx, step ->
-            StepDto(
-                name = step.title,
-                stepOrder = idx + 1,
-                estimatedTime = (step.time.takeIf { it.isNotBlank() } ?: "00:00:00").toIsoDuration()
-            )
-        }
+        val simple = !isFocusingRoutine.value
+
+        // 1) steps payload
+        val stepsPayload: List<StepDto>? =
+            if (simple) {
+                // ✅ 간편 루틴: steps 필드 자체를 생략해야 하므로 null
+                null
+            } else {
+                // 집중 루틴: 시간 규칙 준수 (비었으면 PT0S, 있으면 HH:MM:SS -> PT#H#M#S)
+                stepList.mapIndexed { idx, step ->
+                    val timeIso: String =
+                        if (step.time.isBlank()) "PT0S" else step.time.toIsoDuration()
+                    Log.d(
+                        "createroutine",
+                        "[build] step idx=${idx + 1} title='${step.title}' time='${step.time}' -> iso=$timeIso simple=$simple"
+                    )
+                    StepDto(
+                        name = step.title,
+                        stepOrder = idx + 1,
+                        estimatedTime = timeIso
+                    )
+                }
+            }
+
+        // 2) selectedApps payload
+        val appsPayload: List<String>? =
+            if (simple) {
+                // ✅ 간편 루틴: selectedApps 필드 자체 생략
+                null
+            } else {
+                // 집중 루틴: 선택 앱이 없으면 빈 배열로 보냄([]) — 서버가 허용
+                selectedAppList.map { it.packageName }
+            }
+
+        Log.d(
+            "createroutine",
+            "[build] final isSimple=$simple steps=${stepsPayload?.size ?: 0}(null means omitted) " +
+                    "anyTimeSent=${stepsPayload?.any { it.estimatedTime != null } ?: false} " +
+                    "apps=${appsPayload?.size ?: 0}(null means omitted)"
+        )
+
         return CreateRoutineRequest(
             title = routineTitle.value,
             imageKey = imageKey,
             tags = tagList.toList(),
             description = routineDescription.value,
-            steps = stepsDto,
-            selectedApps = selectedAppList.map { it.packageName },
-            isSimple = !isFocusingRoutine.value,
+            steps = stepsPayload,          // ✅ 간편이면 null → JSON에서 아예 빠짐
+            selectedApps = appsPayload,    // ✅ 간편이면 null → JSON에서 아예 빠짐
+            isSimple = simple,
             isUserVisible = showUser.value
         )
     }
+
 
     private val TAG = "createroutine"
     fun createRoutine(imageKey: String?) {
@@ -239,7 +295,10 @@ class RoutineCreateViewModel @Inject constructor(
                     Log.d(TAG, "[$trace] try upload image uri=$localUri")
                     val file = copyUriToCache(localUri) // [추가]
                     val key = crImageRepository.uploadImage(file).getOrThrow() // [추가]
-                    Log.d(TAG, "[$trace] image uploaded. key=$key name=${file.name} size=${file.length()}")
+                    Log.d(
+                        TAG,
+                        "[$trace] image uploaded. key=$key name=${file.name} size=${file.length()}"
+                    )
                     key
                 } else {
                     imageKey // 그대로 사용(null 가능)
