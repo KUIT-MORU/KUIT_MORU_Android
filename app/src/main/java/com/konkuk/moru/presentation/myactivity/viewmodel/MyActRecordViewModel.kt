@@ -115,6 +115,12 @@ class MyActRecordViewModel @Inject constructor(
             _allLoading.value = false
         }
     }
+
+    // completed_ 루틴을 ID로 찾는 함수
+    fun findCompletedRoutineById(id: String): MyActRecordUi? {
+        val allRoutines = _today.value + _recent.value + _all.value
+        return allRoutines.find { it.id == id }
+    }
     
     // 완료된 루틴을 내 기록에 추가
     fun addCompletedRoutine(
