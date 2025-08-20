@@ -1,5 +1,3 @@
-// ✅ 파일명: NumberPicker.kt
-
 package com.konkuk.moru.presentation.routinecreate.component
 
 import androidx.compose.foundation.clickable

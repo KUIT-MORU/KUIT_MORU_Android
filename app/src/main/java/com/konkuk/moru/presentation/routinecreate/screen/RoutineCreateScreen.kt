@@ -14,7 +14,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -64,7 +63,7 @@ import com.konkuk.moru.core.component.routinedetail.SelectUsedAppSection
 import com.konkuk.moru.core.component.routinedetail.ShowUserCheckbox
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.routinecreate.component.StepItem
-import com.konkuk.moru.presentation.routinecreate.component.TimePickerDialog
+import com.konkuk.moru.presentation.routinecreate.component.DurationPickerDialog
 import com.konkuk.moru.presentation.routinecreate.viewmodel.RoutineCreateViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
@@ -77,6 +76,7 @@ import java.io.File
 fun RoutineCreateScreen(
     navController: NavHostController,
     viewModel: RoutineCreateViewModel = hiltViewModel()
+//    viewModel: RoutineCreateViewModel? = null
 ) {
     val focusManager = LocalFocusManager.current
     val isFocusingRoutine by viewModel.isFocusingRoutine
@@ -365,8 +365,8 @@ fun RoutineCreateScreen(
 
         // 시간 선택 팝업
         if (isTimePickerVisible) {
-            TimePickerDialog(
-                initialTime = viewModel.getEditingStepTime(),
+            DurationPickerDialog(
+                initialTime = viewModel.getEditingStepTime(), // "HH:mm:ss" 또는 null
                 onConfirm = { h, m, s ->
                     viewModel.confirmTime(h, m, s)
                     isTimePickerVisible = false
