@@ -80,6 +80,7 @@ fun RoutineFocusIntroScreen(
     val category = sharedViewModel.routineCategory.collectAsState<String>().value
     val isSimple = sharedViewModel.isSimple.collectAsState<Boolean>().value
     val steps = sharedViewModel.selectedSteps.collectAsState<List<RoutineStepData>>().value
+    val routineImageUrl = sharedViewModel.routineImageUrl.collectAsState<String?>().value
 
     val routineDetail: RoutineDetailResponseV1? =
         homeViewModel.routineDetail.collectAsState().value
@@ -94,6 +95,7 @@ fun RoutineFocusIntroScreen(
     Log.d("RoutineFocusIntroScreen", "   - steps 개수: ${steps.size}")
     Log.d("RoutineFocusIntroScreen", "   - routineDetail: ${routineDetail?.title ?: "null"}")
     Log.d("RoutineFocusIntroScreen", "   - routineDetail.category: ${routineDetail?.category ?: "null"}")
+    Log.d("RoutineFocusIntroScreen", "   - routineImageUrl: '$routineImageUrl'")
     
     // 루틴 상세 정보가 로드되면 스텝 정보를 SharedViewModel에 설정
     LaunchedEffect(routineDetail) {
@@ -312,7 +314,8 @@ fun RoutineFocusIntroScreen(
                     RoutineHeaderBox(
                         routineTitle = routineTitle,
                         tags = hashTagList,
-                        category = category
+                        category = category,
+                        imageUrl = routineImageUrl
                     )
                 }
                 Spacer(modifier = Modifier.height(172.dp))

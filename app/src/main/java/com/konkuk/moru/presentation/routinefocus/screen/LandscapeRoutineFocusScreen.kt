@@ -57,6 +57,7 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.konkuk.moru.R
@@ -623,7 +624,15 @@ fun LandscapeRoutineFocusScreen(
             }
         }
 
-
+        BackHandler(enabled = true) {
+            // showFinishPopup이 이미 true인 경우 (팝업이 열려있는 경우) 팝업을 닫음
+            if (showFinishPopup) {
+                showFinishPopup = false
+            } else {
+                // 팝업이 닫혀있는 경우 종료 확인 팝업을 표시
+                showFinishPopup = true
+            }
+        }
         // 팝업 1(종료 확인 팝업)
         if (showFinishPopup) {
             Box(

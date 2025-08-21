@@ -12,9 +12,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.google.accompanist.flowlayout.FlowRow
 import com.konkuk.moru.R
 import com.konkuk.moru.ui.theme.MORUTheme.colors
@@ -26,7 +28,13 @@ fun RoutineHeaderBox(
     routineTitle: String,
     tags: List<String>,
     category: String,
+    imageUrl: String? = null,
 ) {
+    // 디버깅용 로그
+    android.util.Log.d("RoutineHeaderBox", "🖼️ RoutineHeaderBox 렌더링:")
+    android.util.Log.d("RoutineHeaderBox", "   - 제목: $routineTitle")
+    android.util.Log.d("RoutineHeaderBox", "   - 이미지 URL: $imageUrl")
+    android.util.Log.d("RoutineHeaderBox", "   - 이미지 URL이 null이거나 빈 문자열인가?: ${imageUrl.isNullOrBlank()}")
     Box(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -34,13 +42,28 @@ fun RoutineHeaderBox(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(R.drawable.transparentbox),
-                contentDescription = "투명 박스",
-                modifier = Modifier
-                    .width(53.dp)
-                    .height(52.dp)
-            )
+            if (imageUrl.isNullOrBlank()) {
+                // 서버에서 이미지가 없을 때 기본 투명 박스 표시
+                Image(
+                    painter = painterResource(R.drawable.transparentbox),
+                    contentDescription = "투명 박스",
+                    modifier = Modifier
+                        .width(53.dp)
+                        .height(52.dp)
+                )
+            } else {
+                // 서버에서 받은 이미지 URL 사용
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = "루틴 이미지",
+                    modifier = Modifier
+                        .width(53.dp)
+                        .height(52.dp),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.transparentbox),
+                    error = painterResource(R.drawable.transparentbox)
+                )
+            }
             Spacer(modifier = Modifier.width(12.dp))
             Column(
                 modifier = Modifier
@@ -80,6 +103,7 @@ private fun RoutineHeaderBoxPreview() {
     RoutineHeaderBox(
         routineTitle = "주말 아침 루틴",
         tags = listOf("화이팅", "루틴"),
-        category = "집중"
+        category = "집중",
+        imageUrl = null
     )
 }

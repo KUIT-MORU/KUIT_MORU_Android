@@ -256,12 +256,15 @@ class HomeRoutinesViewModel @Inject constructor(
             android.util.Log.e("TEST_LOG", "🔥 제목: ${detail.title}")
             android.util.Log.e("TEST_LOG", "🔥 스텝 개수: ${detail.steps.size}")
             android.util.Log.e("TEST_LOG", "🔥 사용앱 개수: ${detail.apps.size}")
+            android.util.Log.e("TEST_LOG", "🔥 이미지 URL: ${detail.imageUrl}")
             System.out.println("🔥 System.out: loadMyRoutineDetail 성공!")
             
             Log.d(TAG, "✅ loadMyRoutineDetail 성공!")
             Log.d(TAG, "   - 제목: ${detail.title}")
             Log.d(TAG, "   - 스텝 개수: ${detail.steps.size}")
             Log.d(TAG, "   - 사용앱 개수: ${detail.apps.size}")
+            Log.d(TAG, "   - 이미지 URL: ${detail.imageUrl}")
+            Log.d(TAG, "   - 전체 detail 객체: $detail")
             
             // 사용앱 정보 상세 로깅
             if (detail.apps.isNotEmpty()) {
@@ -314,6 +317,10 @@ class HomeRoutinesViewModel @Inject constructor(
             // 사용앱 정보를 SharedRoutineViewModel에 설정
             Log.d(TAG, "🔄 사용앱 정보를 SharedRoutineViewModel에 설정")
             setAppsToSharedViewModel(detail.apps)
+            
+            // 이미지 URL을 SharedRoutineViewModel에 설정
+            Log.d(TAG, "🖼️ 이미지 URL을 SharedRoutineViewModel에 설정: ${detail.imageUrl}")
+            _sharedViewModel?.setRoutineImageUrl(detail.imageUrl)
             
             // 기존 RoutineDetailResponseV1 형식으로 변환하여 _routineDetail에 설정
             // (기존 코드와의 호환성을 위해)

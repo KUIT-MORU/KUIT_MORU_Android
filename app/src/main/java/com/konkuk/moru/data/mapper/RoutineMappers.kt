@@ -8,8 +8,11 @@ import java.time.format.DateTimeFormatter
 
 // 서버가 dayOfWeek=MON~SUN으로 필터링해서 내려주므로,
 // 클라이언트는 정렬/요일 계산을 하지 않고 "응답 순서" 그대로 사용한다.
-fun RoutineResponse.toDomain(): Routine =
-    Routine(
+fun RoutineResponse.toDomain(): Routine {
+    // 서버에서 받은 이미지 URL 로깅
+    android.util.Log.d("RoutineMapper", "🖼️ 서버에서 받은 루틴 이미지 URL: ${imageUrl ?: "null"} (제목: $title)")
+
+    return Routine(
         routineId = routineId,             // 서버 String ID를 그대로 사용
         title = title,
         description = "",                  // 목록 응답에 없으므로 기본값
@@ -46,3 +49,4 @@ fun RoutineResponse.toDomain(): Routine =
         },
         steps = emptyList()                // 서버 응답에 없으므로 빈 리스트
     )
+}
