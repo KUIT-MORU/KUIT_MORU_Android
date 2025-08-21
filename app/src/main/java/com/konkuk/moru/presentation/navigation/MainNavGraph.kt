@@ -24,6 +24,7 @@ import com.konkuk.moru.presentation.home.screen.RoutineSimpleRunScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActFabTagScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActInsightInfoClickScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActMainScreen
+import com.konkuk.moru.presentation.myactivity.screen.ActPrivacyPolicyScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActProfileScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActRecordDetailScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActRecordScreen
@@ -589,6 +590,26 @@ fun MainNavGraph(
         // 루틴 생성 화면
         composable(route = Route.RoutineCreate.route) {
             RoutineCreateScreen(navController)
+        }
+
+        composable(route = Route.ActPolicy.route) {
+            ActPrivacyPolicyScreen(navController)
+        }
+
+        composable(
+            route = Route.RoutineFeedDetail1.pattern,
+            arguments = listOf(navArgument(Route.RoutineFeedDetail1.arg) { type = NavType.StringType })
+        ) { backStackEntry ->
+            val routineId = backStackEntry.arguments?.getString(Route.RoutineFeedDetail1.arg)
+            if (routineId != null) {
+                RoutineDetailScreen(
+                    routineId = routineId,
+                    onBackClick = { navController.navigateUpOrHome() },
+                    navController = navController
+                )
+            } else {
+                navController.popBackStack()
+            }
         }
     }
 }

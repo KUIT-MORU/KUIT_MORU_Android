@@ -300,4 +300,26 @@ object NetworkModule {
     @Provides @Singleton
     fun provideMyActLogService(retrofit: Retrofit): MyActLogService =
         retrofit.create(MyActLogService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideCreateRoutineService(retrofit: Retrofit): com.konkuk.moru.data.service.CreateRoutineService =
+        retrofit.create(com.konkuk.moru.data.service.CreateRoutineService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideCRImageService(
+        retrofit: Retrofit
+    ): com.konkuk.moru.data.service.CRImageService =
+        retrofit.create(com.konkuk.moru.data.service.CRImageService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideMyActUserService(
+        retrofit: Retrofit
+    ): com.konkuk.moru.data.service.MyActUserService =
+        retrofit.create(com.konkuk.moru.data.service.MyActUserService::class.java)
+
+
+
 }

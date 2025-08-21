@@ -32,6 +32,7 @@ fun ScrabRoutine(
     tags: List<String>,
     isSelected: Boolean = false,
     onLongClick: () -> Unit,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -39,7 +40,7 @@ fun ScrabRoutine(
             .width(98.36.dp)
             .height(174.14.dp)
             .combinedClickable(
-                onClick = {},
+                onClick = onClick,
                 onLongClick = onLongClick
             )
     ) {
@@ -82,7 +83,7 @@ fun ScrabRoutine(
         )
 
         Text(
-            text = tags.joinToString(" ") { "#$it" },
+            text = tags.joinToString(" ") { "$it" },
             color = colors.darkGray,
             style = typography.time_R_12,
             maxLines = 1,
