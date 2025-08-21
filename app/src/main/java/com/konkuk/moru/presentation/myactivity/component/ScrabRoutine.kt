@@ -82,7 +82,7 @@ fun ScrabRoutine(
         )
 
         Text(
-            text = tags.joinToString(" ") { "#$it" },
+            text = tags,
             color = colors.darkGray,
             style = typography.time_R_12,
             maxLines = 1,
