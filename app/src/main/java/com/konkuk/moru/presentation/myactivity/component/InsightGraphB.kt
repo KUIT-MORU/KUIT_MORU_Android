@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,42 +34,43 @@ fun InsightGraphB(
     weekendAll: Float,
     modifier: Modifier = Modifier
 ) {
-    val labelsWithProgress = listOf(
-        "평일 : $userName"+"님" to weekdayUser,
-        "평일 : 전체" to weekdayAll,
-        "주말 : $userName"+"님" to weekendUser,
-        "주말 : 전체" to weekendAll
+    fun scaledFraction(pct: Float, scaleThresholdPct: Float = 10f): Float {
+        val p = pct.coerceIn(0f, 100f)
+        return if (p <= scaleThresholdPct) (p / scaleThresholdPct) else (p / 100f)
+    }
+
+    fun pctLabel(pct: Float): String = "${pct.coerceIn(0f, 100f).toInt()}%"
+
+    data class RowItem(val label: String, val pct: Float)
+
+    val items = listOf(
+        RowItem("평일 : $userName"+"님"+"(${pctLabel(weekdayUser)})", weekdayUser),
+        RowItem("평일 : 전체 (${pctLabel(weekdayAll)})", weekdayAll),
+        RowItem("주말 : $userName"+"님"+"(${pctLabel(weekendUser)})", weekendUser),
+        RowItem("주말 : 전체 (${pctLabel(weekendAll)})", weekendAll)
     )
 
     Column(
         modifier = modifier
             .padding(horizontal = 29.dp)
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
     ) {
-        Spacer(modifier = Modifier.height(12.dp))
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxWidth()
-        ){
-            Text(
-                text = "평균 루틴 실천률",
-                style = typography.body_SB_16,
-                color = colors.darkGray
-            )
+        Spacer(Modifier.height(12.dp))
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth()) {
+            Text(text = "평균 루틴 실천률", style = typography.body_SB_16, color = colors.darkGray)
         }
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(Modifier.height(18.dp))
 
-        labelsWithProgress.forEach { (label, progress) ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
+        items.forEach { item ->
+            val fraction = scaledFraction(item.pct).coerceIn(0f, 1f)
+
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = label,
+                    text = item.label,
                     style = typography.desc_M_12.copy(fontSize = 10.sp),
                     color = colors.darkGray,
-                    modifier = Modifier.width(70.dp)
+                    modifier = Modifier.width(110.dp) // 안내 문구 때문에 약간 늘림
                 )
 
                 Box(
@@ -80,7 +83,7 @@ fun InsightGraphB(
                     Box(
                         modifier = Modifier
                             .fillMaxHeight()
-                            .fillMaxWidth(progress.coerceIn(0f, 1f))
+                            .fillMaxWidth(fraction)
                             .clip(RoundedCornerShape(50))
                             .background(
                                 Brush.horizontalGradient(
@@ -90,7 +93,7 @@ fun InsightGraphB(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(21.dp))
+            Spacer(Modifier.height(21.dp))
         }
     }
 }
