@@ -6,13 +6,12 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.konkuk.moru.presentation.routinefeed.data.AppDto
-import com.konkuk.moru.core.util.HomeAppUtils
 import com.konkuk.moru.presentation.routinefocus.screen.parseTimeToSeconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -152,79 +151,20 @@ class RoutineFocusViewModel : ViewModel() {
         Log.d("RoutineFocusViewModel", "🛡️ isScreenBlockOverlayVisible = $isScreenBlockOverlayVisible")
     }
     
-    fun setSelectedApps(apps: List<AppDto>, context: Context) {
+    fun setSelectedApps(apps: List<AppDto>) {
         Log.d("RoutineFocusViewModel", "🔄 setSelectedApps 호출됨")
         Log.d("RoutineFocusViewModel", "📱 전달받은 앱 개수: ${apps.size}")
         Log.d("RoutineFocusViewModel", "📱 앱 상세 정보:")
         apps.forEachIndexed { index, app ->
             Log.d("RoutineFocusViewModel", "   ${index + 1}. 이름: ${app.name}, 패키지: ${app.packageName}")
         }
-        
-        // 서버에서 받은 앱 목록을 필터링하여 실행 가능한 앱만 사용
-        val filteredApps = apps.filter { app ->
-            try {
-                // LAUNCHER 액티비티가 있는 앱만 포함
-                val packageManager = context.packageManager
-                packageManager.getLaunchIntentForPackage(app.packageName) != null
-            } catch (e: Exception) {
-                Log.w("RoutineFocusViewModel", "⚠️ 앱 필터링 중 오류: ${app.packageName}", e)
-                false
-            }
-        }
-        
-        Log.d("RoutineFocusViewModel", "🔍 필터링 결과: ${apps.size}개 → ${filteredApps.size}개")
-        filteredApps.forEachIndexed { index, app ->
-            Log.d("RoutineFocusViewModel", "   ✅ 실행 가능한 앱 ${index + 1}: ${app.name} (${app.packageName})")
-        }
-        
-        _selectedApps.value = filteredApps
+        _selectedApps.value = apps
         Log.d("RoutineFocusViewModel", "✅ selectedApps 설정 완료: ${_selectedApps.value.size}개")
         
         // 추가 로그: 업데이트 후 상태 확인
         Log.d("RoutineFocusViewModel", "🔍 업데이트 후 selectedApps 확인: ${_selectedApps.value.size}개")
         _selectedApps.value.forEachIndexed { index, app ->
             Log.d("RoutineFocusViewModel", "   - 업데이트 후 앱 ${index + 1}: ${app.name} (${app.packageName})")
-        }
-    }
-    
-    /**
-     * 실제 설치된 앱 목록을 가져와서 설정합니다.
-     * 선택된 앱이 없거나 비어있을 때 사용됩니다.
-     */
-    fun loadInstalledApps(context: Context) {
-        Log.d("RoutineFocusViewModel", "🔄 loadInstalledApps 호출됨")
-        
-        viewModelScope.launch {
-            try {
-                // 사용자 설치 앱 가져오기 (시스템 앱 제외)
-                val userApps = HomeAppUtils.getInstalledUserApps(context)
-                Log.d("RoutineFocusViewModel", "📱 사용자 설치 앱 ${userApps.size}개 로드 완료")
-                
-                if (userApps.isNotEmpty()) {
-                    // 처음 20개만 사용 (너무 많으면 성능 문제)
-                    _selectedApps.value = userApps.take(20)
-                    Log.d("RoutineFocusViewModel", "✅ 사용자 설치 앱으로 selectedApps 설정 완료 (처음 20개)")
-                } else {
-                    // 사용자 앱이 없으면 모든 앱 가져오기 (시스템 앱 포함)
-                    val allApps = HomeAppUtils.getAllInstalledApps(context)
-                    Log.d("RoutineFocusViewModel", "📱 모든 앱 ${allApps.size}개 로드 완료")
-                    
-                    if (allApps.isNotEmpty()) {
-                        _selectedApps.value = allApps.take(20)
-                        Log.d("RoutineFocusViewModel", "✅ 모든 앱으로 selectedApps 설정 완료 (처음 20개)")
-                    }
-                }
-                
-                Log.d("RoutineFocusViewModel", "🎯 최종 selectedApps: ${_selectedApps.value.size}개")
-                _selectedApps.value.forEachIndexed { index, app ->
-                    Log.d("RoutineFocusViewModel", "   ${index + 1}. ${app.name} (${app.packageName})")
-                }
-                
-            } catch (e: Exception) {
-                Log.e("RoutineFocusViewModel", "❌ 설치된 앱 로드 실패", e)
-                // 실패 시 빈 리스트로 설정
-                _selectedApps.value = emptyList()
-            }
         }
     }
     
@@ -271,6 +211,10 @@ class RoutineFocusViewModel : ViewModel() {
         _isFocusRoutineActive = false
         _isPermittedAppLaunch = false
         
+        // 타이머 Job 취소
+        timerJob?.cancel()
+        timerJob = null
+        
         // 루틴 종료 시 모든 상태 초기화
         isTimerRunning = false
         isTimeout = false
@@ -293,6 +237,12 @@ class RoutineFocusViewModel : ViewModel() {
         
         // 스텝별 메모 초기화
         _stepMemos.value = emptyMap()
+        
+        // 화면 모드 초기화 (세로 모드로)
+        isLandscapeMode = false
+        
+        // 다크 모드 초기화 (기본값으로)
+        isDarkMode = false
         
         Log.d("RoutineFocusViewModel", "🔄 루틴 종료: 모든 상태 초기화 완료")
     }
@@ -371,13 +321,20 @@ class RoutineFocusViewModel : ViewModel() {
     fun getStepMemoFlow(step: Int): StateFlow<String> {
         return MutableStateFlow(_stepMemos.value[step] ?: "").asStateFlow()
     }
+    
+    // 타이머 Job 관리
+    private var timerJob: Job? = null
 
     // 타이머 시작 함수
     fun startTimer() {
         if (isTimerRunning) return
+        
+        // 기존 타이머 Job이 있다면 취소
+        timerJob?.cancel()
+        
         isTimerRunning = true
         isTimeout = false
-        viewModelScope.launch {
+        timerJob = viewModelScope.launch {
             while (isTimerRunning) {
                 delay(1000)
                 elapsedSeconds++
@@ -392,6 +349,8 @@ class RoutineFocusViewModel : ViewModel() {
     // 타이머 일시정지 함수
     fun pauseTimer() {
         isTimerRunning = false
+        timerJob?.cancel()
+        timerJob = null
     }
 
     // 타이머 재개 함수

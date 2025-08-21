@@ -10,7 +10,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -25,7 +24,6 @@ import com.konkuk.moru.presentation.home.screen.RoutineSimpleRunScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActFabTagScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActInsightInfoClickScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActMainScreen
-import com.konkuk.moru.presentation.myactivity.screen.ActPrivacyPolicyScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActProfileScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActRecordDetailScreen
 import com.konkuk.moru.presentation.myactivity.screen.ActRecordScreen
@@ -131,18 +129,6 @@ fun MainNavGraph(
                     sharedViewModel.setRoutineCategory(category)
                     sharedViewModel.setTotalDuration(totalDuration)
 
-                    // 실제 루틴 진행 화면에 진입할 때 스택에 추가
-                    val currentRunningIds = navController.getBackStackEntry(Route.Home.route)
-                        .savedStateHandle.get<List<Int>>("runningRoutineIds") ?: emptyList()
-                    val stableId = sharedViewModel.originalRoutineId.value?.toStableIntId()
-                    
-                    if (stableId != null) {
-                        val updatedRunningIds = currentRunningIds + stableId
-                        navController.getBackStackEntry(Route.Home.route)
-                            .savedStateHandle["runningRoutineIds"] = updatedRunningIds
-                        Log.d("MainNavGraph", "🎯 루틴 진행 화면 진입 시 스택에 추가: $stableId (스택 크기: ${updatedRunningIds.size})")
-                    }
-
                     // 실행 화면 이동
                     if (category == "집중") {
                         Log.d("MainNavGraph", "🎯 집중 루틴으로 이동: RoutineFocus")
@@ -153,9 +139,6 @@ fun MainNavGraph(
                     }
                 },
                 onBackClick = {
-                    // intro 화면에서 뒤로가기할 때는 스택에서 제거하지 않음 (아직 실제 루틴 진행 화면에 진입하지 않았으므로)
-                    Log.d("MainNavGraph", "🔄 intro 화면 뒤로가기: 스택 유지 (아직 루틴 진행 화면에 진입하지 않음)")
-                    
                     navController.popBackStack()
                 }
             )
@@ -207,10 +190,12 @@ fun MainNavGraph(
                         // 홈으로 돌아갈 때 "진행중 루틴" 알림
                         android.util.Log.d("MainNavGraph", "🔄 간편 루틴 X 버튼 클릭: routineId=$currentId")
 
-                        // 간편 루틴 중단 시 스택 유지 (다시 들어갈 수 있으므로 하이라이트 유지)
-                        val currentRunningIds = navController.getBackStackEntry(Route.Home.route)
-                            .savedStateHandle.get<List<Int>>("runningRoutineIds") ?: emptyList()
-                        Log.d("MainNavGraph", "🔄 간편화면 중단: 스택 유지 (스택 크기: ${currentRunningIds.size})")
+                        // originalRoutineId를 stableIntId로 변환해서 설정
+                        val stableId = originalRoutineId?.toStableIntId()
+                        android.util.Log.d("MainNavGraph", "🎯 runningRoutineId 설정: originalRoutineId=$originalRoutineId, stableId=$stableId")
+
+                        navController.getBackStackEntry(Route.Home.route)
+                            .savedStateHandle["runningRoutineId"] = stableId
 
                         // 간편 루틴은 실천율에 반영되지만 내 기록에는 표시되지 않음
 
@@ -227,27 +212,21 @@ fun MainNavGraph(
 
                     },
                     onFinishConfirmed = { finishedId: String ->
+                        Log.d(
+                            "MainNavGraph",
+                            "🔄 RoutineSimpleRun 완료 처리: originalRoutineId=$originalRoutineId"
+                        )
                         Log.d("MainNavGraph", "🔄 RoutineSimpleRun 완료 처리: originalRoutineId=$originalRoutineId")
-                        Log.d("MainNavGraph", "🔄 RoutineSimpleRun 완료 처리: finishedId=$finishedId")
-
-                        // 진행중 루틴 ID 스택에서 특정 루틴 제거 (간편 루틴 완료)
-                        val currentRunningIds = navController.getBackStackEntry(Route.Home.route)
-                            .savedStateHandle.get<List<Int>>("runningRoutineIds") ?: emptyList()
-                        
-                        val routineIdToRemove = originalRoutineId?.toIntOrNull() ?: finishedId.toIntOrNull()
-                        if (routineIdToRemove != null && currentRunningIds.isNotEmpty()) {
-                            val updatedRunningIds = currentRunningIds.filter { it != routineIdToRemove }
-                            navController.getBackStackEntry(Route.Home.route)
-                                .savedStateHandle["runningRoutineIds"] = updatedRunningIds
-                            Log.d("MainNavGraph", "🔄 간편화면 완료: runningRoutineIds에서 루틴 ID $routineIdToRemove 제거 (스택 크기: ${updatedRunningIds.size})")
-                        }
 
                         // 간편 루틴 완료 시 실천율 업데이트 (RoutineSimpleRunScreen에서 처리됨)
                         // 내 기록에는 표시되지 않음
 
                         navController.getBackStackEntry(Route.Home.route)
-                            .savedStateHandle["finishedRoutineId"] = if (originalRoutineId != null) originalRoutineId.toString() else finishedId
-                        Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${if (originalRoutineId != null) originalRoutineId.toString() else finishedId}")
+                            .savedStateHandle["finishedRoutineId"] = originalRoutineId ?: finishedId
+                        Log.d(
+                            "MainNavGraph",
+                            "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}"
+                        )
                         navController.popBackStack(Route.Home.route, false)
                     }
                 )
@@ -279,17 +258,21 @@ fun MainNavGraph(
             Log.d("MainNavGraph", "   - originalRoutineId: $originalRoutineId")
             Log.d("MainNavGraph", "   - 선택된 앱: ${selectedApps.size}개")
 
-            // 집중 루틴 화면 진입 시 선택된 앱들을 설정하고 집중 루틴 시작
-            val context = LocalContext.current
+            // 집중 루틴 화면 진입 시 선택된 앱들을 설정 (타이머는 시작하지 않음)
             LaunchedEffect(selectedApps) {
                 Log.d("MainNavGraph", "🔄 LaunchedEffect(selectedApps) 실행")
                 Log.d("MainNavGraph", "📱 selectedApps 전달: ${selectedApps.size}개")
                 selectedApps.forEachIndexed { index, app ->
                     Log.d("MainNavGraph", "   ${index + 1}. 이름: ${app.name}, 패키지: ${app.packageName}")
                 }
-                routineFocusViewModel.setSelectedApps(selectedApps, context)
+                
+                // 새로운 루틴 시작 전 완전한 초기화
+                routineFocusViewModel.endFocusRoutine()
+                Log.d("MainNavGraph", "🔄 새로운 루틴 시작 전 완전한 초기화 완료")
+                
+                routineFocusViewModel.setSelectedApps(selectedApps)
                 Log.d("MainNavGraph", "✅ routineFocusViewModel.setSelectedApps 완료")
-                routineFocusViewModel.startFocusRoutine()
+                // 타이머는 startFocusRoutine() 호출하지 않음 - intro 화면에서 시작됨
             }
 
             RoutineFocusScreenContainer(
@@ -297,18 +280,6 @@ fun MainNavGraph(
                 sharedViewModel = sharedViewModel,
                 onDismiss = {
                     routineFocusViewModel.endFocusRoutine()
-                    // 진행중 루틴 ID 스택에서 특정 루틴 제거 (집중 루틴 중단)
-                    val currentRunningIds = navController.getBackStackEntry(Route.Home.route)
-                        .savedStateHandle.get<List<Int>>("runningRoutineIds") ?: emptyList()
-                    
-                    val routineIdToRemove = originalRoutineId?.toIntOrNull()
-                    if (routineIdToRemove != null && currentRunningIds.isNotEmpty()) {
-                        val updatedRunningIds = currentRunningIds.filter { it != routineIdToRemove }
-                        navController.getBackStackEntry(Route.Home.route)
-                            .savedStateHandle["runningRoutineIds"] = updatedRunningIds
-                        Log.d("MainNavGraph", "🔄 집중화면 중단: runningRoutineIds에서 루틴 ID $routineIdToRemove 제거 (스택 크기: ${updatedRunningIds.size})")
-                    }
-                    
                     navController.popBackStack(
                         Route.Home.route,
                         inclusive = false
@@ -322,24 +293,23 @@ fun MainNavGraph(
                 },
                 onFinishConfirmed = { finishedId: String ->
                     routineFocusViewModel.endFocusRoutine()
+                    
+                    // 간편 루틴과 동일한 방식으로 총 소요시간 설정
+                    val totalElapsedSeconds = routineFocusViewModel.totalElapsedSeconds + routineFocusViewModel.elapsedSeconds
+                    sharedViewModel.setTotalDuration(totalElapsedSeconds)
+                    Log.d("MainNavGraph", "🔄 집중 루틴 완료: 총 소요시간 ${totalElapsedSeconds}초 설정")
+                    
                     Log.d("MainNavGraph", "🔄 RoutineFocus 완료 처리: originalRoutineId=$originalRoutineId")
-                    Log.d("MainNavGraph", "🔄 RoutineFocus 완료 처리: finishedId=$finishedId")
-                    
-                    // 진행중 루틴 ID 스택에서 특정 루틴 제거 (집중 루틴 완료)
-                    val currentRunningIds = navController.getBackStackEntry(Route.Home.route)
-                        .savedStateHandle.get<List<Int>>("runningRoutineIds") ?: emptyList()
-                    
-                    val routineIdToRemove = originalRoutineId?.toIntOrNull() ?: finishedId.toIntOrNull()
-                    if (routineIdToRemove != null && currentRunningIds.isNotEmpty()) {
-                        val updatedRunningIds = currentRunningIds.filter { it != routineIdToRemove }
-                        navController.getBackStackEntry(Route.Home.route)
-                            .savedStateHandle["runningRoutineIds"] = updatedRunningIds
-                        Log.d("MainNavGraph", "🔄 집중화면 완료: runningRoutineIds에서 루틴 ID $routineIdToRemove 제거 (스택 크기: ${updatedRunningIds.size})")
-                    }
-                    
+                    Log.d(
+                        "MainNavGraph",
+                        "🔄 RoutineFocus 완료 처리: originalRoutineId=$originalRoutineId"
+                    )
                     navController.getBackStackEntry(Route.Home.route)
-                        .savedStateHandle["finishedRoutineId"] = if (originalRoutineId != null) originalRoutineId.toString() else finishedId
-                    Log.d("MainNavGraph", "✅ finishedRoutineId 설정 완료: ${if (originalRoutineId != null) originalRoutineId.toString() else finishedId}")
+                        .savedStateHandle["finishedRoutineId"] = originalRoutineId ?: finishedId
+                    Log.d(
+                        "MainNavGraph",
+                        "✅ finishedRoutineId 설정 완료: ${originalRoutineId ?: finishedId}"
+                    )
                     navController.popBackStack(Route.Home.route, false)
                 },
                 onNavigateToMyActivity = {
@@ -355,11 +325,11 @@ fun MainNavGraph(
                         set("completedRoutineTags", tags)
                     }
 
-                    // 집중화면을 백스택에서 제거하고 내 기록 화면으로 이동
+                    // 집중화면을 백스택에서 제거하고 내 활동 화면으로 이동
                     navController.navigate(Route.ActRecord.route) {
                         // 집중화면을 백스택에서 제거
                         popUpTo(Route.RoutineFocus.route) { inclusive = true }
-                        // 내 기록 화면으로 이동
+                        // 내 활동 화면으로 이동
                         launchSingleTop = true
                     }
                 }
@@ -598,17 +568,14 @@ fun MainNavGraph(
 
         composable(
             route = Route.ActRecordDetail.route,
-            arguments = listOf(navArgument("logId") { type = NavType.StringType })
+            arguments = listOf(navArgument("logId") {
+                type = NavType.StringType
+            })
         ) { backStackEntry ->
-            val logId = backStackEntry.arguments?.getString("logId") ?: return@composable
+            val logId = backStackEntry.arguments?.getString("logId") ?: ""
+
             ActRecordDetailScreen(
                 logId = logId,
-                navController = navController
-            )
-        }
-
-        composable(route = Route.ActPolicy.route) {
-            ActPrivacyPolicyScreen(
                 navController = navController
             )
         }

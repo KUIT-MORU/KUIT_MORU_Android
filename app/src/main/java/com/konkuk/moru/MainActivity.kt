@@ -12,6 +12,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.activity.OnBackPressedCallback
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +32,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val focusViewModel: RoutineFocusViewModel by viewModels()
+    private var navController: androidx.navigation.NavHostController? = null
 
     // --- FCM 알림 권한 요청 로직 추가 ---
     private val requestPermissionLauncher = registerForActivityResult(
@@ -69,13 +71,28 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    override fun onBackPressed() {
-        if (focusViewModel.isFocusRoutineActive) {
-            // 뒤로가기 버튼은 루틴 종료 알림창 팝업 표시
-            focusViewModel.showScreenBlockPopup(focusViewModel.selectedApps)
-        } else {
-            super.onBackPressed()
-        }
+        private fun setupBackPressHandler() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                Log.d("MainActivity", "🔍 OnBackPressedCallback 호출됨")
+                Log.d("MainActivity", "🔍 isFocusRoutineActive: ${focusViewModel.isFocusRoutineActive}")
+                
+                // 현재 화면 경로 확인
+                val currentRoute = navController?.currentDestination?.route
+                Log.d("MainActivity", "🔍 현재 화면 경로: $currentRoute")
+
+                // 집중 루틴 화면에서만 화면 차단 팝업 표시
+                if (focusViewModel.isFocusRoutineActive && currentRoute == "routine_focus") {
+                    Log.d("MainActivity", "🔄 집중 루틴 화면에서 뒤로가기 - 화면 차단 팝업 표시")
+                    focusViewModel.showScreenBlockPopup(focusViewModel.selectedApps)
+                } else {
+                    // 다른 화면이거나 집중 루틴이 아닌 경우 기본 뒤로가기 동작
+                    Log.d("MainActivity", "🔄 기본 뒤로가기 동작 실행 (현재 화면: $currentRoute)")
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        })
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -84,10 +101,15 @@ class MainActivity : ComponentActivity() {
             "🔍 onKeyDown 호출: keyCode=$keyCode, isFocusRoutineActive=${focusViewModel.isFocusRoutineActive}"
         )
 
-        if (focusViewModel.isFocusRoutineActive) {
+        // 현재 화면 경로 확인
+        val currentRoute = navController?.currentDestination?.route
+        Log.d("MainActivity", "🔍 onKeyDown 현재 화면 경로: $currentRoute")
+
+        // 집중 루틴 화면에서만 화면 차단 처리
+        if (focusViewModel.isFocusRoutineActive && currentRoute == "routine_focus") {
             when (keyCode) {
                 KeyEvent.KEYCODE_MENU -> {
-                    Log.d("MainActivity", "📱 메뉴 버튼 감지 - 화면 차단 오버레이 표시")
+                    Log.d("MainActivity", "📱 집중 루틴 화면에서 메뉴 버튼 감지 - 화면 차단 오버레이 표시")
                     focusViewModel.showScreenBlockOverlay(focusViewModel.selectedApps)
                     return true
                 }
@@ -102,8 +124,14 @@ class MainActivity : ComponentActivity() {
             "MainActivity",
             "⏸️ onPause 호출: isFocusRoutineActive=${focusViewModel.isFocusRoutineActive}"
         )
-        if (focusViewModel.isFocusRoutineActive && !focusViewModel.isPermittedAppLaunch) {
-            // 앱이 백그라운드로 갈 때는 기존 팝업 표시
+        
+        // 현재 화면 경로 확인
+        val currentRoute = navController?.currentDestination?.route
+        Log.d("MainActivity", "🔍 onPause 현재 화면 경로: $currentRoute")
+        
+        // 집중 루틴 화면에서만 화면 차단 처리
+        if (focusViewModel.isFocusRoutineActive && currentRoute == "routine_focus" && !focusViewModel.isPermittedAppLaunch) {
+            Log.d("MainActivity", "⏸️ 집중 루틴 화면에서 onPause - 화면 차단 팝업 표시")
             focusViewModel.showScreenBlockPopup(focusViewModel.selectedApps)
         }
     }
@@ -114,9 +142,14 @@ class MainActivity : ComponentActivity() {
             "MainActivity",
             "🚪 onUserLeaveHint 호출: isFocusRoutineActive=${focusViewModel.isFocusRoutineActive}"
         )
-        if (focusViewModel.isFocusRoutineActive) {
-            // 사용자가 홈 버튼이나 최근 앱 버튼을 눌렀을 때 화면 차단 오버레이 표시
-            // 더 빠른 반응을 위해 즉시 실행
+        
+        // 현재 화면 경로 확인
+        val currentRoute = navController?.currentDestination?.route
+        Log.d("MainActivity", "🔍 onUserLeaveHint 현재 화면 경로: $currentRoute")
+        
+        // 집중 루틴 화면에서만 화면 차단 처리
+        if (focusViewModel.isFocusRoutineActive && currentRoute == "routine_focus") {
+            Log.d("MainActivity", "🚪 집중 루틴 화면에서 onUserLeaveHint - 화면 차단 오버레이 표시")
             focusViewModel.showScreenBlockOverlay(focusViewModel.selectedApps)
         }
     }
@@ -127,8 +160,14 @@ class MainActivity : ComponentActivity() {
             "MainActivity",
             "🔍 onWindowFocusChanged: hasFocus=$hasFocus, isFocusRoutineActive=${focusViewModel.isFocusRoutineActive}"
         )
-        if (!hasFocus && focusViewModel.isFocusRoutineActive) {
-            // 앱이 포커스를 잃었을 때도 오버레이 표시
+        
+        // 현재 화면 경로 확인
+        val currentRoute = navController?.currentDestination?.route
+        Log.d("MainActivity", "🔍 onWindowFocusChanged 현재 화면 경로: $currentRoute")
+        
+        // 집중 루틴 화면에서만 화면 차단 처리
+        if (!hasFocus && focusViewModel.isFocusRoutineActive && currentRoute == "routine_focus") {
+            Log.d("MainActivity", "🔍 집중 루틴 화면에서 onWindowFocusChanged - 화면 차단 오버레이 표시")
             focusViewModel.showScreenBlockOverlay(focusViewModel.selectedApps)
         }
     }
@@ -144,10 +183,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         askNotificationPermission()
         logFcmTokenNow()
+        setupBackPressHandler()
 
         setContent {
             MORUTheme {
                 val navController = rememberNavController()
+                this@MainActivity.navController = navController
                 val context = applicationContext
                 val isLoggedInState = remember { mutableStateOf(false) }
                 var isOnboardingComplete by remember { mutableStateOf(false) }

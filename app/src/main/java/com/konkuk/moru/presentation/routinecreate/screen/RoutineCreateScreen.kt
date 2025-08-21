@@ -14,7 +14,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,8 +24,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.BasicTextField
@@ -35,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,7 +50,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.konkuk.moru.R
 import com.konkuk.moru.core.component.ImageChoiceOptionButtonScreen
@@ -64,9 +61,9 @@ import com.konkuk.moru.core.component.routinedetail.RoutineDescriptionField
 import com.konkuk.moru.core.component.routinedetail.RoutineImageSelectBox
 import com.konkuk.moru.core.component.routinedetail.SelectUsedAppSection
 import com.konkuk.moru.core.component.routinedetail.ShowUserCheckbox
+import com.konkuk.moru.core.component.routinedetail.durationpicker.DurationPickerDialog
 import com.konkuk.moru.presentation.navigation.Route
 import com.konkuk.moru.presentation.routinecreate.component.StepItem
-import com.konkuk.moru.presentation.routinecreate.component.TimePickerDialog
 import com.konkuk.moru.presentation.routinecreate.viewmodel.RoutineCreateViewModel
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
@@ -79,6 +76,7 @@ import java.io.File
 fun RoutineCreateScreen(
     navController: NavHostController,
     viewModel: RoutineCreateViewModel = hiltViewModel()
+//    viewModel: RoutineCreateViewModel? = null
 ) {
     val focusManager = LocalFocusManager.current
     val isFocusingRoutine by viewModel.isFocusingRoutine
@@ -109,7 +107,7 @@ fun RoutineCreateScreen(
             cameraImageUriState.value = uri
             takePictureLauncher.launch(uri)
         } else {
-            // 권한 거부 시: 따로 안내 필요하면 스낵바/토스트 등 처리
+            // 권한 거부 시: 스낵바/토스트 처리 가능
         }
     }
 
@@ -119,32 +117,18 @@ fun RoutineCreateScreen(
         viewModel.imageUri.value = uri
     }
 
-    // 상단 선언부
-    val imageUriState = remember { mutableStateOf<Uri?>(null) }
-    //val appList = remember { mutableStateListOf(UsedAppInRoutine("YouTube", "https://www.youtube.com/logo.png")) }
     val stepListScrollState = rememberLazyListState()
 
-    val isSubmitEnabled =
-        viewModel.routineTitle.value.isNotBlank() &&
-                viewModel.tagList.isNotEmpty() && (
-                        (viewModel.isFocusingRoutine.value && viewModel.stepList.any { it.title.isNotBlank() && it.time.isNotBlank() })
-                                || (!viewModel.isFocusingRoutine.value && viewModel.stepList.any { it.title.isNotBlank() }))
-    //val isSubmitEnabled = true
+    // [수정] 서버/피그마 제약 기반 제출 가능 여부
+    val isSubmitEnabled by remember {
+        derivedStateOf { viewModel.validateForSubmit() == null }
+    }
 
-    // 사용앱 바텀시트 관련
+    // 사용앱 바텀시트
     val coroutineScope = rememberCoroutineScope()
     var isBottomSheetOpen by remember { mutableStateOf(false) }
     val allApps = viewModel.appList
     val selectedAppList = viewModel.selectedAppList
-    // 개발용 임시 리스트
-//    val dummyBitmap = createBitmap(64, 64).apply {
-//        eraseColor(0xFFF1F3F5.toInt())
-//    }.asImageBitmap()
-//    val selectedAppList = listOf<UsedAppInRoutine>(
-//        UsedAppInRoutine("YouTube", dummyBitmap),
-//        UsedAppInRoutine("Instagram", dummyBitmap),
-//        UsedAppInRoutine("Twitter", dummyBitmap)
-//    )
 
     LaunchedEffect(Unit) {
         viewModel.loadInstalledApps(context)
@@ -234,7 +218,7 @@ fun RoutineCreateScreen(
                             BasicTextField(
                                 value = viewModel.routineTitle.value,
                                 onValueChange = {
-                                    if (it.length <= 30) viewModel.updateTitle(it) // 최대 30자
+                                    if (it.length <= 10) viewModel.updateTitle(it) // [수정] 최대 10자
                                 },
                                 textStyle = typography.title_B_24,
                                 modifier = Modifier.fillMaxWidth(),
@@ -267,46 +251,47 @@ fun RoutineCreateScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .weight(1f),
-                                onValueChange = { viewModel.updateDescription(it) }
+                                onValueChange = {
+                                    if (it.length <= 32) viewModel.updateDescription(it) // [수정]
+                                }
                             )
                         }
                     }
                 }
 
                 item {
-                    // 태그 추가 버튼
+                    // 태그
                     MyRoutineTagInCreateRoutine(
                         tagList = tagList,
-                        onAddTag = {
-                            // [변경] 임시 태그 추가 → 검색 화면으로 이동
-                            navController.navigate(Route.RoutineSearch.route)
-                        },
-                        onDeleteTag = { tag ->
-                            viewModel.removeTag(tag)
-                        }
+                        onAddTag = { navController.navigate(Route.RoutineSearch.route) },
+                        onDeleteTag = { tag -> viewModel.removeTag(tag) }
                     )
                 }
 
                 item { Text("STEP", style = typography.title_B_20) }
                 itemsIndexed(
                     items = stepList,
-                    key = { index, step -> step.id } // id 유지해도 되고 index로 써도 무방
+                    key = { _, step -> step.id }
                 ) { index, step ->
                     StepItem(
                         title = step.title,
                         timeDisplay = if (isFocusingRoutine) step.time else "",
                         isFocusingRoutine = isFocusingRoutine,
                         stepCount = stepList.size,
-                        onTitleChange = { newTitle -> viewModel.updateStepTitle(index, newTitle) },
+                        onTitleChange = { newTitle -> viewModel.updateStepTitle(index, newTitle) }, // [수정] 22자 제한은 VM에서 처리
                         onShowTimePicker = {
                             viewModel.setEditingStep(index)
                             isTimePickerVisible = true
                         },
-                        onDelete = { viewModel.removeStep(index) }
+                        onDelete = {
+                            if (viewModel.stepList.size > 3) viewModel.removeStep(index) // [수정] 최소 3개 보장
+                        }
                     )
                 }
 
-                item { AddStepButton { viewModel.addStep() } }
+                item {
+                    AddStepButton { if (viewModel.stepList.size < 6) viewModel.addStep() } // [수정] 최대 6개
+                }
 
                 item { Spacer(modifier = Modifier.height(24.dp)) }
             }
@@ -314,14 +299,8 @@ fun RoutineCreateScreen(
             if (isFocusingRoutine) {
                 SelectUsedAppSection(
                     selectedAppList = selectedAppList,
-                    onRemove = { app ->
-                        viewModel.removeAppFromSelected(app)
-                    },
-                    onAddApp = {
-                        coroutineScope.launch {
-                            isBottomSheetOpen = true
-                        }
-                    }
+                    onRemove = { app -> viewModel.removeAppFromSelected(app) },
+                    onAddApp = { coroutineScope.launch { isBottomSheetOpen = true } }
                 )
             }
 
@@ -330,7 +309,9 @@ fun RoutineCreateScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(80.dp)
-                    .background(if (isSubmitEnabled && !isSubmitting) colors.limeGreen else colors.lightGray)
+                    .background(
+                        if (isSubmitEnabled && !isSubmitting) colors.limeGreen else colors.lightGray
+                    )
                     .clickable(
                         enabled = isSubmitEnabled && !isSubmitting,
                         indication = null,
@@ -339,7 +320,9 @@ fun RoutineCreateScreen(
                         Log.d(
                             "createroutine",
                             "click submit enabled=$isSubmitEnabled isSubmitting=$isSubmitting " +
-                                    "title='${viewModel.routineTitle.value}' tags=${tagList.size} steps=${stepList.size} apps=${selectedAppList.size}"
+                                    "title='${viewModel.routineTitle.value}' tags=${tagList.size} " +
+                                    "steps=${stepList.size} apps=${selectedAppList.size} " +
+                                    "reason=${viewModel.validateForSubmit()}" // [유지]
                         )
                         val imageKey: String? = null
                         viewModel.createRoutine(imageKey)
@@ -354,7 +337,7 @@ fun RoutineCreateScreen(
             }
         }
 
-        // 이미지 선택 옵션 팝업
+        // 이미지 선택 옵션
         if (isImageOptionVisible) {
             ImageChoiceOptionButtonScreen(
                 onImageSelected = {
@@ -362,7 +345,6 @@ fun RoutineCreateScreen(
                     isImageOptionVisible = false
                 },
                 onCameraSelected = {
-                    // [변경] 실제 카메라 촬영 동작
                     val permission = Manifest.permission.CAMERA
                     val isGranted = ContextCompat.checkSelfPermission(
                         context, permission
@@ -383,8 +365,8 @@ fun RoutineCreateScreen(
 
         // 시간 선택 팝업
         if (isTimePickerVisible) {
-            TimePickerDialog(
-                initialTime = viewModel.getEditingStepTime(),
+            DurationPickerDialog(
+                initialTime = viewModel.getEditingStepTime(), // "HH:mm:ss" 또는 null
                 onConfirm = { h, m, s ->
                     viewModel.confirmTime(h, m, s)
                     isTimePickerVisible = false
@@ -392,26 +374,22 @@ fun RoutineCreateScreen(
                 onDismiss = { isTimePickerVisible = false }
             )
         }
-
     }
+
     DraggableAppSearchBottomSheet(
         isVisible = isBottomSheetOpen,
         onDismiss = { isBottomSheetOpen = false },
         appList = allApps,
         selectedAppList = selectedAppList,
-        onAddApp = { app ->
-            viewModel.addAppToSelected(app)
-        },
-        onRemoveApp = { app ->
-            viewModel.removeAppFromSelected(app)
-        },
+        onAddApp = { app -> viewModel.addAppToSelected(app) },
+        onRemoveApp = { app -> viewModel.removeAppFromSelected(app) },
     )
 }
 
 private fun createImageUri(context: Context): Uri {
     val imageFile = File.createTempFile(
         "moru_camera_", ".jpg",
-        context.cacheDir // 외부 저장 권한 없이 캐시에 저장
+        context.cacheDir
     )
     return FileProvider.getUriForFile(
         context,

@@ -24,6 +24,6 @@ interface AuthService {
     @POST("/api/auth/refresh")
     suspend fun refreshToken(@Body body: RefreshRequestDto): Response<TokenDto>
 
-    @GET("/api/users/me")
+    @GET("/api/users/me") // 서버 스펙 유지
     suspend fun getUserProfile(): UserProfileResponse
 }

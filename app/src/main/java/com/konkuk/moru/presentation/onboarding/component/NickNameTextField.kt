@@ -27,6 +27,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.konkuk.moru.presentation.onboarding.model.NickNameValid
 import com.konkuk.moru.ui.theme.MORUTheme.colors
 import com.konkuk.moru.ui.theme.MORUTheme.typography
 
@@ -35,7 +36,7 @@ fun NickNameTextField(
     value: String,
     onValueChange: (String) -> Unit,
     onCheckValidNickname: () -> Unit,
-    isValid: Boolean,
+    validity: NickNameValid,
     placeholder: String,
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
@@ -43,12 +44,12 @@ fun NickNameTextField(
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
 
-    val borderColor =
-        if (isValid) {
-            colors.limeGreen
-        } else {
-            if (isFocused) colors.mediumGray else colors.lightGray
-        }
+    val borderColor = when {
+        validity.isValid() -> colors.limeGreen
+        validity.isInvalid() -> colors.red   // ✅ 중복 시 빨간색
+        isFocused -> colors.mediumGray
+        else -> colors.lightGray
+    }
 
     BasicTextField(
         value = value,
@@ -90,7 +91,11 @@ fun NickNameTextField(
                 Column(
                     modifier = Modifier
                         .background(
-                            color = if (isValid) colors.paleLime else colors.veryLightGray,
+                            color = when {
+                                validity.isValid() -> colors.paleLime
+                                validity.isInvalid() -> colors.red
+                                else -> colors.veryLightGray
+                            },
                             shape = RoundedCornerShape(10.5.dp)
                         )
                         .padding(horizontal = 7.dp, vertical = 4.dp)
@@ -106,7 +111,11 @@ fun NickNameTextField(
                     Text(
                         text = "중복확인",
                         style = typography.desc_M_12,
-                        color = if (isValid) colors.oliveGreen else colors.mediumGray
+                        color = when {
+                            validity.isValid() -> colors.oliveGreen
+                            validity.isInvalid() -> Color.White
+                            else -> colors.mediumGray
+                        }
                     )
                 }
 
@@ -125,7 +134,7 @@ private fun BasicPreview() {
             value = "",
             onValueChange = {},
             onCheckValidNickname = {},
-            isValid = true,
+            validity = NickNameValid.EMPTY,
             placeholder = "닉네임",
             keyboardType = KeyboardType.Email,
             visualTransformation = VisualTransformation.None,

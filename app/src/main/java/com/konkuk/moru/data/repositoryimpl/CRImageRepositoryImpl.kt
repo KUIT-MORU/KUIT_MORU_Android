@@ -28,6 +28,10 @@ class CRImageRepositoryImpl @Inject constructor(
 
         Log.d("createroutine", "[upload] start name=${file.name} size=${file.length()} mime=$mime")
         val res = service.uploadImage(part)
+        // ----- [추가] 성공/실패와 무관하게 Authorization 헤더 먼저 로깅 -----
+        val rawReq = res.raw().request
+        Log.d("createroutine", "[upload] req Authorization=${rawReq.header("Authorization")?.let { it.take(16) + "..." } ?: "null"}")
+        // --------------------------------------------------------------------
         Log.d("createroutine", "[upload] resp code=${res.code()} body=${res.body()}")
 
         if (!res.isSuccessful) {

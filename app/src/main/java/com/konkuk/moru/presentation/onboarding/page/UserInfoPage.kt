@@ -57,11 +57,12 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import android.util.Log
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.konkuk.moru.presentation.onboarding.model.NickNameValid
 
 @Composable
 fun UserInfoPage(
     onNext: () -> Unit,
-//    viewModel: OnboardingViewModel? = null,
+//    viewModel: OnboardingViewModel? = null, //제발 에뮬레이터 돌릴 땐 hilt로 바꾸는거 잊지 말자 제발
     viewModel: OnboardingViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -69,13 +70,16 @@ fun UserInfoPage(
 
     var nickName by remember { mutableStateOf("") }
     val nicknameAvailable by viewModel?.nicknameAvailable?.collectAsState()
-        ?: remember { mutableStateOf<Boolean?>(null) }
-    var isNickNameValid by remember { mutableStateOf(false) }
+        ?: remember { mutableStateOf<NickNameValid>(NickNameValid.EMPTY) }
+//    val nicknameAvailable = NickNameValid.INVALID
+
     var gender by remember { mutableStateOf("") }
     var birthDay by remember { mutableStateOf("") }
     var introduction by remember { mutableStateOf("") }
 
-    val isFormValid = isNickNameValid && gender.isNotBlank() && birthDay.isNotBlank()
+//    val isFormValid = isNickNameValid && gender.isNotBlank() && birthDay.isNotBlank()
+    val isFormValid =
+        (nicknameAvailable == NickNameValid.VALID) && gender.isNotBlank() && birthDay.isNotBlank()
     var isImageOptionVisible by remember { mutableStateOf(false) }
 
     // [추가] 선택/촬영한 이미지 URI 상태
@@ -151,9 +155,9 @@ fun UserInfoPage(
     // -------------- [추가 끝] 사진 선택/촬영 런처 세팅 -------------- //
 
     // 닉네임 유효성 검사 결과에 따라 상태 업데이트
-    LaunchedEffect(nicknameAvailable) {
-        isNickNameValid = (nicknameAvailable == true)
-    }
+//    LaunchedEffect(nicknameAvailable) {
+//        isNickNameValid = (nicknameAvailable == true)
+//    }
 
     Box(
         modifier = Modifier
@@ -213,22 +217,31 @@ fun UserInfoPage(
                             text = "닉네임",
                             style = typography.body_SB_16
                         )
-                        if (isNickNameValid) {
+                        if (nicknameAvailable == NickNameValid.VALID) {
                             Text(
                                 text = "사용 가능한 닉네임입니다.",
                                 style = typography.desc_M_12,
                                 color = colors.limeGreen
+                            )
+                        } else if (nicknameAvailable == NickNameValid.INVALID) {
+                            Text(
+                                text = "이미 사용 중인 닉네임입니다.",
+                                style = typography.desc_M_12,
+                                color = colors.red
                             )
                         }
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     NickNameTextField(
                         value = nickName,
-                        onValueChange = { nickName = it },
+                        onValueChange = { new ->
+                            nickName = new
+                            viewModel?.clearNickNameValidity()
+                        },
                         onCheckValidNickname = {
                             viewModel?.checkNicknameAvailability(nickName)
                         },
-                        isValid = isNickNameValid,
+                        validity = nicknameAvailable,
                         placeholder = "닉네임",
                         keyboardType = KeyboardType.Text
                     )

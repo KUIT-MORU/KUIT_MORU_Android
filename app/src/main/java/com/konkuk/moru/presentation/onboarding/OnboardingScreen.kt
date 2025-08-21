@@ -26,7 +26,6 @@ fun OnboardingScreen(
 
     // 온보딩 완료 시 콜백 호출
     val isOnboardingComplete by viewModel.isOnboardingComplete.collectAsState()
-    //val isOnboardingComplete = false // 프리뷰 보기 위해 임시로 false로 설정. TODO: 추후 삭제 예정
     LaunchedEffect(isOnboardingComplete) {
         if (isOnboardingComplete) {
             onFinish()
@@ -48,7 +47,7 @@ fun OnboardingScreen(
                 .fillMaxWidth(),
             userScrollEnabled = false // 스와이프 금지, 버튼으로만 이동
         ) { page ->
-            OnboardingPage(page = page, onNext = { viewModel.nextPage() }, viewModel = viewModel)
+            OnboardingPage(page = page, onNext = { viewModel.nextPage() })
         }
     }
 }

@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.konkuk.moru.core.datastore.RoutineSyncBus
 import com.konkuk.moru.core.datastore.SchedulePreference
 import com.konkuk.moru.data.dto.response.HomeScheduleResponse
 import com.konkuk.moru.data.dto.response.Routine.RoutineDetailResponseV1
@@ -13,6 +14,8 @@ import com.konkuk.moru.data.repositoryimpl.RoutineRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -35,6 +38,17 @@ class HomeRoutinesViewModel @Inject constructor(
         // 간단한 테스트 로그
         android.util.Log.e("TEST_LOG", "이 로그가 보이나요? HomeRoutinesViewModel 생성됨!")
         System.out.println("System.out 테스트: HomeRoutinesViewModel 생성됨!")
+        
+        // RoutineSyncBus 구독하여 내 루틴 변경 시 자동 리프레시
+        viewModelScope.launch {
+            RoutineSyncBus.events
+                .filterIsInstance<RoutineSyncBus.Event.MyRoutinesChanged>()
+                .collectLatest {
+                    Log.d(TAG, "🔄 RoutineSyncBus.MyRoutinesChanged 이벤트 수신 - 내 루틴 리프레시")
+                    loadMyRoutines()
+                    loadTodayRoutines()
+                }
+        }
     }
 
     private val _serverRoutines = MutableStateFlow<List<Routine>>(emptyList())
@@ -137,7 +151,36 @@ class HomeRoutinesViewModel @Inject constructor(
                     Log.d(TAG, "🔍 루틴[$index]: ${routine.title}, category=${routine.category}, scheduledDays=${routine.scheduledDays}, scheduledTime=${routine.scheduledTime}, requiredTime=${routine.requiredTime}")
                 }
                 
-                _myRoutines.value = routines
+                // 첫 번째 로드인지 확인 (현재 루틴 목록이 비어있는 경우)
+                val isFirstLoad = _myRoutines.value.isEmpty()
+                
+                if (isFirstLoad) {
+                    // 첫 번째 로드: 기본 정렬 적용
+                    val sortedRoutines = routines.sortedWith(
+                        compareByDescending<Routine> { it.scheduledTime == null }
+                            .thenBy { it.scheduledTime ?: java.time.LocalTime.MAX }
+                    )
+                    
+                    Log.d(TAG, "🔄 첫 번째 로드: 기본 정렬 적용 - 시간 미설정 ${sortedRoutines.count { it.scheduledTime == null }}개, 시간 설정 ${sortedRoutines.count { it.scheduledTime != null }}개")
+                    _myRoutines.value = sortedRoutines
+                } else {
+                    // 이후 로드: 진행 중인 루틴들의 정렬 유지
+                    val currentRoutines = _myRoutines.value
+                    val runningRoutines = currentRoutines.filter { it.isRunning }
+                    val nonRunningRoutines = routines.filter { !it.isRunning }
+                    
+                    // 진행 중이지 않은 루틴들을 기본 정렬 기준으로 정렬
+                    val sortedNonRunning = nonRunningRoutines.sortedWith(
+                        compareByDescending<Routine> { it.scheduledTime == null }
+                            .thenBy { it.scheduledTime ?: java.time.LocalTime.MAX }
+                    )
+                    
+                    // 진행 중인 루틴들 + 정렬된 나머지 루틴들
+                    val finalRoutines = runningRoutines + sortedNonRunning
+                    
+                    Log.d(TAG, "🔄 이후 로드: 진행중 루틴 정렬 유지 - 진행중 ${runningRoutines.size}개, 시간 미설정 ${sortedNonRunning.count { it.scheduledTime == null }}개, 시간 설정 ${sortedNonRunning.count { it.scheduledTime != null }}개")
+                    _myRoutines.value = finalRoutines
+                }
                 Log.d(TAG, "✅ _myRoutines StateFlow 업데이트 완료")
             }
             .onFailure { e ->
