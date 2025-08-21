@@ -70,6 +70,14 @@ class SharedRoutineViewModel : ViewModel() {
         _routineTags.value = tags
     }
 
+    // 루틴 이미지 URL
+    private val _routineImageUrl = MutableStateFlow<String?>(null)
+    val routineImageUrl: StateFlow<String?> = _routineImageUrl
+    fun setRoutineImageUrl(imageUrl: String?) {
+        Log.d("SharedRoutineViewModel", "🔄 setRoutineImageUrl: $imageUrl")
+        _routineImageUrl.value = imageUrl
+    }
+
     // 간편 루틴 여부
     private val _isSimple = MutableStateFlow(false)
     val isSimple: StateFlow<Boolean> = _isSimple
@@ -107,16 +115,18 @@ class SharedRoutineViewModel : ViewModel() {
     }
 
     // 제목, 카테고리, 태그, 간편 루틴 여부 한꺼번에 설정
-    fun setRoutineInfo(title: String, category: String, tags: List<String>, isSimple: Boolean = false) {
+    fun setRoutineInfo(title: String, category: String, tags: List<String>, isSimple: Boolean = false, imageUrl: String? = null) {
         Log.d("SharedRoutineViewModel", "🔄 setRoutineInfo 호출:")
         Log.d("SharedRoutineViewModel", "   - title: $title")
         Log.d("SharedRoutineViewModel", "   - category: $category")
         Log.d("SharedRoutineViewModel", "   - tags: $tags")
         Log.d("SharedRoutineViewModel", "   - isSimple: $isSimple")
+        Log.d("SharedRoutineViewModel", "   - imageUrl: $imageUrl")
         _routineTitle.value = title
         _routineCategory.value = category
         _routineTags.value = tags
         _isSimple.value = isSimple
+        _routineImageUrl.value = imageUrl
         Log.d("SharedRoutineViewModel", "✅ setRoutineInfo 완료")
     }
 

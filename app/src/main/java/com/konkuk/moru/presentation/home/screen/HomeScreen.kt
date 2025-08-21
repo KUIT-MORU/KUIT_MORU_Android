@@ -841,7 +841,7 @@ fun HomeScreen(
                                     val isSimple = determineRoutineType(routine.requiredTime)
                                     val actualCategory = if (isSimple) "간편" else "집중"
                                     Log.d("HomeScreen", "📱 루틴 카테고리 설정: ${routine.title} -> $actualCategory (isSimple=$isSimple, requiredTime=${routine.requiredTime})")
-                                    sharedViewModel.setRoutineInfo(title = routine.title, category = actualCategory, tags = routine.tags, isSimple = isSimple)
+                                    sharedViewModel.setRoutineInfo(title = routine.title, category = actualCategory, tags = routine.tags, isSimple = isSimple, imageUrl = routine.imageUrl)
 
                                     // 루틴 상세 정보 로드 (스텝 포함) 후 SharedRoutineViewModel에 직접 설정
                                     Log.d("HomeScreen", "🔄 loadMyRoutineDetail 호출 (사용앱 정보 포함)")

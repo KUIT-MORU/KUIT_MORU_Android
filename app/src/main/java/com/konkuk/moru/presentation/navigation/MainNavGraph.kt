@@ -115,12 +115,15 @@ fun MainNavGraph(
             RoutineFocusIntroScreen(
                 sharedViewModel = sharedViewModel,
                 onStartClick = { selectedSteps, title, hashTag, category, totalDuration ->
+                    // 이미지 URL은 SharedRoutineViewModel에서 가져오기
+                    val imageUrl = sharedViewModel.routineImageUrl.value
                     Log.d("MainNavGraph", "🚀 RoutineFocusIntroScreen에서 시작하기 버튼 클릭!")
                     Log.d("MainNavGraph", "   - 카테고리: $category")
                     Log.d("MainNavGraph", "   - 선택된 스텝: ${selectedSteps.size}개")
                     Log.d("MainNavGraph", "   - 총 소요시간: ${totalDuration}분")
                     Log.d("MainNavGraph", "   - 제목: $title")
                     Log.d("MainNavGraph", "   - 태그: $hashTag")
+                    Log.d("MainNavGraph", "   - 이미지 URL: $imageUrl")
 
                     // 루틴 데이터 설정
                     sharedViewModel.setSelectedSteps(selectedSteps)
@@ -128,6 +131,7 @@ fun MainNavGraph(
                     sharedViewModel.setRoutineTags(hashTag.split(" ").map { it.removePrefix("#") })
                     sharedViewModel.setRoutineCategory(category)
                     sharedViewModel.setTotalDuration(totalDuration)
+                    sharedViewModel.setRoutineImageUrl(imageUrl)
 
                     // 실행 화면 이동
                     if (category == "집중") {
