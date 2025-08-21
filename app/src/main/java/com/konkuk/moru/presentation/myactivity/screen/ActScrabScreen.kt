@@ -1,5 +1,6 @@
 package com.konkuk.moru.presentation.myactivity.screen
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.ui.unit.sp
+import com.konkuk.moru.presentation.navigation.Route
 
 @Composable
 fun ActScrabScreen(
@@ -117,6 +119,9 @@ fun ActScrabScreen(
                         onLongClick = {
                             selectedIndex.value = if (selectedIndex.value == index) null else index
                             Log.d(TAG, "longClick index=$index, selected=${selectedIndex.value}")
+                        },
+                        onClick = {
+                            navController.navigate(Route.RoutineFeedDetail1.withId(scrap.routineId))
                         }
                     )
                 }

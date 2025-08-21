@@ -595,6 +595,22 @@ fun MainNavGraph(
         composable(route = Route.ActPolicy.route) {
             ActPrivacyPolicyScreen(navController)
         }
+
+        composable(
+            route = Route.RoutineFeedDetail1.pattern,
+            arguments = listOf(navArgument(Route.RoutineFeedDetail1.arg) { type = NavType.StringType })
+        ) { backStackEntry ->
+            val routineId = backStackEntry.arguments?.getString(Route.RoutineFeedDetail1.arg)
+            if (routineId != null) {
+                RoutineDetailScreen(
+                    routineId = routineId,
+                    onBackClick = { navController.navigateUpOrHome() },
+                    navController = navController
+                )
+            } else {
+                navController.popBackStack()
+            }
+        }
     }
 }
 

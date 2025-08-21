@@ -96,4 +96,10 @@ sealed class Route(
     // [추가] 태그 전용 검색
     data object RoutineTagSearch : Route("routine_tag_search")
 
+    object RoutineFeedDetail1 {
+        const val base = "routineFeedDetail"
+        const val arg = "routineId"
+        const val pattern = "$base/{$arg}"           // NavGraph 등록용
+        fun withId(id: String) = "$base/${Uri.encode(id)}" // navigate용
+    }
 }

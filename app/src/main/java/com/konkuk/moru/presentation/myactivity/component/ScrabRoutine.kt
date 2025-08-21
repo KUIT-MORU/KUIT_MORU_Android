@@ -32,6 +32,7 @@ fun ScrabRoutine(
     tags: List<String>,
     isSelected: Boolean = false,
     onLongClick: () -> Unit,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -39,7 +40,7 @@ fun ScrabRoutine(
             .width(98.36.dp)
             .height(174.14.dp)
             .combinedClickable(
-                onClick = {},
+                onClick = onClick,
                 onLongClick = onLongClick
             )
     ) {
